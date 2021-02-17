@@ -1,4 +1,6 @@
 NAME="github.com/odpf/siren"
+VERSION=$(shell git describe --always --tags 2>/dev/null)
+COVERFILE="/tmp/siren.coverprofile"
 
 .PHONY: all build clean
 
@@ -12,3 +14,6 @@ clean:
 
 test:
 	go list ./... | grep -v extern | xargs go test -count 1 -cover -race -timeout 1m
+
+dist:
+	@bash ./scripts/build.sh
