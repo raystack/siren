@@ -35,3 +35,7 @@ jobs:
         run: make dist
       - name: Docker build
         run: docker build -t siren:${{ github.sha }} .
+      - name: Docker Tag
+        run: docker tag siren:${{ github.sha }} odpf/siren
+      - name: Docker Push
+        run: docker push odpf/siren
