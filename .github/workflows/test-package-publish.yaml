@@ -33,3 +33,5 @@ jobs:
         uses: actions/checkout@v2
       - name: Make distributables
         run: make dist
+      - name: Docker build
+        run: docker build -t siren:${{ github.sha }} .
