@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/odpf/siren/api"
-	"github.com/odpf/siren/provider"
 	"github.com/odpf/siren/store"
 )
 
@@ -24,9 +23,7 @@ func RunServer(c *Config) error {
 		return err
 	}
 
-	models := []interface{}{
-		&provider.Model{},
-	}
+	models := []interface{}{}
 	store.Migrate(db, models...)
 
 	r := api.New()
