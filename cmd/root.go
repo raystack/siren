@@ -8,7 +8,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "guardian",
+	Use: "siren",
 }
 
 // Execute runs the command line interface
