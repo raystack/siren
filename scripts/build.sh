@@ -13,7 +13,7 @@ build() {
         for arch in ${ARCH[*]}; do
 
             # create a folder named via the combination of os and arch
-            TARGET="./$BUILD_DIR/$EXECUTABLE_NAME/${os}-${arch}"
+            TARGET="./$BUILD_DIR/${os}-${arch}"
             mkdir -p $TARGET
 
             # place the executable within that folder
