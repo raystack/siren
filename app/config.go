@@ -45,7 +45,7 @@ func LoadConfig() *Config {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("fatal error reading config: %s", err))
+		fmt.Errorf("fatal error reading config: %s, \nfalling back to defaults", err)
 	}
 
 	viper.SetDefault(PortKey, 3000)

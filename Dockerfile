@@ -1,10 +1,13 @@
+FROM golang:1.15
+WORKDIR /go/src/github.com/odpf/siren
+COPY . .
+RUN make dist
+
 FROM alpine:latest
 RUN ["apk", "update"]
 RUN ["apk", "add", "libc6-compat"]
-
-WORKDIR /opt/
-COPY ./dist/siren/linux-amd64/siren .
-RUN chmod +x ./siren
-
+WORKDIR /root/
+COPY --from=0 /go/src/github.com/odpf/siren .
+RUN ls .
 EXPOSE 3000
-ENTRYPOINT ["/opt/siren"]
+ENTRYPOINT ["/root/dist/linux-amd64/siren"]
