@@ -15,13 +15,13 @@ type DBConfig struct {
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
 	Name     string `mapstructure:"name" default:"postgres"`
-	Port     string `mapstructure:"port"`
+	Port     string `mapstructure:"port" default:"5432"`
 	SslMode  string `mapstructure:"sslmode"`
 }
 
 // Config contains the application configuration
 type Config struct {
-	Port int      `mapstructure:"port"`
+	Port int      `mapstructure:"port" default:"8080"`
 	DB   DBConfig `mapstructure:"db"`
 }
 
@@ -36,19 +36,23 @@ func LoadConfig() *Config {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Errorf("viper read config error %v", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			fmt.Println("config file was not found. Env vars and defaults will be used")
+		} else {
+			panic(err)
+		}
 	}
 
 	err, configKeys := getFlattenedStructKeys(Config{})
 	if err != nil {
-		fmt.Errorf("Unable to get config keys : %s\n", err)
+		panic(err)
 	}
 
 	// Bind each conf fields to environment vars
 	for key := range configKeys {
 		err := viper.BindEnv(configKeys[key])
 		if err != nil {
-			fmt.Errorf("Unable to bind env var: %s\n", err)
+			panic(err)
 		}
 	}
 

@@ -1,7 +1,6 @@
-PORT: 3000
-DB_HOST: localhost
-DB_USER:
-DB_PASSWORD:
-DB_NAME:
-DB_PORT: 5432
-DB_SSLMODE: disable
+port: 3000
+db:
+  host: localhost
+  password: ""
+  name: siren_dev
+  port: 5432
