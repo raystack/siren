@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/odpf/siren/domain"
 	"log"
 	"net/http"
 
@@ -10,15 +11,8 @@ import (
 )
 
 // RunServer runs the application server
-func RunServer(c *Config) error {
-	db, err := store.New(&store.Config{
-		Host:     c.DB.Host,
-		User:     c.DB.User,
-		Password: c.DB.Password,
-		Name:     c.DB.Name,
-		Port:     c.DB.Port,
-		SslMode:  c.DB.SslMode,
-	})
+func RunServer(c *domain.Config) error {
+	db, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}

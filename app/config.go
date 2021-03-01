@@ -7,26 +7,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"strings"
+	"github.com/odpf/siren/domain"
 )
 
-// DBConfig contains the database configuration
-type DBConfig struct {
-	Host     string `mapstructure:"host"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Name     string `mapstructure:"name" default:"postgres"`
-	Port     string `mapstructure:"port" default:"5432"`
-	SslMode  string `mapstructure:"sslmode"`
-}
-
-// Config contains the application configuration
-type Config struct {
-	Port int      `mapstructure:"port" default:"8080"`
-	DB   DBConfig `mapstructure:"db"`
-}
-
 // LoadConfig returns application configuration
-func LoadConfig() *Config {
+func LoadConfig() *domain.Config {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("./")
 	viper.AddConfigPath("../")
@@ -43,7 +28,7 @@ func LoadConfig() *Config {
 		}
 	}
 
-	err, configKeys := getFlattenedStructKeys(Config{})
+	err, configKeys := getFlattenedStructKeys(domain.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +41,7 @@ func LoadConfig() *Config {
 		}
 	}
 
-	var config Config
+	var config domain.Config
 	defaults.SetDefaults(&config)
 
 	err = viper.Unmarshal(&config)
@@ -66,7 +51,7 @@ func LoadConfig() *Config {
 	return &config
 }
 
-func getFlattenedStructKeys(config Config) (error, []string) {
+func getFlattenedStructKeys(config domain.Config) (error, []string) {
 	var structMap map[string]interface{}
 	err := mapstructure.Decode(config, &structMap)
 	if err != nil {
