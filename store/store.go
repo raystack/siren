@@ -2,24 +2,15 @@ package store
 
 import (
 	"fmt"
+	"github.com/odpf/siren/domain"
 	"log"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// Config for database connection
-type Config struct {
-	Host     string
-	User     string
-	Password string
-	Name     string
-	Port     string
-	SslMode  string
-}
-
 // New returns the database instance
-func New(c *Config) (*gorm.DB, error) {
+func New(c *domain.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s dbname=%s password=%s port=%s sslmode=%s",
 		c.Host,
