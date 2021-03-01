@@ -12,12 +12,12 @@ import (
 // RunServer runs the application server
 func RunServer(c *Config) error {
 	db, err := store.New(&store.Config{
-		Host:     c.DBHost,
-		User:     c.DBUser,
-		Password: c.DBPassword,
-		Name:     c.DBName,
-		Port:     c.DBPort,
-		SslMode:  c.DBSslMode,
+		Host:     c.DB.Host,
+		User:     c.DB.User,
+		Password: c.DB.Password,
+		Name:     c.DB.Name,
+		Port:     c.DB.Port,
+		SslMode:  c.DB.SslMode,
 	})
 	if err != nil {
 		return err
