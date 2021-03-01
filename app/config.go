@@ -2,37 +2,27 @@ package app
 
 import (
 	"fmt"
-
+	"github.com/jeremywohl/flatten"
+	"github.com/mcuadros/go-defaults"
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
+	"strings"
 )
 
-const (
-	// PortKey is the key for port configuration
-	PortKey = "PORT"
-	// DBHostKey is the key for database host configuration
-	DBHostKey = "DB_HOST"
-	// DBUserKey is the key for database user configuration
-	DBUserKey = "DB_USER"
-	// DBPasswordKey is the key for database password configuration
-	DBPasswordKey = "DB_PASSWORD"
-	// DBNameKey is the key for database name configuration
-	DBNameKey = "DB_NAME"
-	// DBPortKey is the key for database port configuration
-	DBPortKey = "DB_PORT"
-	// DBSslModeKey is the key for database ssl mode configuration
-	DBSslModeKey = "DB_SSLMODE"
-)
+// DBConfig contains the database configuration
+type DBConfig struct {
+	Host     string `mapstructure:"host"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	Name     string `mapstructure:"name" default:"postgres"`
+	Port     string `mapstructure:"port"`
+	SslMode  string `mapstructure:"sslmode"`
+}
 
 // Config contains the application configuration
 type Config struct {
-	Port int
-
-	DBHost     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBPort     string
-	DBSslMode  string
+	Port int      `mapstructure:"port"`
+	DB   DBConfig `mapstructure:"db"`
 }
 
 // LoadConfig returns application configuration
@@ -42,22 +32,52 @@ func LoadConfig() *Config {
 	viper.AddConfigPath("../")
 	viper.SetConfigType("yaml")
 	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Errorf("fatal error reading config: %s, \nfalling back to defaults", err)
+		fmt.Errorf("viper read config error %v", err)
 	}
 
-	viper.SetDefault(PortKey, 3000)
-	viper.SetDefault(DBSslModeKey, "disable")
-
-	return &Config{
-		Port:       viper.GetInt(PortKey),
-		DBHost:     viper.GetString(DBHostKey),
-		DBUser:     viper.GetString(DBUserKey),
-		DBPassword: viper.GetString(DBPasswordKey),
-		DBName:     viper.GetString(DBNameKey),
-		DBPort:     viper.GetString(DBPortKey),
-		DBSslMode:  viper.GetString(DBSslModeKey),
+	err, configKeys := getFlattenedStructKeys(Config{})
+	if err != nil {
+		fmt.Errorf("Unable to get config keys : %s\n", err)
 	}
+
+	// Bind each conf fields to environment vars
+	for key := range configKeys {
+		err := viper.BindEnv(configKeys[key])
+		if err != nil {
+			fmt.Errorf("Unable to bind env var: %s\n", err)
+		}
+	}
+
+	var config Config
+	defaults.SetDefaults(&config)
+
+	err = viper.Unmarshal(&config)
+	if err != nil {
+		fmt.Errorf("unable to unmarshal config to struct: %v\n", err)
+	}
+	return &config
+}
+
+func getFlattenedStructKeys(config Config) (error, []string) {
+	var structMap map[string]interface{}
+	err := mapstructure.Decode(config, &structMap)
+	if err != nil {
+		return err, nil
+	}
+
+	flat, err := flatten.Flatten(structMap, "", flatten.DotStyle)
+	if err != nil {
+		return err, nil
+	}
+
+	keys := make([]string, 0, len(flat))
+	for k := range flat {
+		keys = append(keys, k)
+	}
+
+	return nil, keys
 }
