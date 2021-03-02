@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/service"
 	"log"
 	"net/http"
 
@@ -13,6 +14,8 @@ import (
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
 	db, err := store.New(&c.DB)
+	stores := store.Init(db)
+	services := service.Init(stores.TemplatesStore)
 	if err != nil {
 		return err
 	}
@@ -20,7 +23,7 @@ func RunServer(c *domain.Config) error {
 	models := []interface{}{}
 	store.Migrate(db, models...)
 
-	r := api.New()
+	r := api.New(services)
 
 	log.Printf("running server on port %d\n", c.Port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", c.Port), r)

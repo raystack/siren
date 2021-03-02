@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jeremywohl/flatten v1.0.1
+	github.com/lib/pq v1.3.0
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/spf13/cobra v1.1.3
