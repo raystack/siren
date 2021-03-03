@@ -2,10 +2,11 @@ package app
 
 import (
 	"fmt"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/service"
 	"log"
 	"net/http"
+
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/service"
 
 	"github.com/odpf/siren/api"
 	"github.com/odpf/siren/store"
