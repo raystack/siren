@@ -9,16 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type Stores struct {
-	TemplatesStore *TemplatesStore
-}
-
-func Init(db *gorm.DB) *Stores {
-	return &Stores{
-		TemplatesStore: NewTemplatesStore(db),
-	}
-}
-
 // New returns the database instance
 func New(c *domain.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(

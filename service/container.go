@@ -1,13 +1,16 @@
 package service
 
-import "github.com/odpf/siren/store"
+import (
+	"github.com/odpf/siren/templates"
+	"gorm.io/gorm"
+)
 
 type Container struct {
-	TemplatesService TemplatesService
+	TemplatesService *templates.Service
 }
 
-func Init(templatesStore *store.TemplatesStore) *Container {
-	templatesService := NewTemplatesService(templatesStore)
+func Init(db *gorm.DB) *Container {
+	templatesService := templates.NewService(db)
 	return &Container{
 		TemplatesService: templatesService,
 	}

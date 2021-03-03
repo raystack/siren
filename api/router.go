@@ -13,7 +13,7 @@ func New(container *service.Container) *mux.Router {
 	r.Use(logger)
 
 	r.Methods("GET").Path("/ping").Handler(handlers.Ping())
-	r.Methods("PUT").Path("/templates").Handler(handlers.UpsertTemplates(container))
+	r.Methods("PUT").Path("/templates").Handler(handlers.UpsertTemplates(container.TemplatesService))
 
 	return r
 }
