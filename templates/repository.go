@@ -1,8 +1,15 @@
 package templates
 
 import (
-	"fmt"
+	"bytes"
+	"github.com/odpf/siren/domain"
 	"gorm.io/gorm"
+	"text/template"
+)
+
+const (
+	leftDelim  = "[["
+	rightDelim = "]]"
 )
 
 // Repository talks to the store to read or insert data
@@ -16,23 +23,92 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 func (r *Repository) Upsert(template *Template) (*Template, error) {
-	var newTemplate, exisitingTemplate Template
+	var newTemplate, existingTemplate Template
 	r.db.AutoMigrate(&Template{})
 	//CREATE INDEX idx_tags on "templates" USING GIN ("tags");
 	//SET enable_seqscan TO off;
-	selectQuery := fmt.Sprintf(`select * from templates where name='%s';`, template.Name)
-	result := r.db.Raw(selectQuery).Scan(&exisitingTemplate)
+	result := r.db.Where("name = ?", template.Name).Find(&existingTemplate)
 	if result.RowsAffected == 0 {
 		result = r.db.Create(template)
 	} else {
-		result = r.db.Model(template).Where("id = ?", exisitingTemplate.ID).Updates(template)
+		result = r.db.Model(template).Where("id = ?", existingTemplate.ID).Updates(template)
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	result = r.db.Raw(selectQuery).Scan(&newTemplate)
+	result = r.db.Where("name = ?", template.Name).Find(&newTemplate)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &newTemplate, nil
+}
+
+func (r *Repository) Index(tag string) ([]Template, error) {
+	var templates []Template
+	var result *gorm.DB
+	if tag == "" {
+		result = r.db.Find(&templates)
+	} else {
+		result = r.db.Where("tags @>ARRAY[?]", tag).Find(&templates)
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return templates, nil
+}
+
+func (r *Repository) GetByName(name string) (*Template, error) {
+	var template Template
+	result := r.db.Where("name = ?", name).Find(&template)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, nil
+	}
+	return &template, nil
+}
+
+func (r *Repository) Delete(name string) error {
+	var template Template
+	result := r.db.Where("name = ?", name).Find(&template)
+	if result.RowsAffected == 0 {
+		return nil
+	}
+	result = r.db.Delete(&template)
+	return result.Error
+}
+
+func enrichWithDefaults(variables []domain.Variable, body map[string]string) map[string]string {
+	result := make(map[string]string)
+	for i := 0; i < len(variables); i++ {
+		name := variables[i].Name
+		value := variables[i].Default
+		val, ok := body[name]
+		if ok {
+			result[name] = val
+		} else {
+			result[name] = value
+		}
+	}
+	return result
+}
+
+func (r *Repository) Render(name string, body map[string]string) (string, error) {
+	templateFromDB, err := r.GetByName(name)
+	if err != nil {
+		return "", err
+	}
+	convertedTemplate, err := templateFromDB.toDomain()
+	enrichedBody := enrichWithDefaults(convertedTemplate.Variables, body)
+	var tpl bytes.Buffer
+	tmpl, err := template.New("test").Delims(leftDelim, rightDelim).Parse(convertedTemplate.Body)
+	if err != nil {
+		return "", err
+	}
+	err = tmpl.Execute(&tpl, enrichedBody)
+	if err != nil {
+		return "", err
+	}
+	return tpl.String(), nil
 }

@@ -8,6 +8,7 @@ import (
 const (
 	defaultErrorMessage    = "Internal server error"
 	BadRequestErrorMessage = "Bad Request"
+	NotFoundErrorMessage   = "Not Found"
 )
 
 func returnJSON(w http.ResponseWriter, data interface{}) {
@@ -34,6 +35,17 @@ func BadRequest(w http.ResponseWriter, err error) {
 	}
 
 	sendError(w, errMessage, http.StatusBadRequest, nil)
+}
+
+func NotFound(w http.ResponseWriter, err error) {
+	var errMessage string
+	if err != nil {
+		errMessage = err.Error()
+	} else {
+		errMessage = NotFoundErrorMessage
+	}
+
+	sendError(w, errMessage, http.StatusNotFound, nil)
 }
 
 func sendError(w http.ResponseWriter, errorMessage string, code int, data interface{}) (ResponseError, error) {

@@ -27,3 +27,32 @@ func (service *Service) Upsert(template *domain.Template) (*domain.Template, err
 	}
 	return upsertedTemplate.toDomain()
 }
+
+func (service *Service) Index(tag string) ([]domain.Template, error) {
+	templates, err := service.repository.Index(tag)
+	if err != nil {
+		return nil, err
+	}
+	domainTemplates := make([]domain.Template, 0, len(templates))
+	for i := 0; i < len(templates); i++ {
+		t, _ := templates[i].toDomain()
+		domainTemplates = append(domainTemplates, *t)
+	}
+	return domainTemplates, nil
+}
+
+func (service *Service) GetByName(name string) (*domain.Template, error) {
+	templates, err := service.repository.GetByName(name)
+	if err != nil || templates == nil {
+		return nil, err
+	}
+	return templates.toDomain()
+}
+
+func (service *Service) Delete(name string) error {
+	return service.repository.Delete(name)
+}
+
+func (service *Service) Render(name string, body map[string]string) (string, error) {
+	return service.repository.Render(name, body)
+}
