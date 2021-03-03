@@ -2,21 +2,21 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/odpf/siren/service"
-	"github.com/odpf/siren/store"
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/templates"
 	"net/http"
 )
 
 // UpsertTemplates handler
-func UpsertTemplates(service *service.Container) http.HandlerFunc {
+func UpsertTemplates(service *templates.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var template store.Template
+		var template domain.Template
 		err := json.NewDecoder(r.Body).Decode(&template)
 		if err != nil {
 			BadRequest(w, err)
 			return
 		}
-		createdTemplate, err := service.TemplatesService.Upsert(&template)
+		createdTemplate, err := service.Upsert(&template)
 		if err != nil {
 			InternalServerError(w, err)
 			return

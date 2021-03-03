@@ -13,15 +13,11 @@ import (
 
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
-	db, err := store.New(&c.DB)
-	stores := store.Init(db)
-	services := service.Init(stores.TemplatesStore)
+	store, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}
-
-	models := []interface{}{}
-	store.Migrate(db, models...)
+	services := service.Init(store)
 
 	r := api.New(services)
 
