@@ -12,13 +12,13 @@ import (
 // New returns the database instance
 func New(c *domain.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s dbname=%s password=%s port=%s sslmode=%s",
+		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
 		c.Host,
 		c.User,
 		c.Name,
-		c.Password,
 		c.Port,
 		c.SslMode,
+		c.Password,
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
