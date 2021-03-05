@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/odpf/siren/domain"
 	"gorm.io/gorm"
 	"text/template"
@@ -59,7 +60,7 @@ func (r *Repository) Index(tag string) ([]Template, error) {
 
 func (r *Repository) GetByName(name string) (*Template, error) {
 	var template Template
-	result := r.db.Where("name = ?", name).Find(&template)
+	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -70,8 +71,11 @@ func (r *Repository) GetByName(name string) (*Template, error) {
 }
 
 func (r *Repository) Delete(name string) error {
-	var template Template
-	result := r.db.Where("name = ?", name).Find(&template)
+	template := Template{ID: 10}
+	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
+	if result.Error != nil {
+		return result.Error
+	}
 	if result.RowsAffected == 0 {
 		return nil
 	}
