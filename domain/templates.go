@@ -20,22 +20,3 @@ type Template struct {
 	Tags      []string   `json:"tags"`
 	Variables []Variable `json:"variables"`
 }
-
-// TemplatesRepository interface
-type TemplatesRepository interface {
-	Upsert(*Template) (*Template, error)
-	Index(string) (*[]Template, error)
-	GetByName(string) (*[]Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
-}
-
-// TemplatesService interface
-type TemplatesService interface {
-	Upsert(*Template) (*Template, error)
-	Index(string) (*[]Template, error)
-	GetByName(string) (*[]Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
-	Migrate() error
-}
