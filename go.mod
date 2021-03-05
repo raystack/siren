@@ -3,6 +3,7 @@ module github.com/odpf/siren
 go 1.15
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jeremywohl/flatten v1.0.1
