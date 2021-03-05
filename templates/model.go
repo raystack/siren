@@ -13,8 +13,8 @@ type Template struct {
 	UpdatedAt time.Time
 	Name      string `gorm:"index:idx_name,unique"`
 	Body      string
-	Tags      pq.StringArray `gorm:"type:text[]"`
-	Variables string         `sql:"type:jsonb" gorm:"type:jsonb"`
+	Tags      pq.StringArray `gorm:"type:text[];index:idx_tags,type:gin"`
+	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
 }
 
 func (template *Template) fromDomain(t *domain.Template) (*Template, error) {

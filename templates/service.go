@@ -15,6 +15,10 @@ func NewService(db *gorm.DB) *Service {
 	return &Service{NewRepository(db)}
 }
 
+func (service *Service) Migrate() error {
+	return service.repository.Migrate()
+}
+
 func (service *Service) Upsert(template *domain.Template) (*domain.Template, error) {
 	t := &Template{}
 	t, err := t.fromDomain(template)

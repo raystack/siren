@@ -37,4 +37,5 @@ type TemplatesService interface {
 	GetByName(string) (*[]Template, error)
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
+	Migrate() error
 }

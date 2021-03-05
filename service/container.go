@@ -15,3 +15,12 @@ func Init(db *gorm.DB) *Container {
 		TemplatesService: templatesService,
 	}
 }
+
+func MigrateAll(db *gorm.DB) error {
+	container:= Init(db)
+	err:= container.TemplatesService.Migrate()
+	if err!= nil{
+		return err
+	}
+	return nil
+}
