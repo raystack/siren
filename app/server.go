@@ -5,10 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/odpf/siren/api"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
-
-	"github.com/odpf/siren/api"
 	"github.com/odpf/siren/store"
 )
 
@@ -24,4 +23,13 @@ func RunServer(c *domain.Config) error {
 
 	log.Printf("running server on port %d\n", c.Port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", c.Port), r)
+}
+
+func RunMigrations(c *domain.Config) error {
+	store, err := store.New(&c.DB)
+	if err != nil {
+		return err
+	}
+	service.MigrateAll(store)
+	return nil
 }

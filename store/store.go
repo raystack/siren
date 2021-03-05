@@ -29,8 +29,3 @@ func New(c *domain.DBConfig) (*gorm.DB, error) {
 
 	return db, err
 }
-
-// Migrate auto migrate models
-func Migrate(db *gorm.DB, models ...interface{}) error {
-	return db.AutoMigrate(models...)
-}

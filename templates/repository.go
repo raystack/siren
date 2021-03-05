@@ -23,9 +23,16 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
+func (r *Repository) Migrate() error {
+	err:= r.db.AutoMigrate(&Template{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *Repository) Upsert(template *Template) (*Template, error) {
 	var newTemplate, existingTemplate Template
-	r.db.AutoMigrate(&Template{})
 	//CREATE INDEX idx_tags on "templates" USING GIN ("tags");
 	//SET enable_seqscan TO off;
 	result := r.db.Where("name = ?", template.Name).Find(&existingTemplate)
