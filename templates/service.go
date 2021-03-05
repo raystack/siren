@@ -7,7 +7,7 @@ import (
 
 // Service handles business logic
 type Service struct {
-	repository *Repository
+	repository TemplatesRepository
 }
 
 // NewService returns repository struct
@@ -46,11 +46,11 @@ func (service *Service) Index(tag string) ([]domain.Template, error) {
 }
 
 func (service *Service) GetByName(name string) (*domain.Template, error) {
-	templates, err := service.repository.GetByName(name)
-	if err != nil || templates == nil {
+	template, err := service.repository.GetByName(name)
+	if err != nil || template == nil {
 		return nil, err
 	}
-	return templates.toDomain()
+	return template.toDomain()
 }
 
 func (service *Service) Delete(name string) error {

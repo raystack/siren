@@ -23,35 +23,36 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
-func (r *Repository) Migrate() error {
-	err:= r.db.AutoMigrate(&Template{})
+func (r Repository) Migrate() error {
+	err := r.db.AutoMigrate(&Template{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *Repository) Upsert(template *Template) (*Template, error) {
+func (r Repository) Upsert(template *Template) (*Template, error) {
 	var newTemplate, existingTemplate Template
-	//CREATE INDEX idx_tags on "templates" USING GIN ("tags");
-	//SET enable_seqscan TO off;
-	result := r.db.Where("name = ?", template.Name).Find(&existingTemplate)
+	result := r.db.Where(fmt.Sprintf("name = '%s'", template.Name)).Find(&existingTemplate)
+	if result.Error != nil {
+		return nil, result.Error
+	}
 	if result.RowsAffected == 0 {
 		result = r.db.Create(template)
 	} else {
-		result = r.db.Model(template).Where("id = ?", existingTemplate.ID).Updates(template)
+		result = r.db.Where("id = ?", existingTemplate.ID).Updates(template)
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	result = r.db.Where("name = ?", template.Name).Find(&newTemplate)
+	result = r.db.Where(fmt.Sprintf("name = '%s'", template.Name)).Find(&newTemplate)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return &newTemplate, nil
 }
 
-func (r *Repository) Index(tag string) ([]Template, error) {
+func (r Repository) Index(tag string) ([]Template, error) {
 	var templates []Template
 	var result *gorm.DB
 	if tag == "" {
@@ -65,7 +66,7 @@ func (r *Repository) Index(tag string) ([]Template, error) {
 	return templates, nil
 }
 
-func (r *Repository) GetByName(name string) (*Template, error) {
+func (r Repository) GetByName(name string) (*Template, error) {
 	var template Template
 	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
 	if result.Error != nil {
@@ -77,16 +78,9 @@ func (r *Repository) GetByName(name string) (*Template, error) {
 	return &template, nil
 }
 
-func (r *Repository) Delete(name string) error {
-	template := Template{ID: 10}
-	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return nil
-	}
-	result = r.db.Delete(&template)
+func (r Repository) Delete(name string) error {
+	var template Template
+	result := r.db.Where("name = ?", name).Delete(&template)
 	return result.Error
 }
 
@@ -94,18 +88,20 @@ func enrichWithDefaults(variables []domain.Variable, body map[string]string) map
 	result := make(map[string]string)
 	for i := 0; i < len(variables); i++ {
 		name := variables[i].Name
-		value := variables[i].Default
+		defaultValue := variables[i].Default
 		val, ok := body[name]
 		if ok {
 			result[name] = val
 		} else {
-			result[name] = value
+			result[name] = defaultValue
 		}
 	}
 	return result
 }
 
-func (r *Repository) Render(name string, body map[string]string) (string, error) {
+var templateParser = template.New("test").Delims(leftDelim, rightDelim).Parse
+
+func (r Repository) Render(name string, body map[string]string) (string, error) {
 	templateFromDB, err := r.GetByName(name)
 	if err != nil {
 		return "", err
@@ -113,7 +109,7 @@ func (r *Repository) Render(name string, body map[string]string) (string, error)
 	convertedTemplate, err := templateFromDB.toDomain()
 	enrichedBody := enrichWithDefaults(convertedTemplate.Variables, body)
 	var tpl bytes.Buffer
-	tmpl, err := template.New("test").Delims(leftDelim, rightDelim).Parse(convertedTemplate.Body)
+	tmpl, err := templateParser(convertedTemplate.Body)
 	if err != nil {
 		return "", err
 	}
