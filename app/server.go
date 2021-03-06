@@ -2,13 +2,12 @@ package app
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-
 	"github.com/odpf/siren/api"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
+	"log"
+	"net/http"
 )
 
 // RunServer runs the application server

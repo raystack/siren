@@ -1,0 +1,158 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Template:
+    properties:
+      CreatedAt:
+        format: date-time
+        type: string
+      UpdatedAt:
+        format: date-time
+        type: string
+      body:
+        type: string
+        x-go-name: Body
+      id:
+        format: uint64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      tags:
+        items:
+          type: string
+        type: array
+        x-go-name: Tags
+      variables:
+        items:
+          $ref: '#/definitions/Variable'
+        type: array
+        x-go-name: Variables
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  Variable:
+    properties:
+      default:
+        type: string
+        x-go-name: Default
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+host: siren.golabs.io
+info:
+  description: Documentation of our Siren API.
+  title: Siren.
+  version: 1.0.0
+paths:
+  /ping:
+    get:
+      description: Ping call
+      operationId: ping
+      responses:
+        "200":
+          $ref: '#/responses/pingResponse'
+      tags:
+      - ping
+  /templates:
+    get:
+      description: Templates list call
+      operationId: templates
+      responses:
+        "200":
+          $ref: '#/responses/listResponse'
+      tags:
+      - templates
+    post:
+      operationId: createTemplateRequest
+      parameters:
+      - description: Create template request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Template'
+      responses:
+        "200":
+          $ref: '#/responses/templatesResponse'
+      summary: Templates does some amazing stuff.
+      tags:
+      - templates
+  /templates/{name}:
+    delete:
+      description: Delete template by name
+      operationId: deleteTemplatesRequest
+      parameters:
+      - description: Delete Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      responses:
+        "200":
+          $ref: '#/responses/templatesResponse'
+      tags:
+      - templates
+    get:
+      description: Get template by name
+      operationId: getTemplatesRequest
+      parameters:
+      - description: Get Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      responses:
+        "200":
+          $ref: '#/responses/templatesResponse'
+      tags:
+      - templates
+  /templates/{name}/render:
+    post:
+      description: Render template by name
+      operationId: renderTemplatesRequest
+      parameters:
+      - description: Render Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      responses:
+        "200":
+          $ref: '#/responses/renderTemplatesResponse'
+      tags:
+      - templates
+produces:
+- application/json
+responses:
+  listResponse:
+    description: List templates response
+    schema:
+      items:
+        $ref: '#/definitions/Template'
+      type: array
+  pingResponse:
+    description: Response body for Ping.
+  renderTemplatesResponse:
+    description: ""
+  templatesResponse:
+    description: ""
+    schema:
+      $ref: '#/definitions/Template'
+schemes:
+- http
+securityDefinitions:
+  basic:
+    type: basic
+swagger: "2.0"
