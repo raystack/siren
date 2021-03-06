@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/templates"
 	"net/http"
 )
 
 // UpsertTemplates handler
-func UpsertTemplates(service *templates.Service) http.HandlerFunc {
+func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var template domain.Template
 		err := json.NewDecoder(r.Body).Decode(&template)
@@ -29,20 +28,12 @@ func UpsertTemplates(service *templates.Service) http.HandlerFunc {
 }
 
 // IndexTemplates handler
-func IndexTemplates(service *templates.Service) http.HandlerFunc {
+func IndexTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tag, _ := r.URL.Query()["tag"]
-		if len(tag) > 1 {
-			BadRequest(w, fmt.Errorf("more than one tags given"))
-			return
-		}
+		tag := r.URL.Query().Get("tag")
 		var templates []domain.Template
 		var err error
-		if len(tag) == 0 {
-			templates, err = service.Index("")
-		} else {
-			templates, err = service.Index(tag[0])
-		}
+		templates, err = service.Index(tag)
 		if err != nil {
 			InternalServerError(w, err)
 			return
@@ -53,7 +44,7 @@ func IndexTemplates(service *templates.Service) http.HandlerFunc {
 }
 
 // GetTemplates handler
-func GetTemplates(service *templates.Service) http.HandlerFunc {
+func GetTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
@@ -72,7 +63,7 @@ func GetTemplates(service *templates.Service) http.HandlerFunc {
 }
 
 // DeleteTemplates handler
-func DeleteTemplates(service *templates.Service) http.HandlerFunc {
+func DeleteTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
@@ -87,7 +78,7 @@ func DeleteTemplates(service *templates.Service) http.HandlerFunc {
 }
 
 // RenderTemplates handler
-func RenderTemplates(service *templates.Service) http.HandlerFunc {
+func RenderTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
@@ -98,6 +89,10 @@ func RenderTemplates(service *templates.Service) http.HandlerFunc {
 			return
 		}
 		renderedBody, err := service.Render(name, body)
+		if err != nil && err.Error() == "template not found" {
+			NotFound(w, err)
+			return
+		}
 		if err != nil {
 			InternalServerError(w, err)
 			return

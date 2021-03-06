@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/odpf/siren/domain"
 	"gorm.io/gorm"
@@ -105,6 +106,9 @@ func (r Repository) Render(name string, body map[string]string) (string, error) 
 	templateFromDB, err := r.GetByName(name)
 	if err != nil {
 		return "", err
+	}
+	if templateFromDB == nil {
+		return "", errors.New("template not found")
 	}
 	convertedTemplate, err := templateFromDB.toDomain()
 	enrichedBody := enrichWithDefaults(convertedTemplate.Variables, body)

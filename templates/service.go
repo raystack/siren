@@ -11,15 +11,15 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB) *Service {
+func NewService(db *gorm.DB) domain.TemplatesService {
 	return &Service{NewRepository(db)}
 }
 
-func (service *Service) Migrate() error {
+func (service Service) Migrate() error {
 	return service.repository.Migrate()
 }
 
-func (service *Service) Upsert(template *domain.Template) (*domain.Template, error) {
+func (service Service) Upsert(template *domain.Template) (*domain.Template, error) {
 	t := &Template{}
 	t, err := t.fromDomain(template)
 	if err != nil {
@@ -32,7 +32,7 @@ func (service *Service) Upsert(template *domain.Template) (*domain.Template, err
 	return upsertedTemplate.toDomain()
 }
 
-func (service *Service) Index(tag string) ([]domain.Template, error) {
+func (service Service) Index(tag string) ([]domain.Template, error) {
 	templates, err := service.repository.Index(tag)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (service *Service) Index(tag string) ([]domain.Template, error) {
 	return domainTemplates, nil
 }
 
-func (service *Service) GetByName(name string) (*domain.Template, error) {
+func (service Service) GetByName(name string) (*domain.Template, error) {
 	template, err := service.repository.GetByName(name)
 	if err != nil || template == nil {
 		return nil, err
@@ -53,10 +53,10 @@ func (service *Service) GetByName(name string) (*domain.Template, error) {
 	return template.toDomain()
 }
 
-func (service *Service) Delete(name string) error {
+func (service Service) Delete(name string) error {
 	return service.repository.Delete(name)
 }
 
-func (service *Service) Render(name string, body map[string]string) (string, error) {
+func (service Service) Render(name string, body map[string]string) (string, error) {
 	return service.repository.Render(name, body)
 }

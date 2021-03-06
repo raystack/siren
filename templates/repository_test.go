@@ -430,13 +430,12 @@ func (s *RepositoryTestSuite) TestRender() {
 	})
 
 	s.Run("should return error if template not found", func() {
-		expectedErrorMessage := "random error"
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New(expectedErrorMessage))
+		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 		inputBody := make(map[string]string)
 		inputBody["color"] = "brown"
 		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.Equal(err.Error(), expectedErrorMessage)
+		s.Equal(err.Error(), "template not found")
 		s.Equal("", renderedBody)
 	})
 
