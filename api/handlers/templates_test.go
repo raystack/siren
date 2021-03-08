@@ -66,6 +66,72 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 		assert.Equal(t, expectedStringBody, w.Body.String())
 	})
 
+	t.Run("should return 400 Bad Request if name is empty in request body", func(t *testing.T) {
+		expectedError := errors.New("name cannot be empty")
+		mockedTemplatesService := &mocks.TemplatesService{}
+		dummyTemplate := &domain.Template{
+			Name: "", Body: "bar",
+			Tags: []string{"test"},
+			Variables: []domain.Variable{{
+				Name:        "test-name",
+				Default:     "test-default",
+				Description: "test-description",
+				Type:        "test-type",
+			}},
+		}
+
+		payload := []byte(`{"name":"", "body": "bar", "tags": ["test"], "variables": [{"name": "test-name", "default":"test-default", "description": "test-description", "type": "test-type" }]}`)
+
+		mockedTemplatesService.On("Upsert", dummyTemplate).Return(nil, expectedError).Once()
+		r, err := http.NewRequest(http.MethodPut, "/templates", bytes.NewBuffer(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		expectedStatusCode := http.StatusBadRequest
+		expectedStringBody := "{\"code\":400,\"message\":\"name cannot be empty\",\"data\":null}"
+
+		handler.ServeHTTP(w, r)
+
+		assert.Equal(t, expectedStatusCode, w.Code)
+		assert.Equal(t, expectedStringBody, w.Body.String())
+		mockedTemplatesService.AssertCalled(t, "Upsert", dummyTemplate)
+	})
+
+	t.Run("should return 400 Bad Request if body is empty in request body", func(t *testing.T) {
+		expectedError := errors.New("body cannot be empty")
+		mockedTemplatesService := &mocks.TemplatesService{}
+		dummyTemplate := &domain.Template{
+			Name: "foo", Body: "",
+			Tags: []string{"test"},
+			Variables: []domain.Variable{{
+				Name:        "test-name",
+				Default:     "test-default",
+				Description: "test-description",
+				Type:        "test-type",
+			}},
+		}
+
+		payload := []byte(`{"name":"foo", "body": "", "tags": ["test"], "variables": [{"name": "test-name", "default":"test-default", "description": "test-description", "type": "test-type" }]}`)
+
+		mockedTemplatesService.On("Upsert", dummyTemplate).Return(nil, expectedError).Once()
+		r, err := http.NewRequest(http.MethodPut, "/templates", bytes.NewBuffer(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		expectedStatusCode := http.StatusBadRequest
+		expectedStringBody := "{\"code\":400,\"message\":\"body cannot be empty\",\"data\":null}"
+
+		handler.ServeHTTP(w, r)
+
+		assert.Equal(t, expectedStatusCode, w.Code)
+		assert.Equal(t, expectedStringBody, w.Body.String())
+		mockedTemplatesService.AssertCalled(t, "Upsert", dummyTemplate)
+	})
+
 	t.Run("should return 500 Error on failure", func(t *testing.T) {
 		expectedError := errors.New("random error")
 		mockedTemplatesService := &mocks.TemplatesService{}

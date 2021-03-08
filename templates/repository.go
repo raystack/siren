@@ -85,12 +85,12 @@ func (r Repository) Delete(name string) error {
 	return result.Error
 }
 
-func enrichWithDefaults(variables []domain.Variable, body map[string]string) map[string]string {
+func enrichWithDefaults(variables []domain.Variable, requestVariables map[string]string) map[string]string {
 	result := make(map[string]string)
 	for i := 0; i < len(variables); i++ {
 		name := variables[i].Name
 		defaultValue := variables[i].Default
-		val, ok := body[name]
+		val, ok := requestVariables[name]
 		if ok {
 			result[name] = val
 		} else {
@@ -100,9 +100,9 @@ func enrichWithDefaults(variables []domain.Variable, body map[string]string) map
 	return result
 }
 
-var templateParser = template.New("test").Delims(leftDelim, rightDelim).Parse
+var templateParser = template.New("parser").Delims(leftDelim, rightDelim).Parse
 
-func (r Repository) Render(name string, body map[string]string) (string, error) {
+func (r Repository) Render(name string, requestVariables map[string]string) (string, error) {
 	templateFromDB, err := r.GetByName(name)
 	if err != nil {
 		return "", err
@@ -111,13 +111,13 @@ func (r Repository) Render(name string, body map[string]string) (string, error) 
 		return "", errors.New("template not found")
 	}
 	convertedTemplate, err := templateFromDB.toDomain()
-	enrichedBody := enrichWithDefaults(convertedTemplate.Variables, body)
+	enrichedVariables := enrichWithDefaults(convertedTemplate.Variables, requestVariables)
 	var tpl bytes.Buffer
 	tmpl, err := templateParser(convertedTemplate.Body)
 	if err != nil {
 		return "", err
 	}
-	err = tmpl.Execute(&tpl, enrichedBody)
+	err = tmpl.Execute(&tpl, enrichedVariables)
 	if err != nil {
 		return "", err
 	}

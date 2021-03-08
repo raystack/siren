@@ -18,6 +18,14 @@ func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
 			return
 		}
 		createdTemplate, err := service.Upsert(&template)
+		if err != nil && err.Error() == ("name cannot be empty") {
+			BadRequest(w, err)
+			return
+		}
+		if err != nil && err.Error() == ("body cannot be empty") {
+			BadRequest(w, err)
+			return
+		}
 		if err != nil {
 			InternalServerError(w, err)
 			return
