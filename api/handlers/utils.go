@@ -7,8 +7,8 @@ import (
 
 const (
 	defaultErrorMessage    = "Internal server error"
-	BadRequestErrorMessage = "Bad Request"
-	NotFoundErrorMessage   = "Not Found"
+	badRequestErrorMessage = "Bad Request"
+	notFoundErrorMessage   = "Not Found"
 )
 
 func returnJSON(w http.ResponseWriter, data interface{}) {
@@ -16,22 +16,22 @@ func returnJSON(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
-type ResponseError struct {
+type responseError struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-func InternalServerError(w http.ResponseWriter, err error) (ResponseError, error) {
+func internalServerError(w http.ResponseWriter, err error) (responseError, error) {
 	return sendError(w, defaultErrorMessage, http.StatusInternalServerError, nil)
 }
 
-func BadRequest(w http.ResponseWriter, err error) {
+func badRequest(w http.ResponseWriter, err error) {
 	var errMessage string
 	if err != nil {
 		errMessage = err.Error()
 	} else {
-		errMessage = BadRequestErrorMessage
+		errMessage = badRequestErrorMessage
 	}
 
 	sendError(w, errMessage, http.StatusBadRequest, nil)
@@ -42,18 +42,18 @@ func NotFound(w http.ResponseWriter, err error) {
 	if err != nil {
 		errMessage = err.Error()
 	} else {
-		errMessage = NotFoundErrorMessage
+		errMessage = notFoundErrorMessage
 	}
 
 	sendError(w, errMessage, http.StatusNotFound, nil)
 }
 
-func sendError(w http.ResponseWriter, errorMessage string, code int, data interface{}) (ResponseError, error) {
+func sendError(w http.ResponseWriter, errorMessage string, code int, data interface{}) (responseError, error) {
 	if code == 0 {
 		code = http.StatusInternalServerError
 	}
 
-	response := ResponseError{
+	response := responseError{
 		Code:    code,
 		Message: errorMessage,
 		Data:    data,
