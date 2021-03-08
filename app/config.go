@@ -5,9 +5,9 @@ import (
 	"github.com/jeremywohl/flatten"
 	"github.com/mcuadros/go-defaults"
 	"github.com/mitchellh/mapstructure"
+	"github.com/odpf/siren/domain"
 	"github.com/spf13/viper"
 	"strings"
-	"github.com/odpf/siren/domain"
 )
 
 // LoadConfig returns application configuration
