@@ -14,6 +14,6 @@ func logger(next http.Handler) http.Handler {
 func SwaggerMiddleware(next http.Handler) http.Handler {
 	return middleware.SwaggerUI(middleware.SwaggerUIOpts{
 		SpecURL: "/swagger.yaml",
-		Path: "docs",
+		Path:    "docs",
 	}, next)
 }

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
 	"net/http"
@@ -39,9 +39,7 @@ func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
 func IndexTemplates(service domain.TemplatesService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.URL.Query().Get("tag")
-		var templates []domain.Template
-		var err error
-		templates, err = service.Index(tag)
+		templates, err := service.Index(tag)
 		if err != nil {
 			internalServerError(w, err)
 			return
@@ -62,7 +60,7 @@ func GetTemplates(service domain.TemplatesService) http.HandlerFunc {
 			return
 		}
 		if templates == nil {
-			NotFound(w, fmt.Errorf("not found"))
+			NotFound(w, errors.New(notFoundErrorMessage))
 			return
 		}
 		returnJSON(w, templates)
