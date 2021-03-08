@@ -12,6 +12,14 @@ Siren requires the following dependencies:
 * Golang (version 1.15 or above)
 * Git
 
+Run the application dependecies using Docker:
+
+```
+$ docker-compose up
+```
+
+Update the configs(db credentials etc.) as per your dev machine and docker configs.
+
 Run the following commands to compile from source
 
 ```
@@ -23,7 +31,13 @@ $ go build main.go
 To run tests locally
 
 ```
-$ go test
+$ make test
+```
+
+To run tests locally with coverage
+
+```
+$ make test-coverage
 ```
 
 To run server locally
@@ -31,6 +45,9 @@ To run server locally
 ```
 $ go run main.go serve
 ```
+
+To view swagger docs of HTTP APIs visit `/docs` route on the server.
+e.g. [http://localhost:3000/docs](http://localhost:3000/docs)
 
 #### Config
 
