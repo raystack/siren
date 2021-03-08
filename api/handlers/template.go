@@ -14,20 +14,20 @@ func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
 		var template domain.Template
 		err := json.NewDecoder(r.Body).Decode(&template)
 		if err != nil {
-			BadRequest(w, err)
+			badRequest(w, err)
 			return
 		}
 		createdTemplate, err := service.Upsert(&template)
 		if err != nil && err.Error() == ("name cannot be empty") {
-			BadRequest(w, err)
+			badRequest(w, err)
 			return
 		}
 		if err != nil && err.Error() == ("body cannot be empty") {
-			BadRequest(w, err)
+			badRequest(w, err)
 			return
 		}
 		if err != nil {
-			InternalServerError(w, err)
+			internalServerError(w, err)
 			return
 		}
 		returnJSON(w, createdTemplate)
@@ -43,7 +43,7 @@ func IndexTemplates(service domain.TemplatesService) http.HandlerFunc {
 		var err error
 		templates, err = service.Index(tag)
 		if err != nil {
-			InternalServerError(w, err)
+			internalServerError(w, err)
 			return
 		}
 		returnJSON(w, templates)
@@ -58,7 +58,7 @@ func GetTemplates(service domain.TemplatesService) http.HandlerFunc {
 		name := params["name"]
 		templates, err := service.GetByName(name)
 		if err != nil {
-			InternalServerError(w, err)
+			internalServerError(w, err)
 			return
 		}
 		if templates == nil {
@@ -77,7 +77,7 @@ func DeleteTemplates(service domain.TemplatesService) http.HandlerFunc {
 		name := params["name"]
 		err := service.Delete(name)
 		if err != nil {
-			InternalServerError(w, err)
+			internalServerError(w, err)
 			return
 		}
 		returnJSON(w, nil)
@@ -93,7 +93,7 @@ func RenderTemplates(service domain.TemplatesService) http.HandlerFunc {
 		var body map[string]string
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
-			BadRequest(w, err)
+			badRequest(w, err)
 			return
 		}
 		renderedBody, err := service.Render(name, body)
@@ -102,7 +102,7 @@ func RenderTemplates(service domain.TemplatesService) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			InternalServerError(w, err)
+			internalServerError(w, err)
 			return
 		}
 		returnJSON(w, renderedBody)
