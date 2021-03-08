@@ -48,7 +48,7 @@ definitions:
         x-go-name: Type
     type: object
     x-go-package: github.com/odpf/siren/domain
-host: siren.golabs.io
+host: localhost:3000
 info:
   description: Documentation of our Siren API.
   title: Siren.
@@ -66,13 +66,19 @@ paths:
   /templates:
     get:
       description: Templates list call
-      operationId: templates
+      operationId: listTemplatesRequest
+      parameters:
+      - description: List Template Request
+        in: query
+        name: tag
+        type: string
+        x-go-name: Tag
       responses:
         "200":
           $ref: '#/responses/listResponse'
       tags:
       - templates
-    post:
+    put:
       operationId: createTemplateRequest
       parameters:
       - description: Create template request
