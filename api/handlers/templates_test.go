@@ -209,7 +209,7 @@ func TestTemplates_GetTemplates(t *testing.T) {
 		w := httptest.NewRecorder()
 		handler := handlers.GetTemplates(mockedTemplatesService)
 		expectedStatusCode := http.StatusNotFound
-		expectedStringBody := "{\"code\":404,\"message\":\"not found\",\"data\":null}"
+		expectedStringBody := "{\"code\":404,\"message\":\"Not Found\",\"data\":null}"
 
 		handler.ServeHTTP(w, r)
 
