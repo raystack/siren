@@ -10,10 +10,17 @@ type templatesResponse struct {
 
 //-------------------------
 //-------------------------
-// swagger:route GET /templates templates templates
+// swagger:route GET /templates templates listTemplatesRequest
 // Templates list call
 // responses:
 //   200: listResponse
+
+// swagger:parameters listTemplatesRequest
+type listTemplatesRequest struct {
+	// List Template Request
+	// in:query
+	Tag string `json:"tag"`
+}
 
 // List templates response
 // swagger:response listResponse
@@ -23,7 +30,7 @@ type listResponse struct {
 }
 
 //-------------------------
-// swagger:route POST /templates templates createTemplateRequest
+// swagger:route PUT /templates templates createTemplateRequest
 // Templates does some amazing stuff.
 // responses:
 //   200: templatesResponse

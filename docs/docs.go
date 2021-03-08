@@ -5,7 +5,7 @@
 //     Schemes: http
 //     BasePath: /
 //     Version: 1.0.0
-//     Host: siren.golabs.io
+//     Host: localhost:3000
 //
 //     Schemes: http, https
 //     Consumes:
