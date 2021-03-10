@@ -11,7 +11,7 @@ type Template struct {
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Name      string `gorm:"index:idx_name,unique"`
+	Name      string `gorm:"index:idx_template_name,unique"`
 	Body      string
 	Tags      pq.StringArray `gorm:"type:text[];index:idx_tags,type:gin"`
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
