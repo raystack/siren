@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+
 func TestService_GetByName(t *testing.T) {
 	t.Run("should call repository GetByName method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &TemplatesRepositoryMock{}
@@ -130,7 +131,7 @@ func TestService_Upsert(t *testing.T) {
 		result, err := dummyService.Upsert(dummyTemplate)
 		assert.EqualError(t, err, "name cannot be empty")
 		assert.Nil(t, result)
-		repositoryMock.AssertNotCalled(t, "Upsert")
+		repositoryMock.AssertNotCalled(t, "UpsertSlack")
 	})
 
 	t.Run("should perform body validation", func(t *testing.T) {
@@ -150,10 +151,10 @@ func TestService_Upsert(t *testing.T) {
 		result, err := dummyService.Upsert(dummyTemplate)
 		assert.EqualError(t, err, "body cannot be empty")
 		assert.Nil(t, result)
-		repositoryMock.AssertNotCalled(t, "Upsert")
+		repositoryMock.AssertNotCalled(t, "UpsertSlack")
 	})
 
-	t.Run("should call repository Upsert method and return result in domain's type", func(t *testing.T) {
+	t.Run("should call repository UpsertSlack method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &TemplatesRepositoryMock{}
 		dummyService := Service{repository: repositoryMock}
 		dummyTemplate := &domain.Template{

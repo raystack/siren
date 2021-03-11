@@ -27,6 +27,7 @@ func New(container *service.Container) *mux.Router {
 	r.Methods("GET").Path("/templates/{name}").Handler(handlers.GetTemplates(container.TemplatesService))
 	r.Methods("DELETE").Path("/templates/{name}").Handler(handlers.DeleteTemplates(container.TemplatesService))
 	r.Methods("POST").Path("/templates/{name}/render").Handler(handlers.RenderTemplates(container.TemplatesService))
+	r.Methods("PUT").Path("/alertingCredentials/teams/{teamName}").Handler(handlers.UpdateAlertCredentials(container.AlertmanagerService))
 
 	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService))
 	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService))

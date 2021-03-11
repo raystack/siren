@@ -1,0 +1,2 @@
+[[- /*gotype: github.com/odpf/siren/alertCredentials.EntityCredentials*/ -]]
+        [[.Entity]][[range $team := .Teams]][[$team.Name]][[end]]
