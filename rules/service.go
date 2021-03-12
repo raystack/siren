@@ -29,6 +29,15 @@ func (service Service) Upsert(rule *domain.Rule) (*domain.Rule, error) {
 	return upsertedRule.toDomain()
 }
 
-func (service Service) Get(s string) ([]domain.Rule, error) {
-	panic("implement me")
+func (service Service) Get(namespace, entity, groupName, status, template string) ([]domain.Rule, error) {
+	rules, err := service.repository.Get(namespace, entity, groupName, status, template)
+	if err != nil {
+		return nil, err
+	}
+	domainRules := make([]domain.Rule, 0, len(rules))
+	for i := 0; i < len(rules); i++ {
+		r, _ := rules[i].toDomain()
+		domainRules = append(domainRules, *r)
+	}
+	return domainRules, nil
 }

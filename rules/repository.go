@@ -16,7 +16,7 @@ const (
 	namePrefix = "siren_api"
 )
 
-type Variable struct {
+type variable struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Value       string `json:"value"`
@@ -24,7 +24,7 @@ type Variable struct {
 }
 
 type Variables struct {
-	Variables []Variable `json:"variables"`
+	Variables []variable `json:"variables"`
 }
 
 // Repository talks to the store to read or insert data
@@ -75,11 +75,16 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
 		result = tx.Where(fmt.Sprintf("namespace = '%s' AND entity = '%s' AND group_name = '%s'",
 			rule.Namespace, rule.Entity, rule.GroupName)).Find(&rulesWithinGroup)
-
+		if result.Error != nil {
+			return result.Error
+		}
 		renderedBodyForThisGroup := ""
 		for i := 0; i < len(rulesWithinGroup); i++ {
+			if rulesWithinGroup[i].Status == "disabled" {
+				continue
+			}
 			inputValue := make(map[string]string)
-			var variables []Variable
+			var variables []variable
 			jsonBlob := []byte(rulesWithinGroup[i].Variables)
 			_ = json.Unmarshal(jsonBlob, &variables)
 			for _, v := range variables {
@@ -92,15 +97,20 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 			}
 			renderedBodyForThisGroup += renderedBody
 		}
-		if result.Error != nil {
-			return result.Error
+		ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
+		if renderedBodyForThisGroup == "" {
+			//all alerts disabled in this group so we can delete the rule group
+			err := r.client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
+			if err != nil {
+				return err
+			}
+			return nil
 		}
 		var ruleNodes []rulefmt.RuleNode
 		err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
 		if err != nil {
 			fmt.Println(err)
 		}
-		ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
 		y := rwrulefmt.RuleGroup{
 			RuleGroup: rulefmt.RuleGroup{
 				Name:  rule.GroupName,
@@ -119,6 +129,42 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 	return &existingRule, err
 }
 
-func (r Repository) Get(string) ([]Rule, error) {
-	return nil, nil
+func (r Repository) Get(namespace string, entity string, groupName string, status string, template string) ([]Rule, error) {
+	var rules []Rule
+	selectQuery := `SELECT * from rules`
+	selectQueryWithWhereClause := `SELECT * from rules WHERE `
+	var filterConditions []string
+	if namespace != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("namespace = '%s' ", namespace))
+	}
+	if entity != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("entity = '%s' ", entity))
+	}
+	if groupName != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("group_name = '%s' ", groupName))
+	}
+	if status != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("status = '%s' ", status))
+	}
+	if template != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("template = '%s' ", template))
+	}
+	var finalSelectQuery string
+	if len(filterConditions) == 0 {
+		finalSelectQuery = selectQuery
+	} else {
+		finalSelectQuery = selectQueryWithWhereClause
+		for i := 0; i < len(filterConditions); i++ {
+			if i == 0 {
+				finalSelectQuery += filterConditions[i]
+			} else {
+				finalSelectQuery += " AND " + filterConditions[i]
+			}
+		}
+	}
+	result := r.db.Raw(finalSelectQuery).Scan(&rules)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return rules, nil
 }

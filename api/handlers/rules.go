@@ -24,3 +24,21 @@ func UpsertRule(service domain.RuleService) http.HandlerFunc {
 		return
 	}
 }
+
+// GetRules handler
+func GetRules(service domain.RuleService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		namespace := r.URL.Query().Get("namespace")
+		entity := r.URL.Query().Get("entity")
+		groupName := r.URL.Query().Get("group_name")
+		status := r.URL.Query().Get("status")
+		template := r.URL.Query().Get("template")
+		rules, err := service.Get(namespace, entity, groupName, status, template)
+		if err != nil {
+			internalServerError(w, err)
+			return
+		}
+		returnJSON(w, rules)
+		return
+	}
+}
