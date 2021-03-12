@@ -23,6 +23,13 @@ type variable struct {
 	Description string `json:"description"`
 }
 
+type cortexCaller interface {
+	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
+	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
+	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
+	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
+}
+
 type Variables struct {
 	Variables []variable `json:"variables"`
 }
@@ -30,7 +37,7 @@ type Variables struct {
 // Repository talks to the store to read or insert data
 type Repository struct {
 	db     *gorm.DB
-	client *cortexClient.CortexClient
+	client cortexCaller
 }
 
 // NewRepository returns repository struct
