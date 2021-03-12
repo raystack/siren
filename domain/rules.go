@@ -25,6 +25,6 @@ type Rule struct {
 // RuleService interface
 type RuleService interface {
 	Upsert(*Rule) (*Rule, error)
-	Get(string) ([]Rule, error)
+	Get(string, string, string, string, string) ([]Rule, error)
 	Migrate() error
 }

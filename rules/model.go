@@ -2,7 +2,6 @@ package rules
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/odpf/siren/domain"
 	"time"
 )
@@ -42,7 +41,6 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 	var variables []domain.RuleVariable
 	jsonBlob := []byte(rule.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)
-	fmt.Println("got from repo", rule)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +61,6 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 //Repository interface
 type RuleRepository interface {
 	Upsert(*Rule) (*Rule, error)
-	Get(string) ([]Rule, error)
+	Get(string, string, string, string, string) ([]Rule, error)
 	Migrate() error
 }
