@@ -60,7 +60,7 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 
 //Repository interface
 type RuleRepository interface {
-	Upsert(*Rule) (*Rule, error)
+	Upsert(*Rule, cortexCaller) (*Rule, error)
 	Get(string, string, string, string, string) ([]Rule, error)
 	Migrate() error
 }
