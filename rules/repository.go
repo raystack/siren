@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/templates"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -66,7 +67,44 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
 	var rulesWithinGroup []Rule
-	err := r.db.Transaction(func(tx *gorm.DB) error {
+
+	service := templates.NewService(r.db)
+	template, err := service.GetByName(rule.Template)
+	templateVariables := template.Variables
+
+	var ruleVariables []domain.RuleVariable
+	jsonBlob := []byte(rule.Variables)
+	err = json.Unmarshal(jsonBlob, &ruleVariables)
+	if err != nil {
+		return nil, err
+	}
+	var finalRuleVariables []domain.RuleVariable
+	for j := 0; j < len(templateVariables); j++ {
+		variableExist := false
+		matchingIndex := 0
+		for k := 0; k < len(ruleVariables); k++ {
+			if ruleVariables[k].Name == templateVariables[j].Name {
+				variableExist = true
+				matchingIndex = k
+			}
+		}
+		if !variableExist {
+			finalRuleVariables = append(finalRuleVariables, domain.RuleVariable{
+				Name:        templateVariables[j].Name,
+				Type:        templateVariables[j].Type,
+				Value:       templateVariables[j].Default,
+				Description: templateVariables[j].Description,
+			})
+		} else {
+			finalRuleVariables = append(finalRuleVariables, ruleVariables[matchingIndex])
+		}
+	}
+	jsonBytes, err := json.Marshal(finalRuleVariables)
+	rule.Variables = string(jsonBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
 		if result.Error != nil {
 			return result.Error
@@ -107,6 +145,7 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 		ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
 		if renderedBodyForThisGroup == "" {
 			//all alerts disabled in this group so we can delete the rule group
+			//manually check if group exist and delete only when it exist
 			err := r.client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
 			if err != nil {
 				return err
