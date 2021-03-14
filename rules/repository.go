@@ -24,34 +24,18 @@ type variable struct {
 	Description string `json:"description"`
 }
 
-type cortexCaller interface {
-	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
-	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
-	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
-	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
-}
-
 type Variables struct {
 	Variables []variable `json:"variables"`
 }
 
 // Repository talks to the store to read or insert data
 type Repository struct {
-	db     *gorm.DB
-	client cortexCaller
+	db *gorm.DB
 }
 
 // NewRepository returns repository struct
 func NewRepository(db *gorm.DB) *Repository {
-	cfg := cortexClient.Config{
-		Address:         "http://localhost:8080",
-		UseLegacyRoutes: true,
-	}
-	client, err := cortexClient.New(cfg)
-	if err != nil {
-		return nil
-	}
-	return &Repository{db: db, client: client}
+	return &Repository{db: db}
 }
 
 func (r Repository) Migrate() error {
@@ -62,7 +46,57 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
-func (r Repository) Upsert(rule *Rule) (*Rule, error) {
+func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, db *gorm.DB) error {
+	renderedBodyForThisGroup := ""
+	for i := 0; i < len(rulesWithinGroup); i++ {
+		if rulesWithinGroup[i].Status == "disabled" {
+			continue
+		}
+		inputValue := make(map[string]string)
+		var variables []variable
+		jsonBlob := []byte(rulesWithinGroup[i].Variables)
+		_ = json.Unmarshal(jsonBlob, &variables)
+		for _, v := range variables {
+			inputValue[v.Name] = v.Value
+		}
+		service := templates.NewService(db)
+		renderedBody, err := service.Render(rulesWithinGroup[i].Template, inputValue)
+		if err != nil {
+			return nil
+		}
+		renderedBodyForThisGroup += renderedBody
+	}
+	ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
+	if renderedBodyForThisGroup == "" {
+		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
+		if err != nil {
+			if err.Error() == "requested resource not found" {
+				return nil
+			} else {
+				return err
+			}
+		}
+		return nil
+	}
+	var ruleNodes []rulefmt.RuleNode
+	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
+	if err != nil {
+		fmt.Println(err)
+	}
+	y := rwrulefmt.RuleGroup{
+		RuleGroup: rulefmt.RuleGroup{
+			Name:  rule.GroupName,
+			Rules: ruleNodes,
+		},
+	}
+	err = client.CreateRuleGroup(ctx, rule.Namespace, y)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r Repository) Upsert(rule *Rule, client cortexCaller) (*Rule, error) {
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
 		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
@@ -123,49 +157,7 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 		if result.Error != nil {
 			return result.Error
 		}
-		renderedBodyForThisGroup := ""
-		for i := 0; i < len(rulesWithinGroup); i++ {
-			if rulesWithinGroup[i].Status == "disabled" {
-				continue
-			}
-			inputValue := make(map[string]string)
-			var variables []variable
-			jsonBlob := []byte(rulesWithinGroup[i].Variables)
-			_ = json.Unmarshal(jsonBlob, &variables)
-			for _, v := range variables {
-				inputValue[v.Name] = v.Value
-			}
-			service := templates.NewService(r.db)
-			renderedBody, err := service.Render(rulesWithinGroup[i].Template, inputValue)
-			if err != nil {
-				return nil
-			}
-			renderedBodyForThisGroup += renderedBody
-		}
-		ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
-		if renderedBodyForThisGroup == "" {
-			err := r.client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
-			if err != nil {
-				if err.Error() == "requested resource not found" {
-					return nil
-				} else {
-					return err
-				}
-			}
-			return nil
-		}
-		var ruleNodes []rulefmt.RuleNode
-		err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
-		if err != nil {
-			fmt.Println(err)
-		}
-		y := rwrulefmt.RuleGroup{
-			RuleGroup: rulefmt.RuleGroup{
-				Name:  rule.GroupName,
-				Rules: ruleNodes,
-			},
-		}
-		err = r.client.CreateRuleGroup(ctx, rule.Namespace, y)
+		err = postRuleGroupWith(rule, rulesWithinGroup, client, r.db)
 		if err != nil {
 			return err
 		}
