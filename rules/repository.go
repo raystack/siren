@@ -144,11 +144,13 @@ func (r Repository) Upsert(rule *Rule) (*Rule, error) {
 		}
 		ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
 		if renderedBodyForThisGroup == "" {
-			//all alerts disabled in this group so we can delete the rule group
-			//manually check if group exist and delete only when it exist
 			err := r.client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
 			if err != nil {
-				return err
+				if err.Error() == "requested resource not found" {
+					return nil
+				} else {
+					return err
+				}
 			}
 			return nil
 		}
