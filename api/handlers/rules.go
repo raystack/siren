@@ -16,6 +16,10 @@ func UpsertRule(service domain.RuleService) http.HandlerFunc {
 			return
 		}
 		upsertedRule, err := service.Upsert(&rule)
+		if err != nil && err.Error() == ("template not found") {
+			badRequest(w, err)
+			return
+		}
 		if err != nil {
 			internalServerError(w, err)
 			return
