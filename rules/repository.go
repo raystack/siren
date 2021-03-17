@@ -7,7 +7,6 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/templates"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
@@ -46,7 +45,7 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
-func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, db *gorm.DB) error {
+func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, templateService domain.TemplatesService) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if rulesWithinGroup[i].Status == "disabled" {
@@ -59,8 +58,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 		for _, v := range variables {
 			inputValue[v.Name] = v.Value
 		}
-		service := templates.NewService(db)
-		renderedBody, err := service.Render(rulesWithinGroup[i].Template, inputValue)
+		renderedBody, err := templateService.Render(rulesWithinGroup[i].Template, inputValue)
 		if err != nil {
 			return err
 		}
@@ -93,14 +91,12 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 	return err
 }
 
-func (r Repository) Upsert(rule *Rule, client cortexCaller) (*Rule, error) {
+func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
 		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
 	var rulesWithinGroup []Rule
-
-	service := templates.NewService(r.db)
-	template, err := service.GetByName(rule.Template)
+	template, err := templatesService.GetByName(rule.Template)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +153,7 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller) (*Rule, error) {
 		if result.Error != nil {
 			return result.Error
 		}
-		err = postRuleGroupWith(rule, rulesWithinGroup, client, r.db)
+		err = postRuleGroupWith(rule, rulesWithinGroup, client, templatesService)
 		if err != nil {
 			return err
 		}

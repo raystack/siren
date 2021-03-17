@@ -5,8 +5,8 @@ import (
 	"database/sql/driver"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
-	"github.com/odpf/siren/templates"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"regexp"
@@ -46,24 +46,36 @@ func TestRepository(t *testing.T) {
 }
 
 func (s *RepositoryTestSuite) TestUpsert() {
+	expectedTemplate := &domain.Template{
+		ID:        10,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      "tmpl",
+		Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
+		Tags:      []string{"baz"},
+		Variables: []domain.Variable{{
+			Name:        "for",
+			Default:     "10m",
+			Description: "test",
+			Type:        "string",
+		}, {Name: "team",
+			Default:     "gojek",
+			Description: "test",
+			Type:        "string"},
+		}}
+	dummyTemplateBody := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '20m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
+
 	s.Run("should insert rule merged with defaults and call cortex APIs", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
+
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -96,19 +108,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		expectedTemplateRowsSecondQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -118,30 +117,21 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnRows(expectedTemplateRowsSecondQuery)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 	})
 
 	s.Run("should update rule merged with defaults and call cortex APIs", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -175,19 +165,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		expectedTemplateRowsSecondQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
@@ -195,30 +172,21 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			expectedRule.Variables, expectedRule.ID).WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnRows(expectedTemplateRowsSecondQuery)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 	})
 
 	s.Run("should rollback update if cortex API call fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -252,19 +220,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		expectedTemplateRowsSecondQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
@@ -272,9 +227,8 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			expectedRule.Variables, expectedRule.ID).WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnRows(expectedTemplateRowsSecondQuery)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -284,21 +238,13 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback insert if cortex API call fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -331,19 +277,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
-
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		expectedTemplateRowsSecondQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -354,9 +287,8 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnRows(expectedTemplateRowsSecondQuery)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -366,19 +298,12 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback if insert query fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -399,15 +324,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Status:    "enabled",
 			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}
-
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -416,7 +332,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			expectedRule.Variables).
 			WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -427,18 +343,11 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback if first select query fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -447,16 +356,10 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Status:    "enabled",
 			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -467,20 +370,13 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback if second select query fails", func() {
 		mockClient := &cortexCallerMock{}
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -507,15 +403,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
-
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -526,7 +413,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -538,21 +425,14 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should disable alerts if no error from cortex", func() {
 		mockClient := &cortexCallerMock{}
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(nil)
-
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
+
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -580,14 +460,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -598,7 +470,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		mockClient.AssertCalled(s.T(), "DeleteRuleGroup", mock.Anything, "foo", "bar")
@@ -609,22 +481,14 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback if delete rule group call fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("random error"))
-
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -651,14 +515,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
-
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -670,7 +526,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -680,22 +536,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should handle deletion of non-existent rule group", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("requested resource not found"))
-
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
+
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -722,14 +571,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
-
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -741,7 +582,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -751,8 +592,9 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should return error if template get query fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("GetByName", "tmpl").Return(nil, errors.New("random error"))
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -762,8 +604,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
 		}
 
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnError(errors.New("random error"))
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -773,22 +614,14 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should rollback if template get query fails while rendering", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return("", errors.New("random error"))
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -821,14 +654,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -838,9 +663,8 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -850,17 +674,9 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should return error if rule variables json unmarshalling fails", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "test",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -870,15 +686,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Variables: `{}`,
 		}
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "json: cannot unmarshal object into Go value of type []domain.RuleVariable")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -888,22 +696,24 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should return error if rule body yaml unmarshalling fail", func() {
 		mockClient := &cortexCallerMock{}
-		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		secondSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedTemplate := &templates.Template{
+		mockTemplateService := &mocks.TemplatesService{}
+		badTemplate := &domain.Template{
 			ID:        10,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 			Name:      "tmpl",
 			Body:      "abcd",
 			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
+			Variables: expectedTemplate.Variables,
 		}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(badTemplate.Body, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(badTemplate, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -936,19 +746,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		expectedTemplateRowsSecondQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
@@ -958,9 +755,8 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
-		s.dbmock.ExpectQuery(secondSelectTemplateQuery).WillReturnRows(expectedTemplateRowsSecondQuery)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `abcd` into []rulefmt.RuleNode")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -970,20 +766,13 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should store disabled alerts", func() {
 		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(nil)
-		firstSelectTemplateQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'tmpl'`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
 		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
-		expectedTemplate := &templates.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "tmpl",
-			Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"for","type":"string","default":"10m","description":"test"},{"name":"team","type":"string","default":"gojek","description":"test"}]`,
-		}
 		input := &Rule{
 			Namespace: "foo",
 			GroupName: "bar",
@@ -1017,14 +806,6 @@ func (s *RepositoryTestSuite) TestUpsert() {
 				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
 				expectedRule.Status, expectedRule.Variables)
 
-		expectedTemplateRowsFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectTemplateQuery).WillReturnRows(expectedTemplateRowsFirstQuery)
-
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
@@ -1033,7 +814,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient)
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
