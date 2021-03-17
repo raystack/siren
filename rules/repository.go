@@ -62,7 +62,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 		service := templates.NewService(db)
 		renderedBody, err := service.Render(rulesWithinGroup[i].Template, inputValue)
 		if err != nil {
-			return nil
+			return err
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
@@ -81,7 +81,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 	var ruleNodes []rulefmt.RuleNode
 	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	y := rwrulefmt.RuleGroup{
 		RuleGroup: rulefmt.RuleGroup{
@@ -90,10 +90,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 		},
 	}
 	err = client.CreateRuleGroup(ctx, rule.Namespace, y)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (r Repository) Upsert(rule *Rule, client cortexCaller) (*Rule, error) {
@@ -104,6 +101,9 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller) (*Rule, error) {
 
 	service := templates.NewService(r.db)
 	template, err := service.GetByName(rule.Template)
+	if err != nil {
+		return nil, err
+	}
 	templateVariables := template.Variables
 
 	var ruleVariables []domain.RuleVariable
