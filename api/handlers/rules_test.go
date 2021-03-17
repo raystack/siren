@@ -79,6 +79,37 @@ func TestRules_UpsertRules(t *testing.T) {
 		mockedRulesService.AssertNotCalled(t, "Upsert", dummyRule)
 	})
 
+	t.Run("should return 400 Bad Request if template not found", func(t *testing.T) {
+		mockedRulesService := &mocks.RuleService{}
+		dummyRule := &domain.Rule{
+			Namespace: "foo",
+			Entity:    "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		payload := []byte(`{"namespace":"foo","group_name":"test-group","entity":"gojek","template":"test-tmpl","status":"enabled", "variables": [{"name": "test-name", "value":"test-value", "description": "test-description", "type": "test-type" }]}`)
+
+		mockedRulesService.On("Upsert", dummyRule).Return(nil, errors.New("template not found")).Once()
+		r, err := http.NewRequest(http.MethodPut, "/rules", bytes.NewBuffer(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		handler := handlers.UpsertRule(mockedRulesService)
+		expectedStatusCode := http.StatusBadRequest
+		expectedStringBody := "{\"code\":400,\"message\":\"template not found\",\"data\":null}"
+
+		handler.ServeHTTP(w, r)
+
+		assert.Equal(t, expectedStatusCode, w.Code)
+		assert.Equal(t, expectedStringBody, w.Body.String())
+	})
+
 	t.Run("should return 500 Internal Server Error on service failure", func(t *testing.T) {
 		mockedRulesService := &mocks.RuleService{}
 		dummyRule := &domain.Rule{

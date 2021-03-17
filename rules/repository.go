@@ -3,6 +3,7 @@ package rules
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
@@ -99,6 +100,9 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 	template, err := templatesService.GetByName(rule.Template)
 	if err != nil {
 		return nil, err
+	}
+	if template == nil {
+		return nil, errors.New("template not found")
 	}
 	templateVariables := template.Variables
 

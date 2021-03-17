@@ -821,6 +821,26 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			s.T().Errorf("there were unfulfilled expectations: %s", err)
 		}
 	})
+
+	s.Run("should return error if template not found", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(nil, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
+		input := &Rule{
+			Namespace: "foo",
+			GroupName: "bar",
+			Entity:    "gojek",
+			Template:  "tmpl",
+			Status:    "enabled",
+			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+		}
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "template not found")
+		s.Nil(actualRule)
+	})
+
 }
 
 func (s *RepositoryTestSuite) TestGet() {
