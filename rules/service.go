@@ -5,6 +5,7 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/templates"
 	"gorm.io/gorm"
 )
 
@@ -17,8 +18,9 @@ type cortexCaller interface {
 
 // Service handles business logic
 type Service struct {
-	repository RuleRepository
-	client     cortexCaller
+	repository      RuleRepository
+	templateService domain.TemplatesService
+	client          cortexCaller
 }
 
 // NewService returns repository struct
@@ -31,7 +33,11 @@ func NewService(db *gorm.DB, cortex domain.Cortex) domain.RuleService {
 	if err != nil {
 		return nil
 	}
-	return &Service{repository: NewRepository(db), client: client}
+	return &Service{
+		repository:      NewRepository(db),
+		templateService: templates.NewService(db),
+		client:          client,
+	}
 }
 
 func (service Service) Migrate() error {
@@ -41,7 +47,7 @@ func (service Service) Migrate() error {
 func (service Service) Upsert(rule *domain.Rule) (*domain.Rule, error) {
 	r := &Rule{}
 	r, err := r.fromDomain(rule)
-	upsertedRule, err := service.repository.Upsert(r, service.client)
+	upsertedRule, err := service.repository.Upsert(r, service.client, service.templateService)
 	if err != nil {
 		return nil, err
 	}

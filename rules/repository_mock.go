@@ -3,6 +3,7 @@
 package rules
 
 import (
+	"github.com/odpf/siren/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -49,7 +50,7 @@ func (_m *RuleRepositoryMock) Migrate() error {
 }
 
 // Upsert provides a mock function with given fields: _a0, _a1
-func (_m *RuleRepositoryMock) Upsert(_a0 *Rule, _a1 cortexCaller) (*Rule, error) {
+func (_m *RuleRepositoryMock) Upsert(_a0 *Rule, _a1 cortexCaller, service domain.TemplatesService) (*Rule, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *Rule
