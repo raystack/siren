@@ -117,10 +117,6 @@ func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVar
 	return finalRuleVariables
 }
 
-func upsertRule(rule *Rule, ) {
-
-}
-
 func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
 		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)

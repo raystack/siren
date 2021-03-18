@@ -20,6 +20,26 @@ func UpsertRule(service domain.RuleService) http.HandlerFunc {
 			badRequest(w, err)
 			return
 		}
+		if err != nil && err.Error() == ("namespace cannot be empty") {
+			badRequest(w, err)
+			return
+		}
+		if err != nil && err.Error() == ("group name cannot be empty") {
+			badRequest(w, err)
+			return
+		}
+		if err != nil && err.Error() == ("status could be enabled or disabled") {
+			badRequest(w, err)
+			return
+		}
+		if err != nil && err.Error() == ("template name cannot be empty") {
+			badRequest(w, err)
+			return
+		}
+		if err != nil && err.Error() == ("entity cannot be empty") {
+			badRequest(w, err)
+			return
+		}
 		if err != nil {
 			internalServerError(w, err)
 			return

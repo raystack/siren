@@ -8,6 +8,106 @@ import (
 )
 
 func TestService_Upsert(t *testing.T) {
+	t.Run("should do namespace validation", func(t *testing.T) {
+		repositoryMock := &RuleRepositoryMock{}
+		mockCortexClient := &cortexCallerMock{}
+		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
+		dummyRule := &domain.Rule{
+			Namespace: "",
+			Entity: "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		result, err := dummyService.Upsert(dummyRule)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "namespace cannot be empty")
+	})
+
+	t.Run("should do entity validation", func(t *testing.T) {
+		repositoryMock := &RuleRepositoryMock{}
+		mockCortexClient := &cortexCallerMock{}
+		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
+		dummyRule := &domain.Rule{
+			Namespace: "foo",
+			Entity: "", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		result, err := dummyService.Upsert(dummyRule)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "entity cannot be empty")
+	})
+
+	t.Run("should do template validation", func(t *testing.T) {
+		repositoryMock := &RuleRepositoryMock{}
+		mockCortexClient := &cortexCallerMock{}
+		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
+		dummyRule := &domain.Rule{
+			Namespace: "foo",
+			Entity: "gojek", GroupName: "test-group", Template: "", Status: "enabled",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		result, err := dummyService.Upsert(dummyRule)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "template name cannot be empty")
+	})
+
+	t.Run("should do group name validation", func(t *testing.T) {
+		repositoryMock := &RuleRepositoryMock{}
+		mockCortexClient := &cortexCallerMock{}
+		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
+		dummyRule := &domain.Rule{
+			Namespace: "foo",
+			Entity: "gojek", GroupName: "", Template: "test-tmpl", Status: "enabled",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		result, err := dummyService.Upsert(dummyRule)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "group name cannot be empty")
+	})
+
+	t.Run("should do status validation", func(t *testing.T) {
+		repositoryMock := &RuleRepositoryMock{}
+		mockCortexClient := &cortexCallerMock{}
+		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
+		dummyRule := &domain.Rule{
+			Namespace: "foo",
+			Entity: "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "blah",
+			Variables: []domain.RuleVariable{{
+				Name:        "test-name",
+				Value:       "test-value",
+				Description: "test-description",
+				Type:        "test-type",
+			},
+			},
+		}
+		result, err := dummyService.Upsert(dummyRule)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "status could be enabled or disabled")
+	})
+
 	t.Run("should call repository Upsert method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
 		mockCortexClient := &cortexCallerMock{}
