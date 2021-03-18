@@ -2,6 +2,59 @@ basePath: /
 consumes:
 - application/json
 definitions:
+  Rule:
+    properties:
+      CreatedAt:
+        format: date-time
+        type: string
+      UpdatedAt:
+        format: date-time
+        type: string
+      entity:
+        type: string
+        x-go-name: Entity
+      group_name:
+        type: string
+        x-go-name: GroupName
+      id:
+        format: uint64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      namespace:
+        type: string
+        x-go-name: Namespace
+      status:
+        type: string
+        x-go-name: Status
+      template:
+        type: string
+        x-go-name: Template
+      variables:
+        items:
+          $ref: '#/definitions/RuleVariable'
+        type: array
+        x-go-name: Variables
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  RuleVariable:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      type:
+        type: string
+        x-go-name: Type
+      value:
+        type: string
+        x-go-name: Value
+    type: object
+    x-go-package: github.com/odpf/siren/domain
   Template:
     properties:
       CreatedAt:
@@ -63,9 +116,58 @@ paths:
           $ref: '#/responses/pingResponse'
       tags:
       - ping
+  /rules:
+    get:
+      description: 'List Rules API: This API lists all the existing rules with given
+        filers in query params'
+      operationId: listRulesRequest
+      parameters:
+      - description: List Rule Request
+        in: query
+        name: namespace
+        type: string
+        x-go-name: Namespace
+      - in: query
+        name: entity
+        type: string
+        x-go-name: Entity
+      - in: query
+        name: group_name
+        type: string
+        x-go-name: GroupName
+      - in: query
+        name: status
+        type: string
+        x-go-name: Status
+      - in: query
+        name: template
+        type: string
+        x-go-name: Template
+      responses:
+        "200":
+          $ref: '#/responses/listResponse'
+      tags:
+      - rules
+    put:
+      description: 'Upsert Rule API: This API helps in creating a new rule or update
+        an existing one with unique combination of namespace, entity, group_name,
+        template'
+      operationId: createRuleRequest
+      parameters:
+      - description: Create rule request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Rule'
+      responses:
+        "200":
+          $ref: '#/responses/rulesResponse'
+      tags:
+      - rules
   /templates:
     get:
-      description: Templates list call
+      description: 'List Templates API: This API lists all the existing templates
+        with given filers in query params'
       operationId: listTemplatesRequest
       parameters:
       - description: List Template Request
@@ -79,6 +181,8 @@ paths:
       tags:
       - templates
     put:
+      description: 'Upsert Templates API: This API helps in creating or updating a
+        template with unique name'
       operationId: createTemplateRequest
       parameters:
       - description: Create template request
@@ -89,12 +193,12 @@ paths:
       responses:
         "200":
           $ref: '#/responses/templatesResponse'
-      summary: Templates does some amazing stuff.
       tags:
       - templates
   /templates/{name}:
     delete:
-      description: Delete template by name
+      description: 'Delete Template API: This API deletes a template given the template
+        name'
       operationId: deleteTemplatesRequest
       parameters:
       - description: Delete Template Request
@@ -109,7 +213,8 @@ paths:
       tags:
       - templates
     get:
-      description: Get template by name
+      description: 'Get Template API: This API gets a template given the template
+        name'
       operationId: getTemplatesRequest
       parameters:
       - description: Get Template Request
@@ -125,7 +230,8 @@ paths:
       - templates
   /templates/{name}/render:
     post:
-      description: Render template by name
+      description: 'Render Template API: This API renders the given template with
+        given values'
       operationId: renderTemplatesRequest
       parameters:
       - description: Render Template Request
@@ -152,6 +258,10 @@ responses:
     description: Response body for Ping.
   renderTemplatesResponse:
     description: ""
+  rulesResponse:
+    description: ""
+    schema:
+      $ref: '#/definitions/Rule'
   templatesResponse:
     description: ""
     schema:
