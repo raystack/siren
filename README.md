@@ -46,8 +46,8 @@ To run server locally
 $ go run main.go serve
 ```
 
-To view swagger docs of HTTP APIs visit `/docs` route on the server.
-e.g. [http://localhost:3000/docs](http://localhost:3000/docs)
+To view swagger docs of HTTP APIs visit `/documentation` route on the server.
+e.g. [http://localhost:3000/documentation](http://localhost:3000/documentation)
 
 #### Config
 
