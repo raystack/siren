@@ -16,7 +16,7 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	services := service.Init(store)
+	services := service.Init(store, c.Cortex)
 
 	r := api.New(services)
 
@@ -29,6 +29,6 @@ func RunMigrations(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	service.MigrateAll(store)
+	service.MigrateAll(store, c.Cortex)
 	return nil
 }
