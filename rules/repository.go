@@ -92,26 +92,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 	return err
 }
 
-func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
-		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
-	var existingRule Rule
-	var rulesWithinGroup []Rule
-	template, err := templatesService.GetByName(rule.Template)
-	if err != nil {
-		return nil, err
-	}
-	if template == nil {
-		return nil, errors.New("template not found")
-	}
-	templateVariables := template.Variables
-
-	var ruleVariables []domain.RuleVariable
-	jsonBlob := []byte(rule.Variables)
-	err = json.Unmarshal(jsonBlob, &ruleVariables)
-	if err != nil {
-		return nil, err
-	}
+func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {
 	var finalRuleVariables []domain.RuleVariable
 	for j := 0; j < len(templateVariables); j++ {
 		variableExist := false
@@ -133,6 +114,34 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 			finalRuleVariables = append(finalRuleVariables, ruleVariables[matchingIndex])
 		}
 	}
+	return finalRuleVariables
+}
+
+func upsertRule(rule *Rule, ) {
+
+}
+
+func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
+	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
+		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
+	var existingRule Rule
+	var rulesWithinGroup []Rule
+	template, err := templatesService.GetByName(rule.Template)
+	if err != nil {
+		return nil, err
+	}
+	if template == nil {
+		return nil, errors.New("template not found")
+	}
+	templateVariables := template.Variables
+
+	var ruleVariables []domain.RuleVariable
+	jsonBlob := []byte(rule.Variables)
+	err = json.Unmarshal(jsonBlob, &ruleVariables)
+	if err != nil {
+		return nil, err
+	}
+	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, ruleVariables)
 	jsonBytes, err := json.Marshal(finalRuleVariables)
 	rule.Variables = string(jsonBytes)
 	if err != nil {
