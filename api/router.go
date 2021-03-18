@@ -28,5 +28,8 @@ func New(container *service.Container) *mux.Router {
 	r.Methods("DELETE").Path("/templates/{name}").Handler(handlers.DeleteTemplates(container.TemplatesService))
 	r.Methods("POST").Path("/templates/{name}/render").Handler(handlers.RenderTemplates(container.TemplatesService))
 
+	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService))
+	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService))
+
 	return r
 }

@@ -11,7 +11,7 @@ type templatesResponse struct {
 //-------------------------
 //-------------------------
 // swagger:route GET /templates templates listTemplatesRequest
-// Templates list call
+// List Templates API: This API lists all the existing templates with given filers in query params
 // responses:
 //   200: listResponse
 
@@ -31,8 +31,8 @@ type listResponse struct {
 
 //-------------------------
 // swagger:route PUT /templates templates createTemplateRequest
-// Templates does some amazing stuff.
-// responses:
+// Upsert Templates API: This API helps in creating or updating a template with unique name
+//responses:
 //   200: templatesResponse
 
 // swagger:parameters createTemplateRequest
@@ -45,8 +45,8 @@ type createTemplateRequest struct {
 //-------------------------
 
 // swagger:route GET /templates/{name} templates getTemplatesRequest
-// Get template by name
-// responses:
+// Get Template API: This API gets a template given the template name
+//responses:
 //   200: templatesResponse
 
 // swagger:parameters getTemplatesRequest
@@ -59,7 +59,7 @@ type getTemplatesRequest struct {
 //-------------------------
 
 // swagger:route DELETE /templates/{name} templates deleteTemplatesRequest
-// Delete template by name
+// Delete Template API: This API deletes a template given the template name
 // responses:
 //   200: templatesResponse
 
@@ -73,7 +73,7 @@ type deleteTemplatesRequest struct {
 //-------------------------
 
 // swagger:route POST /templates/{name}/render templates renderTemplatesRequest
-// Render template by name
+// Render Template API: This API renders the given template with given values
 // responses:
 //   200: renderTemplatesResponse
 
