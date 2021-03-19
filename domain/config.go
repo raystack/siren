@@ -11,7 +11,7 @@ type DBConfig struct {
 }
 
 // Cortex contains the radar cortex configuration
-type Cortex struct {
+type CortexConfig struct {
 	Host string `mapstructure:"host" default:"http://localhost:8080"`
 }
 
@@ -23,6 +23,6 @@ type AlertmanagerConfig struct {
 type Config struct {
 	Port         int                `mapstructure:"port" default:"8080"`
 	DB           DBConfig           `mapstructure:"db"`
-	Cortex       Cortex             `mapstructure:"cortex"`
+	Cortex       CortexConfig       `mapstructure:"cortex"`
 	Alertmanager AlertmanagerConfig `mapstructure:"alertmanager"`
 }
