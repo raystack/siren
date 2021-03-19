@@ -15,7 +15,7 @@ type Container struct {
 	AlertmanagerService domain.AlertmanagerService
 }
 
-func Init(db *gorm.DB, cortex domain.Cortex, alertmanagerConfig domain.AlertmanagerConfig) (*Container, error) {
+func Init(db *gorm.DB, cortex domain.CortexConfig, alertmanagerConfig domain.AlertmanagerConfig) (*Container, error) {
 	templatesService := templates.NewService(db)
 	rulesService := rules.NewService(db, cortex)
 	newClient, err := alertmanager.NewClient(alertmanagerConfig)
