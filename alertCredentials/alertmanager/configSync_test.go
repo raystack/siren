@@ -217,33 +217,5 @@ func TestSyncConfig(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tenant := r.Header.Get("X-Scope-Orgid")
-		assert.Equal(t, "greek", tenant)
-		requestBody := ConfigCompat{}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-		err := yaml.Unmarshal(buf.Bytes(), &requestBody)
-		if err != nil {
-		 	t.Fatal(err)
-		}
-		assert.NotEmpty(t, requestBody.AlertmanagerConfig)
-		vartmpl := requestBody.TemplateFiles["var.tmpl"]
-		detmpl := requestBody.TemplateFiles["de.tmpl"]
-		assert.NotEmpty(t, vartmpl)
-		assert.NotEmpty(t, detmpl)
-	}))
-	defer ts.Close()
-	client, err := NewClient(domain.AlertmanagerConfig{
-		Address: "http://localhost:8080",
-	})
-	if err != nil {
-	    t.Fatal(err)
-	}
-	err = client.SyncConfig(credentials,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 

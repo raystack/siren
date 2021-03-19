@@ -1,12 +1,14 @@
 package alertCredentials
 
 import (
+	"fmt"
 	"github.com/odpf/siren/alertCredentials/alertmanager"
 	"github.com/odpf/siren/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -22,7 +24,14 @@ func (am *AlertmanagerClientMock) SyncConfig(credentials alertmanager.EntityCred
 }
 
 func TestServiceUpsert(t *testing.T) {
-	dsn := "host=localhost user=postgres dbname=postgres port=54320 sslmode=disable"
+	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
+	var dsn string
+	if postgresPassword == "" {
+		dsn = "host=localhost user=postgres dbname=postgres port=5432 sslmode=disable"
+	} else {
+		dsn = fmt.Sprintf("host=localhost password=%s user=postgres dbname=postgres port=5432 sslmode=disable", postgresPassword)
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 	    t.Fatal(err)
