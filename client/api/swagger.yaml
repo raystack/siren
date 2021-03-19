@@ -1,0 +1,396 @@
+openapi: 3.0.1
+info:
+  title: Siren.
+  description: Documentation of our Siren API.
+  version: 1.0.0
+servers:
+- url: http://localhost:3000/
+paths:
+  /ping:
+    get:
+      tags:
+      - ping
+      description: Ping call
+      operationId: ping
+      responses:
+        "200":
+          description: Response body for Ping.
+          content: {}
+  /rules:
+    get:
+      tags:
+      - rules
+      description: 'List Rules API: This API lists all the existing rules with given
+        filers in query params'
+      operationId: listRulesRequest
+      parameters:
+      - name: namespace
+        in: query
+        description: List Rule Request
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Namespace
+        x-go-name: Namespace
+      - name: entity
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Entity
+        x-go-name: Entity
+      - name: group_name
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: GroupName
+        x-go-name: GroupName
+      - name: status
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Status
+        x-go-name: Status
+      - name: template
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Template
+        x-go-name: Template
+      responses:
+        "200":
+          description: List templates response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+                x-content-type: application/json
+    put:
+      tags:
+      - rules
+      description: 'Upsert Rule API: This API helps in creating a new rule or update
+        an existing one with unique combination of namespace, entity, group_name,
+        template'
+      operationId: createRuleRequest
+      requestBody:
+        description: Create rule request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rule'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+      x-codegen-request-body-name: Body
+  /templates:
+    get:
+      tags:
+      - templates
+      description: 'List Templates API: This API lists all the existing templates
+        with given filers in query params'
+      operationId: listTemplatesRequest
+      parameters:
+      - name: tag
+        in: query
+        description: List Template Request
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Tag
+        x-go-name: Tag
+      responses:
+        "200":
+          description: List templates response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+                x-content-type: application/json
+    put:
+      tags:
+      - templates
+      description: 'Upsert Templates API: This API helps in creating or updating a
+        template with unique name'
+      operationId: createTemplateRequest
+      requestBody:
+        description: Create template request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Template'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+      x-codegen-request-body-name: Body
+  /templates/{name}:
+    get:
+      tags:
+      - templates
+      description: 'Get Template API: This API gets a template given the template
+        name'
+      operationId: getTemplatesRequest
+      parameters:
+      - name: name
+        in: path
+        description: Get Template Request
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          x-go-name: Name
+        x-go-name: Name
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+    delete:
+      tags:
+      - templates
+      description: 'Delete Template API: This API deletes a template given the template
+        name'
+      operationId: deleteTemplatesRequest
+      parameters:
+      - name: name
+        in: path
+        description: Delete Template Request
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          x-go-name: Name
+        x-go-name: Name
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+  /templates/{name}/render:
+    post:
+      tags:
+      - templates
+      description: 'Render Template API: This API renders the given template with
+        given values'
+      operationId: renderTemplatesRequest
+      parameters:
+      - name: name
+        in: path
+        description: Render Template Request
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          x-go-name: Name
+        x-go-name: Name
+      responses:
+        "200":
+          content: {}
+components:
+  schemas:
+    Rule:
+      type: object
+      properties:
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+        entity:
+          type: string
+          x-go-name: Entity
+        group_name:
+          type: string
+          x-go-name: GroupName
+        id:
+          type: integer
+          format: uint64
+          x-go-name: ID
+        name:
+          type: string
+          x-go-name: Name
+        namespace:
+          type: string
+          x-go-name: Namespace
+        status:
+          type: string
+          x-go-name: Status
+        template:
+          type: string
+          x-go-name: Template
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleVariable'
+          x-go-name: Variables
+      example:
+        template: template
+        variables:
+        - name: name
+          description: description
+          type: type
+          value: value
+        - name: name
+          description: description
+          type: type
+          value: value
+        group_name: group_name
+        CreatedAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        namespace: namespace
+        id: 0
+        UpdatedAt: 2000-01-23T04:56:07.000+00:00
+        entity: entity
+        status: status
+      x-go-package: github.com/odpf/siren/domain
+    RuleVariable:
+      type: object
+      properties:
+        description:
+          type: string
+          x-go-name: Description
+        name:
+          type: string
+          x-go-name: Name
+        type:
+          type: string
+          x-go-name: Type
+        value:
+          type: string
+          x-go-name: Value
+      example:
+        name: name
+        description: description
+        type: type
+        value: value
+      x-go-package: github.com/odpf/siren/domain
+    Template:
+      type: object
+      properties:
+        CreatedAt:
+          type: string
+          format: date-time
+        UpdatedAt:
+          type: string
+          format: date-time
+        body:
+          type: string
+          x-go-name: Body
+        id:
+          type: integer
+          format: uint64
+          x-go-name: ID
+        name:
+          type: string
+          x-go-name: Name
+        tags:
+          type: array
+          items:
+            type: string
+          x-go-name: Tags
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variable'
+          x-go-name: Variables
+      example:
+        variables:
+        - default: default
+          name: name
+          description: description
+          type: type
+        - default: default
+          name: name
+          description: description
+          type: type
+        CreatedAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        id: 0
+        body: body
+        UpdatedAt: 2000-01-23T04:56:07.000+00:00
+        tags:
+        - tags
+        - tags
+      x-go-package: github.com/odpf/siren/domain
+    Variable:
+      type: object
+      properties:
+        default:
+          type: string
+          x-go-name: Default
+        description:
+          type: string
+          x-go-name: Description
+        name:
+          type: string
+          x-go-name: Name
+        type:
+          type: string
+          x-go-name: Type
+      example:
+        default: default
+        name: name
+        description: description
+        type: type
+      x-go-package: github.com/odpf/siren/domain
+  responses:
+    listResponse:
+      description: List templates response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Template'
+    pingResponse:
+      description: Response body for Ping.
+      content: {}
+    renderTemplatesResponse:
+      content: {}
+    rulesResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Rule'
+    templatesResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Template'
+  securitySchemes:
+    basic:
+      type: http
+      scheme: basic
+x-original-swagger-version: "2.0"
