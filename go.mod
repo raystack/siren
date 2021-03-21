@@ -17,6 +17,8 @@ require (
 	github.com/markbates/pkger v0.17.1
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.4.1
+	github.com/newrelic/go-agent/v3 v3.11.0
+	github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
