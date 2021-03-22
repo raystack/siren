@@ -1,13 +1,11 @@
-package alertmanager
-
-var alertmanagerConfigTemplate = `  templates:
+  templates:
     - 'de.tmpl'
     - 'var.tmpl'
   global:
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
   receivers:
-    - name: default[[- /*gotype: github.com/odpf/siren/alertCredentials.EntityCredentials*/ -]]
+    - name: default
   [[- range $key, $team := .Teams -]]
   [[if eq $team.Slackcredentials.Critical.Webhook ""]]
   [[else]]
@@ -85,5 +83,3 @@ var alertmanagerConfigTemplate = `  templates:
               severity: "WARNING"
             receiver: [[if eq $team.Slackcredentials.Warning.Webhook ""]] default [[else]]slack-warning-[[$team.Name]][[end]]
 [[end]]
-`
-

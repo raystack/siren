@@ -87,8 +87,15 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 }
 
 func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
+	configYaml, err := pkger.Open("/alertCredentials/alertmanagerconfig.goyaml")
+	if err != nil {
+	    return "", err
+	}
+	defer  configYaml.Close()
+	configYamlBuf := new (bytes.Buffer)
+	configYamlBuf.ReadFrom(configYaml)
 	delims := template.New("alertmanagerConfigTemplate").Delims("[[", "]]")
-	parse, err := delims.Parse(alertmanagerConfigTemplate)
+	parse, err := delims.Parse(configYamlBuf.String())
 	if err != nil {
 		return "", err
 	}
