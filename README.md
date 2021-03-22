@@ -63,6 +63,8 @@ For any variable the order of precedence is:
 
 The `client` directory holds the HTTP Client for siren service. It's generated using project [swagger-codegen](https://github.com/swagger-api/swagger-codegen)
 
+Ideally we should generate the client on any changes in the swagger spec of siren service. 
+
 The config used for client generation is `client_config.json`
 
 To regenerate the client, run 
