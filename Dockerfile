@@ -1,7 +1,6 @@
 FROM golang:1.15
 WORKDIR /go/src/github.com/odpf/siren
 COPY . .
-RUN make test
 RUN make dist
 
 FROM alpine:latest
