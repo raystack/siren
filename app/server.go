@@ -16,8 +16,10 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	services := service.Init(store, c.Cortex)
-
+	services, err := service.Init(store, c.Cortex, c.Alertmanager)
+	if err != nil {
+		return err
+	}
 	r := api.New(services)
 
 	log.Printf("running server on port %d\n", c.Port)
@@ -29,6 +31,6 @@ func RunMigrations(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	service.MigrateAll(store, c.Cortex)
+	service.MigrateAll(store, *c)
 	return nil
 }

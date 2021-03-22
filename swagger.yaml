@@ -2,6 +2,30 @@ basePath: /
 consumes:
 - application/json
 definitions:
+  AlertCredentials:
+    properties:
+      entity:
+        type: string
+      pagerduty_credentials:
+        type: string
+      slack_credentials:
+        properties:
+          critical:
+            properties:
+              webhook:
+                type: string
+              username:
+                type: string
+              channel:
+                type: string
+          warning:
+            properties:
+              webhook:
+                type: string
+              username:
+                type: string
+              channel:
+                type: string
   Rule:
     properties:
       CreatedAt:
@@ -245,6 +269,22 @@ paths:
           $ref: '#/responses/renderTemplatesResponse'
       tags:
       - templates
+  /alertingCredentials/teams/{teamName}:
+    put:
+      description: 'Update slack & pagerduty configs for the team and sync to alertmanager'
+      operationId: createAlertCredentialRequest
+      parameters:
+        - description: Upsert AlertCredential Request
+          in: body
+          name: Body
+          schema:
+            $ref: '#/definitions/AlertCredentials'
+      responses:
+        "200":
+          $ref: ''
+      tags:
+        - templates
+
 produces:
 - application/json
 responses:

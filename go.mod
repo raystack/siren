@@ -13,9 +13,11 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/lib/pq v1.3.0
 	github.com/magiconair/properties v1.8.4 // indirect
+	github.com/markbates/pkger v0.17.1
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
