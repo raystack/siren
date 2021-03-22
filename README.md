@@ -58,3 +58,45 @@ For any variable the order of precedence is:
 1. Env variable
 2. Config file
 3. Default in Struct defined in the application code
+
+### HTTP Client
+
+The `client` directory holds the HTTP Client for siren service. It's generated using project [swagger-codegen](https://github.com/swagger-api/swagger-codegen)
+
+The config used for client generation is `client_config.json`
+
+To regenerate the client, run 
+
+```
+$ swagger-codegen generate -i swagger.yaml -l go -o client -c client_config.json
+```
+
+Sample usage of the client: 
+
+```go
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/antihax/optional"
+	"github.com/odpf/siren/client"
+)
+
+func main() {
+	cfg := &client.Configuration{
+		BasePath:     "http://localhost:3000",
+	}
+	x := client.NewAPIClient(cfg)
+	options := &client.RulesApiListRulesRequestOpts{
+		Namespace: optional.NewString("n1"),
+	}
+	result, _, err := x.RulesApi.ListRulesRequest(context.Background(), options)
+	if err != nil {
+		panic(err)
+	}
+	response, _ := json.Marshal(result)
+	fmt.Println(string(response))
+}
+```
