@@ -14,7 +14,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
 		dummyRule := &domain.Rule{
 			Namespace: "",
-			Entity: "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
+			Entity:    "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
 			Variables: []domain.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -34,7 +34,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
 		dummyRule := &domain.Rule{
 			Namespace: "foo",
-			Entity: "", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
+			Entity:    "", GroupName: "test-group", Template: "test-tmpl", Status: "enabled",
 			Variables: []domain.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -54,7 +54,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
 		dummyRule := &domain.Rule{
 			Namespace: "foo",
-			Entity: "gojek", GroupName: "test-group", Template: "", Status: "enabled",
+			Entity:    "gojek", GroupName: "test-group", Template: "", Status: "enabled",
 			Variables: []domain.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -74,7 +74,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
 		dummyRule := &domain.Rule{
 			Namespace: "foo",
-			Entity: "gojek", GroupName: "", Template: "test-tmpl", Status: "enabled",
+			Entity:    "gojek", GroupName: "", Template: "test-tmpl", Status: "enabled",
 			Variables: []domain.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -94,7 +94,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, client: mockCortexClient}
 		dummyRule := &domain.Rule{
 			Namespace: "foo",
-			Entity: "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "blah",
+			Entity:    "gojek", GroupName: "test-group", Template: "test-tmpl", Status: "blah",
 			Variables: []domain.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",

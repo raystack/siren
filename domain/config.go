@@ -15,9 +15,14 @@ type Cortex struct {
 	Host string `mapstructure:"host" default:"http://localhost:8080"`
 }
 
+type AlertmanagerConfig struct {
+	Address string `mapstructure:"address" default:"localhost:8080"`
+}
+
 // Config contains the application configuration
 type Config struct {
-	Port   int      `mapstructure:"port" default:"8080"`
-	DB     DBConfig `mapstructure:"db"`
-	Cortex Cortex   `mapstructure:"cortex"`
+	Port         int                `mapstructure:"port" default:"8080"`
+	DB           DBConfig           `mapstructure:"db"`
+	Cortex       Cortex             `mapstructure:"cortex"`
+	Alertmanager AlertmanagerConfig `mapstructure:"alertmanager"`
 }
