@@ -10,3 +10,7 @@ cortex:
   host: http://localhost:8080
 alertmanager:
     address: localhost:8080
+newrelic:
+  enabled: false
+  appname: siren
+  license: ____LICENSE_STRING_OF_40_CHARACTERS_____
