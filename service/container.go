@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/odpf/siren/alertCredentials"
-	"github.com/odpf/siren/alertCredentials/alertmanager"
+	"github.com/odpf/siren/alert"
+	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/rules"
 	"github.com/odpf/siren/templates"
@@ -22,7 +22,7 @@ func Init(db *gorm.DB, cortex domain.Cortex, alertmanagerConfig domain.Alertmana
 	if err != nil {
 		return nil, err
 	}
-	alertmanagerService := alertCredentials.NewService(db, newClient)
+	alertmanagerService := alert.NewService(db, newClient)
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,

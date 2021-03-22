@@ -1,4 +1,4 @@
-package alertCredentials
+package alert
 
 import (
 	"gorm.io/gorm"

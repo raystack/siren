@@ -1,8 +1,8 @@
-package alertCredentials
+package alert
 
 import (
 	"fmt"
-	"github.com/odpf/siren/alertCredentials/alertmanager"
+	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

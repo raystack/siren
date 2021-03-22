@@ -1,8 +1,8 @@
-package alertCredentials
+package alert
 
 import (
 	"database/sql"
-	"github.com/odpf/siren/alertCredentials/alertmanager"
+	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
 	"gorm.io/gorm"
 )

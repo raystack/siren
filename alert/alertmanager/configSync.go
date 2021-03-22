@@ -51,12 +51,12 @@ func NewClient(c domain.AlertmanagerConfig) (AlertmanagerClient, error) {
 		return AlertmanagerClient{}, err
 	}
 
-	deTemplatePath := "/alertCredentials/alertmanagerde.tmpl"
+	deTemplatePath := "/alert/alertmanagerde.tmpl"
 	deTmplateString, err := readTemplateString(err, deTemplatePath)
 	if err != nil {
 		return AlertmanagerClient{}, err
 	}
-	varTmplPath := "/alertCredentials/alertmanagervar.tmpl"
+	varTmplPath := "/alert/alertmanagervar.tmpl"
 	varTmplateString, err := readTemplateString(err, varTmplPath)
 	if err != nil {
 		return AlertmanagerClient{}, err
@@ -87,7 +87,7 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 }
 
 func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
-	configYaml, err := pkger.Open("/alertCredentials/alertmanagerconfig.goyaml")
+	configYaml, err := pkger.Open("/alert/alertmanagerconfig.goyaml")
 	if err != nil {
 	    return "", err
 	}
