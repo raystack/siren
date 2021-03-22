@@ -44,6 +44,22 @@ func UpdateAlertCredentials(service domain.AlertmanagerService) http.HandlerFunc
 	}
 }
 
+func GetAlertCredentials(service domain.AlertmanagerService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		teamName := params["teamName"]
+		alertCredential, err := service.Get(teamName)
+		if err != nil {
+			internalServerError(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(alertCredential)
+		w.WriteHeader(201)
+		return
+	}
+}
+
 func validatePagerdutyKey(credential *domain.AlertCredential) error {
 	if credential.PagerdutyCredentials == "" {
 		return errors.New("pagerduty key cannot be empty")

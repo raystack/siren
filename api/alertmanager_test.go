@@ -1,9 +1,10 @@
-package handlers
+package api
 
 import (
 	"bytes"
 	"errors"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"net/http"
@@ -29,6 +30,76 @@ func (m AlertmanagerServiceMock) Upsert(credential domain.AlertCredential) error
 func (m AlertmanagerServiceMock) Get(teamName string) (domain.AlertCredential, error) {
 	args := m.Called(teamName)
 	return args.Get(0).(domain.AlertCredential), args.Error(1)
+}
+
+func TestGetAlertCredentials(t *testing.T) {
+	t.Run("should return alert credentials of the team", func(t *testing.T) {
+		var alertmanagerServiceMock AlertmanagerServiceMock
+		credential := domain.AlertCredential{
+			Entity:               "avengers",
+			TeamName:             "hydra",
+			PagerdutyCredentials: "xyz",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel:  "critical",
+					Webhook:  "http://critical.com",
+					Username: "critical_user",
+				},
+				Warning: domain.SlackCredential{
+					Channel:  "warning",
+					Webhook:  "http://warning.com",
+					Username: "warning_user",
+				},
+			},
+		}
+		alertmanagerServiceMock.On("Get", "hydra").Return(credential, nil)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r)
+
+		expectedJson := `{
+    "entity": "avengers",
+    "team_name": "hydra",
+    "pagerduty_credentials": "xyz",
+    "slack_config": {
+        "critical": {
+            "webhook": "http://critical.com",
+            "channel": "critical",
+            "username": "critical_user"
+        },
+        "warning": {
+            "webhook": "http://warning.com",
+            "channel": "warning",
+            "username": "warning_user"
+        }
+    }
+}`
+		assert.Equal(t, 200, w.Code)
+		assert.JSONEq(t, expectedJson, w.Body.String())
+	})
+
+	t.Run("get alert credentials should return 500 on error", func(t *testing.T) {
+		var alertmanagerServiceMock AlertmanagerServiceMock
+		alertmanagerServiceMock.On("Get", "hydra").Return(
+			domain.AlertCredential{}, errors.New("internal error"))
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, r)
+		assert.Equal(t, 500, w.Code)
+		assert.JSONEq(t, `{"code":500,"message":"Internal server error","data":null}`, w.Body.String())
+	})
 }
 
 func TestUpdateAlertCredentials(t *testing.T) {
@@ -57,8 +128,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		updateCredsFn := UpdateAlertCredentials(alertmanagerServiceMock)
-		updateCredsFn.ServeHTTP(w, r)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		router.ServeHTTP(w, r)
 		assert.Equal(t, 201, w.Code)
 	})
 	t.Run("should return 500 on error", func(t *testing.T) {
@@ -86,8 +159,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		updateCredsFn := UpdateAlertCredentials(alertmanagerServiceMock)
-		updateCredsFn.ServeHTTP(w, r)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		router.ServeHTTP(w, r)
 		assert.Equal(t, 500, w.Code)
 	})
 	t.Run("should return 4xx on bad  webhook", func(t *testing.T) {
@@ -115,8 +190,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		updateCredsFn := UpdateAlertCredentials(alertmanagerServiceMock)
-		updateCredsFn.ServeHTTP(w, r)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "slack critical webhook is not a valid url", w.Body.String())
 
@@ -146,8 +223,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		updateCredsFn := UpdateAlertCredentials(alertmanagerServiceMock)
-		updateCredsFn.ServeHTTP(w, r)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "entity cannot be empty", w.Body.String())
 
@@ -178,11 +257,12 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		updateCredsFn := UpdateAlertCredentials(alertmanagerServiceMock)
-		updateCredsFn.ServeHTTP(w, r)
+		router := New(&service.Container{
+			AlertmanagerService: alertmanagerServiceMock,
+		})
+		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "pagerduty key cannot be empty", w.Body.String())
 
 	})
-
 }
