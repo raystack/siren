@@ -88,7 +88,7 @@ from slack_credentials as sw
   and sc.level ='CRITICAL'  
  and pg.entity=?`, credential.Entity, credential.Entity, credential.Entity).Rows()
 		defer rows.Close()
-		 teamCredentials := make(map[string]alertmanager.TeamCredentials)
+		teamCredentials := make(map[string]alertmanager.TeamCredentials)
 		for rows.Next() {
 			teamCredential := alertmanager.TeamCredentials{
 				Slackcredentials: alertmanager.SlackConfig{
@@ -105,7 +105,7 @@ from slack_credentials as sw
 		}
 		err = s.amClient.SyncConfig(alertmanager.EntityCredentials{
 			Entity: credential.Entity,
-			Teams: teamCredentials,
+			Teams:  teamCredentials,
 		})
 
 		if err != nil {

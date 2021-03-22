@@ -1,14 +1,14 @@
 package domain
 
 type SlackCredential struct {
-	Channel string `json:"channel"`
-	Webhook string	`json:"webhook"`
+	Channel  string `json:"channel"`
+	Webhook  string `json:"webhook"`
 	Username string `json:"username"`
 }
 
 type SlackConfig struct {
 	Critical SlackCredential `json:"critical"`
-	Warning SlackCredential  `json:"warning"`
+	Warning  SlackCredential `json:"warning"`
 }
 
 type AlertCredential struct {
@@ -18,7 +18,7 @@ type AlertCredential struct {
 	SlackConfig          SlackConfig `json:"slack_config"`
 }
 type AlertmanagerService interface {
-	Upsert(credential AlertCredential) (error)
-	Get(teamName string)(AlertCredential, error)
+	Upsert(credential AlertCredential) error
+	Get(teamName string) (AlertCredential, error)
 	Migrate() error
 }

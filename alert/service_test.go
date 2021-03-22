@@ -13,7 +13,6 @@ import (
 	"testing"
 )
 
-
 type AlertmanagerClientMock struct {
 	mock.Mock
 }
@@ -34,7 +33,7 @@ func TestServiceUpsert(t *testing.T) {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-	    t.Fatal(err)
+		t.Fatal(err)
 	}
 	expectedEntityCredentials := alertmanager.EntityCredentials{
 		Entity: "avengers",
@@ -75,7 +74,7 @@ func TestServiceUpsert(t *testing.T) {
 	}
 
 	t.Run("should insert new records", func(t *testing.T) {
-		db.Exec("truncate slack_credentials, pagerduty_credentials");
+		db.Exec("truncate slack_credentials, pagerduty_credentials")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -129,7 +128,7 @@ func TestServiceUpsert(t *testing.T) {
 
 	})
 	t.Run("should upsert records", func(t *testing.T) {
-		db.Exec("truncate slack_credentials, pagerduty_credentials");
+		db.Exec("truncate slack_credentials, pagerduty_credentials")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -205,7 +204,7 @@ func TestServiceUpsert(t *testing.T) {
 	})
 
 	t.Run("should update entity config for the alertmanager", func(t *testing.T) {
-		db.Exec("truncate slack_credentials, pagerduty_credentials");
+		db.Exec("truncate slack_credentials, pagerduty_credentials")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -218,9 +217,9 @@ func TestServiceUpsert(t *testing.T) {
 			t.Fatal(err)
 		}
 		clientMock := AlertmanagerClientMock{}
-		clientMock.On("SyncConfig", mock.MatchedBy(func( actualCredentials alertmanager.EntityCredentials) bool {
+		clientMock.On("SyncConfig", mock.MatchedBy(func(actualCredentials alertmanager.EntityCredentials) bool {
 
-			return reflect.DeepEqual(actualCredentials, expectedEntityCredentials);
+			return reflect.DeepEqual(actualCredentials, expectedEntityCredentials)
 		})).Return(nil)
 		service := NewService(db, &clientMock)
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{

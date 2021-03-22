@@ -38,8 +38,8 @@ type Client interface {
 
 type AlertmanagerClient struct {
 	CortextClient client.CortexClient
-	vartmplStr string
-	detmplStr string
+	vartmplStr    string
+	detmplStr     string
 }
 
 func NewClient(c domain.AlertmanagerConfig) (AlertmanagerClient, error) {
@@ -81,7 +81,7 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 	ctx := client.NewContextWithTenantId(context.Background(), credentials.Entity)
 	err = am.CortextClient.CreateAlertmanagerConfig(ctx, cfg, templates)
 	if err != nil {
-	    return err
+		return err
 	}
 	return nil
 }
@@ -89,10 +89,10 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
 	configYaml, err := pkger.Open("/alert/alertmanagerconfig.goyaml")
 	if err != nil {
-	    return "", err
+		return "", err
 	}
-	defer  configYaml.Close()
-	configYamlBuf := new (bytes.Buffer)
+	defer configYaml.Close()
+	configYamlBuf := new(bytes.Buffer)
 	configYamlBuf.ReadFrom(configYaml)
 	delims := template.New("alertmanagerConfigTemplate").Delims("[[", "]]")
 	parse, err := delims.Parse(configYamlBuf.String())

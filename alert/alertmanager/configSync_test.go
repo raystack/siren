@@ -38,7 +38,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 		},
 	}
 	expectedConfigStr :=
-`  templates:
+		`  templates:
     - 'de.tmpl'
     - 'var.tmpl'
   global:
@@ -182,8 +182,7 @@ func TestSyncConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = client.SyncConfig(credentials,
-		)
+		err = client.SyncConfig(credentials)
 		assert.Error(t, err)
 
 	})
@@ -211,11 +210,9 @@ func TestSyncConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = client.SyncConfig(credentials,
-		)
+		err = client.SyncConfig(credentials)
 		if err != nil {
 			t.Fatal(err)
 		}
 	})
 }
-

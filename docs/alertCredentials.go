@@ -20,5 +20,3 @@ type createAlertCredentialRequest struct {
 	// in:body
 	Body domain.AlertCredential
 }
-
-

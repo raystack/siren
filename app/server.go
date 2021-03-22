@@ -18,7 +18,7 @@ func RunServer(c *domain.Config) error {
 	}
 	services, err := service.Init(store, c.Cortex, c.Alertmanager)
 	if err != nil {
-	    return err
+		return err
 	}
 	r := api.New(services)
 

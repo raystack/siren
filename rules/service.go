@@ -60,7 +60,6 @@ func (service Service) Upsert(rule *domain.Rule) (*domain.Rule, error) {
 	return upsertedRule.toDomain()
 }
 
-
 func trimmer(x string) string {
 	return strings.Trim(x, " ")
 }

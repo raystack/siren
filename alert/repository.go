@@ -17,7 +17,7 @@ func (r Repository) UpsertSlack(credential SlackCredential) error {
 	return nil
 }
 
-func (r Repository) UpsertPagerduty(credential PagerdutyCredential) error{
+func (r Repository) UpsertPagerduty(credential PagerdutyCredential) error {
 	result := r.db.Create(&credential)
 	if result.Error != nil {
 		return result.Error

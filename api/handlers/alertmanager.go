@@ -34,7 +34,6 @@ func UpdateAlertCredentials(service domain.AlertmanagerService) http.HandlerFunc
 			}
 		}
 
-
 		err = service.Upsert(alertCredential)
 		if err != nil {
 			internalServerError(w, err)
@@ -44,7 +43,6 @@ func UpdateAlertCredentials(service domain.AlertmanagerService) http.HandlerFunc
 		return
 	}
 }
-
 
 func validatePagerdutyKey(credential *domain.AlertCredential) error {
 	if credential.PagerdutyCredentials == "" {
@@ -64,7 +62,7 @@ func validateEntity(credential *domain.AlertCredential) error {
 func validateWebhooks(credential *domain.AlertCredential) error {
 	_, err := url.Parse(credential.SlackConfig.Critical.Webhook)
 	if err != nil {
-	    return errors.New("slack critical webhook is not a valid url")
+		return errors.New("slack critical webhook is not a valid url")
 	}
 	_, err = url.Parse(credential.SlackConfig.Warning.Webhook)
 	if err != nil {

@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 func TestService_GetByName(t *testing.T) {
 	t.Run("should call repository GetByName method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &TemplatesRepositoryMock{}
