@@ -121,23 +121,29 @@ from slack_credentials as sw
 }
 
 func (s Service) Get(teamName string) (domain.AlertCredential, error) {
-	row := s.repository.db.Raw(`select sw.team_name as team_name, sw.entity as entity, pg.service_key as pg_service_key, sw.channel_name  as warning_channel_name, sw.webhook  as warning_webhook, sw.username as warning_username, 
- sc.channel_name as critical_channel_name, sc.webhook as critical_webhook, sc.username as critical_username
-from slack_credentials as sw
- join slack_credentials as sc 
- on sc.team_name=sw.team_name 
- join pagerduty_credentials as pg
-  on sc.team_name = pg.team_name
- where sw.team_name= ? and 
- sw.level='WARNING'
-  and sc.level ='CRITICAL'`, teamName).Row()
-	if row.Err() != nil {
-		return domain.AlertCredential{}, row.Err()
+	slackCredentialMap, pagerdutyCredential, err := s.repository.GetCredential(teamName)
+	if err != nil {
+		return domain.AlertCredential{}, err
 	}
-	credential := domain.AlertCredential{}
-	row.Scan(&credential.TeamName, &credential.Entity, &credential.PagerdutyCredentials,
-		&credential.SlackConfig.Warning.Channel, &credential.SlackConfig.Warning.Webhook, &credential.SlackConfig.Warning.Username,
-		&credential.SlackConfig.Critical.Channel, &credential.SlackConfig.Critical.Webhook, &credential.SlackConfig.Critical.Username)
+	warningSlackCredential := slackCredentialMap["WARNING"]
+	criticalSlackCredential := slackCredentialMap["CRITICAL"]
+	credential := domain.AlertCredential{
+		Entity:               pagerdutyCredential.Entity,
+		TeamName:             teamName,
+		PagerdutyCredentials: pagerdutyCredential.ServiceKey,
+		SlackConfig: domain.SlackConfig{
+			Warning: domain.SlackCredential{
+				Channel:  warningSlackCredential.ChannelName,
+				Webhook:  warningSlackCredential.Webhook,
+				Username: warningSlackCredential.Username,
+			},
+			Critical: domain.SlackCredential{
+				Channel:  criticalSlackCredential.ChannelName,
+				Webhook:  criticalSlackCredential.Webhook,
+				Username: criticalSlackCredential.Username,
+			},
+		},
+	}
 	return credential, nil
 }
 
