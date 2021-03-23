@@ -26,7 +26,7 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB, cortex domain.Cortex) domain.RuleService {
+func NewService(db *gorm.DB, cortex domain.CortexConfig) domain.RuleService {
 	cfg := cortexClient.Config{
 		Address:         cortex.Host,
 		UseLegacyRoutes: true,

@@ -1,4 +1,4 @@
-port: 3000
+port: 8080
 db:
   host: localhost
   user: postgres
@@ -10,3 +10,7 @@ cortex:
   host: http://localhost:8080
 alertmanager:
     address: localhost:8080
+newrelic:
+  enabled: false
+  appname: siren
+  license: ____LICENSE_STRING_OF_40_CHARACTERS_____
