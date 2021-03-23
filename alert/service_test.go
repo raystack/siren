@@ -284,3 +284,78 @@ func TestServiceUpsert(t *testing.T) {
 
 	})
 }
+
+func TestServiceGet(t *testing.T) {
+	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
+	var dsn string
+	if postgresPassword == "" {
+		dsn = "host=localhost user=postgres dbname=postgres port=5432 sslmode=disable"
+	} else {
+		dsn = fmt.Sprintf("host=localhost password=%s user=postgres dbname=postgres port=5432 sslmode=disable", postgresPassword)
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Run("should return alert credentials of the team", func(t *testing.T) {
+		db.Exec("truncate slack_credentials, pagerduty_credentials")
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = db.AutoMigrate(SlackCredential{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = db.AutoMigrate(PagerdutyCredential{})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		result := db.Model(SlackCredential{}).Create(&SlackCredential{
+			ChannelName: "critical_channel",
+			Username:    "critical_user",
+			Webhook:     "http://critical.com",
+			Level:       "CRITICAL",
+			TeamName:    "hydra",
+			Entity:      "avengers",
+		})
+		assert.Nil(t, result.Error)
+		result = db.Model(SlackCredential{}).Create(&SlackCredential{
+			ChannelName: "warning_channel",
+			Username:    "warning_user",
+			Webhook:     "http://warning.com",
+			Level:       "WARNING",
+			TeamName:    "hydra",
+			Entity:      "avengers",
+		})
+		assert.Nil(t, result.Error)
+		db.Model(PagerdutyCredential{}).Create(&PagerdutyCredential{
+			ServiceKey: "xyz",
+			TeamName:   "hydra",
+			Entity:     "avengers",
+		})
+		assert.Nil(t, result.Error)
+		service := NewService(db, nil)
+		credential, err := service.Get("hydra")
+		assert.Nil(t, err)
+		expectedCredential := domain.AlertCredential{
+			Entity:               "avengers",
+			TeamName:             "hydra",
+			PagerdutyCredentials: "xyz",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel:  "critical_channel",
+					Webhook:  "http://critical.com",
+					Username: "critical_user",
+				},
+				Warning: domain.SlackCredential{
+					Channel:  "warning_channel",
+					Webhook:  "http://warning.com",
+					Username: "warning_user",
+				},
+			},
+		}
+		assert.Equal(t, expectedCredential, credential)
+	})
+}
