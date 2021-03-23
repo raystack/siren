@@ -1,0 +1,24 @@
+apiVersion: v2
+type: rule
+namespace: system
+rules:
+  CPUHigh:
+    template: cpu
+    status: enabled
+    variables:
+      - name: for
+        value: 5m
+      - name: warning
+        value: 85
+      - name: critical
+        value: 95
+  TestCPUHigh:
+    template: cpu
+    status: disabled
+    variables:
+      - name: for
+        value: 15m
+      - name: warning
+        value: 70
+      - name: critical
+        value: 90

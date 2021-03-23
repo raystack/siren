@@ -15,6 +15,10 @@ type CortexConfig struct {
 	Address string `mapstructure:"address" default:"http://localhost:8080"`
 }
 
+type SirenServiceConfig struct {
+	Host string `mapstructure:"host" default:"http://localhost:3000"`
+}
+
 // NewRelic contains the New Relic go-agent configuration
 type NewRelicConfig struct {
 	Enabled bool   `mapstructure:"enabled" default:"false"`
@@ -28,4 +32,5 @@ type Config struct {
 	DB       DBConfig       `mapstructure:"db"`
 	Cortex   CortexConfig   `mapstructure:"cortex"`
 	NewRelic NewRelicConfig `mapstructure:"newrelic"`
+	SirenService SirenServiceConfig	`mapstructure:"siren_service"`
 }
