@@ -7,7 +7,7 @@ db:
   port: 5432
   sslmode: disable
 cortex:
-  host: http://localhost:8080
+  address: http://localhost:8080
 newrelic:
   enabled: false
   appname: siren
