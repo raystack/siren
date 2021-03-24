@@ -10,15 +10,12 @@ type DBConfig struct {
 	SslMode  string `mapstructure:"sslmode" default:"disable"`
 }
 
-// Cortex contains the radar cortex configuration
+// CortexConfig contains the cortex configuration
 type CortexConfig struct {
-	Host string `mapstructure:"host" default:"http://localhost:8080"`
+	Address string `mapstructure:"address" default:"http://localhost:8080"`
 }
 
-type AlertmanagerConfig struct {
-	Address string `mapstructure:"address" default:"localhost:8080"`
-}
-
+// NewRelic contains the New Relic go-agent configuration
 type NewRelicConfig struct {
 	Enabled bool   `mapstructure:"enabled" default:"false"`
 	AppName string `mapstructure:"appname" default:"siren"`
@@ -27,9 +24,8 @@ type NewRelicConfig struct {
 
 // Config contains the application configuration
 type Config struct {
-	Port         int                `mapstructure:"port" default:"8080"`
-	DB           DBConfig           `mapstructure:"db"`
-	Cortex       CortexConfig       `mapstructure:"cortex"`
-	Alertmanager AlertmanagerConfig `mapstructure:"alertmanager"`
-	NewRelic     NewRelicConfig     `mapstructure:"newrelic"`
+	Port     int            `mapstructure:"port" default:"8080"`
+	DB       DBConfig       `mapstructure:"db"`
+	Cortex   CortexConfig   `mapstructure:"cortex"`
+	NewRelic NewRelicConfig `mapstructure:"newrelic"`
 }
