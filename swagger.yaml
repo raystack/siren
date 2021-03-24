@@ -2,30 +2,18 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  AlertCredentials:
+  AlertCredentialResponse:
     properties:
       entity:
         type: string
+        x-go-name: Entity
       pagerduty_credentials:
         type: string
-      slack_credentials:
-        properties:
-          critical:
-            properties:
-              webhook:
-                type: string
-              username:
-                type: string
-              channel:
-                type: string
-          warning:
-            properties:
-              webhook:
-                type: string
-              username:
-                type: string
-              channel:
-                type: string
+        x-go-name: PagerdutyCredentials
+      slack_config:
+        $ref: '#/definitions/SlackConfig'
+    type: object
+    x-go-package: github.com/odpf/siren/docs
   Rule:
     properties:
       CreatedAt:
@@ -77,6 +65,27 @@ definitions:
       value:
         type: string
         x-go-name: Value
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  SlackConfig:
+    properties:
+      critical:
+        $ref: '#/definitions/SlackCredential'
+      warning:
+        $ref: '#/definitions/SlackCredential'
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  SlackCredential:
+    properties:
+      channel:
+        type: string
+        x-go-name: Channel
+      username:
+        type: string
+        x-go-name: Username
+      webhook:
+        type: string
+        x-go-name: Webhook
     type: object
     x-go-package: github.com/odpf/siren/domain
   Template:
@@ -131,6 +140,46 @@ info:
   title: Siren.
   version: 1.0.0
 paths:
+  /alertingCredentials/teams/{teamName}:
+    get:
+      description: 'Get AlertCredentials API: This API helps in getting the teams
+        slack and pagerduty credentials'
+      operationId: getAlertCredentialRequest
+      parameters:
+      - description: name of the team
+        in: path
+        name: teamName
+        required: true
+        type: string
+        x-go-name: TeamName
+      responses:
+        "200":
+          description: AlertCredentialResponse
+          schema:
+            $ref: '#/definitions/AlertCredentialResponse'
+      tags:
+      - alertcredential
+    put:
+      description: 'Upsert AlertCredentials API: This API helps in creating or updating
+        the teams slack and pagerduty credentials'
+      operationId: createAlertCredentialRequest
+      parameters:
+      - description: Create AlertCredential request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/AlertCredentialResponse'
+      - description: name of the team
+        in: path
+        name: teamName
+        required: true
+        type: string
+        x-go-name: TeamName
+      responses:
+        "200":
+          description: ""
+      tags:
+      - alertcredential
   /ping:
     get:
       description: Ping call
@@ -269,22 +318,6 @@ paths:
           $ref: '#/responses/renderTemplatesResponse'
       tags:
       - templates
-  /alertingCredentials/teams/{teamName}:
-    put:
-      description: 'Update slack & pagerduty configs for the team and sync to alertmanager'
-      operationId: createAlertCredentialRequest
-      parameters:
-        - description: Upsert AlertCredential Request
-          in: body
-          name: Body
-          schema:
-            $ref: '#/definitions/AlertCredentials'
-      responses:
-        "200":
-          $ref: ''
-      tags:
-        - templates
-
 produces:
 - application/json
 responses:
