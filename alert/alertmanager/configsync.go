@@ -42,7 +42,7 @@ type AlertmanagerClient struct {
 	detmplStr     string
 }
 
-func NewClient(c domain.AlertmanagerConfig) (AlertmanagerClient, error) {
+func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
 	config := client.Config{
 		Address: c.Address,
 	}

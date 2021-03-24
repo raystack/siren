@@ -23,7 +23,7 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	services, err := service.Init(store, c.Cortex, c.Alertmanager)
+	services, err := service.Init(store, c.Cortex)
 	if err != nil {
 		return err
 	}
