@@ -176,7 +176,7 @@ func TestSyncConfig(t *testing.T) {
 			w.WriteHeader(500)
 		}))
 		defer ts.Close()
-		client, err := NewClient(domain.AlertmanagerConfig{
+		client, err := NewClient(domain.CortexConfig{
 			Address: ts.URL,
 		})
 		if err != nil {
@@ -204,7 +204,7 @@ func TestSyncConfig(t *testing.T) {
 			assert.NotEmpty(t, detmpl)
 		}))
 		defer ts.Close()
-		client, err := NewClient(domain.AlertmanagerConfig{
+		client, err := NewClient(domain.CortexConfig{
 			Address: ts.URL,
 		})
 		if err != nil {

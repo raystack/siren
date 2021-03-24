@@ -15,10 +15,10 @@ type Container struct {
 	AlertmanagerService domain.AlertmanagerService
 }
 
-func Init(db *gorm.DB, cortex domain.CortexConfig, alertmanagerConfig domain.AlertmanagerConfig) (*Container, error) {
+func Init(db *gorm.DB, cortex domain.CortexConfig) (*Container, error) {
 	templatesService := templates.NewService(db)
 	rulesService := rules.NewService(db, cortex)
-	newClient, err := alertmanager.NewClient(alertmanagerConfig)
+	newClient, err := alertmanager.NewClient(cortex)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func Init(db *gorm.DB, cortex domain.CortexConfig, alertmanagerConfig domain.Ale
 }
 
 func MigrateAll(db *gorm.DB, c domain.Config) error {
-	container, err := Init(db, c.Cortex, c.Alertmanager)
+	container, err := Init(db, c.Cortex)
 	if err != nil {
 		return err
 	}
