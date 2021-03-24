@@ -55,7 +55,7 @@ func TestGetAlertCredentials(t *testing.T) {
 		alertmanagerServiceMock.On("Get", "hydra").Return(credential, nil)
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -90,7 +90,7 @@ func TestGetAlertCredentials(t *testing.T) {
 			domain.AlertCredential{}, errors.New("internal error"))
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -130,7 +130,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 201, w.Code)
 	})
@@ -161,7 +161,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 500, w.Code)
 	})
@@ -192,7 +192,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "slack critical webhook is not a valid url", w.Body.String())
@@ -225,7 +225,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "entity cannot be empty", w.Body.String())
@@ -259,7 +259,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		})
+		}, nil)
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "pagerduty key cannot be empty", w.Body.String())
