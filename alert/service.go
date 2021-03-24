@@ -121,7 +121,30 @@ from slack_credentials as sw
 }
 
 func (s Service) Get(teamName string) (domain.AlertCredential, error) {
-	return domain.AlertCredential{}, nil
+	slackCredentialMap, pagerdutyCredential, err := s.repository.GetCredential(teamName)
+	if err != nil {
+		return domain.AlertCredential{}, err
+	}
+	warningSlackCredential := slackCredentialMap["WARNING"]
+	criticalSlackCredential := slackCredentialMap["CRITICAL"]
+	credential := domain.AlertCredential{
+		Entity:               pagerdutyCredential.Entity,
+		TeamName:             teamName,
+		PagerdutyCredentials: pagerdutyCredential.ServiceKey,
+		SlackConfig: domain.SlackConfig{
+			Warning: domain.SlackCredential{
+				Channel:  warningSlackCredential.ChannelName,
+				Webhook:  warningSlackCredential.Webhook,
+				Username: warningSlackCredential.Username,
+			},
+			Critical: domain.SlackCredential{
+				Channel:  criticalSlackCredential.ChannelName,
+				Webhook:  criticalSlackCredential.Webhook,
+				Username: criticalSlackCredential.Username,
+			},
+		},
+	}
+	return credential, nil
 }
 
 func NewService(db *gorm.DB, amClient alertmanager.Client) domain.AlertmanagerService {
