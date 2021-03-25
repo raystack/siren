@@ -9,16 +9,23 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/siren/api/handlers"
 	"github.com/odpf/siren/service"
+	"github.com/purini-to/zapmw"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // New initializes the service router
-func New(container *service.Container, nr *newrelic.Application) *mux.Router {
+func New(container *service.Container, nr *newrelic.Application, logger *zap.Logger) *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 
-	nrMiddleware := nrgorilla.Middleware(nr)
+	zapMiddlewares := []mux.MiddlewareFunc{
+		zapmw.WithZap(logger),
+		zapmw.Request(zapcore.InfoLevel, "request"),
+		zapmw.Recoverer(zapcore.ErrorLevel, "recover", zapmw.RecovererDefault),
+	}
 
-	r.Use(nrMiddleware)
-	r.Use(logger)
+	r.Use(nrgorilla.Middleware(nr))
+	r.Use(zapMiddlewares...)
 
 	// Route => handler
 	r.Methods("GET").Path("/ping").Handler(handlers.Ping())
@@ -41,8 +48,8 @@ func New(container *service.Container, nr *newrelic.Application) *mux.Router {
 	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService))
 
 	// Handle middlewares for NotFoundHandler and MethodNotAllowedHandler since Mux doesn't apply middlewares to them. Ref: https://github.com/gorilla/mux/issues/416
-	_, r.NotFoundHandler = newrelic.WrapHandle(nr, "NotFoundHandler", logger(http.NotFoundHandler()))
-	_, r.MethodNotAllowedHandler = newrelic.WrapHandle(nr, "MethodNotAllowedHandler", logger(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+	_, r.NotFoundHandler = newrelic.WrapHandle(nr, "NotFoundHandler", applyMiddlewaresToHandler(zapMiddlewares, http.NotFoundHandler()))
+	_, r.MethodNotAllowedHandler = newrelic.WrapHandle(nr, "MethodNotAllowedHandler", applyMiddlewaresToHandler(zapMiddlewares, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 	})))
 
