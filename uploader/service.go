@@ -1,4 +1,4 @@
-package app
+package uploader
 
 import (
 	"context"
@@ -10,51 +10,76 @@ import (
 	"github.com/odpf/siren/domain"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
-type variables struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+type RulesAPICaller interface {
+	CreateRuleRequest(ctx context.Context, localVarOptionals *client.RulesApiCreateRuleRequestOpts) (client.Rule, *http.Response, error)
 }
 
-type rule struct {
-	Template  string      `json:"template"`
-	Status    string      `json:"enabled"`
-	Variables []variables `json:"variables"`
+type TemplatesAPICaller interface {
+	CreateTemplateRequest(ctx context.Context, localVarOptionals *client.TemplatesApiCreateTemplateRequestOpts) (client.Template, *http.Response, error)
 }
 
-type ruleYaml struct {
-	ApiVersion string          `json:"apiVersion"`
-	Type       string          `json:"type"`
-	Namespace  string          `json:"namespace"`
-	Rules      map[string]rule `json:"rules"`
+type SirenClient struct {
+	client       *client.APIClient
+	RulesAPI     RulesAPICaller
+	TemplatesAPI TemplatesAPICaller
 }
 
-type templatedRule struct {
-	Alert       string            `json:"alert"`
-	Expr        string            `json:"expr"`
-	For         string            `json:"for"`
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
+func NewSirenClient(host string) *SirenClient {
+	cfg := &client.Configuration{
+		BasePath: host,
+	}
+	apiClient := client.NewAPIClient(cfg)
+	return &SirenClient{
+		client:       apiClient,
+		RulesAPI:     apiClient.RulesApi,
+		TemplatesAPI: apiClient.TemplatesApi,
+	}
 }
 
-type template struct {
-	Name       string            `json:"name"`
-	ApiVersion string            `json:"apiVersion"`
-	Type       string            `json:"type"`
-	Body       []templatedRule   `json:"body"`
-	Tags       []string          `json:"tags"`
-	Variables  []domain.Variable `json:"variables"`
+type Uploader interface {
+	Upload(string) error
+	UploadTemplates([]byte) error
+	UploadRules([]byte) error
 }
 
-func UploadTemplates(c *domain.Config, fileName string) error {
+//Service talks to siren's HTTP Client
+type Service struct {
+	SirenClient *SirenClient
+}
+
+func NewService(c *domain.SirenServiceConfig) *Service {
+	return &Service{
+		SirenClient: NewSirenClient(c.Host),
+	}
+}
+
+func (s Service) Upload(fileName string) error {
 	yamlFile, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
 		return err
 	}
+	var y yamlObject
+	err = yaml.Unmarshal(yamlFile, &y)
+	if err != nil {
+		return err
+	}
+	if strings.ToLower(y.Type) == "template" {
+		return s.UploadTemplates(yamlFile)
+	} else if strings.ToLower(y.Type) == "rule" {
+		return s.UploadRules(yamlFile)
+	} else {
+		return errors.New("unknown type given")
+	}
+}
+
+func (s Service) UploadTemplates(yamlFile []byte) error {
 	var t template
-	err = yaml.Unmarshal(yamlFile, &t)
+	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
 		return err
 	}
@@ -65,20 +90,16 @@ func UploadTemplates(c *domain.Config, fileName string) error {
 	if err != nil {
 		return err
 	}
-	cfg := &client.Configuration{
-		BasePath: c.SirenService.Host,
-	}
 	payload := domain.Template{
 		Body:      string(body),
 		Name:      t.Name,
 		Variables: t.Variables,
 		Tags:      t.Tags,
 	}
-	sirenClient := client.NewAPIClient(cfg)
 	options := &client.TemplatesApiCreateTemplateRequestOpts{
 		Body: optional.NewInterface(payload),
 	}
-	result, _, err := sirenClient.TemplatesApi.CreateTemplateRequest(context.Background(), options)
+	result, _, err := s.SirenClient.TemplatesAPI.CreateTemplateRequest(context.Background(), options)
 	if err != nil {
 		fmt.Println(result)
 	}
@@ -87,24 +108,15 @@ func UploadTemplates(c *domain.Config, fileName string) error {
 	return nil
 }
 
-func UploadRules(c *domain.Config, fileName string, entity string) error {
-	yamlFile, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		fmt.Printf("Error reading YAML file: %s\n", err)
-		return err
-	}
+func (s Service) UploadRules(yamlFile []byte) error {
 	var yamlBody ruleYaml
-	err = yaml.Unmarshal(yamlFile, &yamlBody)
+	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
 		return err
 	}
 	if yamlBody.Type != "rule" {
 		return errors.New("object was not of rule type")
 	}
-	cfg := &client.Configuration{
-		BasePath: c.SirenService.Host,
-	}
-	sirenClient := client.NewAPIClient(cfg)
 
 	for k, v := range yamlBody.Rules {
 		var vars []domain.RuleVariable
@@ -117,7 +129,7 @@ func UploadRules(c *domain.Config, fileName string, entity string) error {
 		}
 		payload := domain.Rule{
 			Namespace: yamlBody.Namespace,
-			Entity:    entity,
+			Entity:    yamlBody.Entity,
 			GroupName: k,
 			Template:  v.Template,
 			Status:    v.Status,
@@ -126,7 +138,7 @@ func UploadRules(c *domain.Config, fileName string, entity string) error {
 		options := &client.RulesApiCreateRuleRequestOpts{
 			Body: optional.NewInterface(payload),
 		}
-		result, _, err := sirenClient.RulesApi.CreateRuleRequest(context.Background(), options)
+		result, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), options)
 		response, _ := json.Marshal(result)
 		fmt.Println(string(response))
 		if err != nil {
