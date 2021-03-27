@@ -2,7 +2,6 @@ package uploader
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/antihax/optional"
@@ -41,9 +40,9 @@ func NewSirenClient(host string) *SirenClient {
 }
 
 type Uploader interface {
-	Upload(string) error
-	UploadTemplates([]byte) error
-	UploadRules([]byte) error
+	Upload(string) (interface{}, error)
+	UploadTemplates([]byte) (client.Template, error)
+	UploadRules([]byte) ([]*client.Rule, error)
 }
 
 //Service talks to siren's HTTP Client
@@ -57,38 +56,37 @@ func NewService(c *domain.SirenServiceConfig) *Service {
 	}
 }
 
-func (s Service) Upload(fileName string) error {
-	yamlFile, err := ioutil.ReadFile(fileName)
+var fileReader = ioutil.ReadFile
+
+func (s Service) Upload(fileName string) (interface{}, error) {
+	yamlFile, err := fileReader(fileName)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
-		return err
+		return nil, err
 	}
 	var y yamlObject
 	err = yaml.Unmarshal(yamlFile, &y)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if strings.ToLower(y.Type) == "template" {
 		return s.UploadTemplates(yamlFile)
 	} else if strings.ToLower(y.Type) == "rule" {
 		return s.UploadRules(yamlFile)
 	} else {
-		return errors.New("unknown type given")
+		return nil, errors.New("unknown type given")
 	}
 }
 
-func (s Service) UploadTemplates(yamlFile []byte) error {
+func (s Service) UploadTemplates(yamlFile []byte) (*client.Template, error) {
 	var t template
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
-		return err
-	}
-	if t.Type != "template" {
-		return errors.New("object was not of template type")
+		return nil, err
 	}
 	body, err := yaml.Marshal(t.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	payload := domain.Template{
 		Body:      string(body),
@@ -101,22 +99,18 @@ func (s Service) UploadTemplates(yamlFile []byte) error {
 	}
 	result, _, err := s.SirenClient.TemplatesAPI.CreateTemplateRequest(context.Background(), options)
 	if err != nil {
-		fmt.Println(result)
+		return nil, err
 	}
-	response, _ := json.Marshal(result)
-	fmt.Println(string(response))
-	return nil
+	return &result, nil
 }
 
-func (s Service) UploadRules(yamlFile []byte) error {
+func (s Service) UploadRules(yamlFile []byte) ([]*client.Rule, error) {
 	var yamlBody ruleYaml
 	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if yamlBody.Type != "rule" {
-		return errors.New("object was not of rule type")
-	}
+	var successfullyUpsertedRules []*client.Rule
 
 	for k, v := range yamlBody.Rules {
 		var vars []domain.RuleVariable
@@ -139,15 +133,15 @@ func (s Service) UploadRules(yamlFile []byte) error {
 			Body: optional.NewInterface(payload),
 		}
 		result, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), options)
-		response, _ := json.Marshal(result)
-		fmt.Println(string(response))
 		if err != nil {
 			fmt.Println(fmt.Sprintf("rule %s/%s/%s/%s upload error",
 				payload.Namespace, payload.Entity, payload.GroupName, payload.Template), err)
+			return successfullyUpsertedRules, err
 		} else {
+			successfullyUpsertedRules = append(successfullyUpsertedRules, &result)
 			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s/%s",
 				payload.Namespace, payload.Entity, payload.GroupName, payload.Template))
 		}
 	}
-	return nil
+	return successfullyUpsertedRules, nil
 }
