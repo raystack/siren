@@ -46,3 +46,35 @@ func (_m *RulesAPICaller) CreateRuleRequest(ctx context.Context, localVarOptiona
 
 	return r0, r1, r2
 }
+
+// ListRulesRequest provides a mock function with given fields: ctx, localVarOptionals
+func (_m *RulesAPICaller) ListRulesRequest(ctx context.Context, localVarOptionals *client.RulesApiListRulesRequestOpts) ([]client.Rule, *http.Response, error) {
+	ret := _m.Called(ctx, localVarOptionals)
+
+	var r0 []client.Rule
+	if rf, ok := ret.Get(0).(func(context.Context, *client.RulesApiListRulesRequestOpts) []client.Rule); ok {
+		r0 = rf(ctx, localVarOptionals)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]client.Rule)
+		}
+	}
+
+	var r1 *http.Response
+	if rf, ok := ret.Get(1).(func(context.Context, *client.RulesApiListRulesRequestOpts) *http.Response); ok {
+		r1 = rf(ctx, localVarOptionals)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*http.Response)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, *client.RulesApiListRulesRequestOpts) error); ok {
+		r2 = rf(ctx, localVarOptionals)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}

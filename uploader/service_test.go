@@ -42,7 +42,7 @@ rules:
 `
 	badYaml := `abcd`
 
-	t.Run("should call siren's cortex API with proper payload for template upsert", func(t *testing.T) {
+	t.Run("should call siren's cortex API with proper payload for template upsert and updates associated rules", func(t *testing.T) {
 		rulesAPIMock := &mocks.RulesAPICaller{}
 		templatesAPIMock := &mocks.TemplatesAPICaller{}
 		mockedClient := &SirenClient{
@@ -54,6 +54,17 @@ rules:
 		}
 		templatesAPIMock.On("CreateTemplateRequest", mock.Anything, mock.Anything).Return(client.Template{
 			Name: "test",
+		}, nil, nil)
+		rulesAPIMock.On("ListRulesRequest", mock.Anything, mock.Anything).
+			Return([]client.Rule{{
+				Id:   31,
+				Name: "test-rule",
+				Variables: []client.RuleVariable{{
+					Name: "varName", Description: "test-description", Type_: "int", Value: "30",
+				},
+				}}}, nil, nil)
+		rulesAPIMock.On("CreateRuleRequest", mock.Anything, mock.Anything).Return(client.Rule{
+			Name: "test-rule",
 		}, nil, nil)
 		oldFileReader := fileReader
 		defer func() { fileReader = oldFileReader }()
@@ -85,6 +96,71 @@ rules:
 		tmp, err := dummyService.Upload("test.txt")
 		assert.EqualError(t, err, "random error")
 		assert.Nil(t, tmp)
+	})
+
+	t.Run("should handle errors in getting associated rules after template upsert", func(t *testing.T) {
+		rulesAPIMock := &mocks.RulesAPICaller{}
+		templatesAPIMock := &mocks.TemplatesAPICaller{}
+		mockedClient := &SirenClient{
+			RulesAPI:     rulesAPIMock,
+			TemplatesAPI: templatesAPIMock,
+		}
+		dummyService := &Service{
+			SirenClient: mockedClient,
+		}
+		templatesAPIMock.On("CreateTemplateRequest", mock.Anything, mock.Anything).Return(client.Template{
+			Name: "test",
+		}, nil, nil)
+		rulesAPIMock.On("ListRulesRequest", mock.Anything, mock.Anything).
+			Return([]client.Rule{{
+				Id:   31,
+				Name: "test-rule",
+				Variables: []client.RuleVariable{{
+					Name: "varName", Description: "test-description", Type_: "int", Value: "30",
+				},
+				}}}, nil, errors.New("random error"))
+		oldFileReader := fileReader
+		defer func() { fileReader = oldFileReader }()
+		fileReader = func(_ string) ([]byte, error) {
+			return []byte(templateBody), nil
+		}
+		tmp, err := dummyService.Upload("test.txt")
+		temp := tmp.(*client.Template)
+		assert.Equal(t, temp.Name, "test")
+		assert.EqualError(t, err, "random error")
+	})
+
+	t.Run("should handle errors in updating associated rules after template upsert", func(t *testing.T) {
+		rulesAPIMock := &mocks.RulesAPICaller{}
+		templatesAPIMock := &mocks.TemplatesAPICaller{}
+		mockedClient := &SirenClient{
+			RulesAPI:     rulesAPIMock,
+			TemplatesAPI: templatesAPIMock,
+		}
+		dummyService := &Service{
+			SirenClient: mockedClient,
+		}
+		templatesAPIMock.On("CreateTemplateRequest", mock.Anything, mock.Anything).Return(client.Template{
+			Name: "test",
+		}, nil, nil)
+		rulesAPIMock.On("ListRulesRequest", mock.Anything, mock.Anything).
+			Return([]client.Rule{{
+				Id:   31,
+				Name: "test-rule",
+				Variables: []client.RuleVariable{{
+					Name: "varName", Description: "test-description", Type_: "int", Value: "30",
+				},
+				}}}, nil, nil)
+		rulesAPIMock.On("CreateRuleRequest", mock.Anything, mock.Anything).Return(client.Rule{}, nil, errors.New("random error"))
+		oldFileReader := fileReader
+		defer func() { fileReader = oldFileReader }()
+		fileReader = func(_ string) ([]byte, error) {
+			return []byte(templateBody), nil
+		}
+		tmp, err := dummyService.Upload("test.txt")
+		temp := tmp.(*client.Template)
+		assert.Equal(t, temp.Name, "test")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should call siren's cortex API with proper payload for rule upsert", func(t *testing.T) {
