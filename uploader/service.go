@@ -15,6 +15,7 @@ import (
 
 type RulesAPICaller interface {
 	CreateRuleRequest(ctx context.Context, localVarOptionals *client.RulesApiCreateRuleRequestOpts) (client.Rule, *http.Response, error)
+	ListRulesRequest(ctx context.Context, localVarOptionals *client.RulesApiListRulesRequestOpts) ([]client.Rule, *http.Response, error)
 }
 
 type TemplatesAPICaller interface {
@@ -100,6 +101,44 @@ func (s Service) UploadTemplates(yamlFile []byte) (*client.Template, error) {
 	result, _, err := s.SirenClient.TemplatesAPI.CreateTemplateRequest(context.Background(), options)
 	if err != nil {
 		return nil, err
+	}
+	//update associated rules for this template
+	associatedRules, _, err := s.SirenClient.RulesAPI.ListRulesRequest(context.Background(), &client.RulesApiListRulesRequestOpts{
+		Template: optional.NewString(t.Name),
+	})
+	if err != nil {
+		return &result, err
+	}
+	for i := 0; i < len(associatedRules); i++ {
+		associatedRule := associatedRules[i]
+		var updatedVariables []domain.RuleVariable
+		for j := 0; j < len(associatedRules[i].Variables); j++ {
+			ruleVar := domain.RuleVariable{
+				Name:        associatedRules[i].Variables[j].Name,
+				Value:       associatedRules[i].Variables[j].Value,
+				Type:        associatedRules[i].Variables[j].Type_,
+				Description: associatedRules[i].Variables[j].Description,
+			}
+			updatedVariables = append(updatedVariables, ruleVar)
+		}
+		updateRulePayload := domain.Rule{
+			Namespace: associatedRule.Namespace,
+			Entity:    associatedRule.Entity,
+			GroupName: associatedRule.GroupName,
+			Template:  associatedRule.Template,
+			Status:    associatedRule.Status,
+			Variables: updatedVariables,
+		}
+		updateOptions := &client.RulesApiCreateRuleRequestOpts{
+			Body: optional.NewInterface(updateRulePayload),
+		}
+		_, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), updateOptions)
+		if err != nil {
+			fmt.Println("failed to update rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
+			return &result, err
+		} else {
+			fmt.Println("successfully updated rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
+		}
 	}
 	return &result, nil
 }

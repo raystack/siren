@@ -110,8 +110,11 @@ func main() {
     - Runs the DB Migrations `$ go run main.go serve`
 
 2. Upload
-    - Parses a YAML File in specified format to upsert templates and rules `$ go run main.go upload fileName.yaml`
+    - Parses a YAML File in specified format to upsert templates and rules(alerts) `$ go run main.go upload fileName.yaml`
 
+   **Note:** Updating a template will update all associated rules(alerts). If some new variable is introduced in tempalte, 
+   one should always give default values. 
+   
 #### Sample template YAML File
 
 ```yaml
