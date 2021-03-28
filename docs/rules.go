@@ -13,7 +13,7 @@ type rulesResponse struct {
 // swagger:route GET /rules rules listRulesRequest
 // List Rules API: This API lists all the existing rules with given filers in query params
 // responses:
-//   200: listResponse
+//   200: listRulesResponse
 
 // swagger:parameters listRulesRequest
 type listRulesRequest struct {
@@ -27,7 +27,7 @@ type listRulesRequest struct {
 }
 
 // List rules response
-// swagger:response listResponse
+// swagger:response listRulesResponse
 type listRulesResponse struct {
 	// in:body
 	Body []domain.Rule
