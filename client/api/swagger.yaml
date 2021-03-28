@@ -6,6 +6,59 @@ info:
 servers:
 - url: http://localhost:3000/
 paths:
+  /alertingCredentials/teams/{teamName}:
+    get:
+      tags:
+      - alertcredential
+      description: 'Get AlertCredentials API: This API helps in getting the teams
+        slack and pagerduty credentials'
+      operationId: getAlertCredentialRequest
+      parameters:
+      - name: teamName
+        in: path
+        description: name of the team
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          x-go-name: TeamName
+        x-go-name: TeamName
+      responses:
+        "200":
+          description: AlertCredentialResponse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertCredentialResponse'
+    put:
+      tags:
+      - alertcredential
+      description: 'Upsert AlertCredentials API: This API helps in creating or updating
+        the teams slack and pagerduty credentials'
+      operationId: createAlertCredentialRequest
+      parameters:
+      - name: teamName
+        in: path
+        description: name of the team
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          x-go-name: TeamName
+        x-go-name: TeamName
+      requestBody:
+        description: Create AlertCredential request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCredentialResponse'
+        required: false
+      responses:
+        "200":
+          content: {}
+      x-codegen-request-body-name: Body
   /ping:
     get:
       tags:
@@ -72,13 +125,13 @@ paths:
         x-go-name: Template
       responses:
         "200":
-          description: List templates response
+          description: List rules response
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Template'
+                  $ref: '#/components/schemas/Rule'
                 x-content-type: application/json
     put:
       tags:
@@ -219,6 +272,27 @@ paths:
           content: {}
 components:
   schemas:
+    AlertCredentialResponse:
+      type: object
+      properties:
+        entity:
+          type: string
+          x-go-name: Entity
+        pagerduty_credentials:
+          type: string
+          x-go-name: PagerdutyCredentials
+        slack_config:
+          $ref: '#/components/schemas/SlackConfig'
+      example:
+        slack_config:
+          critical:
+            webhook: webhook
+            channel: channel
+            username: username
+          warning: null
+        pagerduty_credentials: pagerduty_credentials
+        entity: entity
+      x-go-package: github.com/odpf/siren/docs
     Rule:
       type: object
       properties:
@@ -295,6 +369,37 @@ components:
         description: description
         type: type
         value: value
+      x-go-package: github.com/odpf/siren/domain
+    SlackConfig:
+      type: object
+      properties:
+        critical:
+          $ref: '#/components/schemas/SlackCredential'
+        warning:
+          $ref: '#/components/schemas/SlackCredential'
+      example:
+        critical:
+          webhook: webhook
+          channel: channel
+          username: username
+        warning: null
+      x-go-package: github.com/odpf/siren/domain
+    SlackCredential:
+      type: object
+      properties:
+        channel:
+          type: string
+          x-go-name: Channel
+        username:
+          type: string
+          x-go-name: Username
+        webhook:
+          type: string
+          x-go-name: Webhook
+      example:
+        webhook: webhook
+        channel: channel
+        username: username
       x-go-package: github.com/odpf/siren/domain
     Template:
       type: object
@@ -374,6 +479,14 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Template'
+    listRulesResponse:
+      description: List rules response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Rule'
     pingResponse:
       description: Response body for Ping.
       content: {}

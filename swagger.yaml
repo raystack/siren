@@ -218,7 +218,7 @@ paths:
         x-go-name: Template
       responses:
         "200":
-          $ref: '#/responses/listResponse'
+          $ref: '#/responses/listRulesResponse'
       tags:
       - rules
     put:
@@ -326,6 +326,12 @@ responses:
     schema:
       items:
         $ref: '#/definitions/Template'
+      type: array
+  listRulesResponse:
+    description: List rules response
+    schema:
+      items:
+        $ref: '#/definitions/Rule'
       type: array
   pingResponse:
     description: Response body for Ping.
