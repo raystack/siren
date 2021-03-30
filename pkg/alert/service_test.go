@@ -2,8 +2,8 @@ package alert
 
 import (
 	"fmt"
-	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/pkg/alert/alertmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gorm.io/driver/postgres"
