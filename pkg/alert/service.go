@@ -2,8 +2,8 @@ package alert
 
 import (
 	"database/sql"
-	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/pkg/alert/alertmanager"
 	"gorm.io/gorm"
 )
 
