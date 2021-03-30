@@ -73,7 +73,7 @@ The config used for client generation is `client_config.json`
 To regenerate the client, run
 
 ```
-$ swagger-codegen generate -i swagger.yaml -l go -o client -c client_config.json
+$ swagger-codegen generate -i api/handlers/swagger.yaml -l go -o client -c client_config.json
 ```
 
 Sample usage of the client:
