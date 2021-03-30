@@ -36,16 +36,16 @@ func New(container *service.Container, nr *newrelic.Application, logger *zap.Log
 		Path:    "documentation",
 	}, r.NotFoundHandler))
 
-	r.Methods("PUT").Path("/templates").Handler(handlers.UpsertTemplates(container.TemplatesService))
-	r.Methods("GET").Path("/templates").Handler(handlers.IndexTemplates(container.TemplatesService))
-	r.Methods("GET").Path("/templates/{name}").Handler(handlers.GetTemplates(container.TemplatesService))
-	r.Methods("DELETE").Path("/templates/{name}").Handler(handlers.DeleteTemplates(container.TemplatesService))
-	r.Methods("POST").Path("/templates/{name}/render").Handler(handlers.RenderTemplates(container.TemplatesService))
-	r.Methods("PUT").Path("/alertingCredentials/teams/{teamName}").Handler(handlers.UpdateAlertCredentials(container.AlertmanagerService))
-	r.Methods("GET").Path("/alertingCredentials/teams/{teamName}").Handler(handlers.GetAlertCredentials(container.AlertmanagerService))
+	r.Methods("PUT").Path("/templates").Handler(handlers.UpsertTemplates(container.TemplatesService, logger))
+	r.Methods("GET").Path("/templates").Handler(handlers.IndexTemplates(container.TemplatesService, logger))
+	r.Methods("GET").Path("/templates/{name}").Handler(handlers.GetTemplates(container.TemplatesService, logger))
+	r.Methods("DELETE").Path("/templates/{name}").Handler(handlers.DeleteTemplates(container.TemplatesService, logger))
+	r.Methods("POST").Path("/templates/{name}/render").Handler(handlers.RenderTemplates(container.TemplatesService, logger))
+	r.Methods("PUT").Path("/alertingCredentials/teams/{teamName}").Handler(handlers.UpdateAlertCredentials(container.AlertmanagerService, logger))
+	r.Methods("GET").Path("/alertingCredentials/teams/{teamName}").Handler(handlers.GetAlertCredentials(container.AlertmanagerService, logger))
 
-	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService))
-	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService))
+	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService, logger))
+	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService, logger))
 
 	// Handle middlewares for NotFoundHandler and MethodNotAllowedHandler since Mux doesn't apply middlewares to them. Ref: https://github.com/gorilla/mux/issues/416
 	_, r.NotFoundHandler = newrelic.WrapHandle(nr, "NotFoundHandler", applyMiddlewaresToHandler(zapMiddlewares, http.NotFoundHandler()))
