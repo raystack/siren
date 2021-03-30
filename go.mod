@@ -14,7 +14,6 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/lib/pq v1.3.0
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/markbates/pkger v0.17.1
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/newrelic/go-agent/v3 v3.11.0

@@ -3,11 +3,22 @@ package alertmanager
 import (
 	"bytes"
 	"context"
+	"text/template"
+
+	_ "embed"
+
 	"github.com/grafana/cortex-tools/pkg/client"
-	"github.com/markbates/pkger"
 	"github.com/odpf/siren/domain"
 	"github.com/prometheus/alertmanager/config"
-	"text/template"
+)
+
+var (
+	//go:embed alertmanagerde.tmpl
+	deTmplateString string
+	//go:embed alertmanagervar.tmpl
+	varTmplateString string
+	//go:embed alertmanagerconfig.goyaml
+	configYamlString string
 )
 
 type SlackCredential struct {
@@ -51,13 +62,6 @@ func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
 		return AlertmanagerClient{}, err
 	}
 
-	deTemplatePath := "/pkg/alert/alertmanagerde.tmpl"
-	deTmplateString, err := readTemplateString(err, deTemplatePath)
-	if err != nil {
-		return AlertmanagerClient{}, err
-	}
-	varTmplPath := "/pkg/alert/alertmanagervar.tmpl"
-	varTmplateString, err := readTemplateString(err, varTmplPath)
 	if err != nil {
 		return AlertmanagerClient{}, err
 	}
@@ -87,15 +91,8 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 }
 
 func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
-	configYaml, err := pkger.Open("/pkg/alert/alertmanagerconfig.goyaml")
-	if err != nil {
-		return "", err
-	}
-	defer configYaml.Close()
-	configYamlBuf := new(bytes.Buffer)
-	configYamlBuf.ReadFrom(configYaml)
 	delims := template.New("alertmanagerConfigTemplate").Delims("[[", "]]")
-	parse, err := delims.Parse(configYamlBuf.String())
+	parse, err := delims.Parse(configYamlString)
 	if err != nil {
 		return "", err
 	}
@@ -110,18 +107,4 @@ func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
 		return "", err
 	}
 	return configStr, nil
-}
-
-func readTemplateString(err error, templatePath string) (string, error) {
-	tmpl, err := pkger.Open(templatePath)
-	if err != nil {
-		return "", err
-	}
-	defer tmpl.Close()
-	detmplBuf := new(bytes.Buffer)
-	_, err = detmplBuf.ReadFrom(tmpl)
-	if err != nil {
-		return "", err
-	}
-	return detmplBuf.String(), nil
 }
