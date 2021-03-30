@@ -1,6 +1,12 @@
-FROM golang:1.16
+FROM golang:1.16-alpine3.13 AS builder
 WORKDIR /go/src/github.com/odpf/siren
 COPY . .
+RUN apk add make bash
 RUN make dist
-EXPOSE 3000
-ENTRYPOINT ["/go/src/github.com/odpf/siren/dist/linux-amd64/siren"]
+
+FROM alpine:3.13
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+EXPOSE 8080
+COPY --from=builder /go/src/github.com/odpf/siren/dist/linux-amd64/siren .
+ENTRYPOINT ["./siren"]
