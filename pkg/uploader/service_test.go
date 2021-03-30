@@ -3,7 +3,7 @@ package uploader
 import (
 	"errors"
 	"github.com/odpf/siren/client"
-	"github.com/odpf/siren/uploader/mocks"
+	"github.com/odpf/siren/pkg/uploader/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"

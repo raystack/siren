@@ -6,7 +6,7 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/templates"
+	"github.com/odpf/siren/pkg/templates"
 	"gorm.io/gorm"
 	"strings"
 )

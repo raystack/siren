@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/odpf/siren/app"
 	"github.com/odpf/siren/client"
-	"github.com/odpf/siren/uploader"
+	"github.com/odpf/siren/pkg/uploader"
 	"github.com/spf13/cobra"
 )
 
