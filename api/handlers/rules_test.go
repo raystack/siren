@@ -4,14 +4,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/odpf/siren/api/handlers"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/odpf/siren/api/handlers"
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/logger"
+	"github.com/odpf/siren/mocks"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
+
+func getPanicLogger() *zap.Logger {
+	panicLogger, _ := logger.New(&domain.LogConfig{Level: "panic"})
+	return panicLogger
+}
 
 func TestRules_UpsertRules(t *testing.T) {
 	t.Run("should return 200 OK on success", func(t *testing.T) {
@@ -35,7 +43,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyRule)
 		expectedStringBody := string(response) + "\n"
@@ -68,7 +76,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"invalid character 'b' looking for beginning of value\",\"data\":null}"
 
@@ -100,7 +108,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"namespace cannot be empty\",\"data\":null}"
 
@@ -132,7 +140,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"entity cannot be empty\",\"data\":null}"
 
@@ -164,7 +172,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"template name cannot be empty\",\"data\":null}"
 
@@ -196,7 +204,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"status could be enabled or disabled\",\"data\":null}"
 
@@ -228,7 +236,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"group name cannot be empty\",\"data\":null}"
 
@@ -260,7 +268,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"template not found\",\"data\":null}"
 
@@ -291,7 +299,7 @@ func TestRules_UpsertRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertRule(mockedRulesService)
+		handler := handlers.UpsertRule(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
@@ -331,7 +339,7 @@ func TestRules_GetRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.GetRules(mockedRulesService)
+		handler := handlers.GetRules(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyRules)
 		expectedStringBody := string(response) + "\n"
@@ -359,7 +367,7 @@ func TestRules_GetRules(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.GetRules(mockedRulesService)
+		handler := handlers.GetRules(mockedRulesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 

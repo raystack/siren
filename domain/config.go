@@ -8,6 +8,7 @@ type DBConfig struct {
 	Name     string `mapstructure:"name" default:"postgres"`
 	Port     string `mapstructure:"port" default:"5432"`
 	SslMode  string `mapstructure:"sslmode" default:"disable"`
+	LogLevel string `mapstructure:"log_level" default:"info"`
 }
 
 // CortexConfig contains the cortex configuration
@@ -26,11 +27,16 @@ type NewRelicConfig struct {
 	License string `mapstructure:"license"`
 }
 
+type LogConfig struct {
+	Level string `mapstructure:"level" default:"info"`
+}
+
 // Config contains the application configuration
 type Config struct {
-	Port     int            `mapstructure:"port" default:"8080"`
-	DB       DBConfig       `mapstructure:"db"`
-	Cortex   CortexConfig   `mapstructure:"cortex"`
-	NewRelic NewRelicConfig `mapstructure:"newrelic"`
-	SirenService SirenServiceConfig	`mapstructure:"siren_service"`
+	Port         int                `mapstructure:"port" default:"8080"`
+	DB           DBConfig           `mapstructure:"db"`
+	Cortex       CortexConfig       `mapstructure:"cortex"`
+	NewRelic     NewRelicConfig     `mapstructure:"newrelic"`
+	SirenService SirenServiceConfig `mapstructure:"siren_service"`
+	Log          LogConfig          `mapstructure:"log"`
 }

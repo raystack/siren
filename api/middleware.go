@@ -1,19 +1,15 @@
 package api
 
 import (
-	"github.com/go-openapi/runtime/middleware"
-	"github.com/gorilla/handlers"
 	"net/http"
-	"os"
+
+	"github.com/gorilla/mux"
 )
 
-func logger(next http.Handler) http.Handler {
-	return handlers.LoggingHandler(os.Stdout, next)
-}
-
-func SwaggerMiddleware(next http.Handler) http.Handler {
-	return middleware.SwaggerUI(middleware.SwaggerUIOpts{
-		SpecURL: "/swagger.yaml",
-		Path:    "docs",
-	}, next)
+func applyMiddlewaresToHandler(middlewares []mux.MiddlewareFunc, next http.Handler) http.Handler {
+	handler := next
+	for index := range middlewares {
+		handler = middlewares[len(middlewares)-1-index](handler)
+	}
+	return handler
 }
