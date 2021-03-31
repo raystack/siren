@@ -2,12 +2,13 @@ package alertmanager
 
 import (
 	"bytes"
-	"github.com/odpf/siren/domain"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/odpf/siren/domain"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestGenerateAlertmanagerConfig(t *testing.T) {
@@ -39,8 +40,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 	}
 	expectedConfigStr :=
 		`  templates:
-    - 'de.tmpl'
-    - 'var.tmpl'
+    - 'helper.tmpl'
   global:
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
@@ -198,10 +198,8 @@ func TestSyncConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 			assert.NotEmpty(t, requestBody.AlertmanagerConfig)
-			vartmpl := requestBody.TemplateFiles["var.tmpl"]
-			detmpl := requestBody.TemplateFiles["de.tmpl"]
-			assert.NotEmpty(t, vartmpl)
-			assert.NotEmpty(t, detmpl)
+			helperTemplate := requestBody.TemplateFiles["helper.tmpl"]
+			assert.NotEmpty(t, helperTemplate)
 		}))
 		defer ts.Close()
 		client, err := NewClient(domain.CortexConfig{
