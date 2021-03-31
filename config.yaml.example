@@ -12,3 +12,5 @@ newrelic:
   enabled: false
   appname: siren
   license: ____LICENSE_STRING_OF_40_CHARACTERS_____
+siren_service:
+  host: http://localhost:3000

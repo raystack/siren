@@ -11,11 +11,12 @@ package client
 
 import (
 	"context"
+	"github.com/antihax/optional"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-	"github.com/antihax/optional"
+	"fmt"
 )
 
 // Linger please
@@ -23,31 +24,33 @@ var (
 	_ context.Context
 )
 
-type RulesApiService service
+type AlertcredentialApiService service
 /*
-RulesApiService
-Upsert Rule API: This API helps in creating a new rule or update an existing one with unique combination of namespace, entity, group_name, template
+AlertcredentialApiService
+Upsert AlertCredentials API: This API helps in creating or updating the teams slack and pagerduty credentials
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param optional nil or *RulesApiCreateRuleRequestOpts - Optional Parameters:
-     * @param "Body" (optional.Interface of Rule) -  Create rule request
-@return Rule
+ * @param teamName name of the team
+ * @param optional nil or *AlertcredentialApiCreateAlertCredentialRequestOpts - Optional Parameters:
+     * @param "Body" (optional.Interface of AlertCredentialResponse) -  Create AlertCredential request
+
 */
 
-type RulesApiCreateRuleRequestOpts struct {
+type AlertcredentialApiCreateAlertCredentialRequestOpts struct {
     Body optional.Interface
 }
 
-func (a *RulesApiService) CreateRuleRequest(ctx context.Context, localVarOptionals *RulesApiCreateRuleRequestOpts) (Rule, *http.Response, error) {
+func (a *AlertcredentialApiService) CreateAlertCredentialRequest(ctx context.Context, teamName string, localVarOptionals *AlertcredentialApiCreateAlertCredentialRequestOpts) (*http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Put")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
-		localVarReturnValue Rule
+		
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/rules"
+	localVarPath := a.client.cfg.BasePath + "/alertingCredentials/teams/{teamName}"
+	localVarPath = strings.Replace(localVarPath, "{"+"teamName"+"}", fmt.Sprintf("%v", teamName), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
@@ -63,7 +66,7 @@ func (a *RulesApiService) CreateRuleRequest(ctx context.Context, localVarOptiona
 	}
 
 	// to determine the Accept header
-	localVarHttpHeaderAccepts := []string{"application/json"}
+	localVarHttpHeaderAccepts := []string{}
 
 	// set Accept header
 	localVarHttpHeaderAccept := selectHeaderAccept(localVarHttpHeaderAccepts)
@@ -78,100 +81,55 @@ func (a *RulesApiService) CreateRuleRequest(ctx context.Context, localVarOptiona
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
 	if err != nil {
-		return localVarReturnValue, nil, err
+		return nil, err
 	}
 
 	localVarHttpResponse, err := a.client.callAPI(r)
 	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarHttpResponse, err
 	}
 
 	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
 	localVarHttpResponse.Body.Close()
 	if err != nil {
-		return localVarReturnValue, localVarHttpResponse, err
+		return localVarHttpResponse, err
 	}
 
-	if localVarHttpResponse.StatusCode < 300 {
-		// If we succeed, return the data, otherwise pass on to decode error.
-		err = a.client.decode(&localVarReturnValue, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
-		if err == nil { 
-			return localVarReturnValue, localVarHttpResponse, err
-		}
-	}
 
 	if localVarHttpResponse.StatusCode >= 300 {
 		newErr := GenericSwaggerError{
 			body: localVarBody,
 			error: localVarHttpResponse.Status,
 		}
-		if localVarHttpResponse.StatusCode == 200 {
-			var v Rule
-			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
-				if err != nil {
-					newErr.error = err.Error()
-					return localVarReturnValue, localVarHttpResponse, newErr
-				}
-				newErr.model = v
-				return localVarReturnValue, localVarHttpResponse, newErr
-		}
-		return localVarReturnValue, localVarHttpResponse, newErr
+		return localVarHttpResponse, newErr
 	}
 
-	return localVarReturnValue, localVarHttpResponse, nil
+	return localVarHttpResponse, nil
 }
 /*
-RulesApiService
-List Rules API: This API lists all the existing rules with given filers in query params
+AlertcredentialApiService
+Get AlertCredentials API: This API helps in getting the teams slack and pagerduty credentials
  * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param optional nil or *RulesApiListRulesRequestOpts - Optional Parameters:
-     * @param "Namespace" (optional.String) -  List Rule Request
-     * @param "Entity" (optional.String) - 
-     * @param "GroupName" (optional.String) - 
-     * @param "Status" (optional.String) - 
-     * @param "Template" (optional.String) - 
-@return []Rule
+ * @param teamName name of the team
+@return AlertCredentialResponse
 */
-
-type RulesApiListRulesRequestOpts struct {
-    Namespace optional.String
-    Entity optional.String
-    GroupName optional.String
-    Status optional.String
-    Template optional.String
-}
-
-func (a *RulesApiService) ListRulesRequest(ctx context.Context, localVarOptionals *RulesApiListRulesRequestOpts) ([]Rule, *http.Response, error) {
+func (a *AlertcredentialApiService) GetAlertCredentialRequest(ctx context.Context, teamName string) (AlertCredentialResponse, *http.Response, error) {
 	var (
 		localVarHttpMethod = strings.ToUpper("Get")
 		localVarPostBody   interface{}
 		localVarFileName   string
 		localVarFileBytes  []byte
-		localVarReturnValue []Rule
+		localVarReturnValue AlertCredentialResponse
 	)
 
 	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/rules"
+	localVarPath := a.client.cfg.BasePath + "/alertingCredentials/teams/{teamName}"
+	localVarPath = strings.Replace(localVarPath, "{"+"teamName"+"}", fmt.Sprintf("%v", teamName), -1)
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
-	if localVarOptionals != nil && localVarOptionals.Namespace.IsSet() {
-		localVarQueryParams.Add("namespace", parameterToString(localVarOptionals.Namespace.Value(), ""))
-	}
-	if localVarOptionals != nil && localVarOptionals.Entity.IsSet() {
-		localVarQueryParams.Add("entity", parameterToString(localVarOptionals.Entity.Value(), ""))
-	}
-	if localVarOptionals != nil && localVarOptionals.GroupName.IsSet() {
-		localVarQueryParams.Add("group_name", parameterToString(localVarOptionals.GroupName.Value(), ""))
-	}
-	if localVarOptionals != nil && localVarOptionals.Status.IsSet() {
-		localVarQueryParams.Add("status", parameterToString(localVarOptionals.Status.Value(), ""))
-	}
-	if localVarOptionals != nil && localVarOptionals.Template.IsSet() {
-		localVarQueryParams.Add("template", parameterToString(localVarOptionals.Template.Value(), ""))
-	}
 	// to determine the Content-Type header
 	localVarHttpContentTypes := []string{}
 
@@ -219,7 +177,7 @@ func (a *RulesApiService) ListRulesRequest(ctx context.Context, localVarOptional
 			error: localVarHttpResponse.Status,
 		}
 		if localVarHttpResponse.StatusCode == 200 {
-			var v []Rule
+			var v AlertCredentialResponse
 			err = a.client.decode(&v, localVarBody, localVarHttpResponse.Header.Get("Content-Type"));
 				if err != nil {
 					newErr.error = err.Error()

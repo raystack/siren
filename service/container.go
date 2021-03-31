@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/odpf/siren/alert"
-	"github.com/odpf/siren/alert/alertmanager"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/rules"
-	"github.com/odpf/siren/templates"
+	"github.com/odpf/siren/pkg/alert"
+	"github.com/odpf/siren/pkg/alert/alertmanager"
+	"github.com/odpf/siren/pkg/rules"
+	"github.com/odpf/siren/pkg/templates"
 	"gorm.io/gorm"
 )
 
