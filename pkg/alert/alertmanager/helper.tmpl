@@ -36,3 +36,22 @@
     {{ .Annotations.summary }}
     {{ end }}
     {{ end}}
+    {{ define "alertmanager_root_url" }}http://localhost:8080{{ end }}
+    {{ define "slack.warning.name" }}{{ end }}
+    {{ define "slack.warning.webhook_url" }}Not Supported: https://github.com/prometheus/alertmanager/issues/2207{{ end }}
+    {{ define "slack.critical.name" }}{{ end }}
+    {{ define "slack.critical.webhook_url" }}Not Supported: https://github.com/prometheus/alertmanager/issues/2207{{ end }}
+    {{ define "pagerduty.service_key" }}cb73f271c7904e58a7891d044a50ed5c{{ end }}
+    {{ define "slack.default.name" }}none{{ end }}
+    {{ define "silence_url" -}}
+      {{ template "alertmanager_root_url" }}/api/prom/alertmanager/#/silences/new?filter={{ `{` | urlquery -}}
+      {{$first := true}}{{range .CommonLabels.SortedPairs }}{{if $first}}{{$first = false}}{{else}}{{`,` | urlquery }}{{end -}}
+      {{ .Name | urlquery }}{{ `="` | urlquery }}{{ .Value | urlquery }}{{ `"` | urlquery }}{{ end }}
+      {{- `}` | urlquery }}
+    {{- end }}
+    {{define "slack.dashboard"}}
+    {{- if (index .Alerts 0).Annotations.dashboard}}{{(index .Alerts 0).Annotations.dashboard}}{{else}}https://radar.golabs.io{{end}}
+    {{- end -}}
+    {{define "slack.runbook"}}
+    {{- if (index .Alerts 0).Annotations.playbook}}{{(index .Alerts 0).Annotations.playbook}}{{end}}
+    {{- end -}}
