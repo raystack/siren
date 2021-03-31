@@ -9,7 +9,7 @@ Alerting on data pipelines with support for multi tenancy
 Siren requires the following dependencies:
 
 * Docker
-* Golang (version 1.15 or above)
+* Golang (version 1.16 or above)
 * Git
 
 Run the application dependecies using Docker:
