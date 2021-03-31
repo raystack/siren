@@ -13,11 +13,9 @@ import (
 )
 
 var (
-	//go:embed alertmanagerde.tmpl
-	deTmplateString string
-	//go:embed alertmanagervar.tmpl
-	varTmplateString string
-	//go:embed alertmanagerconfig.goyaml
+	//go:embed helper.tmpl
+	helperTemplateString string
+	//go:embed config.goyaml
 	configYamlString string
 )
 
@@ -48,9 +46,8 @@ type Client interface {
 }
 
 type AlertmanagerClient struct {
-	CortextClient client.CortexClient
-	vartmplStr    string
-	detmplStr     string
+	CortextClient  client.CortexClient
+	helperTemplate string
 }
 
 func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
@@ -66,9 +63,8 @@ func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
 		return AlertmanagerClient{}, err
 	}
 	return AlertmanagerClient{
-		CortextClient: *amClient,
-		detmplStr:     deTmplateString,
-		vartmplStr:    varTmplateString,
+		CortextClient:  *amClient,
+		helperTemplate: helperTemplateString,
 	}, nil
 }
 
@@ -78,8 +74,7 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 		return err
 	}
 	templates := map[string]string{
-		"var.tmpl": am.vartmplStr,
-		"de.tmpl":  am.detmplStr,
+		"helper.tmpl": am.helperTemplate,
 	}
 
 	ctx := client.NewContextWithTenantId(context.Background(), credentials.Entity)

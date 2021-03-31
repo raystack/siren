@@ -1,6 +1,5 @@
   templates:
-    - 'de.tmpl'
-    - 'var.tmpl'
+    - 'helper.tmpl'
   global:
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
