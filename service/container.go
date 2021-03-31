@@ -30,12 +30,8 @@ func Init(db *gorm.DB, cortex domain.CortexConfig) (*Container, error) {
 	}, nil
 }
 
-func MigrateAll(db *gorm.DB, c domain.Config) error {
-	container, err := Init(db, c.Cortex)
-	if err != nil {
-		return err
-	}
-	err = container.TemplatesService.Migrate()
+func (container *Container) MigrateAll(db *gorm.DB) error {
+	err := container.TemplatesService.Migrate()
 	if err != nil {
 		return err
 	}

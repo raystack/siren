@@ -3,13 +3,16 @@ package api
 import (
 	"bytes"
 	"errors"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/service"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/logger"
+	"github.com/odpf/siren/service"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
 )
 
 type AlertmanagerServiceMock struct {
@@ -30,6 +33,11 @@ func (m AlertmanagerServiceMock) Upsert(credential domain.AlertCredential) error
 func (m AlertmanagerServiceMock) Get(teamName string) (domain.AlertCredential, error) {
 	args := m.Called(teamName)
 	return args.Get(0).(domain.AlertCredential), args.Error(1)
+}
+
+func getPanicLogger() *zap.Logger {
+	panicLogger, _ := logger.New(&domain.LogConfig{Level: "panic"})
+	return panicLogger
 }
 
 func TestGetAlertCredentials(t *testing.T) {
@@ -55,7 +63,7 @@ func TestGetAlertCredentials(t *testing.T) {
 		alertmanagerServiceMock.On("Get", "hydra").Return(credential, nil)
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -90,7 +98,7 @@ func TestGetAlertCredentials(t *testing.T) {
 			domain.AlertCredential{}, errors.New("internal error"))
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -130,7 +138,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 201, w.Code)
 	})
@@ -161,7 +169,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 500, w.Code)
 	})
@@ -192,7 +200,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "slack critical webhook is not a valid url", w.Body.String())
@@ -225,7 +233,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "entity cannot be empty", w.Body.String())
@@ -259,7 +267,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		w := httptest.NewRecorder()
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
-		}, nil)
+		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, "pagerduty key cannot be empty", w.Body.String())

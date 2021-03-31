@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 const (
@@ -22,22 +24,23 @@ type responseError struct {
 	Data    interface{} `json:"data"`
 }
 
-func internalServerError(w http.ResponseWriter, err error) (responseError, error) {
-	return sendError(w, defaultErrorMessage, http.StatusInternalServerError, nil)
+func internalServerError(w http.ResponseWriter, err error, logger *zap.Logger) {
+	sendError(w, defaultErrorMessage, http.StatusInternalServerError, nil, logger)
 }
 
-func badRequest(w http.ResponseWriter, err error) {
+func badRequest(w http.ResponseWriter, err error, logger *zap.Logger) {
 	var errMessage string
 	if err != nil {
+		logger.Error("handler", zap.String("error", err.Error()))
 		errMessage = err.Error()
 	} else {
 		errMessage = badRequestErrorMessage
 	}
 
-	sendError(w, errMessage, http.StatusBadRequest, nil)
+	sendError(w, errMessage, http.StatusBadRequest, nil, logger)
 }
 
-func NotFound(w http.ResponseWriter, err error) {
+func notFound(w http.ResponseWriter, err error, logger *zap.Logger) {
 	var errMessage string
 	if err != nil {
 		errMessage = err.Error()
@@ -45,10 +48,10 @@ func NotFound(w http.ResponseWriter, err error) {
 		errMessage = notFoundErrorMessage
 	}
 
-	sendError(w, errMessage, http.StatusNotFound, nil)
+	sendError(w, errMessage, http.StatusNotFound, nil, logger)
 }
 
-func sendError(w http.ResponseWriter, errorMessage string, code int, data interface{}) (responseError, error) {
+func sendError(w http.ResponseWriter, errorMessage string, code int, data interface{}, logger *zap.Logger) {
 	if code == 0 {
 		code = http.StatusInternalServerError
 	}
@@ -61,7 +64,8 @@ func sendError(w http.ResponseWriter, errorMessage string, code int, data interf
 
 	jsonBytes, err := json.Marshal(response)
 	if err != nil {
-		return response, err
+		internalServerError(w, err, logger)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -69,8 +73,8 @@ func sendError(w http.ResponseWriter, errorMessage string, code int, data interf
 
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		return response, err
+		internalServerError(w, err, logger)
+		return
 	}
-
-	return response, nil
+	logger.Error("handler", zap.String("error", errorMessage))
 }
