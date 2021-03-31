@@ -5,7 +5,7 @@ RUN apk add make bash
 RUN make dist
 
 FROM alpine:3.13
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates bash
 WORKDIR /root/
 EXPOSE 8080
 COPY --from=builder /go/src/github.com/odpf/siren/dist/linux-amd64/siren .
