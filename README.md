@@ -59,6 +59,8 @@ For any variable the order of precedence is:
 2. Config file
 3. Default in Struct defined in the application code
 
+For list of all available configuration keys check the [configuration](docs/reference/configuration.md) reference.
+
 ### HTTP Client
 
 The `client` directory holds the HTTP Client for siren service. It's generated using project [swagger-codegen](https://github.com/swagger-api/swagger-codegen)

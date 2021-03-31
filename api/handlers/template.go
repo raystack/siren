@@ -3,31 +3,33 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
-	"net/http"
+	"go.uber.org/zap"
 )
 
 // UpsertTemplates handler
-func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
+func UpsertTemplates(service domain.TemplatesService, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var template domain.Template
 		err := json.NewDecoder(r.Body).Decode(&template)
 		if err != nil {
-			badRequest(w, err)
+			badRequest(w, err, logger)
 			return
 		}
 		createdTemplate, err := service.Upsert(&template)
 		if err != nil && err.Error() == ("name cannot be empty") {
-			badRequest(w, err)
+			badRequest(w, err, logger)
 			return
 		}
 		if err != nil && err.Error() == ("body cannot be empty") {
-			badRequest(w, err)
+			badRequest(w, err, logger)
 			return
 		}
 		if err != nil {
-			internalServerError(w, err)
+			internalServerError(w, err, logger)
 			return
 		}
 		returnJSON(w, createdTemplate)
@@ -36,12 +38,12 @@ func UpsertTemplates(service domain.TemplatesService) http.HandlerFunc {
 }
 
 // IndexTemplates handler
-func IndexTemplates(service domain.TemplatesService) http.HandlerFunc {
+func IndexTemplates(service domain.TemplatesService, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.URL.Query().Get("tag")
 		templates, err := service.Index(tag)
 		if err != nil {
-			internalServerError(w, err)
+			internalServerError(w, err, logger)
 			return
 		}
 		returnJSON(w, templates)
@@ -50,17 +52,17 @@ func IndexTemplates(service domain.TemplatesService) http.HandlerFunc {
 }
 
 // GetTemplates handler
-func GetTemplates(service domain.TemplatesService) http.HandlerFunc {
+func GetTemplates(service domain.TemplatesService, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
 		templates, err := service.GetByName(name)
 		if err != nil {
-			internalServerError(w, err)
+			internalServerError(w, err, logger)
 			return
 		}
 		if templates == nil {
-			NotFound(w, errors.New(notFoundErrorMessage))
+			notFound(w, errors.New(notFoundErrorMessage), logger)
 			return
 		}
 		returnJSON(w, templates)
@@ -69,13 +71,13 @@ func GetTemplates(service domain.TemplatesService) http.HandlerFunc {
 }
 
 // DeleteTemplates handler
-func DeleteTemplates(service domain.TemplatesService) http.HandlerFunc {
+func DeleteTemplates(service domain.TemplatesService, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
 		err := service.Delete(name)
 		if err != nil {
-			internalServerError(w, err)
+			internalServerError(w, err, logger)
 			return
 		}
 		returnJSON(w, nil)
@@ -84,23 +86,23 @@ func DeleteTemplates(service domain.TemplatesService) http.HandlerFunc {
 }
 
 // RenderTemplates handler
-func RenderTemplates(service domain.TemplatesService) http.HandlerFunc {
+func RenderTemplates(service domain.TemplatesService, logger *zap.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		name := params["name"]
 		var body map[string]string
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
-			badRequest(w, err)
+			badRequest(w, err, logger)
 			return
 		}
 		renderedBody, err := service.Render(name, body)
 		if err != nil && err.Error() == "template not found" {
-			NotFound(w, err)
+			notFound(w, err, logger)
 			return
 		}
 		if err != nil {
-			internalServerError(w, err)
+			internalServerError(w, err, logger)
 			return
 		}
 		returnJSON(w, renderedBody)
