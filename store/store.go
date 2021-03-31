@@ -2,9 +2,9 @@ package store
 
 import (
 	"fmt"
+
 	"github.com/odpf/siren/domain"
 	"gorm.io/gorm/logger"
-	"log"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -22,10 +22,25 @@ func New(c *domain.DBConfig) (*gorm.DB, error) {
 		c.Password,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(getLogLevelFromString(c.LogLevel))})
 	if err != nil {
-		log.Panic(err)
+		panic(err)
 	}
 
 	return db, err
+}
+
+func getLogLevelFromString(level string) logger.LogLevel {
+	switch level {
+	case "silent":
+		return logger.Silent
+	case "error":
+		return logger.Error
+	case "warn":
+		return logger.Warn
+	case "info":
+		return logger.Info
+	default:
+		return logger.Info
+	}
 }

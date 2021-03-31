@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/api/handlers"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestTemplates_UpsertTemplates(t *testing.T) {
@@ -36,7 +37,7 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		handler := handlers.UpsertTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyTemplate)
 		expectedStringBody := string(response) + "\n"
@@ -56,7 +57,7 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		handler := handlers.UpsertTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"invalid character '}' after object key\",\"data\":null}"
 
@@ -88,7 +89,7 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		handler := handlers.UpsertTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"name cannot be empty\",\"data\":null}"
 
@@ -121,7 +122,7 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		handler := handlers.UpsertTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"body cannot be empty\",\"data\":null}"
 
@@ -154,7 +155,7 @@ func TestTemplates_UpsertTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.UpsertTemplates(mockedTemplatesService)
+		handler := handlers.UpsertTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
@@ -186,7 +187,7 @@ func TestTemplates_GetTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.GetTemplates(mockedTemplatesService)
+		handler := handlers.GetTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyTemplate)
 		expectedStringBody := string(response) + "\n"
@@ -207,7 +208,7 @@ func TestTemplates_GetTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.GetTemplates(mockedTemplatesService)
+		handler := handlers.GetTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusNotFound
 		expectedStringBody := "{\"code\":404,\"message\":\"Not Found\",\"data\":null}"
 
@@ -227,7 +228,7 @@ func TestTemplates_GetTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.GetTemplates(mockedTemplatesService)
+		handler := handlers.GetTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
@@ -261,7 +262,7 @@ func TestTemplates_IndexTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.IndexTemplates(mockedTemplatesService)
+		handler := handlers.IndexTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyTemplates)
 		expectedStringBody := string(response) + "\n"
@@ -282,7 +283,7 @@ func TestTemplates_IndexTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.IndexTemplates(mockedTemplatesService)
+		handler := handlers.IndexTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		response, _ := json.Marshal(dummyTemplates)
 		expectedStringBody := string(response) + "\n"
@@ -303,7 +304,7 @@ func TestTemplates_IndexTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.IndexTemplates(mockedTemplatesService)
+		handler := handlers.IndexTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
@@ -327,7 +328,7 @@ func TestTemplates_RenderTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.RenderTemplates(mockedTemplatesService)
+		handler := handlers.RenderTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		expectedStringBody := "\"foo bar baz\"\n"
 
@@ -347,7 +348,7 @@ func TestTemplates_RenderTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.RenderTemplates(mockedTemplatesService)
+		handler := handlers.RenderTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusBadRequest
 		expectedStringBody := "{\"code\":400,\"message\":\"invalid character '}' after object key\",\"data\":null}"
 
@@ -370,7 +371,7 @@ func TestTemplates_RenderTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.RenderTemplates(mockedTemplatesService)
+		handler := handlers.RenderTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusNotFound
 		expectedStringBody := "{\"code\":404,\"message\":\"template not found\",\"data\":null}"
 
@@ -393,7 +394,7 @@ func TestTemplates_RenderTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.RenderTemplates(mockedTemplatesService)
+		handler := handlers.RenderTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
@@ -414,7 +415,7 @@ func TestTemplates_DeleteTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.DeleteTemplates(mockedTemplatesService)
+		handler := handlers.DeleteTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusOK
 		expectedStringBody := "null\n"
 
@@ -435,7 +436,7 @@ func TestTemplates_DeleteTemplates(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
-		handler := handlers.DeleteTemplates(mockedTemplatesService)
+		handler := handlers.DeleteTemplates(mockedTemplatesService, getPanicLogger())
 		expectedStatusCode := http.StatusInternalServerError
 		expectedStringBody := "{\"code\":500,\"message\":\"Internal server error\",\"data\":null}"
 
