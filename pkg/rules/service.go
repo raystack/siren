@@ -29,7 +29,7 @@ type Service struct {
 func NewService(db *gorm.DB, cortex domain.CortexConfig) domain.RuleService {
 	cfg := cortexClient.Config{
 		Address:         cortex.Address,
-		UseLegacyRoutes: true,
+		UseLegacyRoutes: false,
 	}
 	client, err := cortexClient.New(cfg)
 	if err != nil {
