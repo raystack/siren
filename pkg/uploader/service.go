@@ -152,35 +152,38 @@ func (s Service) UploadRules(yamlFile []byte) ([]*client.Rule, error) {
 	var successfullyUpsertedRules []*client.Rule
 
 	for k, v := range yamlBody.Rules {
-		var vars []domain.RuleVariable
-		for i := 0; i < len(v.Variables); i++ {
-			v := domain.RuleVariable{
-				Name:  v.Variables[i].Name,
-				Value: v.Variables[i].Value,
+		for itr := 0; itr < len(v); itr++ {
+			var vars []domain.RuleVariable
+			for i := 0; i < len(v[itr].Variables); i++ {
+				v := domain.RuleVariable{
+					Name:  v[itr].Variables[i].Name,
+					Value: v[itr].Variables[i].Value,
+				}
+				vars = append(vars, v)
 			}
-			vars = append(vars, v)
+			payload := domain.Rule{
+				Namespace: yamlBody.Namespace,
+				Entity:    yamlBody.Entity,
+				GroupName: k,
+				Template:  v[itr].Template,
+				Status:    v[itr].Status,
+				Variables: vars,
+			}
+			options := &client.RulesApiCreateRuleRequestOpts{
+				Body: optional.NewInterface(payload),
+			}
+			result, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), options)
+			if err != nil {
+				fmt.Println(fmt.Sprintf("rule %s/%s/%s/%s upload error",
+					payload.Namespace, payload.Entity, payload.GroupName, payload.Template), err)
+				return successfullyUpsertedRules, err
+			} else {
+				successfullyUpsertedRules = append(successfullyUpsertedRules, &result)
+				fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s/%s",
+					payload.Namespace, payload.Entity, payload.GroupName, payload.Template))
+			}
 		}
-		payload := domain.Rule{
-			Namespace: yamlBody.Namespace,
-			Entity:    yamlBody.Entity,
-			GroupName: k,
-			Template:  v.Template,
-			Status:    v.Status,
-			Variables: vars,
-		}
-		options := &client.RulesApiCreateRuleRequestOpts{
-			Body: optional.NewInterface(payload),
-		}
-		result, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), options)
-		if err != nil {
-			fmt.Println(fmt.Sprintf("rule %s/%s/%s/%s upload error",
-				payload.Namespace, payload.Entity, payload.GroupName, payload.Template), err)
-			return successfullyUpsertedRules, err
-		} else {
-			successfullyUpsertedRules = append(successfullyUpsertedRules, &result)
-			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s/%s",
-				payload.Namespace, payload.Entity, payload.GroupName, payload.Template))
-		}
+
 	}
 	return successfullyUpsertedRules, nil
 }

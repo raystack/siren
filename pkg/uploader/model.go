@@ -16,11 +16,11 @@ type rule struct {
 }
 
 type ruleYaml struct {
-	ApiVersion string          `json:"apiVersion"`
-	Entity     string          `json:"entity"`
-	Type       string          `json:"type"`
-	Namespace  string          `json:"namespace"`
-	Rules      map[string]rule `json:"rules"`
+	ApiVersion string            `json:"apiVersion"`
+	Entity     string            `json:"entity"`
+	Type       string            `json:"type"`
+	Namespace  string            `json:"namespace"`
+	Rules      map[string][]rule `json:"rules"`
 }
 
 type templatedRule struct {

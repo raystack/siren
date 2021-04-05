@@ -34,11 +34,20 @@ namespace: test
 entity: real
 rules:
   CPUHigh:
-    template: test
-    status: enabled
-    variables:
-      - name: for
-        value: 1m
+    - template: CPU
+      status: enabled
+      variables:
+        - name: for
+          value: 1m
+        - name: team
+          value: test
+    - template: Lag
+      status: enabled
+      variables:
+        - name: for
+          value: 1m
+        - name: team
+          value: test
 `
 	badYaml := `abcd`
 
@@ -183,8 +192,9 @@ rules:
 		}
 		result, err := dummyService.Upload("test.txt")
 		rules := result.([]*client.Rule)
-		assert.Equal(t, 1, len(rules))
+		assert.Equal(t, 2, len(rules))
 		assert.Equal(t, "foo", rules[0].Name)
+		rulesAPIMock.AssertNumberOfCalls(t, "CreateRuleRequest", 2)
 		assert.Nil(t, err)
 	})
 
