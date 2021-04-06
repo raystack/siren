@@ -13,18 +13,18 @@ func init() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "upload",
 		Short: "Upload Rules or Templates YAML file",
-		RunE:  uploadRules,
+		RunE:  upload,
 	})
 }
 
-func uploadRules(cmd *cobra.Command, args []string) error {
+func upload(cmd *cobra.Command, args []string) error {
 	c := app.LoadConfig()
 	s := uploader.NewService(&c.SirenService)
 	result, err := s.Upload(args[0])
 	//print all resources(succeed or failed in upsert)
 	if err != nil {
 		fmt.Println(err)
-		return nil
+		return err
 	}
 	switch obj := result.(type) {
 	case *client.Template:
