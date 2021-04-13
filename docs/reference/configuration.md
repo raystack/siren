@@ -16,15 +16,13 @@
 | Config.NewRelicConfig.AppName | newrelic.appname | NEWRELIC_APPNAME | siren                 | string                                                                                                           |
 | Config.CortexConfig           | cortex.address   | CORTEX_ADDRESS   | http://localhost:8080 | valid HTTP(S) URL                                                                                                |
 
-
 ## How to configure
 
 There are 3 ways to configure siren:
-  - Using env variables
-  - Using a yaml file
-  - or using a combination of both
 
-
+- Using env variables
+- Using a yaml file
+- or using a combination of both
 
 ### Using env variables
 
