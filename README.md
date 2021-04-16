@@ -1,11 +1,15 @@
 # Siren
 
+![test workflow](https://github.com/odpf/siren/actions/workflows/test.yaml/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
+[![Version](https://img.shields.io/github/v/release/odpf/siren?logo=semantic-release)](Version)
+
 Siren provides alerting on metrics of your applications using cortexmetrics in a simple DIY configuration. With Siren,
 you can define templates(using go templates standard), and create/edit/enable/disable prometheus rules on demand. It
 also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated with any client such as CI/CD
 pipelines, Self-Serve UI, microservices etc.
 
-![Siren Architecture](./docs/assets/siren.jpg)
+![Siren Architecture](./docs/assets/overview.svg)
 
 ## Key Features
 
@@ -41,7 +45,7 @@ Siren requires the following dependencies:
 
 Run the application dependencies using Docker:
 
-```
+```sh
 $ docker-compose up
 ```
 
@@ -49,27 +53,21 @@ Update the configs(db credentials etc.) as per your dev machine and docker confi
 
 Run the following commands to compile from source
 
-```
+```sh
 $ git clone git@github.com:odpf/siren.git
 $ cd siren
 $ go build main.go
 ```
 
-To run tests locally
-
-```
+## Running tests
+```sh
+# To run tests locally
 $ make test
-```
 
-To run tests locally with coverage
-
-```
+# To run tests locally with coverage
 $ make test-coverage
-```
 
-To run server locally
-
-```
+# To run server locally
 $ go run main.go serve
 ```
 
@@ -87,8 +85,6 @@ bugfixes and improvements, and how to build and test your changes to Siren.
 To help you get your feet wet and get you familiar with our contribution process, we have a list of
 [good first issues](https://github.com/odpf/siren/labels/good%20first%20issue) that contain bugs which have a relatively
 limited scope. This is a great place to get started.
-
-## Credits
 
 This project exists thanks to all the [contributors](https://github.com/odpf/siren/graphs/contributors).
 
