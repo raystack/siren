@@ -3,7 +3,7 @@
 Siren exposes HTTP API to allow rule, template and slack & Pagerduty credentials configuration. It talks to upstream
 cortex ruler to configure rules(alerting and recording rules). It talks to Cortex Alertmanager to configure destination
 where alerts should go. It stores data around credentials, templates and current state of configured alerts in
-PostgresDB.
+PostgresDB. It also stores alerts triggered via Cortex Alertmanager.
 
 ![Siren Architecture](../assets/siren.jpg)
 
@@ -13,7 +13,8 @@ PostgresDB.
 
 _**HTTP Server**_
 
-* HTTP Server exposes Restful APIs to allow configuration of rules and templates and alerting credentials.
+* HTTP Server exposes Restful APIs to allow configuration of rules, templates, alerting credentials and storing
+  triggered alert history.
 
 _**PostgresDB**_
 
