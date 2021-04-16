@@ -19,6 +19,7 @@ pipelines, Self-Serve UI, microservices etc.
 - **Alerting Credentials management:** Siren can store slack and pagerduty credentials, sync them with Cortex
   alertmanager to deliver alerts on proper channels, in a multitenant fashion. It gives a simple interface to rotate the
   credentials on demand via HTTP API.
+- **Alert History:** Siren can store alerts triggered via Alertamanger, which can be used for audit purposes.
 
 To know more, follow the detailed [documentation](docs)
 
