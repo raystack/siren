@@ -23,7 +23,7 @@ type AlertHistoryRepository interface {
 	Migrate() error
 }
 
-func (a *Alert) fromDomain(alert *domain.Alert) error {
+func (a *Alert) fromDomain(alert *domain.Alert) {
 	a.Template = alert.Annotations.Template
 	a.Resource = alert.Annotations.Resource
 	a.MetricName = alert.Annotations.MetricName
@@ -33,10 +33,9 @@ func (a *Alert) fromDomain(alert *domain.Alert) error {
 	} else {
 		a.Level = strings.ToUpper(alert.Labels.Severity)
 	}
-	return nil
 }
 
-func (a *Alert) toDomain() (domain.AlertHistoryObject, error) {
+func (a *Alert) toDomain() domain.AlertHistoryObject {
 	return domain.AlertHistoryObject{
 		ID:          a.ID,
 		Name:        a.Resource,
@@ -46,5 +45,5 @@ func (a *Alert) toDomain() (domain.AlertHistoryObject, error) {
 		Level:       a.Level,
 		Created:     a.CreatedAt,
 		Updated:     a.UpdatedAt,
-	}, nil
+	}
 }
