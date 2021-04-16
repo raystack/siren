@@ -24,19 +24,12 @@ func (service Service) Create(alerts *domain.Alerts) ([]domain.AlertHistoryObjec
 	result := make([]domain.AlertHistoryObject, 0, len(alerts.Alerts))
 	for i := 0; i < len(alerts.Alerts); i++ {
 		alertHistoryObject := &Alert{}
-		err := alertHistoryObject.fromDomain(&alerts.Alerts[i])
-		if err != nil {
-			return nil, err
-		}
-		//err = isValid(alert)
+		alertHistoryObject.fromDomain(&alerts.Alerts[i])
 		res, err := service.repository.Create(alertHistoryObject)
 		if err != nil {
 			return nil, err
 		}
-		createdAlertHistoryObj, err := res.toDomain()
-		if err != nil {
-			return nil, err
-		}
+		createdAlertHistoryObj := res.toDomain()
 		result = append(result, createdAlertHistoryObj)
 	}
 	return result, nil
@@ -52,10 +45,7 @@ func (service Service) Get(resource string, startTime uint32, endTime uint32) ([
 	}
 	result := make([]domain.AlertHistoryObject, 0, len(filteredAlerts))
 	for i := 0; i < len(filteredAlerts); i++ {
-		alertHistoryObj, err := filteredAlerts[i].toDomain()
-		if err != nil {
-			return nil, err
-		}
+		alertHistoryObj := filteredAlerts[i].toDomain()
 		result = append(result, alertHistoryObj)
 	}
 	return result, nil

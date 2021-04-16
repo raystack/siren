@@ -39,8 +39,5 @@ func (r Repository) Get(resource string, startTime uint32, endTime uint32) ([]Al
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	if result.RowsAffected == 0 {
-		return nil, nil
-	}
 	return alerts, nil
 }
