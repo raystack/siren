@@ -10,6 +10,7 @@ import (
 type Service struct {
 	repository *Repository
 	amClient   alertmanager.Client
+	sirenHost  string
 }
 
 type SlackCredential struct {
@@ -103,9 +104,12 @@ from slack_credentials as sw
 			teamCredentials[teamCredential.Name] = teamCredential
 
 		}
-		err = s.amClient.SyncConfig(alertmanager.EntityCredentials{
-			Entity: credential.Entity,
-			Teams:  teamCredentials,
+		err = s.amClient.SyncConfig(alertmanager.AlertManagerConfig{
+			AlertHistoryHost: s.sirenHost,
+			EntityCredentials: alertmanager.EntityCredentials{
+				Entity: credential.Entity,
+				Teams:  teamCredentials,
+			},
 		})
 
 		if err != nil {
@@ -147,8 +151,9 @@ func (s Service) Get(teamName string) (domain.AlertCredential, error) {
 	return credential, nil
 }
 
-func NewService(db *gorm.DB, amClient alertmanager.Client) domain.AlertmanagerService {
+func NewService(db *gorm.DB, amClient alertmanager.Client, c domain.SirenServiceConfig) domain.AlertmanagerService {
 	return &Service{repository: NewRepository(db),
-		amClient: amClient,
+		amClient:  amClient,
+		sirenHost: c.Host,
 	}
 }

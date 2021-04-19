@@ -17,14 +17,14 @@ type Container struct {
 	AlertHistoryService domain.AlertHistoryService
 }
 
-func Init(db *gorm.DB, cortex domain.CortexConfig) (*Container, error) {
+func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig) (*Container, error) {
 	templatesService := templates.NewService(db)
 	rulesService := rules.NewService(db, cortex)
 	newClient, err := alertmanager.NewClient(cortex)
 	if err != nil {
 		return nil, err
 	}
-	alertmanagerService := alert.NewService(db, newClient)
+	alertmanagerService := alert.NewService(db, newClient, siren)
 	alertHistoryService := alert_history.NewService(db)
 	return &Container{
 		TemplatesService:    templatesService,
