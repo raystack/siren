@@ -29,7 +29,7 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	services, err := service.Init(store, c.Cortex)
+	services, err := service.Init(store, c.Cortex, c.SirenService)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func RunMigrations(c *domain.Config) error {
 		return err
 	}
 
-	services, err := service.Init(store, c.Cortex)
+	services, err := service.Init(store, c.Cortex, c.SirenService)
 	if err != nil {
 		return err
 	}
