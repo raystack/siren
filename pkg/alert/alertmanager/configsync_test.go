@@ -12,33 +12,36 @@ import (
 )
 
 func TestGenerateAlertmanagerConfig(t *testing.T) {
-	credentials := EntityCredentials{
-		Entity:    "de-infra",
-		SirenHost: "http://example.com",
-		Teams: map[string]TeamCredentials{
-			"eureka": {
-				Name: "eureka",
-				Slackcredentials: SlackConfig{
-					Critical: SlackCredential{
-						Webhook:  "http://eurcritical.com",
-						Channel:  "dss",
-						Username: "ss",
+	config := AlertManagerConfig{
+		AlertHistoryHost: "http://example.com",
+		EntityObj: EntityCredentials{
+			Entity:    "de-infra",
+			Teams: map[string]TeamCredentials{
+				"eureka": {
+					Name: "eureka",
+					Slackcredentials: SlackConfig{
+						Critical: SlackCredential{
+							Webhook:  "http://eurcritical.com",
+							Channel:  "dss",
+							Username: "ss",
+						},
 					},
 				},
-			},
-			"wonder-woman": {
-				Name: "wonder-woman",
-				Slackcredentials: SlackConfig{
-					Warning: SlackCredential{
-						Webhook:  "http://eurcritical.com",
-						Channel:  "dss",
-						Username: "ss",
+				"wonder-woman": {
+					Name: "wonder-woman",
+					Slackcredentials: SlackConfig{
+						Warning: SlackCredential{
+							Webhook:  "http://eurcritical.com",
+							Channel:  "dss",
+							Username: "ss",
+						},
 					},
+					PagerdutyCredential: "abc",
 				},
-				PagerdutyCredential: "abc",
 			},
 		},
 	}
+
 	expectedConfigStr :=
 		`  templates:
     - 'helper.tmpl'
@@ -46,7 +49,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
   receivers:
-    - name: siren
+    - name: alert_history
       webhook_configs:
         - url: 'http://example.com/history'
     - name: default
@@ -102,7 +105,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
-    receiver: siren
+    receiver: alert_history
     routes:
       - match:
           team: 'eureka'
@@ -135,7 +138,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
             receiver: slack-warning-wonder-woman
 
 `
-	configStr, err := generateAlertmanagerConfig(credentials)
+	configStr, err := generateAlertmanagerConfig(config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,30 +152,32 @@ type ConfigCompat struct {
 }
 
 func TestSyncConfig(t *testing.T) {
-	credentials := EntityCredentials{
-		Entity: "greek",
-		SirenHost: "http://example.com",
-		Teams: map[string]TeamCredentials{
-			"eureka": {
-				Name: "eureka",
-				Slackcredentials: SlackConfig{
-					Critical: SlackCredential{
-						Webhook:  "http://eurcritical.com",
-						Channel:  "dss",
-						Username: "ss",
+	config := AlertManagerConfig{
+		AlertHistoryHost: "http://example.com",
+		EntityObj: EntityCredentials{
+			Entity:    "greek",
+			Teams: map[string]TeamCredentials{
+				"eureka": {
+					Name: "eureka",
+					Slackcredentials: SlackConfig{
+						Critical: SlackCredential{
+							Webhook:  "http://eurcritical.com",
+							Channel:  "dss",
+							Username: "ss",
+						},
 					},
 				},
-			},
-			"wonder": {
-				Name: "wonder",
-				Slackcredentials: SlackConfig{
-					Warning: SlackCredential{
-						Webhook:  "http://eurcritical.com",
-						Channel:  "dss",
-						Username: "ss",
+				"wonder": {
+					Name: "wonder",
+					Slackcredentials: SlackConfig{
+						Warning: SlackCredential{
+							Webhook:  "http://eurcritical.com",
+							Channel:  "dss",
+							Username: "ss",
+						},
 					},
+					PagerdutyCredential: "abc",
 				},
-				PagerdutyCredential: "abc",
 			},
 		},
 	}
@@ -187,7 +192,7 @@ func TestSyncConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = client.SyncConfig(credentials)
+		err = client.SyncConfig(config)
 		assert.Error(t, err)
 
 	})
@@ -213,7 +218,7 @@ func TestSyncConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = client.SyncConfig(credentials)
+		err = client.SyncConfig(config)
 		if err != nil {
 			t.Fatal(err)
 		}

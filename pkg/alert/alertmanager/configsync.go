@@ -39,11 +39,15 @@ type TeamCredentials struct {
 type EntityCredentials struct {
 	Entity string
 	Teams  map[string]TeamCredentials
-	SirenHost string
+}
+
+type AlertManagerConfig struct {
+	EntityObj EntityCredentials
+	AlertHistoryHost string
 }
 
 type Client interface {
-	SyncConfig(credentials EntityCredentials) error
+	SyncConfig(credentials AlertManagerConfig) error
 }
 
 type AlertmanagerClient struct {
@@ -69,8 +73,8 @@ func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
 	}, nil
 }
 
-func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
-	cfg, err := generateAlertmanagerConfig(credentials)
+func (am AlertmanagerClient) SyncConfig(config AlertManagerConfig) error {
+	cfg, err := generateAlertmanagerConfig(config)
 	if err != nil {
 		return err
 	}
@@ -78,7 +82,7 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 		"helper.tmpl": am.helperTemplate,
 	}
 
-	ctx := client.NewContextWithTenantId(context.Background(), credentials.Entity)
+	ctx := client.NewContextWithTenantId(context.Background(), config.EntityObj.Entity)
 	err = am.CortextClient.CreateAlertmanagerConfig(ctx, cfg, templates)
 	if err != nil {
 		return err
@@ -86,14 +90,14 @@ func (am AlertmanagerClient) SyncConfig(credentials EntityCredentials) error {
 	return nil
 }
 
-func generateAlertmanagerConfig(credentials EntityCredentials) (string, error) {
+func generateAlertmanagerConfig(alertManagerConfig AlertManagerConfig) (string, error) {
 	delims := template.New("alertmanagerConfigTemplate").Delims("[[", "]]")
 	parse, err := delims.Parse(configYamlString)
 	if err != nil {
 		return "", err
 	}
 	var tpl bytes.Buffer
-	err = parse.Execute(&tpl, credentials)
+	err = parse.Execute(&tpl, alertManagerConfig)
 	if err != nil {
 		return "", err
 	}
