@@ -17,8 +17,8 @@ type AlertmanagerClientMock struct {
 	mock.Mock
 }
 
-func (am *AlertmanagerClientMock) SyncConfig(credentials alertmanager.EntityCredentials) error {
-	args := am.Called(credentials)
+func (am *AlertmanagerClientMock) SyncConfig(config alertmanager.AlertManagerConfig) error {
+	args := am.Called(config)
 	return args.Error(0)
 }
 
@@ -35,39 +35,41 @@ func TestServiceUpsert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedEntityCredentials := alertmanager.EntityCredentials{
-		Entity: "avengers",
-		SirenHost: "http://example.com",
-		Teams: map[string]alertmanager.TeamCredentials{
-			"hydra": {
-				Name:                "hydra",
-				PagerdutyCredential: "abc",
-				Slackcredentials: alertmanager.SlackConfig{
-					Critical: alertmanager.SlackCredential{
-						Webhook:  "http://critical.com",
-						Channel:  "critical_channel",
-						Username: "critical_user",
-					},
-					Warning: alertmanager.SlackCredential{
-						Webhook:  "http://warning.com",
-						Channel:  "warning_channel2",
-						Username: "warning_user",
+	expectedConfigs := alertmanager.AlertManagerConfig{
+		AlertHistoryHost: "http://example.com",
+		EntityObj: alertmanager.EntityCredentials{
+			Entity: "avengers",
+			Teams: map[string]alertmanager.TeamCredentials{
+				"hydra": {
+					Name:                "hydra",
+					PagerdutyCredential: "abc",
+					Slackcredentials: alertmanager.SlackConfig{
+						Critical: alertmanager.SlackCredential{
+							Webhook:  "http://critical.com",
+							Channel:  "critical_channel",
+							Username: "critical_user",
+						},
+						Warning: alertmanager.SlackCredential{
+							Webhook:  "http://warning.com",
+							Channel:  "warning_channel2",
+							Username: "warning_user",
+						},
 					},
 				},
-			},
-			"wakanda": {
-				Name:                "wakanda",
-				PagerdutyCredential: "xyzw",
-				Slackcredentials: alertmanager.SlackConfig{
-					Critical: alertmanager.SlackCredential{
-						Webhook:  "http://criticalwakanda.com",
-						Channel:  "critical_channel",
-						Username: "critical_user",
-					},
-					Warning: alertmanager.SlackCredential{
-						Webhook:  "http://warningwakanda.com",
-						Channel:  "warning_channel",
-						Username: "warning_user",
+				"wakanda": {
+					Name:                "wakanda",
+					PagerdutyCredential: "xyzw",
+					Slackcredentials: alertmanager.SlackConfig{
+						Critical: alertmanager.SlackCredential{
+							Webhook:  "http://criticalwakanda.com",
+							Channel:  "critical_channel",
+							Username: "critical_user",
+						},
+						Warning: alertmanager.SlackCredential{
+							Webhook:  "http://warningwakanda.com",
+							Channel:  "warning_channel",
+							Username: "warning_user",
+						},
 					},
 				},
 			},
@@ -222,9 +224,9 @@ func TestServiceUpsert(t *testing.T) {
 			t.Fatal(err)
 		}
 		clientMock := AlertmanagerClientMock{}
-		clientMock.On("SyncConfig", mock.MatchedBy(func(actualCredentials alertmanager.EntityCredentials) bool {
+		clientMock.On("SyncConfig", mock.MatchedBy(func(actualConfig alertmanager.AlertManagerConfig) bool {
 
-			return reflect.DeepEqual(actualCredentials, expectedEntityCredentials)
+			return reflect.DeepEqual(actualConfig, expectedConfigs)
 		})).Return(nil)
 		service := NewService(db, &clientMock, domain.SirenServiceConfig{
 			Host: "http://example.com",
@@ -287,7 +289,7 @@ func TestServiceUpsert(t *testing.T) {
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "abc", pagerdutyCredential.ServiceKey)
 		clientMock.AssertExpectations(t)
-		clientMock.AssertCalled(t, "SyncConfig", expectedEntityCredentials)
+		clientMock.AssertCalled(t, "SyncConfig", expectedConfigs)
 
 	})
 }
