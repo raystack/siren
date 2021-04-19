@@ -42,8 +42,8 @@ type EntityCredentials struct {
 }
 
 type AlertManagerConfig struct {
-	EntityObj EntityCredentials
-	AlertHistoryHost string
+	EntityCredentials EntityCredentials
+	AlertHistoryHost  string
 }
 
 type Client interface {
@@ -82,7 +82,7 @@ func (am AlertmanagerClient) SyncConfig(config AlertManagerConfig) error {
 		"helper.tmpl": am.helperTemplate,
 	}
 
-	ctx := client.NewContextWithTenantId(context.Background(), config.EntityObj.Entity)
+	ctx := client.NewContextWithTenantId(context.Background(), config.EntityCredentials.Entity)
 	err = am.CortextClient.CreateAlertmanagerConfig(ctx, cfg, templates)
 	if err != nil {
 		return err
