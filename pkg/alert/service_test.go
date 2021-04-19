@@ -37,6 +37,7 @@ func TestServiceUpsert(t *testing.T) {
 	}
 	expectedEntityCredentials := alertmanager.EntityCredentials{
 		Entity: "avengers",
+		SirenHost: "http://example.com",
 		Teams: map[string]alertmanager.TeamCredentials{
 			"hydra": {
 				Name:                "hydra",
@@ -88,7 +89,9 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		clientMock := AlertmanagerClientMock{}
 		clientMock.On("SyncConfig", mock.Anything).Return(nil)
-		service := NewService(db, &clientMock)
+		service := NewService(db, &clientMock, domain.SirenServiceConfig{
+			Host: "http://example.com",
+		})
 
 		credential := domain.AlertCredential{
 			Entity:               "avengers",
@@ -142,7 +145,9 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		clientMock := AlertmanagerClientMock{}
 		clientMock.On("SyncConfig", mock.Anything).Return(nil)
-		service := NewService(db, &clientMock)
+		service := NewService(db, &clientMock, domain.SirenServiceConfig{
+			Host: "http://example.com",
+		})
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "critical_channel",
 			Username:    "critical_user",
@@ -221,7 +226,9 @@ func TestServiceUpsert(t *testing.T) {
 
 			return reflect.DeepEqual(actualCredentials, expectedEntityCredentials)
 		})).Return(nil)
-		service := NewService(db, &clientMock)
+		service := NewService(db, &clientMock, domain.SirenServiceConfig{
+			Host: "http://example.com",
+		})
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "critical_channel",
 			Username:    "critical_user",
@@ -336,7 +343,9 @@ func TestServiceGet(t *testing.T) {
 			Entity:     "avengers",
 		})
 		assert.Nil(t, result.Error)
-		service := NewService(db, nil)
+		service := NewService(db, nil, domain.SirenServiceConfig{
+			Host: "http://example.com",
+		})
 		credential, err := service.Get("hydra")
 		assert.Nil(t, err)
 		expectedCredential := domain.AlertCredential{
