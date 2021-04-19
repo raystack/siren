@@ -4,7 +4,7 @@ import "github.com/odpf/siren/domain"
 
 //-------------------------
 //-------------------------
-// swagger:route GET /alertHistory alertHistory getAlertHistoryRequest
+// swagger:route GET /history alertHistory getAlertHistoryRequest
 // GET Alert History API: This API lists stored alert history for given filers in query params
 // responses:
 //   200: getResponse
@@ -25,7 +25,7 @@ type getResponse struct {
 }
 
 //-------------------------
-// swagger:route POST /alertHistory alertHistory createAlertHistoryRequest
+// swagger:route POST /history alertHistory createAlertHistoryRequest
 // Create Alert History API: This API create alert history
 
 // swagger:parameters createAlertHistoryRequest

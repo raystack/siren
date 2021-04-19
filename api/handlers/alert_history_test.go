@@ -30,7 +30,7 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 					"annotations":{"resource":"foo","template":"bar","metricName":"baz","metricValue":"30"}}]}`)
 
 		mockedAlertHistoryService.On("Create", &domainAlerts).Return(dummyAlerts, nil).Once()
-		r, err := http.NewRequest(http.MethodPost, "/alertHistory", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPost, "/history", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -60,7 +60,7 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 		payload := []byte(`bad input`)
 
 		mockedAlertHistoryService.On("Create", &domainAlerts).Return(dummyAlerts, nil).Once()
-		r, err := http.NewRequest(http.MethodPost, "/alertHistory", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPost, "/history", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -88,7 +88,7 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 
 		mockedAlertHistoryService.On("Create", &domainAlerts).
 			Return(nil, errors.New("random error")).Once()
-		r, err := http.NewRequest(http.MethodPost, "/alertHistory", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPost, "/history", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +112,7 @@ func TestAlertHistory_GetAlertHistory(t *testing.T) {
 		}}
 
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).Return(dummyAlerts, nil).Once()
-		r, err := http.NewRequest(http.MethodGet, "/alertHistory", nil)
+		r, err := http.NewRequest(http.MethodGet, "/history", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,7 +141,7 @@ func TestAlertHistory_GetAlertHistory(t *testing.T) {
 		}}
 
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).Return(dummyAlerts, nil).Once()
-		r, err := http.NewRequest(http.MethodGet, "/alertHistory", nil)
+		r, err := http.NewRequest(http.MethodGet, "/history", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -166,7 +166,7 @@ func TestAlertHistory_GetAlertHistory(t *testing.T) {
 		mockedAlertHistoryService := &mocks.AlertHistoryService{}
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).
 			Return(nil, errors.New("random error")).Once()
-		r, err := http.NewRequest(http.MethodGet, "/alertHistory", nil)
+		r, err := http.NewRequest(http.MethodGet, "/history", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
