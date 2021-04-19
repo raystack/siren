@@ -37,7 +37,7 @@ func TestServiceUpsert(t *testing.T) {
 	}
 	expectedConfigs := alertmanager.AlertManagerConfig{
 		AlertHistoryHost: "http://example.com",
-		EntityObj: alertmanager.EntityCredentials{
+		EntityCredentials: alertmanager.EntityCredentials{
 			Entity: "avengers",
 			Teams: map[string]alertmanager.TeamCredentials{
 				"hydra": {

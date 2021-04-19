@@ -106,7 +106,7 @@ from slack_credentials as sw
 		}
 		err = s.amClient.SyncConfig(alertmanager.AlertManagerConfig{
 			AlertHistoryHost: s.sirenHost,
-			EntityObj: alertmanager.EntityCredentials{
+			EntityCredentials: alertmanager.EntityCredentials{
 				Entity: credential.Entity,
 				Teams:  teamCredentials,
 			},

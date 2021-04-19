@@ -14,7 +14,7 @@ import (
 func TestGenerateAlertmanagerConfig(t *testing.T) {
 	config := AlertManagerConfig{
 		AlertHistoryHost: "http://example.com",
-		EntityObj: EntityCredentials{
+		EntityCredentials: EntityCredentials{
 			Entity:    "de-infra",
 			Teams: map[string]TeamCredentials{
 				"eureka": {
@@ -154,7 +154,7 @@ type ConfigCompat struct {
 func TestSyncConfig(t *testing.T) {
 	config := AlertManagerConfig{
 		AlertHistoryHost: "http://example.com",
-		EntityObj: EntityCredentials{
+		EntityCredentials: EntityCredentials{
 			Entity:    "greek",
 			Teams: map[string]TeamCredentials{
 				"eureka": {

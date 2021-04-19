@@ -8,7 +8,7 @@
       webhook_configs:
         - url: '[[.AlertHistoryHost]]/history'
     - name: default
-  [[- range $key, $team := .EntityObj.Teams -]]
+  [[- range $key, $team := .EntityCredentials.Teams -]]
   [[if eq $team.Slackcredentials.Critical.Webhook ""]]
   [[else]]
     - name: slack-critical-[[$team.Name]]
@@ -69,7 +69,7 @@
     group_interval: 5m
     repeat_interval: 4h
     receiver: alert_history
-    routes:[[- range $key, $team := .EntityObj.Teams]]
+    routes:[[- range $key, $team := .EntityCredentials.Teams]]
       - match:
           team: '[[$team.Name]]'
         routes:
