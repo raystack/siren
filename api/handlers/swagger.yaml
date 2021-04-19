@@ -214,43 +214,6 @@ info:
   title: Siren.
   version: 1.0.0
 paths:
-  /alertHistory:
-    get:
-      description: 'GET Alert History API: This API lists stored alert history for
-        given filers in query params'
-      operationId: getAlertHistoryRequest
-      parameters:
-        - in: query
-          name: resource
-          type: string
-          x-go-name: Resource
-        - format: uint32
-          in: query
-          name: startTime
-          type: integer
-          x-go-name: StartTime
-        - format: uint32
-          in: query
-          name: endTime
-          type: integer
-          x-go-name: EndTime
-      responses:
-        "200":
-          $ref: '#/responses/getResponse'
-      tags:
-        - alertHistory
-    post:
-      description: 'Create Alert History API: This API create alert history'
-      operationId: createAlertHistoryRequest
-      parameters:
-        - in: body
-          name: Body
-          schema:
-            items:
-              $ref: '#/definitions/Alerts'
-            type: array
-      tags:
-        - alertHistory
   /alertingCredentials/teams/{teamName}:
     get:
       description: 'Get AlertCredentials API: This API helps in getting the teams
@@ -291,6 +254,43 @@ paths:
           description: ""
       tags:
         - alertcredential
+  /history:
+    get:
+      description: 'GET Alert History API: This API lists stored alert history for
+        given filers in query params'
+      operationId: getAlertHistoryRequest
+      parameters:
+        - in: query
+          name: resource
+          type: string
+          x-go-name: Resource
+        - format: uint32
+          in: query
+          name: startTime
+          type: integer
+          x-go-name: StartTime
+        - format: uint32
+          in: query
+          name: endTime
+          type: integer
+          x-go-name: EndTime
+      responses:
+        "200":
+          $ref: '#/responses/getResponse'
+      tags:
+        - alertHistory
+    post:
+      description: 'Create Alert History API: This API create alert history'
+      operationId: createAlertHistoryRequest
+      parameters:
+        - in: body
+          name: Body
+          schema:
+            items:
+              $ref: '#/definitions/Alerts'
+            type: array
+      tags:
+        - alertHistory
   /ping:
     get:
       description: Ping call

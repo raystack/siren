@@ -94,5 +94,5 @@ c in the templates):
 }
 ```
 
-Siren POST `/alertHistory` API will parse the above payload and store in DB, which you can fetch via the GET APIs with proper filters of startTime, endTime. 
+Siren POST `/history` API will parse the above payload and store in DB, which you can fetch via the GET APIs with proper filters of startTime, endTime. 
 See the [swagger](../../api/handlers/swagger.yaml) file for more details. 
