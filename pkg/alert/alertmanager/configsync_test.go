@@ -13,7 +13,8 @@ import (
 
 func TestGenerateAlertmanagerConfig(t *testing.T) {
 	credentials := EntityCredentials{
-		Entity: "de-infra",
+		Entity:    "de-infra",
+		SirenHost: "http://example.com",
 		Teams: map[string]TeamCredentials{
 			"eureka": {
 				Name: "eureka",
@@ -45,6 +46,9 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
   receivers:
+    - name: siren
+      webhook_configs:
+        - url: 'http://example.com/history'
     - name: default
     - name: slack-critical-eureka
       slack_configs:
@@ -98,7 +102,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
-    receiver: default
+    receiver: siren
     routes:
       - match:
           team: 'eureka'
@@ -147,6 +151,7 @@ type ConfigCompat struct {
 func TestSyncConfig(t *testing.T) {
 	credentials := EntityCredentials{
 		Entity: "greek",
+		SirenHost: "http://example.com",
 		Teams: map[string]TeamCredentials{
 			"eureka": {
 				Name: "eureka",

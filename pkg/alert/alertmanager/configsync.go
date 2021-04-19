@@ -39,6 +39,7 @@ type TeamCredentials struct {
 type EntityCredentials struct {
 	Entity string
 	Teams  map[string]TeamCredentials
+	SirenHost string
 }
 
 type Client interface {

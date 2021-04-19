@@ -4,6 +4,9 @@
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
   receivers:
+    - name: siren
+      webhook_configs:
+        - url: '[[.SirenHost]]/history'
     - name: default
   [[- range $key, $team := .Teams -]]
   [[if eq $team.Slackcredentials.Critical.Webhook ""]]
@@ -65,7 +68,7 @@
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
-    receiver: default
+    receiver: siren
     routes:[[- range $key, $team := .Teams]]
       - match:
           team: '[[$team.Name]]'
