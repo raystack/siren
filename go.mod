@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/spec v0.20.2 // indirect
-	github.com/gorilla/handlers v1.5.1
+	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grafana/cortex-tools v0.7.2
 	github.com/jeremywohl/flatten v1.0.1
