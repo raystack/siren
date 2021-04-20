@@ -68,8 +68,11 @@
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
-    receiver: alert_history
-    routes:[[- range $key, $team := .EntityCredentials.Teams]]
+    receiver: default
+    routes:
+      - receiver: alert_history
+        continue: true
+      [[- range $key, $team := .EntityCredentials.Teams]]
       - match:
           team: '[[$team.Name]]'
         routes:
