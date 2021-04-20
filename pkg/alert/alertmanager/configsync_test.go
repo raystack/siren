@@ -105,8 +105,10 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
-    receiver: alert_history
+    receiver: default
     routes:
+      - receiver: alert_history
+        continue: true
       - match:
           team: 'eureka'
         routes:
