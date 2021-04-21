@@ -20,6 +20,11 @@ func CreateAlertHistory(service domain.AlertHistoryService, logger *zap.Logger) 
 			return
 		}
 		result, err := service.Create(&alerts)
+
+		if err != nil && err.Error() == "alert history parameters missing" {
+			badRequest(w, err, logger)
+			return
+		}
 		if err != nil {
 			internalServerError(w, err, logger)
 			return
