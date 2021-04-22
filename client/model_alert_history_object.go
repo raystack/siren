@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-type Template struct {
-	Body string `json:"body,omitempty"`
+type AlertHistoryObject struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	Id int32 `json:"id,omitempty"`
+	Level string `json:"level,omitempty"`
+	MetricName string `json:"metric_name,omitempty"`
+	MetricValue string `json:"metric_value,omitempty"`
 	Name string `json:"name,omitempty"`
-	Tags []string `json:"tags,omitempty"`
+	TemplateId string `json:"template_id,omitempty"`
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	Variables []Variable `json:"variables,omitempty"`
 }

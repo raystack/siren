@@ -21,6 +21,8 @@ All URIs are relative to *http://localhost:3000/*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*AlertHistoryApi* | [**CreateAlertHistoryRequest**](docs/AlertHistoryApi.md#createalerthistoryrequest) | **Post** /history | 
+*AlertHistoryApi* | [**GetAlertHistoryRequest**](docs/AlertHistoryApi.md#getalerthistoryrequest) | **Get** /history | 
 *AlertcredentialApi* | [**CreateAlertCredentialRequest**](docs/AlertcredentialApi.md#createalertcredentialrequest) | **Put** /alertingCredentials/teams/{teamName} | 
 *AlertcredentialApi* | [**GetAlertCredentialRequest**](docs/AlertcredentialApi.md#getalertcredentialrequest) | **Get** /alertingCredentials/teams/{teamName} | 
 *PingApi* | [**Ping**](docs/PingApi.md#ping) | **Get** /ping | 
@@ -34,7 +36,12 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Alert](docs/Alert.md)
  - [AlertCredentialResponse](docs/AlertCredentialResponse.md)
+ - [AlertHistoryObject](docs/AlertHistoryObject.md)
+ - [Alerts](docs/Alerts.md)
+ - [Annotations](docs/Annotations.md)
+ - [Labels](docs/Labels.md)
  - [Rule](docs/Rule.md)
  - [RuleVariable](docs/RuleVariable.md)
  - [SlackConfig](docs/SlackConfig.md)

@@ -27,7 +27,7 @@ definitions:
     x-go-package: github.com/odpf/siren/docs
   AlertHistoryObject:
     properties:
-      created:
+      created_at:
         format: date-time
         type: string
         x-go-name: Created
@@ -50,7 +50,7 @@ definitions:
       template_id:
         type: string
         x-go-name: TemplateID
-      updated:
+      updated_at:
         format: date-time
         type: string
         x-go-name: Updated
@@ -67,10 +67,10 @@ definitions:
     x-go-package: github.com/odpf/siren/domain
   Annotations:
     properties:
-      metricName:
+      metric_name:
         type: string
         x-go-name: MetricName
-      metricValue:
+      metric_value:
         type: string
         x-go-name: MetricValue
       resource:
@@ -90,12 +90,10 @@ definitions:
     x-go-package: github.com/odpf/siren/domain
   Rule:
     properties:
-      CreatedAt:
+      created_at:
         format: date-time
         type: string
-      UpdatedAt:
-        format: date-time
-        type: string
+        x-go-name: CreatedAt
       entity:
         type: string
         x-go-name: Entity
@@ -118,6 +116,10 @@ definitions:
       template:
         type: string
         x-go-name: Template
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
       variables:
         items:
           $ref: '#/definitions/RuleVariable'
@@ -164,15 +166,13 @@ definitions:
     x-go-package: github.com/odpf/siren/domain
   Template:
     properties:
-      CreatedAt:
-        format: date-time
-        type: string
-      UpdatedAt:
-        format: date-time
-        type: string
       body:
         type: string
         x-go-name: Body
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
       id:
         format: uint64
         type: integer
@@ -185,6 +185,10 @@ definitions:
           type: string
         type: array
         x-go-name: Tags
+      updated_at:
+        format: date-time
+        type: string
+        x-go-name: UpdatedAt
       variables:
         items:
           $ref: '#/definitions/Variable'
