@@ -76,31 +76,33 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 		mockedAlertHistoryService.AssertNotCalled(t, "Create")
 	})
 
-	t.Run("should return 400 bad request of invalid objects in payload", func(t *testing.T) {
+	t.Run("should return 200 even if invalid objects in payload", func(t *testing.T) {
 		mockedAlertHistoryService := &mocks.AlertHistoryService{}
 
 		domainAlerts := domain.Alerts{Alerts: []domain.Alert{{Status: "firing",
 			Labels:      domain.Labels{Severity: "CRITICAL"},
 			Annotations: domain.Annotations{}},
 		}}
+		var dummyAlerts []domain.AlertHistoryObject
 
 		payload := []byte(`{"alerts":[{"status":"firing","labels":{"severity":"CRITICAL"},"annotations":{}}]}`)
 
-		mockedAlertHistoryService.On("Create", &domainAlerts).Return(nil, errors.New("alert history parameters missing")).Once()
+		mockedAlertHistoryService.On("Create", &domainAlerts).Return(dummyAlerts,
+			errors.New("alert history parameters missing for 1 alerts")).Once()
 		r, err := http.NewRequest(http.MethodPost, "/history", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
 		w := httptest.NewRecorder()
 		handler := handlers.CreateAlertHistory(mockedAlertHistoryService, getPanicLogger())
-		expectedStatusCode := http.StatusBadRequest
-		expectedStringBody := "{\"code\":400,\"message\":\"alert history parameters missing\",\"data\":null}"
+		expectedStatusCode := http.StatusOK
+		response, _ := json.Marshal(dummyAlerts)
+		expectedStringBody := string(response) + "\n"
 
 		handler.ServeHTTP(w, r)
 
 		assert.Equal(t, expectedStatusCode, w.Code)
 		assert.Equal(t, expectedStringBody, w.Body.String())
-		mockedAlertHistoryService.AssertNotCalled(t, "Create")
 	})
 
 	t.Run("should return 500 on error from service", func(t *testing.T) {
