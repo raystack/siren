@@ -13,8 +13,8 @@ type Variable struct {
 
 type Template struct {
 	ID        uint       `json:"id"`
-	CreatedAt time.Time  `json:"CreatedAt"`
-	UpdatedAt time.Time  `json:"UpdatedAt"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 	Name      string     `json:"name"`
 	Body      string     `json:"body"`
 	Tags      []string   `json:"tags"`

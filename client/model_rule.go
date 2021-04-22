@@ -12,8 +12,7 @@ import (
 )
 
 type Rule struct {
-	CreatedAt time.Time `json:"CreatedAt,omitempty"`
-	UpdatedAt time.Time `json:"UpdatedAt,omitempty"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
 	Entity string `json:"entity,omitempty"`
 	GroupName string `json:"group_name,omitempty"`
 	Id int32 `json:"id,omitempty"`
@@ -21,5 +20,6 @@ type Rule struct {
 	Namespace string `json:"namespace,omitempty"`
 	Status string `json:"status,omitempty"`
 	Template string `json:"template,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	Variables []RuleVariable `json:"variables,omitempty"`
 }

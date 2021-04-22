@@ -11,8 +11,8 @@ type RuleVariable struct {
 
 type Rule struct {
 	ID        uint           `json:"id"`
-	CreatedAt time.Time      `json:"CreatedAt"`
-	UpdatedAt time.Time      `json:"UpdatedAt"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
 	Name      string         `json:"name"`
 	Namespace string         `json:"namespace"`
 	Entity    string         `json:"entity"`

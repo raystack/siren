@@ -44,6 +44,8 @@ type APIClient struct {
 
 	// API Services
 
+	AlertHistoryApi *AlertHistoryApiService
+
 	AlertcredentialApi *AlertcredentialApiService
 
 	PingApi *PingApiService
@@ -69,6 +71,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.common.client = c
 
 	// API Services
+	c.AlertHistoryApi = (*AlertHistoryApiService)(&c.common)
 	c.AlertcredentialApi = (*AlertcredentialApiService)(&c.common)
 	c.PingApi = (*PingApiService)(&c.common)
 	c.RulesApi = (*RulesApiService)(&c.common)
