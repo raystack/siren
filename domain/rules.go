@@ -3,9 +3,9 @@ package domain
 import "time"
 
 type RuleVariable struct {
-	Name        string `json:"name"`
+	Name        string `json:"name" validate:"required"`
 	Type        string `json:"type"`
-	Value       string `json:"value"`
+	Value       string `json:"value" validate:"required"`
 	Description string `json:"description"`
 }
 
@@ -14,12 +14,12 @@ type Rule struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	Name      string         `json:"name"`
-	Namespace string         `json:"namespace"`
-	Entity    string         `json:"entity"`
-	GroupName string         `json:"group_name"`
-	Template  string         `json:"template"`
-	Status    string         `json:"status"`
-	Variables []RuleVariable `json:"variables"`
+	Namespace string         `json:"namespace" validate:"required"`
+	Entity    string         `json:"entity" validate:"required"`
+	GroupName string         `json:"group_name" validate:"required"`
+	Template  string         `json:"template" validate:"required"`
+	Status    string         `json:"status" validate:"required,statusChecker"`
+	Variables []RuleVariable `json:"variables" validate:"required,dive,required"`
 }
 
 // RuleService interface
