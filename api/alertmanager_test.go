@@ -202,8 +202,9 @@ func TestUpdateAlertCredentials(t *testing.T) {
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
+		expectedBody := `{"code":400,"message":"Key: 'AlertCredential.SlackConfig.Critical.Webhook' Error:Field validation for 'Webhook' failed on the 'webhookChecker' tag","data":null}`
 		assert.Equal(t, 400, w.Code)
-		assert.Equal(t, "slack critical webhook is not a valid url", w.Body.String())
+		assert.Equal(t, expectedBody, w.Body.String())
 
 	})
 	t.Run("should return 4xx on empty entity", func(t *testing.T) {
@@ -235,8 +236,9 @@ func TestUpdateAlertCredentials(t *testing.T) {
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
+		expectedBody := `{"code":400,"message":"Key: 'AlertCredential.Entity' Error:Field validation for 'Entity' failed on the 'required' tag","data":null}`
 		assert.Equal(t, 400, w.Code)
-		assert.Equal(t, "entity cannot be empty", w.Body.String())
+		assert.Equal(t, expectedBody, w.Body.String())
 
 	})
 
@@ -269,8 +271,9 @@ func TestUpdateAlertCredentials(t *testing.T) {
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
+		expectedBody := `{"code":400,"message":"Key: 'AlertCredential.PagerdutyCredentials' Error:Field validation for 'PagerdutyCredentials' failed on the 'required' tag","data":null}`
 		assert.Equal(t, 400, w.Code)
-		assert.Equal(t, "pagerduty key cannot be empty", w.Body.String())
+		assert.Equal(t, expectedBody, w.Body.String())
 
 	})
 }
