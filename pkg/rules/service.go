@@ -3,7 +3,6 @@ package rules
 import (
 	"context"
 	"errors"
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/templates"
@@ -26,15 +25,7 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB, cortex domain.CortexConfig) domain.RuleService {
-	cfg := cortexClient.Config{
-		Address:         cortex.Address,
-		UseLegacyRoutes: false,
-	}
-	client, err := cortexClient.New(cfg)
-	if err != nil {
-		return nil
-	}
+func NewService(db *gorm.DB, client cortexCaller) domain.RuleService {
 	return &Service{
 		repository:      NewRepository(db),
 		templateService: templates.NewService(db),
