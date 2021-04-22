@@ -108,6 +108,27 @@ func TestService_Create(t *testing.T) {
 		assert.EqualError(t, err, "random error")
 		assert.Nil(t, actualAlerts)
 	})
+
+	t.Run("should insert valid objects and throw error if invalid object exist in create request", func(t *testing.T) {
+		repositoryMock := &AlertHistoryRepositoryMock{}
+		dummyService := Service{repository: repositoryMock}
+		dummyAlerts := []Alert{
+			{ID: 1, Resource: "foo", Template: "lagHigh", MetricName: "lag", MetricValue: "20", Level: "CRITICAL"},
+		}
+		expectedAlerts := []domain.AlertHistoryObject{
+			{ID: 1, Name: "foo", TemplateID: "lagHigh", MetricName: "lag", MetricValue: "20", Level: "CRITICAL"},
+		}
+		alertsToBeCreated := &domain.Alerts{Alerts: []domain.Alert{
+			{Status: "firing", Labels: domain.Labels{Severity: "CRITICAL"},
+				Annotations: domain.Annotations{Resource: "foo", Template: "lagHigh", MetricName: "lag", MetricValue: "20"}},
+			{Status: "firing", Labels: domain.Labels{Severity: "CRITICAL"}, Annotations: domain.Annotations{}},
+		}}
+		repositoryMock.On("Create", mock.Anything).Return(&dummyAlerts[0], nil)
+		actualAlerts, err := dummyService.Create(alertsToBeCreated)
+		assert.Equal(t, actualAlerts, expectedAlerts)
+		assert.EqualError(t, err, "alert history parameters missing for 1 alerts")
+		repositoryMock.AssertNumberOfCalls(t, "Create", 1)
+	})
 }
 
 func TestService_Migrate(t *testing.T) {
