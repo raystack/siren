@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/odpf/siren/app"
 	"github.com/odpf/siren/client"
+	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/pkg/uploader"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ func init() {
 }
 
 func upload(cmd *cobra.Command, args []string) error {
-	c := app.LoadConfig()
+	c := config.LoadConfig()
 	s := uploader.NewService(&c.SirenService)
 	result, err := s.Upload(args[0])
 	//print all resources(succeed or failed in upsert)
