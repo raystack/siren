@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/odpf/siren/domain"
 	"go.uber.org/zap"
@@ -21,8 +22,9 @@ func CreateAlertHistory(service domain.AlertHistoryService, logger *zap.Logger) 
 		}
 		result, err := service.Create(&alerts)
 
-		if err != nil && err.Error() == "alert history parameters missing" {
-			badRequest(w, err, logger)
+		if err != nil && strings.Contains(err.Error(), "alert history parameters missing") {
+			logger.Error(err.Error())
+			returnJSON(w, result)
 			return
 		}
 		if err != nil {

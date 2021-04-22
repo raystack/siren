@@ -115,18 +115,19 @@ func TestService_Create(t *testing.T) {
 		dummyAlerts := []Alert{
 			{ID: 1, Resource: "foo", Template: "lagHigh", MetricName: "lag", MetricValue: "20", Level: "CRITICAL"},
 		}
+		expectedAlerts := []domain.AlertHistoryObject{
+			{ID: 1, Name: "foo", TemplateID: "lagHigh", MetricName: "lag", MetricValue: "20", Level: "CRITICAL"},
+		}
 		alertsToBeCreated := &domain.Alerts{Alerts: []domain.Alert{
-			{Status: "firing", Labels: domain.Labels{Severity: "WARNING"},
-				Annotations: domain.Annotations{Resource: "foo", Template: "lagHigh", MetricName: "lag", MetricValue: "10"}},
 			{Status: "firing", Labels: domain.Labels{Severity: "CRITICAL"},
 				Annotations: domain.Annotations{Resource: "foo", Template: "lagHigh", MetricName: "lag", MetricValue: "20"}},
 			{Status: "firing", Labels: domain.Labels{Severity: "CRITICAL"}, Annotations: domain.Annotations{}},
 		}}
 		repositoryMock.On("Create", mock.Anything).Return(&dummyAlerts[0], nil)
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
-		assert.Nil(t, actualAlerts)
-		assert.EqualError(t, err, "alert history parameters missing")
-		repositoryMock.AssertNumberOfCalls(t, "Create", 2)
+		assert.Equal(t, actualAlerts, expectedAlerts)
+		assert.EqualError(t, err, "alert history parameters missing for 1 alerts")
+		repositoryMock.AssertNumberOfCalls(t, "Create", 1)
 	})
 }
 
