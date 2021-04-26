@@ -2,7 +2,7 @@ port: 8080
 db:
   host: localhost
   user: postgres
-  name: postgres
+  name: siren_dev
   password: ""
   port: 5432
   sslmode: disable
