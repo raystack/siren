@@ -9,6 +9,15 @@ PostgresDB. It also stores alerts triggered via Cortex Alertmanager.
 
 ## System Design
 
+### Technologies
+
+Siren is developed with
+
+- Golang - Programming language
+- Docker - container engine to start postgres and cortex to aid development
+- Cortex - multi-tenant prometheus based monitoring stack
+- Postgres - a relational database
+
 ### Components
 
 _**HTTP Server**_
@@ -33,14 +42,14 @@ _**Command Line Interface**_
 Siren gives flexibility to templatise prometheus rules for re-usability purpose. Template can be managed via HTTP APIs  
 at`/templates` route in a restful manner. Apart from that, there is a command line interface as well which parses a YAML
 file in a specified format (as described below) and upload to Siren using an HTTP Client of Siren Service.
-Refer [here](templates.md) for more details around usage and terminology.
+Refer [here](../guides/templates.md) for more details around usage and terminology.
 
 ### Managing Rules via YAML File
 
 To manage rules in bulk, Siren gives a way to manage rules using YAML files, which you can manage in a version
 controlled repository. Using the `upload` command one can upload a rule YAML file in a specified format (as described
-below) and upload to Siren using an HTTP Client(comes inbuilt) of Siren Service. Refer [here](rules.md) for more details
-around usage and terminology.
+below) and upload to Siren using an HTTP Client(comes inbuilt) of Siren Service. Refer [here](../guides/rules.md) for
+more details around usage and terminology.
 
 **Note:** Updating a template also updates the associated rules.
 
