@@ -5,7 +5,7 @@ you can define templates(using go templates standard), and create/edit/enable/di
 also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated with any client such as CI/CD
 pipelines, Self-Serve UI, microservices etc.
 
-![Siren Architecture](./docs/assets/overview.svg)
+![Siren Architecture](./assets/overview.svg)
 
 ## Key Features
 

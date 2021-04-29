@@ -31,10 +31,15 @@ To know more, follow the detailed [documentation](docs)
 
 Explore the following resources to get started with Siren:
 
-* [Guides](docs/guides) provides guidance on usage.
-* [Concepts](docs/concepts) describes all important Siren concepts including system architecture.
+* [Guides](docs/guides/overview.md) provides guidance on usage.
+* [Concepts](docs/concepts/overview.md) describes all important Siren concepts including system architecture.
 * [Reference](docs/reference) contains details about configurations and other aspects of Siren.
 * [Contribute](docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
+
+
+## Run with Kubernetes
+* Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
+
 
 ## Running locally
 
