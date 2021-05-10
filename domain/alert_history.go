@@ -30,8 +30,8 @@ type AlertHistoryObject struct {
 	MetricName  string    `json:"metric_name"`
 	MetricValue string    `json:"metric_value"`
 	Level       string    `json:"level"`
-	Created     time.Time `json:"created_at"`
-	Updated     time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type AlertHistoryService interface {

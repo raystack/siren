@@ -43,8 +43,8 @@ func printRules(rules []*client.Rule) {
 		fmt.Println("ID:", rules[i].Id)
 		fmt.Println("Name:", rules[i].Name)
 		fmt.Println("Name:", rules[i].Status)
-		fmt.Println("Created At:", rules[i].CreatedAt)
-		fmt.Println("Updated At:", rules[i].UpdatedAt)
+		fmt.Println("CreatedAt At:", rules[i].CreatedAt)
+		fmt.Println("UpdatedAt At:", rules[i].UpdatedAt)
 		fmt.Println()
 	}
 }
@@ -56,8 +56,8 @@ func printTemplate(template *client.Template) {
 	fmt.Println("Upserted Template")
 	fmt.Println("ID:", template.Id)
 	fmt.Println("Name:", template.Name)
-	fmt.Println("Created At:", template.CreatedAt)
-	fmt.Println("Updated At:", template.UpdatedAt)
+	fmt.Println("CreatedAt At:", template.CreatedAt)
+	fmt.Println("UpdatedAt At:", template.UpdatedAt)
 	fmt.Println("Tags:", template.Tags)
 	fmt.Println("Variables:", template.Variables)
 }
