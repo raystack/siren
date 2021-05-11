@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"net/http"
 
 	"github.com/odpf/siren/api"
@@ -29,7 +30,15 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	services, err := service.Init(store, c.Cortex, c.SirenService)
+	cortexConfig := cortexClient.Config{
+		Address:         c.Cortex.Address,
+		UseLegacyRoutes: false,
+	}
+	client, err := cortexClient.New(cortexConfig)
+	if err != nil {
+		return nil
+	}
+	services, err := service.Init(store, c.Cortex, c.SirenService, client)
 	if err != nil {
 		return err
 	}
@@ -45,7 +54,15 @@ func RunMigrations(c *domain.Config) error {
 		return err
 	}
 
-	services, err := service.Init(store, c.Cortex, c.SirenService)
+	cortexConfig := cortexClient.Config{
+		Address:         c.Cortex.Address,
+		UseLegacyRoutes: false,
+	}
+	client, err := cortexClient.New(cortexConfig)
+	if err != nil {
+		return nil
+	}
+	services, err := service.Init(store, c.Cortex, c.SirenService, client)
 	if err != nil {
 		return err
 	}

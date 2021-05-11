@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"gopkg.in/go-playground/validator.v9"
 	"net/http"
 
 	"github.com/odpf/siren/domain"
@@ -17,28 +18,22 @@ func UpsertRule(service domain.RuleService, logger *zap.Logger) http.HandlerFunc
 			badRequest(w, err, logger)
 			return
 		}
+		v := validator.New()
+		_ = v.RegisterValidation("statusChecker", func(fl validator.FieldLevel) bool {
+			return fl.Field().Interface().(string) == "enabled" || fl.Field().Interface().(string) == "disabled"
+		})
+		err = v.Struct(rule)
+		if err != nil {
+			if _, ok := err.(*validator.InvalidValidationError); ok {
+				logger.Error("invalid validation error")
+				internalServerError(w, err, logger)
+				return
+			}
+			badRequest(w, err, logger)
+			return
+		}
 		upsertedRule, err := service.Upsert(&rule)
 		if err != nil && err.Error() == ("template not found") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("namespace cannot be empty") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("group name cannot be empty") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("status could be enabled or disabled") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("template name cannot be empty") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("entity cannot be empty") {
 			badRequest(w, err, logger)
 			return
 		}

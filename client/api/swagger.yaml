@@ -59,6 +59,67 @@ paths:
         "200":
           content: {}
       x-codegen-request-body-name: Body
+  /history:
+    get:
+      tags:
+      - alertHistory
+      description: 'GET Alert History API: This API lists stored alert history for
+        given filers in query params'
+      operationId: getAlertHistoryRequest
+      parameters:
+      - name: resource
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          x-go-name: Resource
+        x-go-name: Resource
+      - name: startTime
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          format: uint32
+          x-go-name: StartTime
+        x-go-name: StartTime
+      - name: endTime
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          format: uint32
+          x-go-name: EndTime
+        x-go-name: EndTime
+      responses:
+        "200":
+          description: Get alertHistory response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertHistoryObject'
+                x-content-type: application/json
+    post:
+      tags:
+      - alertHistory
+      description: 'Create Alert History API: This API create alert history'
+      operationId: createAlertHistoryRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Alerts'
+        required: false
+      x-codegen-request-body-name: Body
   /ping:
     get:
       tags:
@@ -272,6 +333,17 @@ paths:
           content: {}
 components:
   schemas:
+    Alert:
+      type: object
+      properties:
+        annotations:
+          $ref: '#/components/schemas/Annotations'
+        labels:
+          $ref: '#/components/schemas/Labels'
+        status:
+          type: string
+          x-go-name: Status
+      x-go-package: github.com/odpf/siren/domain
     AlertCredentialResponse:
       type: object
       properties:
@@ -293,15 +365,85 @@ components:
         pagerduty_credentials: pagerduty_credentials
         entity: entity
       x-go-package: github.com/odpf/siren/docs
+    AlertHistoryObject:
+      type: object
+      properties:
+        created_at:
+          type: string
+          format: date-time
+          x-go-name: Created
+        id:
+          type: integer
+          format: uint64
+          x-go-name: ID
+        level:
+          type: string
+          x-go-name: Level
+        metric_name:
+          type: string
+          x-go-name: MetricName
+        metric_value:
+          type: string
+          x-go-name: MetricValue
+        name:
+          type: string
+          x-go-name: Name
+        template_id:
+          type: string
+          x-go-name: TemplateID
+        updated_at:
+          type: string
+          format: date-time
+          x-go-name: Updated
+      example:
+        metric_name: metric_name
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        level: level
+        name: name
+        created_at: 2000-01-23T04:56:07.000+00:00
+        metric_value: metric_value
+        template_id: template_id
+        id: 0
+      x-go-package: github.com/odpf/siren/domain
+    Alerts:
+      type: object
+      properties:
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+          x-go-name: Alerts
+      x-go-package: github.com/odpf/siren/domain
+    Annotations:
+      type: object
+      properties:
+        metric_name:
+          type: string
+          x-go-name: MetricName
+        metric_value:
+          type: string
+          x-go-name: MetricValue
+        resource:
+          type: string
+          x-go-name: Resource
+        template:
+          type: string
+          x-go-name: Template
+      x-go-package: github.com/odpf/siren/domain
+    Labels:
+      type: object
+      properties:
+        severity:
+          type: string
+          x-go-name: Severity
+      x-go-package: github.com/odpf/siren/domain
     Rule:
       type: object
       properties:
-        CreatedAt:
+        created_at:
           type: string
           format: date-time
-        UpdatedAt:
-          type: string
-          format: date-time
+          x-go-name: CreatedAt
         entity:
           type: string
           x-go-name: Entity
@@ -324,6 +466,10 @@ components:
         template:
           type: string
           x-go-name: Template
+        updated_at:
+          type: string
+          format: date-time
+          x-go-name: UpdatedAt
         variables:
           type: array
           items:
@@ -340,12 +486,12 @@ components:
           description: description
           type: type
           value: value
+        updated_at: 2000-01-23T04:56:07.000+00:00
         group_name: group_name
-        CreatedAt: 2000-01-23T04:56:07.000+00:00
         name: name
         namespace: namespace
+        created_at: 2000-01-23T04:56:07.000+00:00
         id: 0
-        UpdatedAt: 2000-01-23T04:56:07.000+00:00
         entity: entity
         status: status
       x-go-package: github.com/odpf/siren/domain
@@ -404,15 +550,13 @@ components:
     Template:
       type: object
       properties:
-        CreatedAt:
-          type: string
-          format: date-time
-        UpdatedAt:
-          type: string
-          format: date-time
         body:
           type: string
           x-go-name: Body
+        created_at:
+          type: string
+          format: date-time
+          x-go-name: CreatedAt
         id:
           type: integer
           format: uint64
@@ -425,6 +569,10 @@ components:
           items:
             type: string
           x-go-name: Tags
+        updated_at:
+          type: string
+          format: date-time
+          x-go-name: UpdatedAt
         variables:
           type: array
           items:
@@ -440,11 +588,11 @@ components:
           name: name
           description: description
           type: type
-        CreatedAt: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
         name: name
+        created_at: 2000-01-23T04:56:07.000+00:00
         id: 0
         body: body
-        UpdatedAt: 2000-01-23T04:56:07.000+00:00
         tags:
         - tags
         - tags
@@ -471,6 +619,14 @@ components:
         type: type
       x-go-package: github.com/odpf/siren/domain
   responses:
+    getResponse:
+      description: Get alertHistory response
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AlertHistoryObject'
     listResponse:
       description: List templates response
       content:
