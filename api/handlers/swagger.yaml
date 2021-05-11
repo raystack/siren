@@ -1,6 +1,6 @@
 basePath: /
 consumes:
-  - application/json
+- application/json
 definitions:
   Alert:
     properties:
@@ -30,7 +30,7 @@ definitions:
       created_at:
         format: date-time
         type: string
-        x-go-name: Created
+        x-go-name: CreatedAt
       id:
         format: uint64
         type: integer
@@ -53,7 +53,7 @@ definitions:
       updated_at:
         format: date-time
         type: string
-        x-go-name: Updated
+        x-go-name: UpdatedAt
     type: object
     x-go-package: github.com/odpf/siren/domain
   Alerts:
@@ -218,83 +218,43 @@ info:
   title: Siren.
   version: 1.0.0
 paths:
-  /alertingCredentials/teams/{teamName}:
-    get:
-      description: 'Get AlertCredentials API: This API helps in getting the teams
-        slack and pagerduty credentials'
-      operationId: getAlertCredentialRequest
-      parameters:
-        - description: name of the team
-          in: path
-          name: teamName
-          required: true
-          type: string
-          x-go-name: TeamName
-      responses:
-        "200":
-          description: AlertCredentialResponse
-          schema:
-            $ref: '#/definitions/AlertCredentialResponse'
-      tags:
-        - alertcredential
-    put:
-      description: 'Upsert AlertCredentials API: This API helps in creating or updating
-        the teams slack and pagerduty credentials'
-      operationId: createAlertCredentialRequest
-      parameters:
-        - description: Create AlertCredential request
-          in: body
-          name: Body
-          schema:
-            $ref: '#/definitions/AlertCredentialResponse'
-        - description: name of the team
-          in: path
-          name: teamName
-          required: true
-          type: string
-          x-go-name: TeamName
-      responses:
-        "200":
-          description: ""
-      tags:
-        - alertcredential
   /history:
     get:
       description: 'GET Alert History API: This API lists stored alert history for
         given filers in query params'
       operationId: getAlertHistoryRequest
       parameters:
-        - in: query
-          name: resource
-          type: string
-          x-go-name: Resource
-        - format: uint32
-          in: query
-          name: startTime
-          type: integer
-          x-go-name: StartTime
-        - format: uint32
-          in: query
-          name: endTime
-          type: integer
-          x-go-name: EndTime
+      - in: query
+        name: resource
+        type: string
+        x-go-name: Resource
+      - format: uint32
+        in: query
+        name: startTime
+        type: integer
+        x-go-name: StartTime
+      - format: uint32
+        in: query
+        name: endTime
+        type: integer
+        x-go-name: EndTime
       responses:
         "200":
           $ref: '#/responses/getResponse'
       tags:
-        - alertHistory
+      - alertHistory
     post:
       description: 'Create Alert History API: This API create alert history'
       operationId: createAlertHistoryRequest
       parameters:
-        - in: body
-          name: Body
-          schema:
-            items:
-              $ref: '#/definitions/Alerts'
-            type: array
+      - in: body
+        name: Body
+        schema:
+          items:
+            $ref: '#/definitions/Alerts'
+          type: array
       tags:
-        - alertHistory
+      - alertHistory
   /ping:
     get:
       description: Ping call
@@ -303,138 +263,178 @@ paths:
         "200":
           $ref: '#/responses/pingResponse'
       tags:
-        - ping
+      - ping
   /rules:
     get:
       description: 'List Rules API: This API lists all the existing rules with given
         filers in query params'
       operationId: listRulesRequest
       parameters:
-        - description: List Rule Request
-          in: query
-          name: namespace
-          type: string
-          x-go-name: Namespace
-        - in: query
-          name: entity
-          type: string
-          x-go-name: Entity
-        - in: query
-          name: group_name
-          type: string
-          x-go-name: GroupName
-        - in: query
-          name: status
-          type: string
-          x-go-name: Status
-        - in: query
-          name: template
-          type: string
-          x-go-name: Template
+      - description: List Rule Request
+        in: query
+        name: namespace
+        type: string
+        x-go-name: Namespace
+      - in: query
+        name: entity
+        type: string
+        x-go-name: Entity
+      - in: query
+        name: group_name
+        type: string
+        x-go-name: GroupName
+      - in: query
+        name: status
+        type: string
+        x-go-name: Status
+      - in: query
+        name: template
+        type: string
+        x-go-name: Template
       responses:
         "200":
           $ref: '#/responses/listRulesResponse'
       tags:
-        - rules
+      - rules
     put:
       description: 'Upsert Rule API: This API helps in creating a new rule or update
         an existing one with unique combination of namespace, entity, group_name,
         template'
       operationId: createRuleRequest
       parameters:
-        - description: Create rule request
-          in: body
-          name: Body
-          schema:
-            $ref: '#/definitions/Rule'
+      - description: Create rule request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Rule'
       responses:
         "200":
           $ref: '#/responses/rulesResponse'
       tags:
-        - rules
+      - rules
+  /teams/{teamName}/credentials:
+    get:
+      description: 'Get AlertCredentials API: This API helps in getting the teams
+        slack and pagerduty credentials'
+      operationId: getAlertCredentialRequest
+      parameters:
+      - description: name of the team
+        in: path
+        name: teamName
+        required: true
+        type: string
+        x-go-name: TeamName
+      responses:
+        "200":
+          description: AlertCredentialResponse
+          schema:
+            $ref: '#/definitions/AlertCredentialResponse'
+      tags:
+      - alertCredential
+    put:
+      description: 'Upsert AlertCredentials API: This API helps in creating or updating
+        the teams slack and pagerduty credentials'
+      operationId: createAlertCredentialRequest
+      parameters:
+      - description: Create AlertCredential request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/AlertCredentialResponse'
+      - description: name of the team
+        in: path
+        name: teamName
+        required: true
+        type: string
+        x-go-name: TeamName
+      responses:
+        "200":
+          description: ""
+      tags:
+      - alertCredential
   /templates:
     get:
       description: 'List Templates API: This API lists all the existing templates
         with given filers in query params'
       operationId: listTemplatesRequest
       parameters:
-        - description: List Template Request
-          in: query
-          name: tag
-          type: string
-          x-go-name: Tag
+      - description: List Template Request
+        in: query
+        name: tag
+        type: string
+        x-go-name: Tag
       responses:
         "200":
           $ref: '#/responses/listResponse'
       tags:
-        - templates
+      - templates
     put:
       description: 'Upsert Templates API: This API helps in creating or updating a
         template with unique name'
       operationId: createTemplateRequest
       parameters:
-        - description: Create template request
-          in: body
-          name: Body
-          schema:
-            $ref: '#/definitions/Template'
+      - description: Create template request
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Template'
       responses:
         "200":
           $ref: '#/responses/templatesResponse'
       tags:
-        - templates
+      - templates
   /templates/{name}:
     delete:
       description: 'Delete Template API: This API deletes a template given the template
         name'
       operationId: deleteTemplatesRequest
       parameters:
-        - description: Delete Template Request
-          in: path
-          name: name
-          required: true
-          type: string
-          x-go-name: Name
+      - description: Delete Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
       responses:
         "200":
           $ref: '#/responses/templatesResponse'
       tags:
-        - templates
+      - templates
     get:
       description: 'Get Template API: This API gets a template given the template
         name'
       operationId: getTemplatesRequest
       parameters:
-        - description: Get Template Request
-          in: path
-          name: name
-          required: true
-          type: string
-          x-go-name: Name
+      - description: Get Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
       responses:
         "200":
           $ref: '#/responses/templatesResponse'
       tags:
-        - templates
+      - templates
   /templates/{name}/render:
     post:
       description: 'Render Template API: This API renders the given template with
         given values'
       operationId: renderTemplatesRequest
       parameters:
-        - description: Render Template Request
-          in: path
-          name: name
-          required: true
-          type: string
-          x-go-name: Name
+      - description: Render Template Request
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
       responses:
         "200":
           $ref: '#/responses/renderTemplatesResponse'
       tags:
-        - templates
+      - templates
 produces:
-  - application/json
+- application/json
 responses:
   getResponse:
     description: Get alertHistory response
@@ -467,7 +467,7 @@ responses:
     schema:
       $ref: '#/definitions/Template'
 schemes:
-  - http
+- http
 securityDefinitions:
   basic:
     type: basic
