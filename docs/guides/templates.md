@@ -13,7 +13,7 @@ One can create templates using either HTTP APIs or CLI.
 
 Templates can be created using Siren APIs. The below snippet describes an example.
 
-```http request
+```text
 PUT /templates HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
@@ -113,7 +113,7 @@ The response body will look like this:
 
 Here is an example to fetch a template using name.
 
-```http request
+```text
 GET /templates/cpu HTTP/1.1
 Host: localhost:3000
 ```
@@ -122,14 +122,14 @@ Host: localhost:3000
 
 Here is an example to fetch a templates matching the tag.
 
-```http request
+```text
 GET /templates?tag=firehose HTTP/1.1
 Host: localhost:3000
 ```
 
 ### Deleting a template
 
-```http request
+```text
 DELETE /templates/cpu HTTP/1.1
 Host: localhost:3000
 ```
