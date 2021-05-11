@@ -12,7 +12,7 @@ A valid request payload has slack webhook, slack channel name and slack username
 levels along with pagerduty service key. You also need to mention the entity (tenant id) which is tenant id in cortex
 alertmanager.
 
-```http request
+```text
 PUT /alertingCredentials/teams/siren_devs HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
@@ -91,7 +91,7 @@ So if the rule has a label of `team` as `siren_devs` the alert will be processed
 
 **Fetching alerting credentials**
 
-```http request
+```text
 GET /alertingCredentials/teams/siren_devs HTTP/1.1
 Host: localhost:3000
 ```

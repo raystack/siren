@@ -96,7 +96,7 @@ parsed by Siren APIs, to be stored in the database.
 
 **Alert History Creation via API**
 
-```http request
+```text
 POST /history HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json

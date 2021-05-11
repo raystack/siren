@@ -15,7 +15,7 @@ one or more rules.
 
 The below snippet describes an example of template creation/update. Same API can be used to enable or disable alerts.
 
-```http request
+```text
 PUT /rules HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
@@ -59,7 +59,7 @@ default will be picked.
 
 Rules can be fetched and filtered with multiple parameters. An example of all filters is described below.
 
-```http request
+```text
 GET /rules?namespace=foo&entity=odpf&group_name=CPUHigh&status=enabled&template=CPU HTTP/1.1
 Host: localhost:3000
 ```
