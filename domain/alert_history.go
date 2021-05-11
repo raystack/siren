@@ -13,8 +13,8 @@ type Labels struct {
 type Annotations struct {
 	Resource    string `json:"resource"`
 	Template    string `json:"template"`
-	MetricName  string `json:"metricName"`
-	MetricValue string `json:"metricValue"`
+	MetricName  string `json:"metric_name"`
+	MetricValue string `json:"metric_value"`
 }
 
 type Alert struct {
@@ -30,8 +30,8 @@ type AlertHistoryObject struct {
 	MetricName  string    `json:"metric_name"`
 	MetricValue string    `json:"metric_value"`
 	Level       string    `json:"level"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type AlertHistoryService interface {

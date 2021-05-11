@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/grafana/cortex-tools/pkg/client"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alert"
 	"github.com/odpf/siren/pkg/alert/alertmanager"
@@ -17,9 +18,9 @@ type Container struct {
 	AlertHistoryService domain.AlertHistoryService
 }
 
-func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig) (*Container, error) {
+func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig, client *client.CortexClient) (*Container, error) {
 	templatesService := templates.NewService(db)
-	rulesService := rules.NewService(db, cortex)
+	rulesService := rules.NewService(db, client)
 	newClient, err := alertmanager.NewClient(cortex)
 	if err != nil {
 		return nil, err

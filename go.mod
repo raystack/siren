@@ -8,10 +8,12 @@ require (
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/spec v0.20.2 // indirect
+	github.com/go-playground/universal-translator v0.17.0
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grafana/cortex-tools v0.7.2
 	github.com/jeremywohl/flatten v1.0.1
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.3.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mcuadros/go-defaults v1.2.0
@@ -32,6 +34,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sys v0.0.0-20201126233918-771906719818 // indirect
+	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	gorm.io/driver/postgres v1.0.8

@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/odpf/siren/app"
 	"github.com/odpf/siren/client"
+	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/pkg/uploader"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ func init() {
 }
 
 func upload(cmd *cobra.Command, args []string) error {
-	c := app.LoadConfig()
+	c := config.LoadConfig()
 	s := uploader.NewService(&c.SirenService)
 	result, err := s.Upload(args[0])
 	//print all resources(succeed or failed in upsert)
@@ -43,8 +43,8 @@ func printRules(rules []*client.Rule) {
 		fmt.Println("ID:", rules[i].Id)
 		fmt.Println("Name:", rules[i].Name)
 		fmt.Println("Name:", rules[i].Status)
-		fmt.Println("Created At:", rules[i].CreatedAt)
-		fmt.Println("Updated At:", rules[i].UpdatedAt)
+		fmt.Println("CreatedAt At:", rules[i].CreatedAt)
+		fmt.Println("UpdatedAt At:", rules[i].UpdatedAt)
 		fmt.Println()
 	}
 }
@@ -56,8 +56,8 @@ func printTemplate(template *client.Template) {
 	fmt.Println("Upserted Template")
 	fmt.Println("ID:", template.Id)
 	fmt.Println("Name:", template.Name)
-	fmt.Println("Created At:", template.CreatedAt)
-	fmt.Println("Updated At:", template.UpdatedAt)
+	fmt.Println("CreatedAt At:", template.CreatedAt)
+	fmt.Println("UpdatedAt At:", template.UpdatedAt)
 	fmt.Println("Tags:", template.Tags)
 	fmt.Println("Variables:", template.Variables)
 }

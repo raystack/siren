@@ -27,7 +27,7 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 		}}
 
 		payload := []byte(`{"alerts":[{"status":"firing","labels":{"severity":"CRITICAL"},
-					"annotations":{"resource":"foo","template":"bar","metricName":"baz","metricValue":"30"}}]}`)
+					"annotations":{"resource":"foo","template":"bar","metric_name":"baz","metric_value":"30"}}]}`)
 
 		mockedAlertHistoryService.On("Create", &domainAlerts).Return(dummyAlerts, nil).Once()
 		r, err := http.NewRequest(http.MethodPost, "/history", bytes.NewBuffer(payload))
@@ -113,7 +113,7 @@ func TestAlertHistory_CreateAlertHistory(t *testing.T) {
 		}}
 
 		payload := []byte(`{"alerts":[{"status":"firing","labels":{"severity":"CRITICAL"},
-					"annotations":{"resource":"foo","template":"bar","metricName":"baz","metricValue":"30"}}]}`)
+					"annotations":{"resource":"foo","template":"bar","metric_name":"baz","metric_value":"30"}}]}`)
 
 		mockedAlertHistoryService.On("Create", &domainAlerts).
 			Return(nil, errors.New("random error")).Once()

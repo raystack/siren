@@ -1,10 +1,8 @@
 package templates
 
 import (
-	"errors"
 	"github.com/odpf/siren/domain"
 	"gorm.io/gorm"
-	"strings"
 )
 
 // Service handles business logic
@@ -27,29 +25,11 @@ func (service Service) Upsert(template *domain.Template) (*domain.Template, erro
 	if err != nil {
 		return nil, err
 	}
-	err = isValid(template)
-	if err != nil {
-		return nil, err
-	}
 	upsertedTemplate, err := service.repository.Upsert(t)
 	if err != nil {
 		return nil, err
 	}
 	return upsertedTemplate.toDomain()
-}
-
-func trimmer(x string) string {
-	return strings.Trim(x, " ")
-}
-
-func isValid(template *domain.Template) error {
-	if trimmer(template.Name) == "" {
-		return errors.New("name cannot be empty")
-	}
-	if trimmer(template.Body) == "" {
-		return errors.New("body cannot be empty")
-	}
-	return nil
 }
 
 func (service Service) Index(tag string) ([]domain.Template, error) {

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
 	"go.uber.org/zap"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // UpsertTemplates handler
@@ -19,15 +20,18 @@ func UpsertTemplates(service domain.TemplatesService, logger *zap.Logger) http.H
 			badRequest(w, err, logger)
 			return
 		}
+		v := validator.New()
+		err = v.Struct(template)
+		if err != nil {
+			if _, ok := err.(*validator.InvalidValidationError); ok {
+				logger.Error("invalid validation error")
+				internalServerError(w, err, logger)
+				return
+			}
+			badRequest(w, err, logger)
+			return
+		}
 		createdTemplate, err := service.Upsert(&template)
-		if err != nil && err.Error() == ("name cannot be empty") {
-			badRequest(w, err, logger)
-			return
-		}
-		if err != nil && err.Error() == ("body cannot be empty") {
-			badRequest(w, err, logger)
-			return
-		}
 		if err != nil {
 			internalServerError(w, err, logger)
 			return

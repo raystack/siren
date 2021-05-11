@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
+	"gopkg.in/go-playground/validator.v9"
 	"net/http"
 	"net/url"
 
@@ -21,20 +21,23 @@ func UpdateAlertCredentials(service domain.AlertmanagerService, logger *zap.Logg
 			w.Write([]byte("invalid json body"))
 			return
 		}
-		teamName := params["teamName"]
-		alertCredential.TeamName = teamName
-		validators := []func(*domain.AlertCredential) error{
-			validateWebhooks,
-			validateEntity,
-			validatePagerdutyKey,
-		}
-		for _, v := range validators {
-			if err := v(&alertCredential); err != nil {
-				w.WriteHeader(400)
-				w.Write([]byte(err.Error()))
+		v := validator.New()
+		_ = v.RegisterValidation("webhookChecker", func(fl validator.FieldLevel) bool {
+			_, err := url.Parse(fl.Field().Interface().(string))
+			return err == nil
+		})
+		err = v.Struct(alertCredential)
+		if err != nil {
+			if _, ok := err.(*validator.InvalidValidationError); ok {
+				logger.Error("invalid validation error")
+				internalServerError(w, err, logger)
 				return
 			}
+			badRequest(w, err, logger)
+			return
 		}
+		teamName := params["teamName"]
+		alertCredential.TeamName = teamName
 
 		err = service.Upsert(alertCredential)
 		if err != nil {
@@ -60,31 +63,4 @@ func GetAlertCredentials(service domain.AlertmanagerService, logger *zap.Logger)
 		w.WriteHeader(201)
 		return
 	}
-}
-
-func validatePagerdutyKey(credential *domain.AlertCredential) error {
-	if credential.PagerdutyCredentials == "" {
-		return errors.New("pagerduty key cannot be empty")
-	}
-	return nil
-
-}
-
-func validateEntity(credential *domain.AlertCredential) error {
-	if credential.Entity == "" {
-		return errors.New("entity cannot be empty")
-	}
-	return nil
-}
-
-func validateWebhooks(credential *domain.AlertCredential) error {
-	_, err := url.Parse(credential.SlackConfig.Critical.Webhook)
-	if err != nil {
-		return errors.New("slack critical webhook is not a valid url")
-	}
-	_, err = url.Parse(credential.SlackConfig.Warning.Webhook)
-	if err != nil {
-		return errors.New("slack critical webhook is not a valid url")
-	}
-	return nil
 }

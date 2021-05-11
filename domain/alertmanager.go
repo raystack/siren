@@ -1,21 +1,21 @@
 package domain
 
 type SlackCredential struct {
-	Channel  string `json:"channel"`
-	Webhook  string `json:"webhook"`
-	Username string `json:"username"`
+	Channel  string `json:"channel" validate:"required"`
+	Webhook  string `json:"webhook" validate:"required,webhookChecker"`
+	Username string `json:"username" validate:"required,webhookChecker"`
 }
 
 type SlackConfig struct {
-	Critical SlackCredential `json:"critical"`
-	Warning  SlackCredential `json:"warning"`
+	Critical SlackCredential `json:"critical" validate:"required,dive,required"`
+	Warning  SlackCredential `json:"warning" validate:"required,dive,required"`
 }
 
 type AlertCredential struct {
-	Entity               string      `json:"entity"`
+	Entity               string      `json:"entity" validate:"required"`
 	TeamName             string      `json:"team_name"`
-	PagerdutyCredentials string      `json:"pagerduty_credentials"`
-	SlackConfig          SlackConfig `json:"slack_config"`
+	PagerdutyCredentials string      `json:"pagerduty_credentials" validate:"required"`
+	SlackConfig          SlackConfig `json:"slack_config" validate:"required,dive,required"`
 }
 type AlertmanagerService interface {
 	Upsert(credential AlertCredential) error

@@ -113,46 +113,6 @@ func TestService_Index(t *testing.T) {
 }
 
 func TestService_Upsert(t *testing.T) {
-	t.Run("should perform name validation", func(t *testing.T) {
-		repositoryMock := &TemplatesRepositoryMock{}
-		dummyService := Service{repository: repositoryMock}
-		dummyTemplate := &domain.Template{
-			Name: "", Body: "bar",
-			Tags: []string{"test"},
-			Variables: []domain.Variable{{
-				Name:        "test-name",
-				Default:     "test-default",
-				Description: "test-description",
-				Type:        "test-type",
-			},
-			},
-		}
-		result, err := dummyService.Upsert(dummyTemplate)
-		assert.EqualError(t, err, "name cannot be empty")
-		assert.Nil(t, result)
-		repositoryMock.AssertNotCalled(t, "Upsert")
-	})
-
-	t.Run("should perform body validation", func(t *testing.T) {
-		repositoryMock := &TemplatesRepositoryMock{}
-		dummyService := Service{repository: repositoryMock}
-		dummyTemplate := &domain.Template{
-			Name: "foo", Body: "",
-			Tags: []string{"test"},
-			Variables: []domain.Variable{{
-				Name:        "test-name",
-				Default:     "test-default",
-				Description: "test-description",
-				Type:        "test-type",
-			},
-			},
-		}
-		result, err := dummyService.Upsert(dummyTemplate)
-		assert.EqualError(t, err, "body cannot be empty")
-		assert.Nil(t, result)
-		repositoryMock.AssertNotCalled(t, "Upsert")
-	})
-
 	t.Run("should call repository Upsert method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &TemplatesRepositoryMock{}
 		dummyService := Service{repository: repositoryMock}

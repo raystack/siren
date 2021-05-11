@@ -43,7 +43,7 @@ func (a *Alert) toDomain() domain.AlertHistoryObject {
 		MetricValue: a.MetricValue,
 		MetricName:  a.MetricName,
 		Level:       a.Level,
-		Created:     a.CreatedAt,
-		Updated:     a.UpdatedAt,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
 	}
 }
