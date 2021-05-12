@@ -13,7 +13,7 @@ levels along with pagerduty service key. You also need to mention the entity (te
 alertmanager.
 
 ```text
-PUT /alertingCredentials/teams/siren_devs HTTP/1.1
+PUT /teams/siren_devs/credentials HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
 Content-Length: 381
@@ -92,7 +92,7 @@ So if the rule has a label of `team` as `siren_devs` the alert will be processed
 **Fetching alerting credentials**
 
 ```text
-GET /alertingCredentials/teams/siren_devs HTTP/1.1
+GET /teams/siren_devs/credentials HTTP/1.1
 Host: localhost:3000
 ```
 
