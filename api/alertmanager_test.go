@@ -64,7 +64,7 @@ func TestGetAlertCredentials(t *testing.T) {
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
-		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
+		r, err := http.NewRequest(http.MethodGet, "/teams/hydra/credentials", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -99,7 +99,7 @@ func TestGetAlertCredentials(t *testing.T) {
 		router := New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
-		r, err := http.NewRequest(http.MethodGet, "/alertingCredentials/teams/hydra", nil)
+		r, err := http.NewRequest(http.MethodGet, "/teams/hydra/credentials", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -130,7 +130,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
       "webhook": "http://warning.com"
     }
   }}`)
-		r, err := http.NewRequest(http.MethodPut, "/alertingCredentials/teams/myTeam", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,7 +161,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
       "webhook": "http://warning.com"
     }
   }}`)
-		r, err := http.NewRequest(http.MethodPut, "/alertingCredentials/teams/myTeam", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -192,7 +192,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
       "webhook": "http://warning.com"
     }
   }}`)
-		r, err := http.NewRequest(http.MethodPut, "/alertingCredentials/teams/myTeam", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -226,7 +226,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
       "webhook": "http://warning.com"
     }
   }}`)
-		r, err := http.NewRequest(http.MethodPut, "/alertingCredentials/teams/myTeam", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -261,7 +261,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
       "webhook": "http://warning.com"
     }
   }}`)
-		r, err := http.NewRequest(http.MethodPut, "/alertingCredentials/teams/myTeam", bytes.NewBuffer(payload))
+		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}

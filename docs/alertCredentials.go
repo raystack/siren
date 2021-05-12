@@ -9,7 +9,7 @@ type AlertCredentialResponse struct {
 }
 
 //-------------------------
-// swagger:route PUT /alertingCredentials/teams/{teamName}  alertcredential createAlertCredentialRequest
+// swagger:route PUT /teams/{teamName}/credentials  alertCredential createAlertCredentialRequest
 // Upsert AlertCredentials API: This API helps in creating or updating the teams slack and pagerduty credentials
 //responses:
 //   200:
@@ -25,7 +25,7 @@ type createAlertCredentialRequest struct {
 }
 
 //-------------------------
-// swagger:route GET /alertingCredentials/teams/{teamName}  alertcredential getAlertCredentialRequest
+// swagger:route GET /teams/{teamName}/credentials  alertCredential getAlertCredentialRequest
 // Get AlertCredentials API: This API helps in getting the teams slack and pagerduty credentials
 //responses:
 //   200: AlertCredentialResponse
