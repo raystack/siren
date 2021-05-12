@@ -1,9 +1,9 @@
 # Architecture
 
 Siren exposes HTTP API to allow rule, template and slack & Pagerduty credentials configuration. It talks to upstream
-cortex ruler to configure rules(alerting and recording rules). It talks to Cortex Alertmanager to configure destination
-where alerts should go. It stores data around credentials, templates and current state of configured alerts in
-PostgresDB. It also stores alerts triggered via Cortex Alertmanager.
+cortex ruler to configure rules(alerting and recording rules). It talks to Cortex Alertmanager to configure the
+destination where alerts should go. It stores data around credentials, templates and current state of configured alerts
+in PostgresDB. It also stores alerts triggered via Cortex Alertmanager.
 
 ![Siren Architecture](../assets/siren.jpg)
 
@@ -33,13 +33,13 @@ _**PostgresDB**_
 
 _**Command Line Interface**_
 
-* Provides a way to manage rules and templates using YAML files in format described below.
+* Provides a way to manage rules and templates using YAML files in a format described below.
 * Run a web-server from CLI.
 * Runs DB Migrations
 
 ### Managing Templates via YAML File
 
-Siren gives flexibility to templatise prometheus rules for re-usability purpose. Template can be managed via HTTP APIs  
+Siren gives flexibility to templatize prometheus rules for re-usability purpose. Template can be managed via HTTP APIs  
 at`/templates` route in a restful manner. Apart from that, there is a command line interface as well which parses a YAML
 file in a specified format (as described below) and upload to Siren using an HTTP Client of Siren Service.
 Refer [here](../guides/templates.md) for more details around usage and terminology.
@@ -59,7 +59,7 @@ The section details all integrating systems for Siren deployment. These are exte
 
 ### Cortex Ruler
 
-* The upstream Cortex ruler deployment which is used for rule creation in proper namespace/group.
+* The upstream Cortex ruler deployment which is used for rule creation in the proper namespace/group.
   The [`cortex_host`](../reference/configuration.md#-cortex.address) config can be set in Siren.
 
 ### Cortex Alertmanager

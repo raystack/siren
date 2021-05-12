@@ -16,8 +16,8 @@ The following topics will describe how to use Siren.
 
 ## Managing Templates
 
-Siren templates are abstraction over prometeheus rules to reuse same rule body to create multiple rules. The rule body
-is templated using go templates. Learn in more detail [here](./templates.md).
+Siren templates are abstraction over Prometheus rules to reuse same rule body to create multiple rules. The rule body is
+templated using go templates. Learn in more detail [here](./templates.md).
 
 ## Managing Rules
 
@@ -32,7 +32,7 @@ GitOps but for alerting. Learn in More detail [here](./bulk_rules.md)
 ## Alerting Credentials Management
 
 Siren stores slack and pagerduty credentials which can be used to configure Cortex Alertmanager to route alerts to Slack
-and Pagerduty. Learn in more detail [here](./alert_credential.md).
+and Pagerduty. Learn in more detail [here](./alert_credentials.md).
 
 ## Alert History Subscription
 
@@ -41,7 +41,7 @@ auditing and analytics purposes. Learn in more detail [here](./alert_history.md)
 
 ## Deployment
 
-Refer [here](./deployment.md) to learn how to deploy siren in production.
+Refer [here](./deployment.md) to learn how to deploy Siren in production.
 
 ## Monitoring
 

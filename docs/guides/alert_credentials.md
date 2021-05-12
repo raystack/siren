@@ -8,8 +8,8 @@ can be configured from the HTTP APIs.
 
 Here is an example to create slack and pagerduty credentials routing configuration in Alertmanager.
 
-A valid request payload has slack webhook, slack channel name and slack username for warning and critical severity
-levels along with pagerduty service key. You also need to mention the entity (tenant id) which is tenant id in cortex
+A valid request payload has a Slack webhook, a Slack channel name and slack username for warning and critical severity
+levels along with pagerduty service key. You also need to mention the entity (tenant id) which is tenant id in Cortex
 alertmanager.
 
 ```text

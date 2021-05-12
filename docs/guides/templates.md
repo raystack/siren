@@ -2,8 +2,8 @@
 
 Siren templates are an abstraction
 over [Prometheus rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). It
-utilises [gotemplates](https://golang.org/pkg/text/template/) to provide implements data-driven templates for generating
-textual output. The template delimiter used is `[[` and `]]`.
+utilises [go-templates](https://golang.org/pkg/text/template/) to provide implements data-driven templates for
+generating textual output. The template delimiter used is `[[` and `]]`.
 
 One can create templates using either HTTP APIs or CLI.
 
@@ -31,7 +31,7 @@ Content-Length: 1383
             "name": "team",
             "type": "string",
             "default": "odpf",
-            "description": "Name of the team thaat owns the deployment"
+            "description": "Name of the team that owns the deployment"
         },
         {
             "name": "for",
@@ -83,7 +83,7 @@ The response body will look like this:
       "name": "team",
       "type": "string",
       "default": "odpf",
-      "description": "Name of the team thaat owns the deployment"
+      "description": "Name of the team that owns the deployment"
     },
     {
       "name": "for",
@@ -180,8 +180,8 @@ tags:
 ```
 
 In the above example, we are using one template to define rules of two severity labels viz WARNING and CRITICAL. Here we
-are have made 3 templates variables `for`, `warning` and `critical` which denote the appropriate alerting thresholds.
-They will be given a value while actual rule(alert) creating.
+have made 3 templates variables `for`, `warning` and `critical` which denote the appropriate alerting thresholds. They
+will be given a value while actual rule(alert) creating.
 
 ```shell
 go run main.go upload cpu_template.yaml
@@ -201,4 +201,4 @@ go run main.go upload cpu_template.yaml
 **Note:**
 
 1. It's suggested to always provide default value for the templated variables.
-2. Updating a template via CLI will update all associated rules. 
+2. Updating a template via CLI will update all associated rules.
