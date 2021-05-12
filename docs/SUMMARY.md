@@ -2,12 +2,12 @@
 
 * [Introduction](README.md)
 * [Roadmap](roadmap.md)
-* [Changelog](https://github.com/odpf/firehose/blob/main/CHANGELOG.md)
+* [Changelog](reference/changelog.md)
 
 ## Guides
 
 * [Overview](guides/overview.md)
-* [Configuring crentials](guides/alert_credentials.md)
+* [Configuring credentials](guides/alert_credentials.md)
 * [Creating templates](guides/templates.md)
 * [Creating rules](guides/rules.md)
 * [Creating bulk rules](guides/bulk_rules.md)
@@ -24,11 +24,13 @@
 * [Code](concepts/code.md)
 * [Schema](concepts/schema.md)
 
-
 ## Reference
 
 * [Configurations](reference/configuration.md)
+* [API](reference/api.md)
+* [Changelog](reference/changelog.md)
 
 ## Contribute
 
 * [Contribution Process](contribute/contribution.md)
+* [Release](contribute/release.md)

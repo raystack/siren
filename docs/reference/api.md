@@ -1,10 +1,12 @@
 # Siren
+
 Documentation of our Siren API.
 
 ## Version: 1.0.0
 
 ### Security
-**basic**  
+
+**basic**
 
 |basic|*Basic*|
 |---|---|
@@ -12,6 +14,7 @@ Documentation of our Siren API.
 ### /alertingCredentials/teams/{teamName}
 
 #### GET
+
 ##### Description
 
 Get AlertCredentials API: This API helps in getting the teams slack and pagerduty credentials
@@ -29,6 +32,7 @@ Get AlertCredentials API: This API helps in getting the teams slack and pagerdut
 | 200 | AlertCredentialResponse | [AlertCredentialResponse](#alertcredentialresponse) |
 
 #### PUT
+
 ##### Description
 
 Upsert AlertCredentials API: This API helps in creating or updating the teams slack and pagerduty credentials
@@ -49,6 +53,7 @@ Upsert AlertCredentials API: This API helps in creating or updating the teams sl
 ### /history
 
 #### GET
+
 ##### Description
 
 GET Alert History API: This API lists stored alert history for given filers in query params
@@ -68,6 +73,7 @@ GET Alert History API: This API lists stored alert history for given filers in q
 | 200 | Get alertHistory response | [ [AlertHistoryObject](#alerthistoryobject) ] |
 
 #### POST
+
 ##### Description
 
 Create Alert History API: This API create alert history
@@ -81,6 +87,7 @@ Create Alert History API: This API create alert history
 ### /ping
 
 #### GET
+
 ##### Description
 
 Ping call
@@ -94,6 +101,7 @@ Ping call
 ### /rules
 
 #### GET
+
 ##### Description
 
 List Rules API: This API lists all the existing rules with given filers in query params
@@ -115,9 +123,11 @@ List Rules API: This API lists all the existing rules with given filers in query
 | 200 | List rules response | [ [Rule](#rule) ] |
 
 #### PUT
+
 ##### Description
 
-Upsert Rule API: This API helps in creating a new rule or update an existing one with unique combination of namespace, entity, group_name, template
+Upsert Rule API: This API helps in creating a new rule or update an existing one with unique combination of namespace,
+entity, group_name, template
 
 ##### Parameters
 
@@ -134,6 +144,7 @@ Upsert Rule API: This API helps in creating a new rule or update an existing one
 ### /templates
 
 #### GET
+
 ##### Description
 
 List Templates API: This API lists all the existing templates with given filers in query params
@@ -151,6 +162,7 @@ List Templates API: This API lists all the existing templates with given filers 
 | 200 | List templates response | [ [Template](#template) ] |
 
 #### PUT
+
 ##### Description
 
 Upsert Templates API: This API helps in creating or updating a template with unique name
@@ -170,6 +182,7 @@ Upsert Templates API: This API helps in creating or updating a template with uni
 ### /templates/{name}
 
 #### DELETE
+
 ##### Description
 
 Delete Template API: This API deletes a template given the template name
@@ -187,6 +200,7 @@ Delete Template API: This API deletes a template given the template name
 | 200 |  | [Template](#template) |
 
 #### GET
+
 ##### Description
 
 Get Template API: This API gets a template given the template name
@@ -206,6 +220,7 @@ Get Template API: This API gets a template given the template name
 ### /templates/{name}/render
 
 #### POST
+
 ##### Description
 
 Render Template API: This API renders the given template with given values

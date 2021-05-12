@@ -11,25 +11,25 @@ history in PostgresDB.
 
 The overall system architecture looks like:
 
-![Siren Architecure](../assets/siren.jpg)
+![Siren Architecture](../assets/siren.jpg)
 
 Let's have a look at the major components:
 
-- **CLI:** Siren CLI provides easy to use commands to perform variuos actions. Currently the actions supported are,
-  starting Siren Web Server, creating/updating templates and rules via a specifid YAML file and migrating database
+- **CLI:** Siren CLI provides easy to use commands to perform various actions. Currently, the actions supported are,
+  starting Siren Web Server, creating/updating templates and rules via a specified YAML file and migrating database
   schema. Read more about usage [here](../guides/overview.md).
 
-- **Web Server:** Siren web server talks to Cortex alertmanger, cortex ruler and postgres DB to configure rules using
-  stored templates and configure alertmanager per tenanat with the stored credentials per team.
+- **Web Server:** Siren web server talks to Cortex alertmanager, cortex ruler and postgres DB to configure rules using
+  stored templates and configure alertmanager per tenant with the stored credentials per team.
 
 - **Cortex Ruler:** The configured rules are stored in Cortex Ruler. Siren Rules HTTP APIs call Cortex ruler to
   create/update/delete rule group in a particular namespace.
 
 - **Cortex Alertmanager:** The stored slack and pagerduty credentials per team are stored as alertmanager configs.
-  Whenever their a update in any team's slack or pagerduty credentials, a fresh copy of alertmanager config is generated
-  from the stored credentials and synced with Cortex Alertmanager. A predefined template of alertmanager configuration
-  can be found [here](../../pkg/alert/alertmanager/config.goyaml). This also involves setting up alert history webhook
-  receiver which is used to capture triggered alert history.
+  Whenever there is an update in any team's slack or pagerduty credentials, a fresh copy of alertmanager config is
+  generated from the stored credentials and synced with Cortex Alertmanager. A predefined template of alertmanager
+  configuration can be found [here](../../pkg/alert/alertmanager/config.goyaml). This also involves setting up alert
+  history webhook receiver which is used to capture triggered alert history.
 
 ### Schema Design
 

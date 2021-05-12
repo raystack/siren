@@ -25,7 +25,7 @@ There are the tables as of now as described below:
 | created_at | timestamp with time zone | Creation timestamp                                                                                     | `2021-03-05 12:37:56.905618+05:30`                                                            |
 | updated_at | timestamp with time zone | Last update timestamp                                                                                  | `2021-03-05 12:37:56.905618+05:30`                                                            |
 | name       | text                     | name of the template, should be unique                                                                 | `cpuHigh`                                                                                     |
-| tags       | text[]                   | Tags array represented which resourc types can use this template                                       | `{kafka, airflow}`                                                                            |
+| tags       | text[]                   | Tags array represented which resource types can use this template                                      | `{kafka, airflow}`                                                                            |
 | body       | text                     | Alert or recording rule body                                                                           | See examples body in [here](./templates.md)                                                   |
 | variables  | jsonb                    | JSON variable listing all variables in the body with their  data type, description and default value.  | ``` [{"name": "for", "type": "string",  "default": "bar", "description": "group period"}] ``` |
 

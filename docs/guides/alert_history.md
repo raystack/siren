@@ -8,7 +8,7 @@ siren_service:
   host: http://my.siren.io
 ```
 
-Alert credentials create/update call makes sure alert hisotry webhook is added in Cortex Alertmanger conifg. The
+Alert credentials create/update call makes sure alert history webhook is added in Cortex Alertmanager config. The
 Alertmanager config would look like:
 
 ```yaml
@@ -90,7 +90,7 @@ annotations:
 
 The keys are pretty obvious to match with what was described in bullets points in the introduction above.
 
-In the above example we can see, the alert annotation has sufficient values for alert history storage. We can setup
+In the above example we can see, the alert annotation has sufficient values for alert history storage. We can set up
 cortex alertmanager, to call Siren AlertHistory APIs as a webhook receiver. The above annotations and labels will be
 parsed by Siren APIs, to be stored in the database.
 
@@ -121,7 +121,7 @@ Content-Length: 357
 ```
 
 The request body of Alertmanager POST call to configured webhook looks something like (after you have followed the
-labels and annotations c in the templates) above snipppet:
+labels and annotations c in the templates) above snippet.
 
-Siren POST `/history` API will parse the above payload and store in DB, which you can fetch via the GET APIs with proper
-filters of startTime, endTime. See the [swagger](../../api/handlers/swagger.yaml) file for more details. 
+Siren POST `/history` API will parse the above payload and store in the database, which you can fetch via the GET APIs
+with proper filters of startTime, endTime. See the [swagger](../../api/handlers/swagger.yaml) file for more details.

@@ -10,7 +10,7 @@ base, you are just in the right place!
 
 ## Bird's Eye View
 
-![Siren Architecure](../assets/siren.jpg)
+![Siren Architecture](../assets/siren.jpg)
 
 **Input:** Siren takes user input either from HTTP APIs in request body or YAML files from CLI Commands.
 
@@ -18,7 +18,7 @@ base, you are just in the right place!
 
 Siren HTTP APIs call cortex endpoints to carry out the required tasks.
 
-## Codemap
+## Code map
 
 This section talks briefly about various important directories and data structures.
 
@@ -30,12 +30,12 @@ Github workflow management for releasing a build.
 
 **`main.go`**
 
-Entry point for the application where cobra CLI commander is initilialized.
+Entry point for the application where cobra CLI commander is initialized.
 
 **`cmd/`**
 
 Contains list of commands which Siren CLI can server. Each file here typically asks `app` to load configs and passes
-them to approproate functions inside `app` package. For example: Loading config and passign them to start web server.
+them to appropriate functions inside `app` package. For example: Loading configs and passing them to start web server.
 
 **`app/config.go`**
 
@@ -43,7 +43,7 @@ Loads config by reading the `config.yaml` file and env variables. Precedence is 
 
 **`app/server.go`**
 
-Starts a Golang application server with cortex ruler, alertmanager and Siren Service host congifurations.
+Starts a Golang application server with cortex ruler, alertmanager and Siren Service host configurations.
 
 It also takes care of running the Migrations by delegating it to `service`
 

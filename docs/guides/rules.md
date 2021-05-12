@@ -50,7 +50,7 @@ default will be picked.
 | Term        | Description                                                              | Example/Default  |
 |-------------|--------------------------------------------------------------------------|------------------|
 | Namespace   | Corresponds to Cortex namespace in which rule will be created            | kafka            |
-| Group Name  | Corresponds to Cortex group name in which rule will be created           | CPUHigh            |
+| Group Name  | Corresponds to Cortex group name in which rule will be created           | CPUHigh          |
 | Entity      | Corresponds to tenant name in cortex                                     | odpf             |
 | Rules       | Map of GroupNames describing what template is used in a particular group | See example above |
 | Variables   | Value of variables defined inside the template                           | See example above |
@@ -91,8 +91,8 @@ rules:
 
 In the above example, we are creating rules
 inside `demo` [namespace](https://cortexmetrics.io/docs/api/#get-rule-groups-by-namespace)
-under `odpf` [tenant](https://cortexmetrics.io/docs/architecture/#the-role-of-prometheus) as denoted by namespace and
-entity keys.
+under `odpf` [tenant](https://cortexmetrics.io/docs/architecture/#the-role-of-prometheus) as denoted by the namespace
+and entity keys.
 
 The rules array defines actual rules defined over the templates. Here `TestGroup` is the name of the group which will be
 created/updated with the rule defined by `CPU` template. The example shows the value of variables provided in creating
