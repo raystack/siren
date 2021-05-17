@@ -1,18 +1,16 @@
 # Changelog
 
-## [Unreleased]
-
 ## [0.1.1] - 2021-05-17
 
-### Fixed
+### Fixes
 
 - CLI upload command unable to upload recording rules
 
 ## [0.1.0] - 2021-05-11
 
-### Added
+### Features
 
-- Siren Templates CRUD.
+- Siren Templates management.
 - Cortex Rules create and update.
 - Rules and Templates create and update via CLI using YAML files.
 - Slack and Pagerduty credentials syncing with Cortex Alertmanager.
