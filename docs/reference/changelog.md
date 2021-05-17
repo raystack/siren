@@ -2,7 +2,13 @@
 
 ## [Unreleased]
 
-## [0.1.0] - 2020-05-11
+## [0.1.1] - 2021-05-17
+
+### Fixed
+
+- CLI upload command unable to upload recording rules
+
+## [0.1.0] - 2021-05-11
 
 ### Added
 
