@@ -5,41 +5,42 @@ import (
 )
 
 type variables struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
 type rule struct {
-	Template  string      `json:"template"`
-	Status    string      `json:"enabled"`
-	Variables []variables `json:"variables"`
+	Template  string      `yaml:"template"`
+	Status    string      `yaml:"status"`
+	Variables []variables `yaml:"variables"`
 }
 
 type ruleYaml struct {
-	ApiVersion string          `json:"apiVersion"`
-	Entity     string          `json:"entity"`
-	Type       string          `json:"type"`
-	Namespace  string          `json:"namespace"`
-	Rules      map[string]rule `json:"rules"`
+	ApiVersion string          `yaml:"apiVersion"`
+	Entity     string          `yaml:"entity"`
+	Type       string          `yaml:"type"`
+	Namespace  string          `yaml:"namespace"`
+	Rules      map[string]rule `yaml:"rules"`
 }
 
 type templatedRule struct {
-	Alert       string            `json:"alert"`
-	Expr        string            `json:"expr"`
-	For         string            `json:"for"`
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
+	Record      string            `yaml:"record,omitempty"`
+	Alert       string            `yaml:"alert,omitempty"`
+	Expr        string            `yaml:"expr"`
+	For         string            `yaml:"for,omitempty"`
+	Labels      map[string]string `yaml:"labels,omitempty"`
+	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
 type template struct {
-	Name       string            `json:"name"`
-	ApiVersion string            `json:"apiVersion"`
-	Type       string            `json:"type"`
-	Body       []templatedRule   `json:"body"`
-	Tags       []string          `json:"tags"`
-	Variables  []domain.Variable `json:"variables"`
+	Name       string            `yaml:"name"`
+	ApiVersion string            `yaml:"apiVersion"`
+	Type       string            `yaml:"type"`
+	Body       []templatedRule   `yaml:"body"`
+	Tags       []string          `yaml:"tags"`
+	Variables  []domain.Variable `yaml:"variables"`
 }
 
 type yamlObject struct {
-	Type string `json:"type"`
+	Type string `yaml:"type"`
 }
