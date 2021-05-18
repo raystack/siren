@@ -25,13 +25,17 @@ type responseError struct {
 }
 
 func internalServerError(w http.ResponseWriter, err error, logger *zap.Logger) {
-	sendError(w, defaultErrorMessage, http.StatusInternalServerError, nil, logger)
+	errMessage := defaultErrorMessage
+	if err != nil {
+		logger.Error("handler", zap.Error(err))
+	}
+	sendError(w, errMessage, http.StatusInternalServerError, nil, logger)
 }
 
 func badRequest(w http.ResponseWriter, err error, logger *zap.Logger) {
 	var errMessage string
 	if err != nil {
-		logger.Error("handler", zap.String("error", err.Error()))
+		logger.Error("handler", zap.Error(err))
 		errMessage = err.Error()
 	} else {
 		errMessage = badRequestErrorMessage
@@ -43,6 +47,7 @@ func badRequest(w http.ResponseWriter, err error, logger *zap.Logger) {
 func notFound(w http.ResponseWriter, err error, logger *zap.Logger) {
 	var errMessage string
 	if err != nil {
+		logger.Error("handler", zap.Error(err))
 		errMessage = err.Error()
 	} else {
 		errMessage = notFoundErrorMessage
@@ -76,5 +81,4 @@ func sendError(w http.ResponseWriter, errorMessage string, code int, data interf
 		internalServerError(w, err, logger)
 		return
 	}
-	logger.Error("handler", zap.String("error", errorMessage))
 }
