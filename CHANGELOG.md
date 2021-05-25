@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] - 2021-05-25
+
+### Fixes
+
+- Make error logging verbose
 ## [0.1.1] - 2021-05-17
 
 ### Fixes
