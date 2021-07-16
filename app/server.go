@@ -38,7 +38,8 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return nil
 	}
-	services, err := service.Init(store, c.Cortex, c.SirenService, client)
+	httpClient := &http.Client{}
+	services, err := service.Init(store, c.Cortex, c.SirenService, c.SlackApp, client, httpClient)
 	if err != nil {
 		return err
 	}
@@ -62,7 +63,8 @@ func RunMigrations(c *domain.Config) error {
 	if err != nil {
 		return nil
 	}
-	services, err := service.Init(store, c.Cortex, c.SirenService, client)
+	httpClient := &http.Client{}
+	services, err := service.Init(store, c.Cortex, c.SirenService, c.SlackApp, client, httpClient)
 	if err != nil {
 		return err
 	}

@@ -31,6 +31,11 @@ type LogConfig struct {
 	Level string `mapstructure:"level" default:"info"`
 }
 
+type SlackApp struct {
+	ClientID     string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+}
+
 // Config contains the application configuration
 type Config struct {
 	Port         int                `mapstructure:"port" default:"8080"`
@@ -39,4 +44,5 @@ type Config struct {
 	NewRelic     NewRelicConfig     `mapstructure:"newrelic"`
 	SirenService SirenServiceConfig `mapstructure:"siren_service"`
 	Log          LogConfig          `mapstructure:"log"`
+	SlackApp     SlackApp           `mapstructure:"slack_app"`
 }

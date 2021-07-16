@@ -5,10 +5,12 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alert"
 	"github.com/odpf/siren/pkg/alert/alertmanager"
+	"github.com/odpf/siren/pkg/alert_history"
+	"github.com/odpf/siren/pkg/codeexchange"
 	"github.com/odpf/siren/pkg/rules"
 	"github.com/odpf/siren/pkg/templates"
-	"github.com/odpf/siren/pkg/alert_history"
 	"gorm.io/gorm"
+	"net/http"
 )
 
 type Container struct {
@@ -16,9 +18,11 @@ type Container struct {
 	RulesService        domain.RuleService
 	AlertmanagerService domain.AlertmanagerService
 	AlertHistoryService domain.AlertHistoryService
+	CodeExchangeService domain.CodeExchangeService
 }
 
-func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig, client *client.CortexClient) (*Container, error) {
+func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig, slackAppConfig domain.SlackApp,
+	client *client.CortexClient, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(db)
 	rulesService := rules.NewService(db, client)
 	newClient, err := alertmanager.NewClient(cortex)
@@ -27,11 +31,13 @@ func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConf
 	}
 	alertmanagerService := alert.NewService(db, newClient, siren)
 	alertHistoryService := alert_history.NewService(db)
+	codeExchangeService := codeexchange.NewService(db, httpClient, slackAppConfig)
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
 		AlertmanagerService: alertmanagerService,
 		AlertHistoryService: alertHistoryService,
+		CodeExchangeService: codeExchangeService,
 	}, nil
 }
 
@@ -50,6 +56,10 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 		return err
 	}
 	err = container.AlertHistoryService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = container.CodeExchangeService.Migrate()
 	if err != nil {
 		return err
 	}
