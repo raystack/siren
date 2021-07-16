@@ -8,10 +8,11 @@ require (
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/spec v0.20.2 // indirect
-	github.com/go-playground/universal-translator v0.17.0
+	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grafana/cortex-tools v0.7.2
+	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.3.0
@@ -21,7 +22,7 @@ require (
 	github.com/newrelic/go-agent/v3 v3.11.0
 	github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
 	github.com/purini-to/zapmw v1.1.0
