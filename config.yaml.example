@@ -14,3 +14,6 @@ newrelic:
   license: ____LICENSE_STRING_OF_40_CHARACTERS_____
 siren_service:
   host: http://localhost:3000
+slack_app:
+  client_id: 123.456
+  client_secret: xyz

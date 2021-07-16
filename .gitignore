@@ -22,3 +22,6 @@ vendor/
 .env
 siren
 config.yaml
+.air.toml
+bin/air
+tmp
