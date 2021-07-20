@@ -14,5 +14,6 @@ type AccessToken struct {
 
 type ExchangeRepository interface {
 	Upsert(*AccessToken) error
+	Get(string) (string, error)
 	Migrate() error
 }

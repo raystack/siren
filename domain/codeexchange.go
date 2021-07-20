@@ -11,5 +11,6 @@ type OAuthExchangeResponse struct {
 
 type CodeExchangeService interface {
 	Exchange(payload OAuthPayload) (*OAuthExchangeResponse, error)
+	GetToken(string) (string, error)
 	Migrate() error
 }
