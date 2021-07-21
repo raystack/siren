@@ -1,6 +1,8 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/grafana/cortex-tools/pkg/client"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alert"
@@ -9,8 +11,8 @@ import (
 	"github.com/odpf/siren/pkg/codeexchange"
 	"github.com/odpf/siren/pkg/rules"
 	"github.com/odpf/siren/pkg/templates"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type Container struct {
@@ -21,17 +23,20 @@ type Container struct {
 	CodeExchangeService domain.CodeExchangeService
 }
 
-func Init(db *gorm.DB, cortex domain.CortexConfig, siren domain.SirenServiceConfig, slackAppConfig domain.SlackApp,
+func Init(db *gorm.DB, c *domain.Config,
 	client *client.CortexClient, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(db)
 	rulesService := rules.NewService(db, client)
-	newClient, err := alertmanager.NewClient(cortex)
+	newClient, err := alertmanager.NewClient(c.Cortex)
 	if err != nil {
 		return nil, err
 	}
-	alertmanagerService := alert.NewService(db, newClient, siren)
+	alertmanagerService := alert.NewService(db, newClient, c.SirenService)
 	alertHistoryService := alert_history.NewService(db)
-	codeExchangeService := codeexchange.NewService(db, httpClient, slackAppConfig)
+	codeExchangeService, err := codeexchange.NewService(db, httpClient, c.SlackApp, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create codeexchange service")
+	}
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,

@@ -1,19 +1,52 @@
 package codeexchange
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"io"
 
+	"github.com/gtank/cryptopasta"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 // Repository talks to the store to read or insert data
 type Repository struct {
-	db *gorm.DB
+	db            *gorm.DB
+	encryptionKey *[32]byte
+}
+
+var cryptopastaEncryptor = cryptopasta.Encrypt
+func encryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
+	cipher, err := cryptopastaEncryptor([]byte(accessToken), encryptionKey)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(cipher), nil
+}
+
+var cryptopastaDecryptor = cryptopasta.Decrypt
+func decryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
+	encrypted, err := base64.StdEncoding.DecodeString( accessToken)
+	if err != nil {
+		return "", err
+	}
+	decryptedToken, _ := cryptopastaDecryptor([]byte(encrypted), encryptionKey)
+	return string(decryptedToken), nil
 }
 
 // NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+func NewRepository(db *gorm.DB, encryptionKey string) (*Repository, error) {
+	secretKey := &[32]byte{}
+	if len(encryptionKey) < 32 {
+		return nil, errors.New("random hash should be 32 chars in length")
+	}
+	_, err := io.ReadFull(bytes.NewBufferString(encryptionKey), secretKey[:])
+	if err != nil {
+		return nil, err
+	}
+	return &Repository{db, secretKey}, nil
 }
 
 func (r Repository) Upsert(accessToken *AccessToken) error {
@@ -22,6 +55,13 @@ func (r Repository) Upsert(accessToken *AccessToken) error {
 	if result.Error != nil {
 		return result.Error
 	}
+
+	token, err := encryptToken(accessToken.AccessToken, r.encryptionKey)
+	accessToken.AccessToken = token
+	if err != nil {
+		return errors.Wrap(err, "encryption failed")
+	}
+
 	if result.RowsAffected == 0 {
 		result = r.db.Create(accessToken)
 	} else {
