@@ -38,11 +38,12 @@ type SlackApp struct {
 
 // Config contains the application configuration
 type Config struct {
-	Port         int                `mapstructure:"port" default:"8080"`
-	DB           DBConfig           `mapstructure:"db"`
-	Cortex       CortexConfig       `mapstructure:"cortex"`
-	NewRelic     NewRelicConfig     `mapstructure:"newrelic"`
-	SirenService SirenServiceConfig `mapstructure:"siren_service"`
-	Log          LogConfig          `mapstructure:"log"`
-	SlackApp     SlackApp           `mapstructure:"slack_app"`
+	Port          int                `mapstructure:"port" default:"8080"`
+	DB            DBConfig           `mapstructure:"db"`
+	Cortex        CortexConfig       `mapstructure:"cortex"`
+	NewRelic      NewRelicConfig     `mapstructure:"newrelic"`
+	SirenService  SirenServiceConfig `mapstructure:"siren_service"`
+	Log           LogConfig          `mapstructure:"log"`
+	SlackApp      SlackApp           `mapstructure:"slack_app"`
+	EncryptionKey string             `mapstructure:"encryption_key"`
 }

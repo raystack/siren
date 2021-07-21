@@ -23,13 +23,18 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB, httpClient Doer, slackAppConfig domain.SlackApp) domain.CodeExchangeService {
+func NewService(db *gorm.DB, httpClient Doer, slackAppConfig domain.SlackApp, encryptionKey string) (domain.CodeExchangeService, error) {
+	repository, err := NewRepository(db, encryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create codeexchange repository")
+	}
+
 	return &Service{
-		repository:   NewRepository(db),
+		repository:   repository,
 		clientID:     slackAppConfig.ClientID,
 		clientSecret: slackAppConfig.ClientSecret,
 		exchanger:    NewSlackClient(httpClient),
-	}
+	}, nil
 }
 
 func (service Service) Exchange(payload domain.OAuthPayload) (*domain.OAuthExchangeResponse, error) {
