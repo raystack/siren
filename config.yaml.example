@@ -17,3 +17,4 @@ siren_service:
 slack_app:
   client_id: 123.456
   client_secret: xyz
+encryption_key: abcde
