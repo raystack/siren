@@ -49,7 +49,7 @@ func New(container *service.Container, nr *newrelic.Application, logger *zap.Log
 	r.Methods("POST").Path("/history").Handler(handlers.CreateAlertHistory(container.AlertHistoryService, logger))
 	r.Methods("GET").Path("/history").Handler(handlers.GetAlertHistory(container.AlertHistoryService, logger))
 
-	r.Methods("POST").Path("/code_exchange").Handler(handlers.ExchangeCode(container.CodeExchangeService, logger))
+	r.Methods("POST").Path("/oauth/slack/token").Handler(handlers.ExchangeCode(container.CodeExchangeService, logger))
 
 	// Handle middlewares for NotFoundHandler and MethodNotAllowedHandler since Mux doesn't apply middlewares to them. Ref: https://github.com/gorilla/mux/issues/416
 	_, r.NotFoundHandler = newrelic.WrapHandle(nr, "NotFoundHandler", applyMiddlewaresToHandler(zapMiddlewares, http.NotFoundHandler()))
