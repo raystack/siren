@@ -235,22 +235,6 @@ info:
   title: Siren.
   version: 1.0.0
 paths:
-  /code_exchange:
-    post:
-      description: |-
-        POST Code Exchange API
-        This API exchanges oauth code with access token from slack server. client_id and client_secret are read from Siren ENV vars.
-      operationId: postExchangeCodeRequest
-      parameters:
-      - in: body
-        name: Body
-        schema:
-          $ref: '#/definitions/OAuthPayload'
-      responses:
-        "200":
-          $ref: '#/responses/postResponse'
-      tags:
-      - codeExchange
   /history:
     get:
       description: 'GET Alert History API: This API lists stored alert history for
@@ -288,6 +272,22 @@ paths:
           type: array
       tags:
       - alertHistory
+  /oauth/slack/token:
+    post:
+      description: |-
+        POST Code Exchange API
+        This API exchanges oauth code with access token from slack server. client_id and client_secret are read from Siren ENV vars.
+      operationId: postExchangeCodeRequest
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/OAuthPayload'
+      responses:
+        "200":
+          $ref: '#/responses/postResponse'
+      tags:
+      - codeExchange
   /ping:
     get:
       description: Ping call

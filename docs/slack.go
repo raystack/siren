@@ -4,7 +4,7 @@ import "github.com/odpf/siren/domain"
 
 //-------------------------
 //-------------------------
-// swagger:route POST /code_exchange codeExchange postExchangeCodeRequest
+// swagger:route POST /oauth/slack/token codeExchange postExchangeCodeRequest
 // POST Code Exchange API
 // This API exchanges oauth code with access token from slack server. client_id and client_secret are read from Siren ENV vars.
 // responses:
