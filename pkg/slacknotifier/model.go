@@ -17,6 +17,6 @@ func (message *SlackMessage) fromDomain(m *domain.SlackMessage) *SlackMessage {
 	return message
 }
 
-type SlackMessageRepository interface {
+type SlackNotifier interface {
 	Notify(*SlackMessage, string) error
 }

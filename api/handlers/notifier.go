@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
+	"strings"
 )
 
 // Notify handler
@@ -22,6 +23,10 @@ func Notify(notifierServices domain.NotifierServices, logger *zap.Logger) http.H
 			}
 			result, err := notifierServices.Slack.Notify(&payload)
 			if err != nil {
+				if isBadRequest(err) {
+					badRequest(w, err, logger)
+					return
+				}
 				internalServerError(w, err, logger)
 				return
 			}
@@ -34,6 +39,10 @@ func Notify(notifierServices domain.NotifierServices, logger *zap.Logger) http.H
 			badRequest(w, errors.New("unrecognized provider"), logger)
 			return
 		}
-
 	}
+}
+
+func isBadRequest(err error) bool {
+	return strings.Contains(err.Error(), "failed to get id for") ||
+		strings.Contains(err.Error(), "app is not part of")
 }

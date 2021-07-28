@@ -9,7 +9,7 @@ import (
 )
 
 type Service struct {
-	repository          SlackMessageRepository
+	client              SlackNotifier
 	codeExchangeService domain.CodeExchangeService
 }
 
@@ -23,7 +23,7 @@ func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendR
 	if err != nil {
 		return res, errors.Wrap(err, fmt.Sprintf("could not get token for entity: %s", message.Entity))
 	}
-	err = s.repository.Notify(m, token)
+	err = s.client.Notify(m, token)
 	if err != nil {
 		return res, err
 	}
@@ -36,5 +36,5 @@ func NewService(db *gorm.DB, encryptionKey string) (domain.SlackNotifierService,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init slack notifier service")
 	}
-	return &Service{repository: NewRepository(), codeExchangeService: svc}, nil
+	return &Service{client: NewSlackHTTPClient(), codeExchangeService: svc}, nil
 }
