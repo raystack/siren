@@ -36,5 +36,5 @@ func NewService(db *gorm.DB, encryptionKey string) (domain.SlackNotifierService,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init slack notifier service")
 	}
-	return &Service{client: NewSlackHTTPClient(), codeExchangeService: svc}, nil
+	return &Service{client: NewSlackNotifierClient(), codeExchangeService: svc}, nil
 }
