@@ -25,7 +25,7 @@ func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendR
 	}
 	err = s.client.Notify(m, token)
 	if err != nil {
-		return res, err
+		return res, errors.Wrap(err, fmt.Sprintf("could not send notification"))
 	}
 	res.OK = true
 	return res, nil
