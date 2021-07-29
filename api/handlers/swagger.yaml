@@ -88,6 +88,23 @@ definitions:
         x-go-name: Severity
     type: object
     x-go-package: github.com/odpf/siren/domain
+  OAuthExchangeResponse:
+    properties:
+      ok:
+        type: boolean
+        x-go-name: OK
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  OAuthPayload:
+    properties:
+      code:
+        type: string
+        x-go-name: Code
+      workspace:
+        type: string
+        x-go-name: Workspace
+    type: object
+    x-go-package: github.com/odpf/siren/domain
   Rule:
     properties:
       created_at:
@@ -255,6 +272,22 @@ paths:
           type: array
       tags:
       - alertHistory
+  /oauth/slack/token:
+    post:
+      description: |-
+        POST Code Exchange API
+        This API exchanges oauth code with access token from slack server. client_id and client_secret are read from Siren ENV vars.
+      operationId: postExchangeCodeRequest
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/OAuthPayload'
+      responses:
+        "200":
+          $ref: '#/responses/postResponse'
+      tags:
+      - codeExchange
   /ping:
     get:
       description: Ping call
@@ -456,6 +489,10 @@ responses:
       type: array
   pingResponse:
     description: Response body for Ping.
+  postResponse:
+    description: POST codeExchange response
+    schema:
+      $ref: '#/definitions/OAuthExchangeResponse'
   renderTemplatesResponse:
     description: ""
   rulesResponse:
