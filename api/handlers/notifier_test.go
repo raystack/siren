@@ -162,4 +162,19 @@ func TestNotifier_Notify(t *testing.T) {
 		assert.Equal(t, expectedStatusCode, w.Code)
 		assert.Equal(t, expectedStringBody, w.Body.String())
 	})
+
+	t.Run("should return 400 Bad request if payload validation", func(t *testing.T) {
+		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+		notifierServices := domain.NotifierServices{Slack: mockedSlackNotifierService}
+		payload := []byte(`{"receiver_name": "","receiver_type": "","entity": "","message": ""}`)
+		r, err := http.NewRequest(http.MethodPost, "/notifications?provider=slack", bytes.NewBuffer(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+		w := httptest.NewRecorder()
+		handler := handlers.Notify(notifierServices, getPanicLogger())
+		expectedStatusCode := http.StatusBadRequest
+		handler.ServeHTTP(w, r)
+		assert.Equal(t, expectedStatusCode, w.Code)
+	})
 }
