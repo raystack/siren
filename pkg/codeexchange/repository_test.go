@@ -35,8 +35,9 @@ func TestRepository(t *testing.T) {
 	suite.Run(t, new(RepositoryTestSuite))
 }
 
+const encryptionKey = "ASBzXLpOI0GOorN41dKF47gcFnaILuVh"
+
 func (s *RepositoryTestSuite) SetupTest() {
-	encryptionKey := "ASBzXLpOI0GOorN41dKF47gcFnaILuVh"
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
@@ -48,7 +49,7 @@ func (s *RepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func (s *RepositoryTestSuite) TestExchange() {
+func (s *RepositoryTestSuite) TestRepository_Upsert() {
 	s.Run("should insert access token if workspace does not exist", func() {
 		var oldCryptopastaEncryptor = cryptopasta.Encrypt
 		defer func() {
@@ -218,12 +219,126 @@ func (s *RepositoryTestSuite) TestExchange() {
 	})
 }
 
+func (s *RepositoryTestSuite) TestRepository_Get() {
+	s.Run("should get decrypted and decoded access token", func() {
+		var oldCryptopastaDecryptor = cryptopastaDecryptor
+		timeNow := time.Now()
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaDecryptor
+		}()
+		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return []byte("test-token"), nil
+		}
+
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "access_tokens" WHERE workspace = 'odpf'`)
+
+		accessToken := &AccessToken{
+			ID:          10,
+			CreatedAt:   timeNow,
+			UpdatedAt:   timeNow,
+			AccessToken: base64.StdEncoding.EncodeToString([]byte("test-token")),
+			Workspace:   "odpf",
+		}
+
+		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "access_token", "workspace"}).
+			AddRow(accessToken.ID, accessToken.CreatedAt, accessToken.UpdatedAt,
+				accessToken.AccessToken, accessToken.Workspace)
+
+		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
+
+		token, err := s.repository.Get("odpf")
+		s.Equal("test-token", token)
+		s.Nil(err)
+	})
+
+	s.Run("should return error if workspace not found", func() {
+
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "access_tokens" WHERE workspace = 'odpf'`)
+
+		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(sqlmock.NewRows(nil))
+
+		token, err := s.repository.Get("odpf")
+		s.Equal("", token)
+		s.EqualError(err, "workspace not found: odpf")
+	})
+
+	s.Run("should return error if query fails", func() {
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "access_tokens" WHERE workspace = 'odpf'`)
+		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
+
+		token, err := s.repository.Get("odpf")
+		s.Equal("", token)
+		s.EqualError(err, "search query failed: random error")
+	})
+
+	s.Run("should return error if decryption fails", func() {
+		var oldCryptopastaDecryptor = cryptopastaDecryptor
+		timeNow := time.Now()
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaDecryptor
+		}()
+		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return []byte("test-token"), errors.New("random error")
+		}
+
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "access_tokens" WHERE workspace = 'odpf'`)
+
+		accessToken := &AccessToken{
+			ID:          10,
+			CreatedAt:   timeNow,
+			UpdatedAt:   timeNow,
+			AccessToken: base64.StdEncoding.EncodeToString([]byte("test-token")),
+			Workspace:   "odpf",
+		}
+
+		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "access_token", "workspace"}).
+			AddRow(accessToken.ID, accessToken.CreatedAt, accessToken.UpdatedAt,
+				accessToken.AccessToken, accessToken.Workspace)
+
+		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
+
+		token, err := s.repository.Get("odpf")
+		s.Equal("", token)
+		s.EqualError(err, "failed to decrypt token: random error")
+	})
+
+	s.Run("should return error if decoding fails", func() {
+		var oldCryptopastaDecryptor = cryptopastaDecryptor
+		timeNow := time.Now()
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaDecryptor
+		}()
+		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return []byte("test-token"), errors.New("random error")
+		}
+
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "access_tokens" WHERE workspace = 'odpf'`)
+
+		accessToken := &AccessToken{
+			ID:          10,
+			CreatedAt:   timeNow,
+			UpdatedAt:   timeNow,
+			AccessToken: "test-token",
+			Workspace:   "odpf",
+		}
+
+		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "access_token", "workspace"}).
+			AddRow(accessToken.ID, accessToken.CreatedAt, accessToken.UpdatedAt,
+				accessToken.AccessToken, accessToken.Workspace)
+
+		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
+
+		token, err := s.repository.Get("odpf")
+		s.Equal("", token)
+		s.EqualError(err, "failed to decrypt token: illegal base64 data at input byte 4")
+	})
+}
+
 func (s *RepositoryTestSuite) TestNewRepository() {
-	s.Run("should through error if encryption key is less then 32 char", func(){
-		encryptionKey := "ASBzXLpOI0GOorN41dKF47gcFnaI"
-		repo, err := NewRepository(nil, encryptionKey)
+	s.Run("should through error if encryption key is less then 32 char", func() {
+		key := "ASBzXLpOI0GOorN41dKF47gcFnaI"
+		repo, err := NewRepository(nil, key)
 		s.Nil(repo)
 		s.EqualError(err, "random hash should be 32 chars in length")
 	})
-
 }

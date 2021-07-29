@@ -172,6 +172,41 @@ func (s *ServiceTestSuite) TestService_Exchange() {
 	})
 }
 
+func (s *ServiceTestSuite) TestService_GetToken() {
+	s.Run("should call repository Get method", func() {
+		clientID, clientSecret := "test-client-id", "test-client-secret"
+		dummyService := Service{
+			repository:   s.repositoryMock,
+			exchanger:    s.exchangerMock,
+			clientID:     clientID,
+			clientSecret: clientSecret,
+		}
+		s.repositoryMock.On("Get", "odpf").Return("test-token", nil).Once()
+
+		res, err := dummyService.GetToken("odpf")
+
+		s.Nil(err)
+		s.Equal("test-token", res)
+	})
+
+	s.Run("should return error for repository Get method", func() {
+		clientID, clientSecret := "test-client-id", "test-client-secret"
+		dummyService := Service{
+			repository:   s.repositoryMock,
+			exchanger:    s.exchangerMock,
+			clientID:     clientID,
+			clientSecret: clientSecret,
+		}
+		s.repositoryMock.On("Get", "odpf").
+			Return("", errors.New("random errors")).Once()
+
+		res, err := dummyService.GetToken("odpf")
+
+		s.Equal("", res)
+		s.EqualError(err, "random errors")
+	})
+}
+
 func TestService_Migrate(t *testing.T) {
 	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
 		repositoryMock := &MockExchangeRepository{}

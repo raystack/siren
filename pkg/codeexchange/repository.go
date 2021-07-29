@@ -34,7 +34,10 @@ func decryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	decryptedToken, _ := cryptopastaDecryptor([]byte(encrypted), encryptionKey)
+	decryptedToken, err := cryptopastaDecryptor(encrypted, encryptionKey)
+	if err != nil {
+		return "", err
+	}
 	return string(decryptedToken), nil
 }
 
@@ -79,10 +82,10 @@ func (r Repository) Get(workspace string) (string, error) {
 	var accessToken AccessToken
 	result := r.db.Where(fmt.Sprintf("workspace = '%s'", workspace)).Find(&accessToken)
 	if result.Error != nil {
-		return "", result.Error
+		return "", errors.Wrap(result.Error, "search query failed")
 	}
 	if result.RowsAffected == 0 {
-		return "", errors.New("workspace not found")
+		return "", errors.New(fmt.Sprintf("workspace not found: %s", workspace))
 	}
 	decryptedAccessToken, err := decryptToken(accessToken.AccessToken, r.encryptionKey)
 	if err != nil {
