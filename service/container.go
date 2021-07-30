@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/workspace"
 	"net/http"
 
@@ -41,14 +42,9 @@ func Init(db *gorm.DB, c *domain.Config,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
 	}
-	slackNotifierService, err := slacknotifier.NewService(db, c.EncryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create codeexchange service")
-	}
-	workspaceService, err := workspace.NewService(codeExchangeService)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create workspace service")
-	}
+	slackService := slack.NewService()
+	slackNotifierService := slacknotifier.NewService(codeExchangeService, slackService)
+	workspaceService := workspace.NewService(slackService, codeExchangeService)
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,

@@ -11,8 +11,10 @@ type Service struct {
 	codeExchangeService domain.CodeExchangeService
 }
 
-func NewService(service domain.CodeExchangeService) (domain.WorkspaceService, error) {
-	return &Service{client: NewRepository(), codeExchangeService: service}, nil
+func NewService(slackService domain.SlackService, codeExchangeService domain.CodeExchangeService) domain.WorkspaceService {
+	return &Service{
+		client:              NewRepository(slackService),
+		codeExchangeService: codeExchangeService}
 }
 
 func (s Service) GetChannels(workspace string) ([]domain.Channel, error) {
