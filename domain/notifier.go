@@ -1,7 +1,19 @@
 package domain
 
+import (
+	"gopkg.in/go-playground/validator.v9"
+)
+
 type NotifierServices struct {
 	Slack SlackNotifierService
+}
+
+type SlackMessageSendResponse struct {
+	OK bool `json:"ok"`
+}
+
+type SlackNotifierService interface {
+	Notify(*SlackMessage) (*SlackMessageSendResponse, error)
 }
 
 type SlackMessage struct {
@@ -11,10 +23,10 @@ type SlackMessage struct {
 	Message      string `json:"message" validate:"required"`
 }
 
-type SlackMessageSendResponse struct {
-	OK bool `json:"ok"`
-}
-
-type SlackNotifierService interface {
-	Notify(*SlackMessage) (*SlackMessageSendResponse, error)
+func (sm *SlackMessage) Validate() error {
+	v := validator.New()
+	_ = v.RegisterValidation("receiverTypeChecker", func(fl validator.FieldLevel) bool {
+		return fl.Field().Interface().(string) == "user" || fl.Field().Interface().(string) == "channel"
+	})
+	return v.Struct(sm)
 }

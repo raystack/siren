@@ -22,13 +22,11 @@ func Notify(notifierServices domain.NotifierServices, logger *zap.Logger) http.H
 				badRequest(w, err, logger)
 				return
 			}
-			v := validator.New()
-			_ = v.RegisterValidation("receiverTypeChecker", func(fl validator.FieldLevel) bool {
-				return fl.Field().Interface().(string) == "user" || fl.Field().Interface().(string) == "channel"
-			})
-			err = v.Struct(payload)
+
+			err = payload.Validate()
 			if err != nil {
-				if _, ok := err.(*validator.InvalidValidationError); ok {
+				var e *validator.InvalidValidationError
+				if errors.As(err, &e) {
 					logger.Error("invalid validation error")
 					internalServerError(w, err, logger)
 					return
