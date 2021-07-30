@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/odpf/siren/pkg/workspace"
 	"net/http"
 
 	"github.com/grafana/cortex-tools/pkg/client"
@@ -23,6 +24,7 @@ type Container struct {
 	AlertHistoryService domain.AlertHistoryService
 	CodeExchangeService domain.CodeExchangeService
 	NotifierServices    domain.NotifierServices
+	WorkspaceService    domain.WorkspaceService
 }
 
 func Init(db *gorm.DB, c *domain.Config,
@@ -43,6 +45,10 @@ func Init(db *gorm.DB, c *domain.Config,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
 	}
+	workspaceService, err := workspace.NewService(codeExchangeService)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create workspace service")
+	}
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
@@ -52,6 +58,7 @@ func Init(db *gorm.DB, c *domain.Config,
 		NotifierServices: domain.NotifierServices{
 			Slack: slackNotifierService,
 		},
+		WorkspaceService: workspaceService,
 	}, nil
 }
 
