@@ -7,9 +7,7 @@ import (
 
 type SlackCaller interface {
 	SendMessage(string, ...slack.MsgOption) (string, string, string, error)
-	GetConversations(*slack.GetConversationsParameters) ([]slack.Channel, string, error)
 	GetUserByEmail(string) (*slack.User, error)
-	JoinConversation(string) (*slack.Channel, string, []string, error)
 	GetConversationsForUser(params *slack.GetConversationsForUserParameters) (channels []slack.Channel, nextCursor string, err error)
 }
 
@@ -47,16 +45,8 @@ func (c *ClientService) SendMessage(channel string, option ...slack.MsgOption) (
 	return c.SlackClient.SendMessage(channel, option...)
 }
 
-func (c *ClientService) GetConversations(parameters *slack.GetConversationsParameters) ([]slack.Channel, string, error) {
-	return c.SlackClient.GetConversations(parameters)
-}
-
 func (c *ClientService) GetUserByEmail(email string) (*slack.User, error) {
 	return c.SlackClient.GetUserByEmail(email)
-}
-
-func (c *ClientService) JoinConversation(channelID string) (*slack.Channel, string, []string, error) {
-	return c.SlackClient.JoinConversation(channelID)
 }
 
 func (c *ClientService) GetConversationsForUser(parameters *slack.GetConversationsForUserParameters) ([]slack.Channel, string, error) {
