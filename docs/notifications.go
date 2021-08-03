@@ -1,6 +1,17 @@
 package docs
 
-import "github.com/odpf/siren/domain"
+import (
+	"github.com/odpf/siren/domain"
+	"github.com/slack-go/slack"
+)
+
+type SlackMessage struct {
+	ReceiverName string `json:"receiver_name" validate:"required"`
+	ReceiverType string `json:"receiver_type" validate:"required,receiverTypeChecker"`
+	Entity       string `json:"entity" validate:"required"`
+	Message      string `json:"message"`
+	slack.Blocks
+}
 
 //-------------------------
 //-------------------------
@@ -15,7 +26,7 @@ type postNotificationsRequest struct {
 	// in:query
 	Provider string `json:"provider"`
 	// in:body
-	Body domain.SlackMessage
+	Body SlackMessage
 }
 
 // POST notifications response
