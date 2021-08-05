@@ -18,15 +18,12 @@ type SlackNotifierService interface {
 
 type SlackMessage struct {
 	ReceiverName string `json:"receiver_name" validate:"required"`
-	ReceiverType string `json:"receiver_type" validate:"required,receiverTypeChecker"`
+	ReceiverType string `json:"receiver_type" validate:"required,oneof=user channel"`
 	Entity       string `json:"entity" validate:"required"`
 	Message      string `json:"message" validate:"required"`
 }
 
 func (sm *SlackMessage) Validate() error {
 	v := validator.New()
-	_ = v.RegisterValidation("receiverTypeChecker", func(fl validator.FieldLevel) bool {
-		return fl.Field().Interface().(string) == "user" || fl.Field().Interface().(string) == "channel"
-	})
 	return v.Struct(sm)
 }
