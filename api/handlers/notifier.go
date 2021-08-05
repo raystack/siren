@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/pkg/slacknotifier"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/validator.v9"
 	"net/http"
-	"strings"
 )
 
 // Notify handler
@@ -56,6 +56,9 @@ func Notify(notifierServices domain.NotifierServices, logger *zap.Logger) http.H
 }
 
 func isBadRequest(err error) bool {
-	return strings.Contains(err.Error(), "failed to get id for") ||
-		strings.Contains(err.Error(), "app is not part of")
+
+	var noChannelFoundError *slacknotifier.NoChannelFoundErr
+	var userLookupByEmailErr *slacknotifier.UserLookupByEmailErr
+
+	return errors.As(err, &noChannelFoundError) || errors.As(err, &userLookupByEmailErr)
 }

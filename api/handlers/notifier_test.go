@@ -7,6 +7,7 @@ import (
 	"github.com/odpf/siren/api/handlers"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/pkg/slacknotifier"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -73,7 +74,9 @@ func TestNotifier_Notify(t *testing.T) {
 			ReceiverType: "channel",
 			Message:      "some text",
 			Entity:       "odpf"}
-		expectedError := errors.New("app is not part of test")
+		expectedError := &slacknotifier.NoChannelFoundErr{
+			Err: errors.New("app is not part of test"),
+		}
 		payload := []byte(`{"receiver_name": "test","receiver_type": "channel","entity": "odpf","message": "some text"}`)
 		mockedSlackNotifierService.On("Notify", &dummyMessage).Return(nil, expectedError).Once()
 		r, err := http.NewRequest(http.MethodPost, "/notifications?provider=slack", bytes.NewBuffer(payload))
@@ -96,7 +99,9 @@ func TestNotifier_Notify(t *testing.T) {
 			ReceiverType: "user",
 			Message:      "some text",
 			Entity:       "odpf"}
-		expectedError := errors.New("failed to get id for foo")
+		expectedError := &slacknotifier.UserLookupByEmailErr{
+			Err: errors.New("failed to get id for foo"),
+		}
 		payload := []byte(`{"receiver_name": "foo","receiver_type": "user","entity": "odpf","message": "some text"}`)
 		mockedSlackNotifierService.On("Notify", &dummyMessage).Return(nil, expectedError).Once()
 		r, err := http.NewRequest(http.MethodPost, "/notifications?provider=slack", bytes.NewBuffer(payload))

@@ -42,22 +42,35 @@ func notifyWithClient(message *SlackMessage, client SlackCaller) error {
 	case "channel":
 		joinedChannelList, err := getJoinedChannelsList(client)
 		if err != nil {
-			return errors.Wrap(err, "failed to fetch joined channel list")
+			return &JoinedChannelFetchErr{
+				Err: errors.Wrap(err, "failed to fetch joined channel list"),
+			}
 		}
 		channelID = searchChannelId(joinedChannelList, message.ReceiverName)
 		if channelID == "" {
-			return errors.New(fmt.Sprintf("app is not part of the channel %s", message.ReceiverName))
+			return &NoChannelFoundErr{
+				Err: errors.New(fmt.Sprintf("app is not part of the channel %s", message.ReceiverName)),
+			}
 		}
 	case "user":
 		user, err := client.GetUserByEmail(message.ReceiverName)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to get id for %s", message.ReceiverName))
+			if err.Error() == "users_not_found" {
+				return &UserLookupByEmailErr{
+					Err: errors.Wrap(err, fmt.Sprintf("failed to get id for %s", message.ReceiverName)),
+				}
+			}
+			return &SlackNotifierErr{
+				Err: err,
+			}
 		}
 		channelID = user.ID
 	}
 	_, _, _, err := client.SendMessage(channelID, slack.MsgOptionText(message.Message, false))
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to send message to %s", message.ReceiverName))
+		return &MsgSendErr{
+			Err: errors.Wrap(err, fmt.Sprintf("failed to send message to %s", message.ReceiverName)),
+		}
 	}
 	return nil
 }

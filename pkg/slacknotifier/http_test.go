@@ -76,7 +76,8 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			createNewSlackClient = oldClientCreator
 		}()
 		mockedSlackClient := &SlackClientMock{}
-		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").Return(nil, errors.New("random error"))
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
+			Return(nil, errors.New("users_not_found"))
 		createNewSlackClient = func(token string) SlackCaller {
 			s.Equal("foo_bar", token)
 			return mockedSlackClient
@@ -88,7 +89,31 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
-		s.EqualError(err, "failed to get id for foo@odpf.io: random error")
+		s.EqualError(err, "failed to get id for foo@odpf.io: users_not_found")
+		mockedSlackClient.AssertExpectations(s.T())
+	})
+	
+	s.Run("should return error if user lookup by email fails", func() {
+		testNotifierClient := NewSlackNotifierClient()
+		oldClientCreator := createNewSlackClient
+		defer func() {
+			createNewSlackClient = oldClientCreator
+		}()
+		mockedSlackClient := &SlackClientMock{}
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
+			Return(nil, errors.New("random error"))
+		createNewSlackClient = func(token string) SlackCaller {
+			s.Equal("foo_bar", token)
+			return mockedSlackClient
+		}
+		dummyMessage := &SlackMessage{
+			ReceiverName: "foo@odpf.io",
+			ReceiverType: "user",
+			Message:      "random text",
+			Entity:       "odpf",
+		}
+		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
+		s.EqualError(err, "random error")
 		mockedSlackClient.AssertExpectations(s.T())
 	})
 
