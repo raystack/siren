@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/siren/pkg/alert_history"
 	"github.com/odpf/siren/pkg/codeexchange"
 	"github.com/odpf/siren/pkg/rules"
+	"github.com/odpf/siren/pkg/slacknotifier"
 	"github.com/odpf/siren/pkg/templates"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ type Container struct {
 	AlertmanagerService domain.AlertmanagerService
 	AlertHistoryService domain.AlertHistoryService
 	CodeExchangeService domain.CodeExchangeService
+	NotifierServices    domain.NotifierServices
 }
 
 func Init(db *gorm.DB, c *domain.Config,
@@ -37,12 +39,19 @@ func Init(db *gorm.DB, c *domain.Config,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
 	}
+	slackNotifierService, err := slacknotifier.NewService(db, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create codeexchange service")
+	}
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
 		AlertmanagerService: alertmanagerService,
 		AlertHistoryService: alertHistoryService,
 		CodeExchangeService: codeExchangeService,
+		NotifierServices: domain.NotifierServices{
+			Slack: slackNotifierService,
+		},
 	}, nil
 }
 

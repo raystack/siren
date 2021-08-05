@@ -181,6 +181,29 @@ definitions:
         x-go-name: Webhook
     type: object
     x-go-package: github.com/odpf/siren/domain
+  SlackMessage:
+    properties:
+      entity:
+        type: string
+        x-go-name: Entity
+      message:
+        type: string
+        x-go-name: Message
+      receiver_name:
+        type: string
+        x-go-name: ReceiverName
+      receiver_type:
+        type: string
+        x-go-name: ReceiverType
+    type: object
+    x-go-package: github.com/odpf/siren/domain
+  SlackMessageSendResponse:
+    properties:
+      ok:
+        type: boolean
+        x-go-name: OK
+    type: object
+    x-go-package: github.com/odpf/siren/domain
   Template:
     properties:
       body:
@@ -272,6 +295,26 @@ paths:
           type: array
       tags:
       - alertHistory
+  /notifications:
+    post:
+      description: |-
+        POST Notifications API
+        This API sends notifications to configured channel
+      operationId: postNotificationsRequest
+      parameters:
+      - in: query
+        name: provider
+        type: string
+        x-go-name: Provider
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/SlackMessage'
+      responses:
+        "200":
+          $ref: '#/responses/postResponse'
+      tags:
+      - notifications
   /oauth/slack/token:
     post:
       description: |-
@@ -489,6 +532,10 @@ responses:
       type: array
   pingResponse:
     description: Response body for Ping.
+  postNotificationsResponse:
+    description: POST notifications response
+    schema:
+      $ref: '#/definitions/SlackMessageSendResponse'
   postResponse:
     description: POST codeExchange response
     schema:

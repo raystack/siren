@@ -18,6 +18,7 @@ type Repository struct {
 }
 
 var cryptopastaEncryptor = cryptopasta.Encrypt
+
 func encryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
 	cipher, err := cryptopastaEncryptor([]byte(accessToken), encryptionKey)
 	if err != nil {
@@ -27,12 +28,16 @@ func encryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
 }
 
 var cryptopastaDecryptor = cryptopasta.Decrypt
+
 func decryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
-	encrypted, err := base64.StdEncoding.DecodeString( accessToken)
+	encrypted, err := base64.StdEncoding.DecodeString(accessToken)
 	if err != nil {
 		return "", err
 	}
-	decryptedToken, _ := cryptopastaDecryptor([]byte(encrypted), encryptionKey)
+	decryptedToken, err := cryptopastaDecryptor(encrypted, encryptionKey)
+	if err != nil {
+		return "", err
+	}
 	return string(decryptedToken), nil
 }
 
@@ -71,6 +76,22 @@ func (r Repository) Upsert(accessToken *AccessToken) error {
 		return result.Error
 	}
 	return nil
+}
+
+func (r Repository) Get(workspace string) (string, error) {
+	var accessToken AccessToken
+	result := r.db.Where(fmt.Sprintf("workspace = '%s'", workspace)).Find(&accessToken)
+	if result.Error != nil {
+		return "", errors.Wrap(result.Error, "search query failed")
+	}
+	if result.RowsAffected == 0 {
+		return "", errors.New(fmt.Sprintf("workspace not found: %s", workspace))
+	}
+	decryptedAccessToken, err := decryptToken(accessToken.AccessToken, r.encryptionKey)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to decrypt token")
+	}
+	return decryptedAccessToken, nil
 }
 
 func (r Repository) Migrate() error {

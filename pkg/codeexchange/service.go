@@ -37,6 +37,10 @@ func NewService(db *gorm.DB, httpClient Doer, slackAppConfig domain.SlackApp, en
 	}, nil
 }
 
+func (service Service) GetToken(workspace string) (string, error) {
+	return service.repository.Get(workspace)
+}
+
 func (service Service) Exchange(payload domain.OAuthPayload) (*domain.OAuthExchangeResponse, error) {
 	response, err := service.exchanger.Exchange(payload.Code, service.clientID, service.clientSecret)
 	if err != nil {
