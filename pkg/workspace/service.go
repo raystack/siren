@@ -20,7 +20,7 @@ func NewService(slackService domain.SlackService, codeExchangeService domain.Cod
 func (s Service) GetChannels(workspace string) ([]domain.Channel, error) {
 	token, err := s.codeExchangeService.GetToken(workspace)
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("could not get token for workspce: %s", workspace))
+		return nil, errors.Wrap(err, fmt.Sprintf("could not get token for workspace: %s", workspace))
 	}
 	channels, err := s.client.GetWorkspaceChannel(token)
 	if err != nil {
