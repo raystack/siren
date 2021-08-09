@@ -29,9 +29,9 @@ func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendR
 	return res, nil
 }
 
-func NewService(codeExchangeService domain.CodeExchangeService, slackService domain.SlackService) domain.SlackNotifierService {
+func NewService(codeExchangeService domain.CodeExchangeService) domain.SlackNotifierService {
 	return &Service{
-		client:              NewSlackNotifierClient(slackService),
+		client:              NewSlackNotifierClient(),
 		codeExchangeService: codeExchangeService,
 	}
 }

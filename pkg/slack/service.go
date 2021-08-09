@@ -15,10 +15,6 @@ type ClientService struct {
 	SlackClient SlackCaller
 }
 
-func (c *ClientService) UpdateClient(token string) {
-	c.SlackClient = slack.New(token)
-}
-
 func (c *ClientService) GetJoinedChannelsList() ([]slack.Channel, error) {
 	channelList := make([]slack.Channel, 0)
 	curr := ""
@@ -53,6 +49,6 @@ func (c *ClientService) GetConversationsForUser(parameters *slack.GetConversatio
 	return c.SlackClient.GetConversationsForUser(parameters)
 }
 
-func NewService() domain.SlackService {
-	return &ClientService{SlackClient: nil}
+func NewService(token string) domain.SlackService {
+	return &ClientService{SlackClient: slack.New(token)}
 }

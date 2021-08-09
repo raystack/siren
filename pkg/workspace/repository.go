@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
 )
 
@@ -9,14 +10,16 @@ type Repository struct {
 	Slacker domain.SlackService
 }
 
-func NewRepository(service domain.SlackService) SlackRepository {
+func NewRepository() SlackRepository {
 	return &Repository{
-		Slacker: service,
+		Slacker: nil,
 	}
 }
 
+var newService = slack.NewService
+
 func (r Repository) GetWorkspaceChannel(token string) ([]Channel, error) {
-	r.Slacker.UpdateClient(token)
+	r.Slacker = newService(token)
 	joinedChannelList, err := r.Slacker.GetJoinedChannelsList()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch joined channel list")

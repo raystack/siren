@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"errors"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/suite"
@@ -18,16 +19,19 @@ func TestHTTP(t *testing.T) {
 	suite.Run(t, new(RepositoryTestSuite))
 }
 
-func (s *RepositoryTestSuite) SetupTest() {
-	s.slacker = &mocks.SlackService{}
+func (s *RepositoryTestSuite) TestGetWorkspaceChannel() {
+	oldServiceCreator := newService
+	mockedSlackService := &mocks.SlackService{}
+	newService = func(string) domain.SlackService {
+		return mockedSlackService
+	}
+	defer func() { newService = oldServiceCreator }()
+	s.slacker = mockedSlackService
 	s.repository = &Repository{
 		Slacker: s.slacker,
 	}
-}
 
-func (s *RepositoryTestSuite) TestGetWorkspaceChannel() {
 	s.Run("should return joined channel list in a workspace", func() {
-		s.slacker.On("UpdateClient", "test_token").Return()
 		s.slacker.On("GetJoinedChannelsList").Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{Name: "foo"}},
 			{GroupConversation: slack.GroupConversation{Name: "bar"}}}, nil).Once()
@@ -40,7 +44,6 @@ func (s *RepositoryTestSuite) TestGetWorkspaceChannel() {
 	})
 
 	s.Run("should return error if get joined channel list fail", func() {
-		s.slacker.On("UpdateClient", "test_token").Return()
 		s.slacker.On("GetJoinedChannelsList").
 			Return(nil, errors.New("random error")).Once()
 

@@ -100,7 +100,3 @@ func (_m *SlackService) SendMessage(_a0 string, _a1 ...slack.MsgOption) (string,
 	return r0, r1, r2, r3
 }
 
-// UpdateClient provides a mock function with given fields: token
-func (_m *SlackService) UpdateClient(token string) {
-	_m.Called(token)
-}

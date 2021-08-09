@@ -6,5 +6,4 @@ type SlackService interface {
 	SendMessage(string, ...slack.MsgOption) (string, string, string, error)
 	GetUserByEmail(string) (*slack.User, error)
 	GetJoinedChannelsList() ([]slack.Channel, error)
-	UpdateClient(token string)
 }

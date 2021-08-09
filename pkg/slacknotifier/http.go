@@ -3,6 +3,7 @@ package slacknotifier
 import (
 	"fmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
 	goslack "github.com/slack-go/slack"
 )
@@ -11,9 +12,9 @@ type SlackNotifierClient struct {
 	Slacker domain.SlackService
 }
 
-func NewSlackNotifierClient(service domain.SlackService) SlackNotifier {
+func NewSlackNotifierClient() SlackNotifier {
 	return &SlackNotifierClient{
-		Slacker: service,
+		Slacker: nil,
 	}
 }
 
@@ -22,8 +23,10 @@ func (r SlackNotifierClient) Notify(message *SlackMessage, token string) error {
 	return r.notifyWithClient(message, token)
 }
 
+var newService = slack.NewService
+
 func (r SlackNotifierClient) notifyWithClient(message *SlackMessage, token string) error {
-	r.Slacker.UpdateClient(token)
+	r.Slacker = newService(token)
 	var channelID string
 	switch message.ReceiverType {
 	case "channel":

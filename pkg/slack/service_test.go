@@ -135,10 +135,10 @@ func (s *SlackServiceTestSuite) TestService_GetJoinedChannelsList() {
 }
 
 func (s *SlackServiceTestSuite) Test_NewService() {
-	s.Run("should initialize client with nil", func() {
-		service := NewService()
+	s.Run("should initialize client with given token", func() {
+		service := NewService("random")
 		res, ok := service.(*ClientService)
 		s.Equal(true, ok)
-		s.Nil(res.SlackClient)
+		s.NotNil(res.SlackClient)
 	})
 }
