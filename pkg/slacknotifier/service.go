@@ -3,9 +3,7 @@ package slacknotifier
 import (
 	"fmt"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/codeexchange"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 type Service struct {
@@ -31,10 +29,9 @@ func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendR
 	return res, nil
 }
 
-func NewService(db *gorm.DB, encryptionKey string) (domain.SlackNotifierService, error) {
-	svc, err := codeexchange.NewService(db, nil, domain.SlackApp{}, encryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init slack notifier service")
+func NewService(codeExchangeService domain.CodeExchangeService) domain.SlackNotifierService {
+	return &Service{
+		client:              NewSlackNotifierClient(),
+		codeExchangeService: codeExchangeService,
 	}
-	return &Service{client: NewSlackNotifierClient(), codeExchangeService: svc}, nil
 }
