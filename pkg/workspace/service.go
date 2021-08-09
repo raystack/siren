@@ -22,7 +22,7 @@ func (s Service) GetChannels(workspace string) ([]domain.Channel, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("could not get token for workspace: %s", workspace))
 	}
-	channels, err := s.client.GetWorkspaceChannel(token)
+	channels, err := s.client.GetWorkspaceChannels(token)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("could not get channels for workspace: %s", workspace))
 	}

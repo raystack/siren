@@ -8,7 +8,7 @@ type Channel struct {
 }
 
 type SlackRepository interface {
-	GetWorkspaceChannel(string) ([]Channel, error)
+	GetWorkspaceChannels(string) ([]Channel, error)
 }
 
 func (c *Channel) toDomain() domain.Channel {

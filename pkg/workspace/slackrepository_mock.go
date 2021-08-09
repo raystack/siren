@@ -12,7 +12,7 @@ type MockSlackRepository struct {
 }
 
 // GetWorkspaceChannel provides a mock function with given fields: _a0
-func (_m *MockSlackRepository) GetWorkspaceChannel(_a0 string) ([]Channel, error) {
+func (_m *MockSlackRepository) GetWorkspaceChannels(_a0 string) ([]Channel, error) {
 	ret := _m.Called(_a0)
 
 	var r0 []Channel

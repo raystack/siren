@@ -35,7 +35,7 @@ func (s *RepositoryTestSuite) TestGetWorkspaceChannel() {
 		s.slacker.On("GetJoinedChannelsList").Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{Name: "foo"}},
 			{GroupConversation: slack.GroupConversation{Name: "bar"}}}, nil).Once()
-		channels, err := s.repository.GetWorkspaceChannel("test_token")
+		channels, err := s.repository.GetWorkspaceChannels("test_token")
 		s.Equal(2, len(channels))
 		s.Equal("foo", channels[0].Name)
 		s.Equal("bar", channels[1].Name)
@@ -47,7 +47,7 @@ func (s *RepositoryTestSuite) TestGetWorkspaceChannel() {
 		s.slacker.On("GetJoinedChannelsList").
 			Return(nil, errors.New("random error")).Once()
 
-		channels, err := s.repository.GetWorkspaceChannel("test_token")
+		channels, err := s.repository.GetWorkspaceChannels("test_token")
 		s.Nil(channels)
 		s.EqualError(err, "failed to fetch joined channel list: random error")
 	})

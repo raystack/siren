@@ -32,7 +32,7 @@ func (s *ServiceTestSuite) TestService_GetChannels() {
 	s.Run("should return channels on success response", func() {
 		s.exchangerMock.On("GetToken", "test_workspace").
 			Return("test_token", nil).Once()
-		s.repository.On("GetWorkspaceChannel", "test_token").
+		s.repository.On("GetWorkspaceChannels", "test_token").
 			Return([]Channel{
 				{Name: "foo"},
 			}, nil).Once()
@@ -55,7 +55,7 @@ func (s *ServiceTestSuite) TestService_GetChannels() {
 	s.Run("should return error response if get channels fail", func() {
 		s.exchangerMock.On("GetToken", "test_workspace").
 			Return("test_token", nil).Once()
-		s.repository.On("GetWorkspaceChannel", "test_token").
+		s.repository.On("GetWorkspaceChannels", "test_token").
 			Return(nil, errors.New("random error")).Once()
 
 		channels, err := s.service.GetChannels("test_workspace")

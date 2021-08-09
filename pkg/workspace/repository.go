@@ -18,7 +18,7 @@ func NewRepository() SlackRepository {
 
 var newService = slack.NewService
 
-func (r Repository) GetWorkspaceChannel(token string) ([]Channel, error) {
+func (r Repository) GetWorkspaceChannels(token string) ([]Channel, error) {
 	r.Slacker = newService(token)
 	joinedChannelList, err := r.Slacker.GetJoinedChannelsList()
 	if err != nil {
