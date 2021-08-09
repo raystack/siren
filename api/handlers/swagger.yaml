@@ -260,8 +260,7 @@ info:
 paths:
   /history:
     get:
-      description: 'GET Alert History API: This API lists stored alert history for
-        given filers in query params'
+      description: 'GET Alert History API: This API lists stored alert history for given filers in query params'
       operationId: getAlertHistoryRequest
       parameters:
       - in: query
@@ -342,8 +341,7 @@ paths:
       - ping
   /rules:
     get:
-      description: 'List Rules API: This API lists all the existing rules with given
-        filers in query params'
+      description: 'List Rules API: This API lists all the existing rules with given filers in query params'
       operationId: listRulesRequest
       parameters:
       - description: List Rule Request
@@ -373,9 +371,7 @@ paths:
       tags:
       - rules
     put:
-      description: 'Upsert Rule API: This API helps in creating a new rule or update
-        an existing one with unique combination of namespace, entity, group_name,
-        template'
+      description: 'Upsert Rule API: This API helps in creating a new rule or update an existing one with unique combination of namespace, entity, group_name, template'
       operationId: createRuleRequest
       parameters:
       - description: Create rule request
@@ -390,8 +386,7 @@ paths:
       - rules
   /teams/{teamName}/credentials:
     get:
-      description: 'Get AlertCredentials API: This API helps in getting the teams
-        slack and pagerduty credentials'
+      description: 'Get AlertCredentials API: This API helps in getting the teams slack and pagerduty credentials'
       operationId: getAlertCredentialRequest
       parameters:
       - description: name of the team
@@ -408,8 +403,7 @@ paths:
       tags:
       - alertCredential
     put:
-      description: 'Upsert AlertCredentials API: This API helps in creating or updating
-        the teams slack and pagerduty credentials'
+      description: 'Upsert AlertCredentials API: This API helps in creating or updating the teams slack and pagerduty credentials'
       operationId: createAlertCredentialRequest
       parameters:
       - description: Create AlertCredential request
@@ -424,14 +418,12 @@ paths:
         type: string
         x-go-name: TeamName
       responses:
-        "200":
-          description: ""
+        "200": {}
       tags:
       - alertCredential
   /templates:
     get:
-      description: 'List Templates API: This API lists all the existing templates
-        with given filers in query params'
+      description: 'List Templates API: This API lists all the existing templates with given filers in query params'
       operationId: listTemplatesRequest
       parameters:
       - description: List Template Request
@@ -445,8 +437,7 @@ paths:
       tags:
       - templates
     put:
-      description: 'Upsert Templates API: This API helps in creating or updating a
-        template with unique name'
+      description: 'Upsert Templates API: This API helps in creating or updating a template with unique name'
       operationId: createTemplateRequest
       parameters:
       - description: Create template request
@@ -461,8 +452,7 @@ paths:
       - templates
   /templates/{name}:
     delete:
-      description: 'Delete Template API: This API deletes a template given the template
-        name'
+      description: 'Delete Template API: This API deletes a template given the template name'
       operationId: deleteTemplatesRequest
       parameters:
       - description: Delete Template Request
@@ -477,8 +467,7 @@ paths:
       tags:
       - templates
     get:
-      description: 'Get Template API: This API gets a template given the template
-        name'
+      description: 'Get Template API: This API gets a template given the template name'
       operationId: getTemplatesRequest
       parameters:
       - description: Get Template Request
@@ -494,8 +483,7 @@ paths:
       - templates
   /templates/{name}/render:
     post:
-      description: 'Render Template API: This API renders the given template with
-        given values'
+      description: 'Render Template API: This API renders the given template with given values'
       operationId: renderTemplatesRequest
       parameters:
       - description: Render Template Request
@@ -509,6 +497,22 @@ paths:
           $ref: '#/responses/renderTemplatesResponse'
       tags:
       - templates
+  /workspaces/{workspaceName}/channels:
+    get:
+      description: 'Get Channels API: This API gets the list of joined channels within a slack workspace'
+      operationId: getWorkspaceChannelsRequest
+      parameters:
+      - description: name of the workspace
+        in: path
+        name: workspaceName
+        required: true
+        type: string
+        x-go-name: WorkspaceName
+      responses:
+        "200":
+          $ref: '#/responses/WorkspaceChannelsResponse'
+      tags:
+      - workspaces
 produces:
 - application/json
 responses:
@@ -540,14 +544,11 @@ responses:
     description: POST codeExchange response
     schema:
       $ref: '#/definitions/OAuthExchangeResponse'
-  renderTemplatesResponse:
-    description: ""
+  renderTemplatesResponse: {}
   rulesResponse:
-    description: ""
     schema:
       $ref: '#/definitions/Rule'
   templatesResponse:
-    description: ""
     schema:
       $ref: '#/definitions/Template'
 schemes:

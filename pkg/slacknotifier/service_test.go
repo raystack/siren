@@ -78,16 +78,3 @@ func (s *ServiceTestSuite) TestService_Notify() {
 	})
 }
 
-func (s *ServiceTestSuite) TestService_NewService() {
-	s.Run("should return error in service initialization", func() {
-		res, err := NewService(nil, "rQvRLU4S6NOtJPDBC0ybemgiU710twcN")
-		s.Nil(err)
-		s.NotNil(res)
-	})
-
-	s.Run("should return error in service initialization", func() {
-		res, err := NewService(nil, "abcd")
-		s.EqualError(err, `failed to init slack notifier service: failed to create codeexchange repository: random hash should be 32 chars in length`)
-		s.Nil(res)
-	})
-}
