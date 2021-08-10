@@ -1,8 +1,10 @@
 package alert
 
 import (
+	"errors"
 	"fmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/pkg/alert/alertmanager"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -39,20 +41,17 @@ func TestServiceUpsert(t *testing.T) {
 		AlertHistoryHost: "http://example.com",
 		EntityCredentials: alertmanager.EntityCredentials{
 			Entity: "avengers",
+			Token:  "random-token",
 			Teams: map[string]alertmanager.TeamCredentials{
 				"hydra": {
 					Name:                "hydra",
 					PagerdutyCredential: "abc",
 					Slackcredentials: alertmanager.SlackConfig{
 						Critical: alertmanager.SlackCredential{
-							Webhook:  "http://critical.com",
-							Channel:  "critical_channel",
-							Username: "critical_user",
+							Channel: "critical_channel",
 						},
 						Warning: alertmanager.SlackCredential{
-							Webhook:  "http://warning.com",
-							Channel:  "warning_channel2",
-							Username: "warning_user",
+							Channel: "warning_channel2",
 						},
 					},
 				},
@@ -61,14 +60,10 @@ func TestServiceUpsert(t *testing.T) {
 					PagerdutyCredential: "xyzw",
 					Slackcredentials: alertmanager.SlackConfig{
 						Critical: alertmanager.SlackCredential{
-							Webhook:  "http://criticalwakanda.com",
-							Channel:  "critical_channel",
-							Username: "critical_user",
+							Channel: "critical_channel",
 						},
 						Warning: alertmanager.SlackCredential{
-							Webhook:  "http://warningwakanda.com",
-							Channel:  "warning_channel",
-							Username: "warning_user",
+							Channel: "warning_channel",
 						},
 					},
 				},
@@ -91,9 +86,12 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		clientMock := AlertmanagerClientMock{}
 		clientMock.On("SyncConfig", mock.Anything).Return(nil)
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		mockedCodeExchangeService.On("GetToken", "avengers").
+			Return("random-token", nil).Once()
 		service := NewService(db, &clientMock, domain.SirenServiceConfig{
 			Host: "http://example.com",
-		})
+		}, mockedCodeExchangeService)
 
 		credential := domain.AlertCredential{
 			Entity:               "avengers",
@@ -101,14 +99,10 @@ func TestServiceUpsert(t *testing.T) {
 			PagerdutyCredentials: "xyz",
 			SlackConfig: domain.SlackConfig{
 				Critical: domain.SlackCredential{
-					Channel:  "critical_channel",
-					Webhook:  "http://critical.com",
-					Username: "critical_user",
+					Channel: "critical_channel",
 				},
 				Warning: domain.SlackCredential{
-					Channel:  "warning_channel",
-					Webhook:  "http://warning.com",
-					Username: "warning_user",
+					Channel: "warning_channel",
 				},
 			},
 		}
@@ -118,20 +112,43 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "http://warning.com", warningSlackCredential.Webhook)
-		assert.Equal(t, "warning_user", warningSlackCredential.Username)
 		assert.Equal(t, "warning_channel", warningSlackCredential.ChannelName)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "http://critical.com", criticalSlackCredential.Webhook)
-		assert.Equal(t, "critical_user", criticalSlackCredential.Username)
 		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "xyz", pagerdutyCredential.ServiceKey)
-
 	})
+
+	t.Run("should handle errors in getting slack token for given entity", func(t *testing.T) {
+		clientMock := AlertmanagerClientMock{}
+		clientMock.On("SyncConfig", mock.Anything).Return(nil).Once()
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		mockedCodeExchangeService.On("GetToken", "avengers").
+			Return("", errors.New("random error")).Once()
+		service := NewService(db, &clientMock, domain.SirenServiceConfig{
+			Host: "http://example.com",
+		}, mockedCodeExchangeService)
+
+		credential := domain.AlertCredential{
+			Entity:               "avengers",
+			TeamName:             "hydra",
+			PagerdutyCredentials: "xyz",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel: "critical_channel",
+				},
+				Warning: domain.SlackCredential{
+					Channel: "warning_channel",
+				},
+			},
+		}
+		err := service.Upsert(credential)
+		assert.EqualError(t, err, "failed to get token for entity avengers: random error")
+	})
+
 	t.Run("should upsert records", func(t *testing.T) {
 		db.Exec("truncate slack_credentials, pagerduty_credentials")
 		if err != nil {
@@ -146,22 +163,21 @@ func TestServiceUpsert(t *testing.T) {
 			t.Fatal(err)
 		}
 		clientMock := AlertmanagerClientMock{}
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		mockedCodeExchangeService.On("GetToken", "avengers").
+			Return("random-token", nil).Once()
 		clientMock.On("SyncConfig", mock.Anything).Return(nil)
 		service := NewService(db, &clientMock, domain.SirenServiceConfig{
 			Host: "http://example.com",
-		})
+		}, mockedCodeExchangeService)
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "critical_channel",
-			Username:    "critical_user",
-			Webhook:     "http://critical.com",
 			Level:       "CRITICAL",
 			TeamName:    "hydra",
 			Entity:      "avengers",
 		})
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "warning_channel",
-			Username:    "warning_user",
-			Webhook:     "http://warning.com",
 			Level:       "WARNING",
 			TeamName:    "hydra",
 			Entity:      "avengers",
@@ -178,14 +194,10 @@ func TestServiceUpsert(t *testing.T) {
 			PagerdutyCredentials: "abc",
 			SlackConfig: domain.SlackConfig{
 				Critical: domain.SlackCredential{
-					Channel:  "critical_channel",
-					Webhook:  "http://critical.com",
-					Username: "critical_user",
+					Channel: "critical_channel",
 				},
 				Warning: domain.SlackCredential{
-					Channel:  "warning_channel2",
-					Webhook:  "http://warning.com",
-					Username: "warning_user",
+					Channel: "warning_channel2",
 				},
 			},
 		}
@@ -195,19 +207,14 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "http://warning.com", warningSlackCredential.Webhook)
-		assert.Equal(t, "warning_user", warningSlackCredential.Username)
 		assert.Equal(t, "warning_channel2", warningSlackCredential.ChannelName)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "http://critical.com", criticalSlackCredential.Webhook)
-		assert.Equal(t, "critical_user", criticalSlackCredential.Username)
 		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "abc", pagerdutyCredential.ServiceKey)
-
 	})
 
 	t.Run("should update entity config for the alertmanager", func(t *testing.T) {
@@ -223,6 +230,9 @@ func TestServiceUpsert(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		mockedCodeExchangeService.On("GetToken", "avengers").
+			Return("random-token", nil).Once()
 		clientMock := AlertmanagerClientMock{}
 		clientMock.On("SyncConfig", mock.MatchedBy(func(actualConfig alertmanager.AlertManagerConfig) bool {
 
@@ -230,19 +240,15 @@ func TestServiceUpsert(t *testing.T) {
 		})).Return(nil)
 		service := NewService(db, &clientMock, domain.SirenServiceConfig{
 			Host: "http://example.com",
-		})
+		}, mockedCodeExchangeService)
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "critical_channel",
-			Username:    "critical_user",
-			Webhook:     "http://criticalwakanda.com",
 			Level:       "CRITICAL",
 			TeamName:    "wakanda",
 			Entity:      "avengers",
 		})
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "warning_channel",
-			Username:    "warning_user",
-			Webhook:     "http://warningwakanda.com",
 			Level:       "WARNING",
 			TeamName:    "wakanda",
 			Entity:      "avengers",
@@ -259,14 +265,10 @@ func TestServiceUpsert(t *testing.T) {
 			PagerdutyCredentials: "abc",
 			SlackConfig: domain.SlackConfig{
 				Critical: domain.SlackCredential{
-					Channel:  "critical_channel",
-					Webhook:  "http://critical.com",
-					Username: "critical_user",
+					Channel: "critical_channel",
 				},
 				Warning: domain.SlackCredential{
-					Channel:  "warning_channel2",
-					Webhook:  "http://warning.com",
-					Username: "warning_user",
+					Channel: "warning_channel2",
 				},
 			},
 		}
@@ -276,14 +278,10 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "http://warning.com", warningSlackCredential.Webhook)
-		assert.Equal(t, "warning_user", warningSlackCredential.Username)
 		assert.Equal(t, "warning_channel2", warningSlackCredential.ChannelName)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "http://critical.com", criticalSlackCredential.Webhook)
-		assert.Equal(t, "critical_user", criticalSlackCredential.Username)
 		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
@@ -293,6 +291,7 @@ func TestServiceUpsert(t *testing.T) {
 
 	})
 }
+
 
 func TestServiceGet(t *testing.T) {
 	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
@@ -323,8 +322,6 @@ func TestServiceGet(t *testing.T) {
 
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "critical_channel",
-			Username:    "critical_user",
-			Webhook:     "http://critical.com",
 			Level:       "CRITICAL",
 			TeamName:    "hydra",
 			Entity:      "avengers",
@@ -332,8 +329,6 @@ func TestServiceGet(t *testing.T) {
 		assert.Nil(t, result.Error)
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
 			ChannelName: "warning_channel",
-			Username:    "warning_user",
-			Webhook:     "http://warning.com",
 			Level:       "WARNING",
 			TeamName:    "hydra",
 			Entity:      "avengers",
@@ -345,9 +340,12 @@ func TestServiceGet(t *testing.T) {
 			Entity:     "avengers",
 		})
 		assert.Nil(t, result.Error)
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		mockedCodeExchangeService.On("GetToken", "avengers").
+			Return("random-token", nil).Once()
 		service := NewService(db, nil, domain.SirenServiceConfig{
 			Host: "http://example.com",
-		})
+		}, mockedCodeExchangeService)
 		credential, err := service.Get("hydra")
 		assert.Nil(t, err)
 		expectedCredential := domain.AlertCredential{
@@ -357,13 +355,9 @@ func TestServiceGet(t *testing.T) {
 			SlackConfig: domain.SlackConfig{
 				Critical: domain.SlackCredential{
 					Channel:  "critical_channel",
-					Webhook:  "http://critical.com",
-					Username: "critical_user",
 				},
 				Warning: domain.SlackCredential{
 					Channel:  "warning_channel",
-					Webhook:  "http://warning.com",
-					Username: "warning_user",
 				},
 			},
 		}

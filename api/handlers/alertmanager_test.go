@@ -1,18 +1,17 @@
-package api
+package handlers_test
 
 import (
 	"bytes"
 	"errors"
+	"github.com/odpf/siren/api"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/logger"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap"
 )
 
 type AlertmanagerServiceMock struct {
@@ -35,11 +34,6 @@ func (m AlertmanagerServiceMock) Get(teamName string) (domain.AlertCredential, e
 	return args.Get(0).(domain.AlertCredential), args.Error(1)
 }
 
-func getPanicLogger() *zap.Logger {
-	panicLogger, _ := logger.New(&domain.LogConfig{Level: "panic"})
-	return panicLogger
-}
-
 func TestGetAlertCredentials(t *testing.T) {
 	t.Run("should return alert credentials of the team", func(t *testing.T) {
 		var alertmanagerServiceMock AlertmanagerServiceMock
@@ -49,19 +43,15 @@ func TestGetAlertCredentials(t *testing.T) {
 			PagerdutyCredentials: "xyz",
 			SlackConfig: domain.SlackConfig{
 				Critical: domain.SlackCredential{
-					Channel:  "critical",
-					Webhook:  "http://critical.com",
-					Username: "critical_user",
+					Channel: "critical",
 				},
 				Warning: domain.SlackCredential{
-					Channel:  "warning",
-					Webhook:  "http://warning.com",
-					Username: "warning_user",
+					Channel: "warning",
 				},
 			},
 		}
 		alertmanagerServiceMock.On("Get", "hydra").Return(credential, nil)
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		r, err := http.NewRequest(http.MethodGet, "/teams/hydra/credentials", nil)
@@ -77,14 +67,10 @@ func TestGetAlertCredentials(t *testing.T) {
     "pagerduty_credentials": "xyz",
     "slack_config": {
         "critical": {
-            "webhook": "http://critical.com",
-            "channel": "critical",
-            "username": "critical_user"
+            "channel": "critical"
         },
         "warning": {
-            "webhook": "http://warning.com",
-            "channel": "warning",
-            "username": "warning_user"
+            "channel": "warning"
         }
     }
 }`
@@ -96,7 +82,7 @@ func TestGetAlertCredentials(t *testing.T) {
 		var alertmanagerServiceMock AlertmanagerServiceMock
 		alertmanagerServiceMock.On("Get", "hydra").Return(
 			domain.AlertCredential{}, errors.New("internal error"))
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		r, err := http.NewRequest(http.MethodGet, "/teams/hydra/credentials", nil)
@@ -120,14 +106,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
   "pagerduty_credentials": "string",
   "slack_config": {
     "critical": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://critical.com"
+      "channel": "string"
     },
     "warning": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://warning.com"
+      "channel": "string"
     }
   }}`)
 		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
@@ -136,12 +118,13 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 201, w.Code)
 	})
+
 	t.Run("should return 500 on error", func(t *testing.T) {
 		var alertmanagerServiceMock AlertmanagerServiceMock
 		alertmanagerServiceMock.On("Upsert", mock.Anything).Return(errors.New("error occurred while updating"))
@@ -151,14 +134,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
   "pagerduty_credentials": "string",
   "slack_config": {
     "critical": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://critical.com"
+      "channel": "string"
     },
     "warning": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://warning.com"
+      "channel": "string"
     }
   }}`)
 		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
@@ -167,46 +146,34 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
 		assert.Equal(t, 500, w.Code)
 	})
-	t.Run("should return 4xx on bad  webhook", func(t *testing.T) {
+
+	t.Run("should return 400 on invalid json payload", func(t *testing.T) {
 		var alertmanagerServiceMock AlertmanagerServiceMock
 		alertmanagerServiceMock.On("UpsertSlack", mock.Anything).Return(nil)
 
-		payload := []byte(`{
-  "entity": "string",
-  "pagerduty_credentials": "string",
-  "slack_config": {
-    "critical": {
-      "channel": "string",
-      "username": "string",
-      "webhook": ":critical"
-    },
-    "warning": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://warning.com"
-    }
-  }}`)
+		payload := []byte(`abcd`)
 		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		w := httptest.NewRecorder()
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
-		expectedBody := `{"code":400,"message":"Key: 'AlertCredential.SlackConfig.Critical.Webhook' Error:Field validation for 'Webhook' failed on the 'webhookChecker' tag","data":null}`
+		expectedBody := `{"code":400,"message":"invalid character 'a' looking for beginning of value","data":null}`
 		assert.Equal(t, 400, w.Code)
 		assert.Equal(t, expectedBody, w.Body.String())
 
 	})
+
 	t.Run("should return 4xx on empty entity", func(t *testing.T) {
 		var alertmanagerServiceMock AlertmanagerServiceMock
 		alertmanagerServiceMock.On("UpsertSlack", mock.Anything).Return(nil)
@@ -216,14 +183,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
   "pagerduty_credentials": "string",
   "slack_config": {
     "critical": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "critical.com"
+      "channel": "string"
     },
     "warning": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://warning.com"
+      "channel": "string"
     }
   }}`)
 		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
@@ -232,7 +195,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)
@@ -251,14 +214,10 @@ func TestUpdateAlertCredentials(t *testing.T) {
   "pagerduty_credentials": "",
   "slack_config": {
     "critical": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "critical.com"
+      "channel": "string"
     },
     "warning": {
-      "channel": "string",
-      "username": "string",
-      "webhook": "http://warning.com"
+      "channel": "string"
     }
   }}`)
 		r, err := http.NewRequest(http.MethodPut, "/teams/myTeam/credentials", bytes.NewBuffer(payload))
@@ -267,7 +226,7 @@ func TestUpdateAlertCredentials(t *testing.T) {
 		}
 
 		w := httptest.NewRecorder()
-		router := New(&service.Container{
+		router := api.New(&service.Container{
 			AlertmanagerService: alertmanagerServiceMock,
 		}, nil, getPanicLogger())
 		router.ServeHTTP(w, r)

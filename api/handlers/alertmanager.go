@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"gopkg.in/go-playground/validator.v9"
-	"net/http"
-	"net/url"
-
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
 	"go.uber.org/zap"
+	"gopkg.in/go-playground/validator.v9"
+	"net/http"
 )
 
 func UpdateAlertCredentials(service domain.AlertmanagerService, logger *zap.Logger) http.HandlerFunc {
@@ -17,15 +15,10 @@ func UpdateAlertCredentials(service domain.AlertmanagerService, logger *zap.Logg
 		var alertCredential domain.AlertCredential
 		err := json.NewDecoder(r.Body).Decode(&alertCredential)
 		if err != nil {
-			w.WriteHeader(400)
-			w.Write([]byte("invalid json body"))
+			badRequest(w, err, logger)
 			return
 		}
 		v := validator.New()
-		_ = v.RegisterValidation("webhookChecker", func(fl validator.FieldLevel) bool {
-			_, err := url.Parse(fl.Field().Interface().(string))
-			return err == nil
-		})
 		err = v.Struct(alertCredential)
 		if err != nil {
 			if _, ok := err.(*validator.InvalidValidationError); ok {
