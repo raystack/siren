@@ -25,3 +25,4 @@ config.yaml
 .air.toml
 bin/air
 tmp
+dist/
