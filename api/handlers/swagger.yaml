@@ -81,6 +81,15 @@ definitions:
         x-go-name: Template
     type: object
     x-go-package: github.com/odpf/siren/domain
+  Block:
+    description: |-
+      Block defines an interface all block types should implement
+      to ensure consistency between blocks.
+    properties:
+      BlockType:
+        $ref: '#/definitions/MessageBlockType'
+    type: object
+    x-go-package: github.com/slack-go/slack
   Labels:
     properties:
       severity:
@@ -88,6 +97,12 @@ definitions:
         x-go-name: Severity
     type: object
     x-go-package: github.com/odpf/siren/domain
+  MessageBlockType:
+    description: |-
+      MessageBlockType defines a named string type to define each block type
+      as a constant for use within the package.
+    type: string
+    x-go-package: github.com/slack-go/slack
   OAuthExchangeResponse:
     properties:
       ok:
@@ -183,6 +198,11 @@ definitions:
     x-go-package: github.com/odpf/siren/domain
   SlackMessage:
     properties:
+      blocks:
+        items:
+          $ref: '#/definitions/Block'
+        type: array
+        x-go-name: BlockSet
       entity:
         type: string
         x-go-name: Entity
@@ -196,7 +216,7 @@ definitions:
         type: string
         x-go-name: ReceiverType
     type: object
-    x-go-package: github.com/odpf/siren/domain
+    x-go-package: github.com/odpf/siren/docs
   SlackMessageSendResponse:
     properties:
       ok:

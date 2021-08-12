@@ -34,7 +34,7 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
 			Return(&slack.User{ID: "U20"}, nil).Once()
 		mockedSlackService.On("SendMessage", "U20",
-			mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
+			mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
 		dummyMessage := &SlackMessage{
 			ReceiverName: "foo@odpf.io",
 			ReceiverType: "user",
@@ -49,8 +49,9 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
 			Return(&slack.User{ID: "U20"}, nil).Once()
 		mockedSlackService.On("SendMessage", "U20",
-			mock.AnythingOfType("slack.MsgOption")).
-			Return("", "", "", errors.New("random error")).Once()
+			mock.AnythingOfType("slack.MsgOption"),
+			mock.AnythingOfType("slack.MsgOption"),
+		).Return("", "", "", errors.New("random error")).Once()
 
 		dummyMessage := &SlackMessage{
 			ReceiverName: "foo@odpf.io",
@@ -101,7 +102,9 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			}}, nil).Once()
 
 		mockedSlackService.On("SendMessage", "C01",
-			mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
+			mock.AnythingOfType("slack.MsgOption"),
+			mock.AnythingOfType("slack.MsgOption"),
+		).Return("", "", "", nil).Once()
 
 		dummyMessage := &SlackMessage{
 			ReceiverName: "foo",
@@ -115,8 +118,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 	})
 
 	s.Run("should return error if not part of the channel", func() {
-		mockedSlackService.On("UpdateClient", "foo_bar").Return().Once()
-
 		mockedSlackService.On("GetJoinedChannelsList").Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{
 				Name:         "foo",
@@ -140,8 +141,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 	})
 
 	s.Run("should return error failed to fetch joined channels list", func() {
-		mockedSlackService.On("UpdateClient", "foo_bar").Return().Once()
-
 		mockedSlackService.On("GetJoinedChannelsList").
 			Return(nil, errors.New("random error")).Once()
 		mockedSlackService.On("SendMessage", "C01",

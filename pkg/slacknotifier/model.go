@@ -1,12 +1,16 @@
 package slacknotifier
 
-import "github.com/odpf/siren/domain"
+import (
+	"github.com/odpf/siren/domain"
+	"github.com/slack-go/slack"
+)
 
 type SlackMessage struct {
-	ReceiverName string `json:"receiver_name"`
-	ReceiverType string `json:"receiver_type"`
-	Entity       string `json:"entity"`
-	Message      string `json:"message"`
+	ReceiverName string       `json:"receiver_name"`
+	ReceiverType string       `json:"receiver_type"`
+	Entity       string       `json:"entity"`
+	Message      string       `json:"message"`
+	Blocks       slack.Blocks `json:"block"`
 }
 
 func (message *SlackMessage) fromDomain(m *domain.SlackMessage) *SlackMessage {
@@ -14,6 +18,7 @@ func (message *SlackMessage) fromDomain(m *domain.SlackMessage) *SlackMessage {
 	message.ReceiverName = m.ReceiverName
 	message.Entity = m.Entity
 	message.Message = m.Message
+	message.Blocks = m.Blocks
 	return message
 }
 
