@@ -23,6 +23,8 @@ with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 - **Credentials Management:** Siren can store slack and pagerduty credentials, sync them with Cortex alertmanager to
   deliver alerts on proper channels, in a multi-tenant fashion. It gives a simple interface to rotate the credentials on
   demand via HTTP API.
+- **Slack Notifications:** Siren can be used to send out notifications in slack to user's DM, private and public
+  channel.
 - **Alert History:** Siren can store alerts triggered via Cortex Alertmanager, which can be used for audit purposes.
 
 To know more, follow the detailed [documentation](docs)
@@ -72,7 +74,11 @@ $ make test
 
 # To run tests locally with coverage
 $ make test-coverage
+```
 
+## Running Server
+
+```sh
 # To run server locally
 $ go run main.go serve
 ```
