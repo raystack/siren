@@ -1,4 +1,4 @@
 FROM alpine:3.13
-COPY siren /usr/bin/siren
+COPY siren .
 EXPOSE 8080
-CMD ["siren"]
+ENTRYPOINT ["./siren"]
