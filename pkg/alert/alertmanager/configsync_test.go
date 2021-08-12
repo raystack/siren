@@ -15,15 +15,13 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 	config := AlertManagerConfig{
 		AlertHistoryHost: "http://example.com",
 		EntityCredentials: EntityCredentials{
-			Entity:    "de-infra",
+			Entity: "de-infra",
 			Teams: map[string]TeamCredentials{
 				"eureka": {
 					Name: "eureka",
 					Slackcredentials: SlackConfig{
 						Critical: SlackCredential{
-							Webhook:  "http://eurcritical.com",
-							Channel:  "dss",
-							Username: "ss",
+							Channel: "dss",
 						},
 					},
 				},
@@ -31,14 +29,13 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					Name: "wonder-woman",
 					Slackcredentials: SlackConfig{
 						Warning: SlackCredential{
-							Webhook:  "http://eurcritical.com",
-							Channel:  "dss",
-							Username: "ss",
+							Channel: "dss",
 						},
 					},
 					PagerdutyCredential: "abc",
 				},
 			},
+			Token: "random-token",
 		},
 	}
 
@@ -48,6 +45,9 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
   global:
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
+    slack_api_url: https://slack.com/api/chat.postMessage
+    http_config:
+      bearer_token: 'random-token'
   receivers:
     - name: alert_history
       webhook_configs:
@@ -56,8 +56,6 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     - name: slack-critical-eureka
       slack_configs:
         - channel: 'dss'
-          api_url: 'http://eurcritical.com'
-          username: 'ss'
           icon_emoji: ':eagle:'
           link_names: false
           send_resolved: true
@@ -76,8 +74,6 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
     - name: slack-warning-wonder-woman
       slack_configs:
         - channel: 'dss'
-          api_url: 'http://eurcritical.com'
-          username: 'ss'
           icon_emoji: ':eagle:'
           link_names: false
           send_resolved: true
@@ -145,7 +141,6 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, expectedConfigStr, configStr)
-
 }
 
 type ConfigCompat struct {
@@ -157,15 +152,13 @@ func TestSyncConfig(t *testing.T) {
 	config := AlertManagerConfig{
 		AlertHistoryHost: "http://example.com",
 		EntityCredentials: EntityCredentials{
-			Entity:    "greek",
+			Entity: "greek",
 			Teams: map[string]TeamCredentials{
 				"eureka": {
 					Name: "eureka",
 					Slackcredentials: SlackConfig{
 						Critical: SlackCredential{
-							Webhook:  "http://eurcritical.com",
-							Channel:  "dss",
-							Username: "ss",
+							Channel: "dss",
 						},
 					},
 				},
@@ -173,16 +166,16 @@ func TestSyncConfig(t *testing.T) {
 					Name: "wonder",
 					Slackcredentials: SlackConfig{
 						Warning: SlackCredential{
-							Webhook:  "http://eurcritical.com",
-							Channel:  "dss",
-							Username: "ss",
+							Channel: "dss",
 						},
 					},
 					PagerdutyCredential: "abc",
 				},
 			},
+			Token: "random-token",
 		},
 	}
+
 	t.Run("should return error if alertmanager response code is non-2xx", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
@@ -198,6 +191,7 @@ func TestSyncConfig(t *testing.T) {
 		assert.Error(t, err)
 
 	})
+
 	t.Run("should return nil on successful sync", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tenant := r.Header.Get("X-Scope-Orgid")

@@ -20,9 +20,7 @@ var (
 )
 
 type SlackCredential struct {
-	Webhook  string
 	Channel  string
-	Username string
 }
 
 type SlackConfig struct {
@@ -38,6 +36,7 @@ type TeamCredentials struct {
 
 type EntityCredentials struct {
 	Entity string
+	Token  string
 	Teams  map[string]TeamCredentials
 }
 

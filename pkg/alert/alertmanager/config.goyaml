@@ -3,19 +3,20 @@
   global:
     pagerduty_url: https://events.pagerduty.com/v2/enqueue
     resolve_timeout: 5m
+    slack_api_url: https://slack.com/api/chat.postMessage
+    http_config:
+      bearer_token: '[[.EntityCredentials.Token]]'
   receivers:
     - name: alert_history
       webhook_configs:
         - url: '[[.AlertHistoryHost]]/history'
     - name: default
   [[- range $key, $team := .EntityCredentials.Teams -]]
-  [[if eq $team.Slackcredentials.Critical.Webhook ""]]
+  [[if eq $team.Slackcredentials.Critical.Channel ""]]
   [[else]]
     - name: slack-critical-[[$team.Name]]
       slack_configs:
         - channel: '[[$team.Slackcredentials.Critical.Channel]]'
-          api_url: '[[$team.Slackcredentials.Critical.Webhook]]'
-          username: '[[$team.Slackcredentials.Critical.Username]]'
           icon_emoji: ':eagle:'
           link_names: false
           send_resolved: true
@@ -31,12 +32,10 @@
               text: 'Dashboard :bar_chart:'
               url: '{{template "slack.dashboard" . }}'
 [[- end -]]
-[[- if eq $team.Slackcredentials.Warning.Webhook "" -]][[- else ]]
+[[- if eq $team.Slackcredentials.Warning.Channel "" -]][[- else ]]
     - name: slack-warning-[[$team.Name]]
       slack_configs:
         - channel: '[[$team.Slackcredentials.Warning.Channel]]'
-          api_url: '[[$team.Slackcredentials.Warning.Webhook]]'
-          username: '[[$team.Slackcredentials.Warning.Username]]'
           icon_emoji: ':eagle:'
           link_names: false
           send_resolved: true
@@ -83,8 +82,8 @@
             continue: true
           - match:
               severity: "CRITICAL"
-            receiver: [[if eq $team.Slackcredentials.Critical.Webhook ""]] default [[else]]slack-critical-[[$team.Name]][[end]]
+            receiver: [[if eq $team.Slackcredentials.Critical.Channel ""]] default [[else]]slack-critical-[[$team.Name]][[end]]
           - match:
               severity: "WARNING"
-            receiver: [[if eq $team.Slackcredentials.Warning.Webhook ""]] default [[else]]slack-warning-[[$team.Name]][[end]]
+            receiver: [[if eq $team.Slackcredentials.Warning.Channel ""]] default [[else]]slack-warning-[[$team.Name]][[end]]
 [[end]]
