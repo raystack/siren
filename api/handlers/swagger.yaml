@@ -90,6 +90,16 @@ definitions:
         $ref: '#/definitions/MessageBlockType'
     type: object
     x-go-package: github.com/slack-go/slack
+  Channel:
+    properties:
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/odpf/siren/domain
   Labels:
     properties:
       severity:
@@ -537,12 +547,18 @@ paths:
         x-go-name: WorkspaceName
       responses:
         "200":
-          $ref: '#/responses/WorkspaceChannelsResponse'
+          $ref: '#/responses/channelListResponse'
       tags:
       - workspaces
 produces:
 - application/json
 responses:
+  channelListResponse:
+    description: ""
+    schema:
+      items:
+        $ref: '#/definitions/Channel'
+      type: array
   getResponse:
     description: Get alertHistory response
     schema:

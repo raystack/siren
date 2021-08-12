@@ -44,7 +44,6 @@ Create Alert History API: This API create alert history
 ### /notifications
 
 #### POST
-
 ##### Description
 
 POST Notifications API This API sends notifications to configured channel
@@ -65,7 +64,6 @@ POST Notifications API This API sends notifications to configured channel
 ### /oauth/slack/token
 
 #### POST
-
 ##### Description
 
 POST Code Exchange API This API exchanges oauth code with access token from slack server. client_id and client_secret
@@ -86,7 +84,6 @@ are read from Siren ENV vars.
 ### /ping
 
 #### GET
-
 ##### Description
 
 Ping call
@@ -268,7 +265,6 @@ Render Template API: This API renders the given template with given values
 ### /workspaces/{workspaceName}/channels
 
 #### GET
-
 ##### Description
 
 Get Channels API: This API gets the list of joined channels within a slack workspace
@@ -283,7 +279,7 @@ Get Channels API: This API gets the list of joined channels within a slack works
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
-| 200 |  | [ integer ] |
+| 200 |  | [ [Channel](#channel) ] |
 
 ### Models
 
@@ -338,6 +334,13 @@ Block defines an interface all block types should implement to ensure consistenc
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | BlockType | [MessageBlockType](#messageblocktype) |  | No |
+
+#### Channel
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| id | string |  | No |
+| name | string |  | No |
 
 #### Labels
 
@@ -402,8 +405,6 @@ MessageBlockType defines a named string type to define each block type as a cons
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | channel | string |  | No |
-| username | string |  | No |
-| webhook | string |  | No |
 
 #### SlackMessage
 
