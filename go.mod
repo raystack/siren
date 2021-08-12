@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grafana/cortex-tools v0.7.2
-	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69 // indirect
+	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/leodido/go-urn v1.2.1 // indirect
