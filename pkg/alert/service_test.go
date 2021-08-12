@@ -112,11 +112,11 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "warning_channel", warningSlackCredential.ChannelName)
+		assert.Equal(t, "warning_channel", warningSlackCredential.Channel)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
+		assert.Equal(t, "critical_channel", criticalSlackCredential.Channel)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "xyz", pagerdutyCredential.ServiceKey)
@@ -171,16 +171,16 @@ func TestServiceUpsert(t *testing.T) {
 			Host: "http://example.com",
 		}, mockedCodeExchangeService)
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "critical_channel",
-			Level:       "CRITICAL",
-			TeamName:    "hydra",
-			Entity:      "avengers",
+			Channel:  "critical_channel",
+			Level:    "CRITICAL",
+			TeamName: "hydra",
+			Entity:   "avengers",
 		})
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "warning_channel",
-			Level:       "WARNING",
-			TeamName:    "hydra",
-			Entity:      "avengers",
+			Channel:  "warning_channel",
+			Level:    "WARNING",
+			TeamName: "hydra",
+			Entity:   "avengers",
 		})
 		db.Model(PagerdutyCredential{}).Create(&PagerdutyCredential{
 			ServiceKey: "xyz",
@@ -207,11 +207,11 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "warning_channel2", warningSlackCredential.ChannelName)
+		assert.Equal(t, "warning_channel2", warningSlackCredential.Channel)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
+		assert.Equal(t, "critical_channel", criticalSlackCredential.Channel)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "abc", pagerdutyCredential.ServiceKey)
@@ -242,16 +242,16 @@ func TestServiceUpsert(t *testing.T) {
 			Host: "http://example.com",
 		}, mockedCodeExchangeService)
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "critical_channel",
-			Level:       "CRITICAL",
-			TeamName:    "wakanda",
-			Entity:      "avengers",
+			Channel:  "critical_channel",
+			Level:    "CRITICAL",
+			TeamName: "wakanda",
+			Entity:   "avengers",
 		})
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "warning_channel",
-			Level:       "WARNING",
-			TeamName:    "wakanda",
-			Entity:      "avengers",
+			Channel:  "warning_channel",
+			Level:    "WARNING",
+			TeamName: "wakanda",
+			Entity:   "avengers",
 		})
 		db.Model(PagerdutyCredential{}).Create(&PagerdutyCredential{
 			ServiceKey: "xyzw",
@@ -278,11 +278,11 @@ func TestServiceUpsert(t *testing.T) {
 		}
 		var warningSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "WARNING").First(&warningSlackCredential)
-		assert.Equal(t, "warning_channel2", warningSlackCredential.ChannelName)
+		assert.Equal(t, "warning_channel2", warningSlackCredential.Channel)
 
 		var criticalSlackCredential SlackCredential
 		db.Model(&SlackCredential{}).Where("team_name = ? AND level =?", "hydra", "CRITICAL").First(&criticalSlackCredential)
-		assert.Equal(t, "critical_channel", criticalSlackCredential.ChannelName)
+		assert.Equal(t, "critical_channel", criticalSlackCredential.Channel)
 		var pagerdutyCredential PagerdutyCredential
 		db.Model(&PagerdutyCredential{}).Where("team_name = ?", "hydra").First(&pagerdutyCredential)
 		assert.Equal(t, "abc", pagerdutyCredential.ServiceKey)
@@ -321,17 +321,17 @@ func TestServiceGet(t *testing.T) {
 		}
 
 		result := db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "critical_channel",
-			Level:       "CRITICAL",
-			TeamName:    "hydra",
-			Entity:      "avengers",
+			Channel:  "critical_channel",
+			Level:    "CRITICAL",
+			TeamName: "hydra",
+			Entity:   "avengers",
 		})
 		assert.Nil(t, result.Error)
 		result = db.Model(SlackCredential{}).Create(&SlackCredential{
-			ChannelName: "warning_channel",
-			Level:       "WARNING",
-			TeamName:    "hydra",
-			Entity:      "avengers",
+			Channel:  "warning_channel",
+			Level:    "WARNING",
+			TeamName: "hydra",
+			Entity:   "avengers",
 		})
 		assert.Nil(t, result.Error)
 		db.Model(PagerdutyCredential{}).Create(&PagerdutyCredential{

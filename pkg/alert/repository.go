@@ -35,7 +35,7 @@ func (r Repository) GetCredential(teamName string) (map[string]SlackCredential, 
 	warningSlackCredential := SlackCredential{}
 	criticalSlackCredential := SlackCredential{}
 	row.Scan(&entity, &pagerdutyCredential.ServiceKey,
-		&warningSlackCredential.ChannelName, &criticalSlackCredential.ChannelName)
+		&warningSlackCredential.Channel, &criticalSlackCredential.Channel)
 	pagerdutyCredential.Entity = entity
 	warningSlackCredential.Entity = entity
 	criticalSlackCredential.Entity = entity

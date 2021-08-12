@@ -18,8 +18,8 @@ type Service struct {
 
 type SlackCredential struct {
 	gorm.Model
-	ChannelName string
-	Level       string `gorm:"uniqueIndex:team_level_unique"`
+	Channel string
+	Level   string `gorm:"uniqueIndex:team_level_unique"`
 
 	TeamName string `gorm:"uniqueIndex:team_level_unique"`
 	Entity   string
@@ -37,11 +37,9 @@ func (s Service) Migrate() error {
 	if err != nil {
 		return err
 	}
-	err = s.repository.db.Migrator().DropColumn(&SlackCredential{}, "username")
-	if err != nil {
-		return err
-	}
-	return s.repository.db.Migrator().DropColumn(&SlackCredential{}, "webhook")
+	s.repository.db.Migrator().DropColumn(&SlackCredential{}, "username")
+	s.repository.db.Migrator().DropColumn(&SlackCredential{}, "webhook")
+	return nil
 }
 
 func (s Service) Upsert(credential domain.AlertCredential) error {
@@ -51,14 +49,14 @@ func (s Service) Upsert(credential domain.AlertCredential) error {
 	}
 	err = s.repository.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Exec(upsertCriticalSlackCredentialQuery,
-			sql.Named("channel_name", credential.SlackConfig.Critical.Channel),
+			sql.Named("channel", credential.SlackConfig.Critical.Channel),
 			sql.Named("entity", credential.Entity),
 			sql.Named("team_name", credential.TeamName),
 		).Error; err != nil {
 			return err
 		}
 		if err := tx.Exec(upsertWarningSlackCredentialQuery,
-			sql.Named("channel_name", credential.SlackConfig.Warning.Channel),
+			sql.Named("channel", credential.SlackConfig.Warning.Channel),
 			sql.Named("entity", credential.Entity),
 			sql.Named("team_name", credential.TeamName),
 		).Error; err != nil {
@@ -127,10 +125,10 @@ func (s Service) Get(teamName string) (domain.AlertCredential, error) {
 		PagerdutyCredentials: pagerdutyCredential.ServiceKey,
 		SlackConfig: domain.SlackConfig{
 			Warning: domain.SlackCredential{
-				Channel: warningSlackCredential.ChannelName,
+				Channel: warningSlackCredential.Channel,
 			},
 			Critical: domain.SlackCredential{
-				Channel: criticalSlackCredential.ChannelName,
+				Channel: criticalSlackCredential.Channel,
 			},
 		},
 	}
