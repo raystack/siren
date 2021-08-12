@@ -36,8 +36,13 @@ and Pagerduty. Learn in more detail [here](./alert_credentials.md).
 
 ## Alert History Subscription
 
-Siren can configure CortexAlertmanager to call Siren back allowing storage of triggered alerts. This can be used for
+Siren can configure Cortex Alertmanager to call Siren back allowing storage of triggered alerts. This can be used for
 auditing and analytics purposes. Learn in more detail [here](./alert_history.md).
+
+## Slack Notification
+
+Siren can send out notification to Slack channels and user DMs using a preconfigured Slack app. Learn in more
+detail [here](./slack_notifications.md).
 
 ## Deployment
 
