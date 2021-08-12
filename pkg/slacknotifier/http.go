@@ -56,7 +56,7 @@ func (r SlackNotifierClient) notifyWithClient(message *SlackMessage, token strin
 		}
 		channelID = user.ID
 	}
-	_, _, _, err := r.Slacker.SendMessage(channelID, goslack.MsgOptionText(message.Message, false))
+	_, _, _, err := r.Slacker.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
 	if err != nil {
 		return &MsgSendErr{
 			Err: errors.Wrap(err, fmt.Sprintf("failed to send message to %s", message.ReceiverName)),
