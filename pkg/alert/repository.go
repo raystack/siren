@@ -26,16 +26,7 @@ func (r Repository) UpsertPagerduty(credential PagerdutyCredential) error {
 }
 
 func (r Repository) GetCredential(teamName string) (map[string]SlackCredential, PagerdutyCredential, error) {
-	row := r.db.Raw(`select sw.entity as entity, pg.service_key as pg_service_key, sw.channel_name  as warning_channel_name, sw.webhook  as warning_webhook, sw.username as warning_username, 
- sc.channel_name as critical_channel_name, sc.webhook as critical_webhook, sc.username as critical_username
-from slack_credentials as sw
- join slack_credentials as sc 
- on sc.team_name=sw.team_name 
- join pagerduty_credentials as pg
-  on sc.team_name = pg.team_name
- where sw.team_name= ? and 
- sw.level='WARNING'
-  and sc.level ='CRITICAL'`, teamName).Row()
+	row := r.db.Raw(selectQuery, teamName).Row()
 	if row.Err() != nil {
 		return map[string]SlackCredential{}, PagerdutyCredential{}, row.Err()
 	}
@@ -44,8 +35,7 @@ from slack_credentials as sw
 	warningSlackCredential := SlackCredential{}
 	criticalSlackCredential := SlackCredential{}
 	row.Scan(&entity, &pagerdutyCredential.ServiceKey,
-		&warningSlackCredential.ChannelName, &warningSlackCredential.Webhook, &warningSlackCredential.Username,
-		&criticalSlackCredential.ChannelName, &criticalSlackCredential.Webhook, &criticalSlackCredential.Username)
+		&warningSlackCredential.Channel, &criticalSlackCredential.Channel)
 	pagerdutyCredential.Entity = entity
 	warningSlackCredential.Entity = entity
 	criticalSlackCredential.Entity = entity

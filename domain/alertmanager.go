@@ -2,8 +2,6 @@ package domain
 
 type SlackCredential struct {
 	Channel  string `json:"channel" validate:"required"`
-	Webhook  string `json:"webhook" validate:"required,webhookChecker"`
-	Username string `json:"username" validate:"required,webhookChecker"`
 }
 
 type SlackConfig struct {

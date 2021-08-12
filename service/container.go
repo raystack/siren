@@ -35,12 +35,12 @@ func Init(db *gorm.DB, c *domain.Config,
 	if err != nil {
 		return nil, err
 	}
-	alertmanagerService := alert.NewService(db, newClient, c.SirenService)
 	alertHistoryService := alert_history.NewService(db)
 	codeExchangeService, err := codeexchange.NewService(db, httpClient, c.SlackApp, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
 	}
+	alertmanagerService := alert.NewService(db, newClient, c.SirenService, codeExchangeService)
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
 	workspaceService := workspace.NewService(codeExchangeService)
 	return &Container{
