@@ -41,6 +41,46 @@ Create Alert History API: This API create alert history
 | ---- | ---------- | ----------- | -------- | ---- |
 | Body | body |  | No | [ [Alerts](#alerts) ] |
 
+### /notifications
+
+#### POST
+##### Description
+
+POST Notifications API This API sends notifications to configured channel
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| provider | query |  | No | string |
+| Body | body |  | No | [SlackMessage](#slackmessage) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | POST codeExchange response | [OAuthExchangeResponse](#oauthexchangeresponse) |
+
+### /oauth/slack/token
+
+#### POST
+##### Description
+
+POST Code Exchange API This API exchanges oauth code with access token from slack server. client_id and client_secret
+are read from Siren ENV vars.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| Body | body |  | No | [OAuthPayload](#oauthpayload) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | POST codeExchange response | [OAuthExchangeResponse](#oauthexchangeresponse) |
+
 ### /ping
 
 #### GET
@@ -222,6 +262,25 @@ Render Template API: This API renders the given template with given values
 | ---- | ----------- |
 | 200 |  |
 
+### /workspaces/{workspaceName}/channels
+
+#### GET
+##### Description
+
+Get Channels API: This API gets the list of joined channels within a slack workspace
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| workspaceName | path | name of the workspace | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 |  | [ [Channel](#channel) ] |
+
 ### Models
 
 #### Alert
@@ -268,11 +327,47 @@ Render Template API: This API renders the given template with given values
 | resource | string |  | No |
 | template | string |  | No |
 
+#### Block
+
+Block defines an interface all block types should implement to ensure consistency between blocks.
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| BlockType | [MessageBlockType](#messageblocktype) |  | No |
+
+#### Channel
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| id | string |  | No |
+| name | string |  | No |
+
 #### Labels
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | severity | string |  | No |
+
+#### MessageBlockType
+
+MessageBlockType defines a named string type to define each block type as a constant for use within the package.
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| MessageBlockType | string | MessageBlockType defines a named string type to define each block type as a constant for use within the package. |  |
+
+#### OAuthExchangeResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| ok | boolean |  | No |
+
+#### OAuthPayload
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| code | string |  | No |
+| workspace | string |  | No |
 
 #### Rule
 
@@ -310,8 +405,22 @@ Render Template API: This API renders the given template with given values
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | channel | string |  | No |
-| username | string |  | No |
-| webhook | string |  | No |
+
+#### SlackMessage
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| blocks | [ [Block](#block) ] |  | No |
+| entity | string |  | No |
+| message | string |  | No |
+| receiver_name | string |  | No |
+| receiver_type | string |  | No |
+
+#### SlackMessageSendResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| ok | boolean |  | No |
 
 #### Template
 

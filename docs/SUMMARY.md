@@ -13,6 +13,7 @@
 * [Creating bulk rules](guides/bulk_rules.md)
 * [Accessing alert history](guides/alert_history.md)
 * [Using client](guides/client.md)
+* [Sending Slack Notifications](guides/slack_notifications.md)
 * [Monitoring](guides/monitoring.md)
 * [Deployment](guides/deployment.md)
 * [Troubleshooting](guides/troubleshooting.md)
@@ -28,7 +29,6 @@
 
 * [Configurations](reference/configuration.md)
 * [API](reference/api.md)
-* [Changelog](reference/changelog.md)
 
 ## Contribute
 
