@@ -1,0 +1,55 @@
+project_name: siren
+
+before:
+  hooks:
+    - go mod vendor
+builds:
+  - main: ./main.go
+    id: "siren"
+    binary: siren
+    flags:
+      - -a
+    ldflags:
+      - -s -w -X github.com/odpf/siren/config.Version={{.Tag}} -X github.com/odpf/siren/config.BuildCommit={{.FullCommit}} -X github.com/odpf/siren/config.BuildDate={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - 386
+archives:
+  - replacements:
+      darwin: macos
+      linux: linux
+      windows: windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+      - goos: windows
+        format: zip
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^build:'
+      - "Merge pull request"
+      - "Merge branch"
+dockers:
+  - goos: linux
+    goarch: amd64
+    ids:
+      - siren
+    dockerfile: Dockerfile
+    image_templates:
+      - 'docker.io/odpf/{{.ProjectName}}:latest'
+      - 'docker.io/odpf/{{.ProjectName}}:{{ .Version }}'
+      - 'docker.io/odpf/{{.ProjectName}}:{{ .Tag }}-amd64'
