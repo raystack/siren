@@ -20,10 +20,10 @@ func UpsertTemplates(service domain.TemplatesService, logger *zap.Logger) http.H
 			badRequest(w, err, logger)
 			return
 		}
-		v := validator.New()
-		err = v.Struct(template)
+		err = template.Validate()
 		if err != nil {
-			if _, ok := err.(*validator.InvalidValidationError); ok {
+			var e *validator.InvalidValidationError
+			if errors.As(err, &e) {
 				logger.Error("invalid validation error")
 				internalServerError(w, err, logger)
 				return

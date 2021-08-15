@@ -2,6 +2,8 @@ package domain
 
 import (
 	"time"
+
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type Variable struct {
@@ -29,4 +31,9 @@ type TemplatesService interface {
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
 	Migrate() error
+}
+
+func (tm *Template) Validate() error {
+	v := validator.New()
+	return v.Struct(tm)
 }

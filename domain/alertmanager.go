@@ -1,5 +1,9 @@
 package domain
 
+import (
+	"gopkg.in/go-playground/validator.v9"
+)
+
 type SlackCredential struct {
 	Channel  string `json:"channel" validate:"required"`
 }
@@ -15,8 +19,14 @@ type AlertCredential struct {
 	PagerdutyCredentials string      `json:"pagerduty_credentials" validate:"required"`
 	SlackConfig          SlackConfig `json:"slack_config" validate:"required,dive,required"`
 }
+
 type AlertmanagerService interface {
 	Upsert(credential AlertCredential) error
 	Get(teamName string) (AlertCredential, error)
 	Migrate() error
+}
+
+func (ac *AlertCredential) Validate() error {
+	v := validator.New()
+	return v.Struct(ac)
 }

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"gopkg.in/go-playground/validator.v9"
 	"net/http"
-
+	"github.com/pkg/errors"
 	"github.com/odpf/siren/domain"
 	"go.uber.org/zap"
 )
@@ -18,13 +18,11 @@ func UpsertRule(service domain.RuleService, logger *zap.Logger) http.HandlerFunc
 			badRequest(w, err, logger)
 			return
 		}
-		v := validator.New()
-		_ = v.RegisterValidation("statusChecker", func(fl validator.FieldLevel) bool {
-			return fl.Field().Interface().(string) == "enabled" || fl.Field().Interface().(string) == "disabled"
-		})
-		err = v.Struct(rule)
+
+		err = rule.Validate()
 		if err != nil {
-			if _, ok := err.(*validator.InvalidValidationError); ok {
+			var e *validator.InvalidValidationError
+			if errors.As(err, &e) {
 				logger.Error("invalid validation error")
 				internalServerError(w, err, logger)
 				return

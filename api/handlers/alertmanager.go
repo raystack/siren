@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/odpf/siren/domain"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gopkg.in/go-playground/validator.v9"
-	"net/http"
 )
 
 func UpdateAlertCredentials(service domain.AlertmanagerService, logger *zap.Logger) http.HandlerFunc {
@@ -18,10 +20,10 @@ func UpdateAlertCredentials(service domain.AlertmanagerService, logger *zap.Logg
 			badRequest(w, err, logger)
 			return
 		}
-		v := validator.New()
-		err = v.Struct(alertCredential)
+		err = alertCredential.Validate()
 		if err != nil {
-			if _, ok := err.(*validator.InvalidValidationError); ok {
+			var e *validator.InvalidValidationError
+			if errors.As(err, &e) {
 				logger.Error("invalid validation error")
 				internalServerError(w, err, logger)
 				return
