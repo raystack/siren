@@ -1,18 +1,30 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
-
-	"github.com/odpf/siren/api"
-	"github.com/odpf/siren/domain"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	v1 "github.com/odpf/siren/api/handlers/v1"
+	pb "github.com/odpf/siren/api/proto/odpf/siren"
 	"github.com/odpf/siren/logger"
 	"github.com/odpf/siren/metric"
+	"golang.org/x/net/http2"
+	"google.golang.org/grpc"
+
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
-	"go.uber.org/zap"
+	"golang.org/x/net/http2/h2c"
 )
 
 // RunServer runs the application server
@@ -44,10 +56,63 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	r := api.New(services, nr, logger)
 
-	logger.Info("starting server", zap.Int("port", c.Port))
-	return http.ListenAndServe(fmt.Sprintf(":%d", c.Port), r)
+	// init grpc server
+
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_recovery.UnaryServerInterceptor(),
+			grpc_ctxtags.UnaryServerInterceptor(),
+			grpc_zap.UnaryServerInterceptor(logger),
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_recovery.StreamServerInterceptor(),
+			grpc_ctxtags.StreamServerInterceptor(),
+			grpc_zap.StreamServerInterceptor(logger),
+		)),
+	}
+	grpcServer := grpc.NewServer(opts...)
+	pb.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr))
+
+	// init http proxy
+	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer grpcDialCancel()
+
+	gwmux := runtime.NewServeMux(
+		runtime.WithErrorHandler(runtime.DefaultHTTPErrorHandler),
+	)
+	address := fmt.Sprintf(":%d", c.Port)
+	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+
+	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
+	defer runtimeCancel()
+
+	if err := pb.RegisterSirenServiceHandler(runtimeCtx, gwmux, grpcConn); err != nil {
+		return err
+	}
+
+	baseMux := http.NewServeMux()
+	baseMux.Handle("/", gwmux)
+
+	server := &http.Server{
+		Handler:      grpcHandlerFunc(grpcServer, baseMux),
+		Addr:         address,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	log.Println("server running on port:", c.Port)
+	if err := server.ListenAndServe(); err != nil {
+		if err != http.ErrServerClosed {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func RunMigrations(c *domain.Config) error {
@@ -72,4 +137,14 @@ func RunMigrations(c *domain.Config) error {
 
 	services.MigrateAll(store)
 	return nil
+}
+
+func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
+	return h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	}), &http2.Server{})
 }

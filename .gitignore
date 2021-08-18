@@ -20,9 +20,12 @@ vendor/
 
 # Project specific ignore
 .env
-siren
 config.yaml
 .air.toml
 bin/air
 tmp
 dist/
+
+# git ignore generate files related to gRPC and proto
+/third_party/*
+!/third_party/OpenAPI/odpf/siren/siren.swagger.json
