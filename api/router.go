@@ -46,9 +46,7 @@ func New(container *service.Container, nr *newrelic.Application, logger *zap.Log
 
 	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService, logger))
 	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService, logger))
-	r.Methods("POST").Path("/history").Handler(handlers.CreateAlertHistory(container.AlertHistoryService, logger))
-	r.Methods("GET").Path("/history").Handler(handlers.GetAlertHistory(container.AlertHistoryService, logger))
-
+	
 	r.Methods("POST").Path("/oauth/slack/token").Handler(handlers.ExchangeCode(container.CodeExchangeService, logger))
 	r.Methods("POST").Path("/notifications").Handler(handlers.Notify(container.NotifierServices, logger))
 

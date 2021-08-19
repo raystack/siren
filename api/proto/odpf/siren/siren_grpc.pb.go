@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SirenServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
+	GetAlertHistory(ctx context.Context, in *GetAlertHistoryRequest, opts ...grpc.CallOption) (*GetAlertHistoryResponse, error)
+	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -38,11 +40,31 @@ func (c *sirenServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...
 	return out, nil
 }
 
+func (c *sirenServiceClient) GetAlertHistory(ctx context.Context, in *GetAlertHistoryRequest, opts ...grpc.CallOption) (*GetAlertHistoryResponse, error) {
+	out := new(GetAlertHistoryResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetAlertHistory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error) {
+	out := new(CreateAlertHistoryResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/CreateAlertHistory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
 type SirenServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
+	GetAlertHistory(context.Context, *GetAlertHistoryRequest) (*GetAlertHistoryResponse, error)
+	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -52,6 +74,12 @@ type UnimplementedSirenServiceServer struct {
 
 func (UnimplementedSirenServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedSirenServiceServer) GetAlertHistory(context.Context, *GetAlertHistoryRequest) (*GetAlertHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAlertHistory not implemented")
+}
+func (UnimplementedSirenServiceServer) CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertHistory not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -84,6 +112,42 @@ func _SirenService_Ping_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_GetAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAlertHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetAlertHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetAlertHistory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetAlertHistory(ctx, req.(*GetAlertHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_CreateAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAlertHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).CreateAlertHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/CreateAlertHistory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).CreateAlertHistory(ctx, req.(*CreateAlertHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +158,14 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _SirenService_Ping_Handler,
+		},
+		{
+			MethodName: "GetAlertHistory",
+			Handler:    _SirenService_GetAlertHistory_Handler,
+		},
+		{
+			MethodName: "CreateAlertHistory",
+			Handler:    _SirenService_CreateAlertHistory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

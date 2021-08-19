@@ -1,6 +1,7 @@
 package alert_history
 
 import (
+	"errors"
 	"fmt"
 	"gorm.io/gorm"
 )
@@ -39,5 +40,5 @@ func (r Repository) Get(resource string, startTime uint32, endTime uint32) ([]Al
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return alerts, nil
+	return alerts, errors.New("from db")
 }

@@ -57,13 +57,16 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	// init grpc server
+	grpc_zap.ReplaceGrpcLoggerV2WithVerbosity(logger, 2)
 
+	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
+
+	// init grpc server
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_zap.UnaryServerInterceptor(logger),
+			grpc_zap.UnaryServerInterceptor(logger, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
@@ -72,7 +75,7 @@ func RunServer(c *domain.Config) error {
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr))
+	pb.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)

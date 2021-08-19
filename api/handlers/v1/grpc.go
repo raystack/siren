@@ -2,25 +2,107 @@ package v1
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	pb "github.com/odpf/siren/api/proto/odpf/siren"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"strings"
 )
 
 type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
+	logger    *zap.Logger
 	pb.UnimplementedSirenServiceServer
 }
 
-func NewGRPCServer(container *service.Container, nr *newrelic.Application) *GRPCServer {
+func NewGRPCServer(container *service.Container, nr *newrelic.Application, logger *zap.Logger) *GRPCServer {
 	return &GRPCServer{
 		container: container,
 		newrelic:  nr,
+		logger:    logger,
 	}
 }
 
 func (s *GRPCServer) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
 	return &pb.PingResponse{Message: "Pong"}, nil
+}
+
+func (s *GRPCServer) GetAlertHistory(_ context.Context, req *pb.GetAlertHistoryRequest) (*pb.GetAlertHistoryResponse, error) {
+	name := req.GetResource()
+	startTime := req.GetStartTime()
+	endTime := req.GetEndTime()
+	if name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("resource name cannot be empty"))
+	}
+	alerts, err := s.container.AlertHistoryService.Get(name, startTime, endTime)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.GetAlertHistoryResponse{
+		Alerts: make([]*pb.AlertHistory, 0),
+	}
+	for _, alert := range alerts {
+		item := &pb.AlertHistory{
+			Name:        alert.Name,
+			Id:          alert.ID,
+			MetricName:  alert.MetricName,
+			MetricValue: alert.MetricValue,
+			TemplateId:  alert.TemplateID,
+			Level:       alert.Level,
+			CreatedAt:   alert.CreatedAt.String(),
+			UpdatedAt:   alert.UpdatedAt.String(),
+		}
+		res.Alerts = append(res.Alerts, item)
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHistoryRequest) (*pb.CreateAlertHistoryResponse, error) {
+	alerts := domain.Alerts{Alerts: make([]domain.Alert, 0)}
+	for _, item := range req.GetAlerts() {
+		labels := domain.Labels{
+			Severity: item.Labels.Severity,
+		}
+		annotations := domain.Annotations{
+			Resource:    item.GetAnnotations().GetResource(),
+			Template:    item.GetAnnotations().GetTemplate(),
+			MetricName:  item.GetAnnotations().GetMetricName(),
+			MetricValue: item.GetAnnotations().GetMetricValue(),
+		}
+		alert := domain.Alert{
+			Labels:      labels,
+			Annotations: annotations,
+			Status:      item.Status,
+		}
+		alerts.Alerts = append(alerts.Alerts, alert)
+	}
+	createdAlerts, err := s.container.AlertHistoryService.Create(&alerts)
+	result := &pb.CreateAlertHistoryResponse{Alerts: make([]*pb.AlertHistory, 0)}
+	for _, item := range createdAlerts {
+		alertHistoryItem := &pb.AlertHistory{
+			Name:        item.Name,
+			Id:          item.ID,
+			MetricName:  item.MetricName,
+			MetricValue: item.MetricValue,
+			TemplateId:  item.TemplateID,
+			Level:       item.Level,
+			CreatedAt:   item.CreatedAt.String(),
+			UpdatedAt:   item.UpdatedAt.String(),
+		}
+		result.Alerts = append(result.Alerts, alertHistoryItem)
+	}
+	if err != nil {
+		if strings.Contains(err.Error(), "alert history parameters missing") {
+			s.logger.Error(err.Error())
+			return result, nil
+		}
+		return nil, err
+	}
+	return result, nil
 }
