@@ -106,3 +106,23 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 	}
 	return result, nil
 }
+
+func (s *GRPCServer) GetWorkspaceChannels(_ context.Context, req *pb.GetWorkspaceChannelsRequest) (*pb.GetWorkspaceChannelsResponse, error) {
+	workspace := req.GetWorkspaceName()
+	workspaces, err := s.container.WorkspaceService.GetChannels(workspace)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.GetWorkspaceChannelsResponse{
+		Data: make([]*pb.Workspace, 0),
+	}
+	for _, workspace := range workspaces {
+		item := &pb.Workspace{
+			Id:   workspace.ID,
+			Name: workspace.Name,
+		}
+		res.Data = append(res.Data, item)
+	}
+	return res, nil
+}

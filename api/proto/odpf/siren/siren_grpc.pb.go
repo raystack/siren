@@ -21,6 +21,7 @@ type SirenServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	GetAlertHistory(ctx context.Context, in *GetAlertHistoryRequest, opts ...grpc.CallOption) (*GetAlertHistoryResponse, error)
 	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
+	GetWorkspaceChannels(ctx context.Context, in *GetWorkspaceChannelsRequest, opts ...grpc.CallOption) (*GetWorkspaceChannelsResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -58,6 +59,15 @@ func (c *sirenServiceClient) CreateAlertHistory(ctx context.Context, in *CreateA
 	return out, nil
 }
 
+func (c *sirenServiceClient) GetWorkspaceChannels(ctx context.Context, in *GetWorkspaceChannelsRequest, opts ...grpc.CallOption) (*GetWorkspaceChannelsResponse, error) {
+	out := new(GetWorkspaceChannelsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetWorkspaceChannels", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -65,6 +75,7 @@ type SirenServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	GetAlertHistory(context.Context, *GetAlertHistoryRequest) (*GetAlertHistoryResponse, error)
 	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
+	GetWorkspaceChannels(context.Context, *GetWorkspaceChannelsRequest) (*GetWorkspaceChannelsResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -80,6 +91,9 @@ func (UnimplementedSirenServiceServer) GetAlertHistory(context.Context, *GetAler
 }
 func (UnimplementedSirenServiceServer) CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertHistory not implemented")
+}
+func (UnimplementedSirenServiceServer) GetWorkspaceChannels(context.Context, *GetWorkspaceChannelsRequest) (*GetWorkspaceChannelsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetWorkspaceChannels not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -148,6 +162,24 @@ func _SirenService_CreateAlertHistory_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_GetWorkspaceChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWorkspaceChannelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetWorkspaceChannels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetWorkspaceChannels",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetWorkspaceChannels(ctx, req.(*GetWorkspaceChannelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +198,10 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateAlertHistory",
 			Handler:    _SirenService_CreateAlertHistory_Handler,
+		},
+		{
+			MethodName: "GetWorkspaceChannels",
+			Handler:    _SirenService_GetWorkspaceChannels_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

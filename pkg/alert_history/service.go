@@ -2,10 +2,11 @@ package alert_history
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/odpf/siren/domain"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 // Service handles business logic
@@ -60,7 +61,7 @@ func (service Service) Get(resource string, startTime uint32, endTime uint32) ([
 	}
 	filteredAlerts, err := service.repository.Get(resource, startTime, endTime)
 	if err != nil {
-		return nil, errors.Wrap(err, "error from repository")
+		return nil, err
 	}
 	result := make([]domain.AlertHistoryObject, 0, len(filteredAlerts))
 	for i := 0; i < len(filteredAlerts); i++ {
