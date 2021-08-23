@@ -1,14 +1,16 @@
 package v1
 
 import (
+	"context"
 	"errors"
+	"testing"
+
 	pb "github.com/odpf/siren/api/proto/odpf/siren"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 func TestGRPCServer_GetAlertHistory(t *testing.T) {
@@ -28,7 +30,7 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(nil, dummyReq)
+		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
 		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
 		assert.Equal(t, "foo", res.GetAlerts()[0].GetName())
@@ -50,16 +52,19 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(nil, dummyReq)
+		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = resource name cannot be empty")
 		assert.Nil(t, res)
 	})
 
 	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
 		mockedAlertHistoryService := &mocks.AlertHistoryService{}
-		dummyGRPCServer := GRPCServer{container: &service.Container{
-			AlertHistoryService: mockedAlertHistoryService,
-		}, logger: zaptest.NewLogger(t)}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertHistoryService: mockedAlertHistoryService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
 
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).
 			Return(nil, errors.New("random error")).Once()
@@ -69,7 +74,7 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(nil, dummyReq)
+		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedAlertHistoryService.AssertCalled(t, "Get", "foo", uint32(100), uint32(200))
@@ -91,7 +96,7 @@ func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetWorkspaceChannels(nil, dummyReq)
+		res, err := dummyGRPCServer.GetWorkspaceChannels(context.Background(), dummyReq)
 		assert.Equal(t, 2, len(res.GetData()))
 		assert.Equal(t, "1", res.GetData()[0].GetId())
 		assert.Equal(t, "foo", res.GetData()[0].GetName())
@@ -103,18 +108,67 @@ func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
 
 	t.Run("should return error code 13 if getting workspaces failed", func(t *testing.T) {
 		mockedWorkspaceService := &mocks.WorkspaceService{}
-		dummyGRPCServer := GRPCServer{container: &service.Container{
-			WorkspaceService: mockedWorkspaceService,
-		}, logger: zaptest.NewLogger(t)}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				WorkspaceService: mockedWorkspaceService,
+			}, logger: zaptest.NewLogger(t),
+		}
 
 		dummyReq := &pb.GetWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.GetWorkspaceChannels(nil, dummyReq)
+		res, err := dummyGRPCServer.GetWorkspaceChannels(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedWorkspaceService.AssertCalled(t, "GetChannels", "random")
+	})
+}
+
+func TestGRPCServer_ExchangeCode(t *testing.T) {
+	t.Run("should return OK response object", func(t *testing.T) {
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		dummyPayload := domain.OAuthPayload{Code: "foo", Workspace: "bar"}
+		dummyResult := domain.OAuthExchangeResponse{OK: true}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				CodeExchangeService: mockedCodeExchangeService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &pb.ExchangeCodeRequest{
+			Code:      "foo",
+			Workspace: "bar",
+		}
+		mockedCodeExchangeService.On("Exchange", dummyPayload).Return(&dummyResult, nil).Once()
+		res, err := dummyGRPCServer.ExchangeCode(context.Background(), dummyReq)
+		assert.Equal(t, true, res.GetOk())
+		assert.Nil(t, err)
+		mockedCodeExchangeService.AssertCalled(t, "Exchange", dummyPayload)
+	})
+
+	t.Run("should return error code 13 if exchange code failed", func(t *testing.T) {
+		mockedCodeExchangeService := &mocks.CodeExchangeService{}
+		dummyPayload := domain.OAuthPayload{Code: "foo", Workspace: "bar"}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				CodeExchangeService: mockedCodeExchangeService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &pb.ExchangeCodeRequest{
+			Code:      "foo",
+			Workspace: "bar",
+		}
+		mockedCodeExchangeService.On("Exchange", dummyPayload).
+			Return(nil, errors.New("random error")).Once()
+		res, err := dummyGRPCServer.ExchangeCode(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.Nil(t, res)
+		mockedCodeExchangeService.AssertCalled(t, "Exchange", dummyPayload)
 	})
 }

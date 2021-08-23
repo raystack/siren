@@ -3,6 +3,8 @@ package v1
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/newrelic/go-agent/v3/newrelic"
 	pb "github.com/odpf/siren/api/proto/odpf/siren"
 	"github.com/odpf/siren/domain"
@@ -10,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 )
 
 type GRPCServer struct {
@@ -123,6 +124,23 @@ func (s *GRPCServer) GetWorkspaceChannels(_ context.Context, req *pb.GetWorkspac
 			Name: workspace.Name,
 		}
 		res.Data = append(res.Data, item)
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) ExchangeCode(_ context.Context, req *pb.ExchangeCodeRequest) (*pb.ExchangeCodeResponse, error) {
+	code := req.GetCode()
+	workspace := req.GetWorkspace()
+	result, err := s.container.CodeExchangeService.Exchange(domain.OAuthPayload{
+		Code:      code,
+		Workspace: workspace,
+	})
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.ExchangeCodeResponse{
+		Ok: result.OK,
 	}
 	return res, nil
 }

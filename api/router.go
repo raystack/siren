@@ -46,8 +46,7 @@ func New(container *service.Container, nr *newrelic.Application, logger *zap.Log
 
 	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService, logger))
 	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService, logger))
-	
-	r.Methods("POST").Path("/oauth/slack/token").Handler(handlers.ExchangeCode(container.CodeExchangeService, logger))
+
 	r.Methods("POST").Path("/notifications").Handler(handlers.Notify(container.NotifierServices, logger))
 
 	// Handle middlewares for NotFoundHandler and MethodNotAllowedHandler since Mux doesn't apply middlewares to them. Ref: https://github.com/gorilla/mux/issues/416
