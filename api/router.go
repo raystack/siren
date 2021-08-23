@@ -41,9 +41,7 @@ func New(container *service.Container, nr *newrelic.Application, logger *zap.Log
 	r.Methods("GET").Path("/templates/{name}").Handler(handlers.GetTemplates(container.TemplatesService, logger))
 	r.Methods("DELETE").Path("/templates/{name}").Handler(handlers.DeleteTemplates(container.TemplatesService, logger))
 	r.Methods("POST").Path("/templates/{name}/render").Handler(handlers.RenderTemplates(container.TemplatesService, logger))
-	r.Methods("PUT").Path("/teams/{teamName}/credentials").Handler(handlers.UpdateAlertCredentials(container.AlertmanagerService, logger))
-	r.Methods("GET").Path("/teams/{teamName}/credentials").Handler(handlers.GetAlertCredentials(container.AlertmanagerService, logger))
-
+	
 	r.Methods("PUT").Path("/rules").Handler(handlers.UpsertRule(container.RulesService, logger))
 	r.Methods("GET").Path("/rules").Handler(handlers.GetRules(container.RulesService, logger))
 

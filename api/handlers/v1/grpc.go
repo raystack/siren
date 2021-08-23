@@ -144,3 +144,58 @@ func (s *GRPCServer) ExchangeCode(_ context.Context, req *pb.ExchangeCodeRequest
 	}
 	return res, nil
 }
+
+func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *pb.GetAlertCredentialsRequest) (*pb.GetAlertCredentialsResponse, error) {
+	teamName := req.GetTeamName()
+	alertCredential, err := s.container.AlertmanagerService.Get(teamName)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.GetAlertCredentialsResponse{
+		Entity:               alertCredential.Entity,
+		TeamName:             alertCredential.TeamName,
+		PagerdutyCredentials: alertCredential.PagerdutyCredentials,
+		SlackConfig: &pb.SlackConfig{
+			Critical: &pb.Critical{Channel: alertCredential.SlackConfig.Critical.Channel},
+			Warning:  &pb.Warning{Channel: alertCredential.SlackConfig.Warning.Channel},
+		},
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *pb.UpdateAlertCredentialsRequest) (*pb.UpdateAlertCredentialsResponse, error) {
+	entity := req.GetEntity()
+	teamName := req.GetTeamName()
+	pagerdutyCredential := req.GetPagerdutyCredentials()
+	criticalChannel := req.GetSlackConfig().GetCritical().GetChannel()
+	warningChannel := req.GetSlackConfig().GetWarning().GetChannel()
+
+	if entity == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "entity cannot be empty")
+	}
+	if pagerdutyCredential == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "pagerduty credential cannot be empty")
+	}
+
+	payload := domain.AlertCredential{
+		Entity:               entity,
+		TeamName:             teamName,
+		PagerdutyCredentials: pagerdutyCredential,
+		SlackConfig: domain.SlackConfig{
+			Critical: domain.SlackCredential{
+				Channel: criticalChannel,
+			},
+			Warning: domain.SlackCredential{
+				Channel: warningChannel,
+			},
+		},
+	}
+
+	err := s.container.AlertmanagerService.Upsert(payload)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.UpdateAlertCredentialsResponse{}, nil
+}

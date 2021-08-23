@@ -23,6 +23,8 @@ type SirenServiceClient interface {
 	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
 	GetWorkspaceChannels(ctx context.Context, in *GetWorkspaceChannelsRequest, opts ...grpc.CallOption) (*GetWorkspaceChannelsResponse, error)
 	ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error)
+	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
+	UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -78,6 +80,24 @@ func (c *sirenServiceClient) ExchangeCode(ctx context.Context, in *ExchangeCodeR
 	return out, nil
 }
 
+func (c *sirenServiceClient) GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error) {
+	out := new(GetAlertCredentialsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetAlertCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error) {
+	out := new(UpdateAlertCredentialsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/UpdateAlertCredentials", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -87,6 +107,8 @@ type SirenServiceServer interface {
 	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
 	GetWorkspaceChannels(context.Context, *GetWorkspaceChannelsRequest) (*GetWorkspaceChannelsResponse, error)
 	ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error)
+	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
+	UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -108,6 +130,12 @@ func (UnimplementedSirenServiceServer) GetWorkspaceChannels(context.Context, *Ge
 }
 func (UnimplementedSirenServiceServer) ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExchangeCode not implemented")
+}
+func (UnimplementedSirenServiceServer) GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAlertCredentials not implemented")
+}
+func (UnimplementedSirenServiceServer) UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAlertCredentials not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -212,6 +240,42 @@ func _SirenService_ExchangeCode_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_GetAlertCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAlertCredentialsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetAlertCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetAlertCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetAlertCredentials(ctx, req.(*GetAlertCredentialsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_UpdateAlertCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAlertCredentialsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).UpdateAlertCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/UpdateAlertCredentials",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).UpdateAlertCredentials(ctx, req.(*UpdateAlertCredentialsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,6 +302,14 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExchangeCode",
 			Handler:    _SirenService_ExchangeCode_Handler,
+		},
+		{
+			MethodName: "GetAlertCredentials",
+			Handler:    _SirenService_GetAlertCredentials_Handler,
+		},
+		{
+			MethodName: "UpdateAlertCredentials",
+			Handler:    _SirenService_UpdateAlertCredentials_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

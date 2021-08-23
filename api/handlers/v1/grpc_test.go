@@ -172,3 +172,196 @@ func TestGRPCServer_ExchangeCode(t *testing.T) {
 		mockedCodeExchangeService.AssertCalled(t, "Exchange", dummyPayload)
 	})
 }
+
+func TestGRPCServer_GetAlertCredentials(t *testing.T) {
+	t.Run("should return alert credentials of the team", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyResult := domain.AlertCredential{
+			Entity:               "foo",
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel: "foo",
+				},
+				Warning: domain.SlackCredential{
+					Channel: "bar",
+				},
+			},
+		}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &pb.GetAlertCredentialsRequest{
+			TeamName: "foo",
+		}
+		mockedAlertmanagerService.On("Get", "foo").Return(dummyResult, nil).Once()
+		res, err := dummyGRPCServer.GetAlertCredentials(context.Background(), dummyReq)
+		assert.Equal(t, "foo", res.GetEntity())
+		assert.Equal(t, "bar", res.GetTeamName())
+		assert.Equal(t, "pager", res.GetPagerdutyCredentials())
+		assert.Equal(t, "foo", res.GetSlackConfig().GetCritical().GetChannel())
+		assert.Equal(t, "bar", res.GetSlackConfig().GetWarning().GetChannel())
+		assert.Nil(t, err)
+		mockedAlertmanagerService.AssertCalled(t, "Get", "foo")
+	})
+
+	t.Run("should return error code 13 if getting alert credentials failed", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &pb.GetAlertCredentialsRequest{
+			TeamName: "foo",
+		}
+		mockedAlertmanagerService.On("Get", "foo").
+			Return(domain.AlertCredential{}, errors.New("random error")).Once()
+		res, err := dummyGRPCServer.GetAlertCredentials(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.Nil(t, res)
+		mockedAlertmanagerService.AssertCalled(t, "Get", "foo")
+	})
+}
+
+func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
+	t.Run("should update alert credentials of the team", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		dummyPayload := domain.AlertCredential{
+			Entity:               "foo",
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel: "foo",
+				},
+				Warning: domain.SlackCredential{
+					Channel: "bar",
+				},
+			},
+		}
+		dummyReq := &pb.UpdateAlertCredentialsRequest{
+			Entity:               "foo",
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: &pb.SlackConfig{
+				Critical: &pb.Critical{
+					Channel: "foo",
+				},
+				Warning: &pb.Warning{
+					Channel: "bar",
+				},
+			},
+		}
+		mockedAlertmanagerService.On("Upsert", dummyPayload).Return(nil).Once()
+		result, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
+		assert.Equal(t, result, &pb.UpdateAlertCredentialsResponse{})
+		assert.Nil(t, err)
+		mockedAlertmanagerService.AssertCalled(t, "Upsert", dummyPayload)
+	})
+
+	t.Run("should return error code 13 if getting alert credentials failed", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		dummyPayload := domain.AlertCredential{
+			Entity:               "foo",
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: domain.SlackConfig{
+				Critical: domain.SlackCredential{
+					Channel: "foo",
+				},
+				Warning: domain.SlackCredential{
+					Channel: "bar",
+				},
+			},
+		}
+		dummyReq := &pb.UpdateAlertCredentialsRequest{
+			Entity:               "foo",
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: &pb.SlackConfig{
+				Critical: &pb.Critical{
+					Channel: "foo",
+				},
+				Warning: &pb.Warning{
+					Channel: "bar",
+				},
+			},
+		}
+		mockedAlertmanagerService.On("Upsert", dummyPayload).
+			Return(errors.New("random error")).Once()
+		res, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if entity is missing", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		dummyReq := &pb.UpdateAlertCredentialsRequest{
+			TeamName:             "bar",
+			PagerdutyCredentials: "pager",
+			SlackConfig: &pb.SlackConfig{
+				Critical: &pb.Critical{
+					Channel: "foo",
+				},
+				Warning: &pb.Warning{
+					Channel: "bar",
+				},
+			},
+		}
+		res, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = entity cannot be empty")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if pagerduty credentials is missing", func(t *testing.T) {
+		mockedAlertmanagerService := &mocks.AlertmanagerService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertmanagerService: mockedAlertmanagerService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		dummyReq := &pb.UpdateAlertCredentialsRequest{
+			Entity:   "foo",
+			TeamName: "bar",
+			SlackConfig: &pb.SlackConfig{
+				Critical: &pb.Critical{
+					Channel: "foo",
+				},
+				Warning: &pb.Warning{
+					Channel: "bar",
+				},
+			},
+		}
+		res, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = pagerduty credential cannot be empty")
+		assert.Nil(t, res)
+	})
+}
