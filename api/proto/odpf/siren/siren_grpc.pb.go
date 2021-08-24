@@ -25,6 +25,7 @@ type SirenServiceClient interface {
 	ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error)
+	SendSlackNotification(ctx context.Context, in *SendSlackNotificationRequest, opts ...grpc.CallOption) (*SendSlackNotificationResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -98,6 +99,15 @@ func (c *sirenServiceClient) UpdateAlertCredentials(ctx context.Context, in *Upd
 	return out, nil
 }
 
+func (c *sirenServiceClient) SendSlackNotification(ctx context.Context, in *SendSlackNotificationRequest, opts ...grpc.CallOption) (*SendSlackNotificationResponse, error) {
+	out := new(SendSlackNotificationResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/SendSlackNotification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -109,6 +119,7 @@ type SirenServiceServer interface {
 	ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error)
+	SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -136,6 +147,9 @@ func (UnimplementedSirenServiceServer) GetAlertCredentials(context.Context, *Get
 }
 func (UnimplementedSirenServiceServer) UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAlertCredentials not implemented")
+}
+func (UnimplementedSirenServiceServer) SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendSlackNotification not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -276,6 +290,24 @@ func _SirenService_UpdateAlertCredentials_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_SendSlackNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendSlackNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).SendSlackNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/SendSlackNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).SendSlackNotification(ctx, req.(*SendSlackNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -310,6 +342,10 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAlertCredentials",
 			Handler:    _SirenService_UpdateAlertCredentials_Handler,
+		},
+		{
+			MethodName: "SendSlackNotification",
+			Handler:    _SirenService_SendSlackNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

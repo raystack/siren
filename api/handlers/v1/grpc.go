@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"github.com/slack-go/slack"
 	"strings"
 
 	"github.com/newrelic/go-agent/v3/newrelic"
@@ -198,4 +199,31 @@ func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *pb.UpdateAle
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	return &pb.UpdateAlertCredentialsResponse{}, nil
+}
+
+func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackNotificationRequest) (*pb.SendSlackNotificationResponse, error) {
+	var payload *domain.SlackMessage
+	provider := req.GetProvider()
+
+	if provider == "slack" {
+		payload = &domain.SlackMessage{
+			ReceiverName: req.GetReceiverName(),
+			ReceiverType: req.GetReceiverType(),
+			Entity:       req.GetEntity(),
+			Message:      req.GetMessage(),
+			Blocks:       slack.Blocks{},
+		}
+	} else {
+		return nil, status.Errorf(codes.InvalidArgument, "provider not supported")
+	}
+
+	result, err := s.container.NotifierServices.Slack.Notify(payload)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.SendSlackNotificationResponse{
+		Ok: result.OK,
+	}
+	return res, nil
 }
