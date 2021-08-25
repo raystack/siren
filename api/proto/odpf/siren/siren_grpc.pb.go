@@ -28,6 +28,11 @@ type SirenServiceClient interface {
 	SendSlackNotification(ctx context.Context, in *SendSlackNotificationRequest, opts ...grpc.CallOption) (*SendSlackNotificationResponse, error)
 	GetRules(ctx context.Context, in *GetRulesRequest, opts ...grpc.CallOption) (*GetRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*Rule, error)
+	GetTemplates(ctx context.Context, in *GetTemplatesRequest, opts ...grpc.CallOption) (*GetTemplatesResponse, error)
+	GetTemplateByName(ctx context.Context, in *GetTemplateByNameRequest, opts ...grpc.CallOption) (*Template, error)
+	UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*Template, error)
+	DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error)
+	RenderTemplate(ctx context.Context, in *RenderTemplateRequest, opts ...grpc.CallOption) (*RenderTemplateResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -128,6 +133,51 @@ func (c *sirenServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleReque
 	return out, nil
 }
 
+func (c *sirenServiceClient) GetTemplates(ctx context.Context, in *GetTemplatesRequest, opts ...grpc.CallOption) (*GetTemplatesResponse, error) {
+	out := new(GetTemplatesResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetTemplates", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) GetTemplateByName(ctx context.Context, in *GetTemplateByNameRequest, opts ...grpc.CallOption) (*Template, error) {
+	out := new(Template)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetTemplateByName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*Template, error) {
+	out := new(Template)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/UpsertTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error) {
+	out := new(DeleteTemplateResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/DeleteTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTemplateRequest, opts ...grpc.CallOption) (*RenderTemplateResponse, error) {
+	out := new(RenderTemplateResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/RenderTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -142,6 +192,11 @@ type SirenServiceServer interface {
 	SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error)
 	GetRules(context.Context, *GetRulesRequest) (*GetRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error)
+	GetTemplates(context.Context, *GetTemplatesRequest) (*GetTemplatesResponse, error)
+	GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*Template, error)
+	UpsertTemplate(context.Context, *UpsertTemplateRequest) (*Template, error)
+	DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error)
+	RenderTemplate(context.Context, *RenderTemplateRequest) (*RenderTemplateResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -178,6 +233,21 @@ func (UnimplementedSirenServiceServer) GetRules(context.Context, *GetRulesReques
 }
 func (UnimplementedSirenServiceServer) UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRule not implemented")
+}
+func (UnimplementedSirenServiceServer) GetTemplates(context.Context, *GetTemplatesRequest) (*GetTemplatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplates not implemented")
+}
+func (UnimplementedSirenServiceServer) GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*Template, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateByName not implemented")
+}
+func (UnimplementedSirenServiceServer) UpsertTemplate(context.Context, *UpsertTemplateRequest) (*Template, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertTemplate not implemented")
+}
+func (UnimplementedSirenServiceServer) DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
+}
+func (UnimplementedSirenServiceServer) RenderTemplate(context.Context, *RenderTemplateRequest) (*RenderTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenderTemplate not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -372,6 +442,96 @@ func _SirenService_UpdateRule_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_GetTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetTemplates",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetTemplates(ctx, req.(*GetTemplatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_GetTemplateByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateByNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetTemplateByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetTemplateByName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetTemplateByName(ctx, req.(*GetTemplateByNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_UpsertTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).UpsertTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/UpsertTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).UpsertTemplate(ctx, req.(*UpsertTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).DeleteTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/DeleteTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).DeleteTemplate(ctx, req.(*DeleteTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_RenderTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenderTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).RenderTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/RenderTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).RenderTemplate(ctx, req.(*RenderTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -418,6 +578,26 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateRule",
 			Handler:    _SirenService_UpdateRule_Handler,
+		},
+		{
+			MethodName: "GetTemplates",
+			Handler:    _SirenService_GetTemplates_Handler,
+		},
+		{
+			MethodName: "GetTemplateByName",
+			Handler:    _SirenService_GetTemplateByName_Handler,
+		},
+		{
+			MethodName: "UpsertTemplate",
+			Handler:    _SirenService_UpsertTemplate_Handler,
+		},
+		{
+			MethodName: "DeleteTemplate",
+			Handler:    _SirenService_DeleteTemplate_Handler,
+		},
+		{
+			MethodName: "RenderTemplate",
+			Handler:    _SirenService_RenderTemplate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

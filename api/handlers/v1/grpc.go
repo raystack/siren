@@ -321,3 +321,128 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*
 	}
 	return res, nil
 }
+
+func (s *GRPCServer) GetTemplates(_ context.Context, req *pb.GetTemplatesRequest) (*pb.GetTemplatesResponse, error) {
+	templates, err := s.container.TemplatesService.Index(req.GetTag())
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	res := &pb.GetTemplatesResponse{Templates: make([]*pb.Template, 0)}
+	for _, template := range templates {
+
+		variables := make([]*pb.TemplateVariables, 0)
+		for _, variable := range template.Variables {
+			variables = append(variables, &pb.TemplateVariables{
+				Name:        variable.Name,
+				Type:        variable.Type,
+				Default:     variable.Default,
+				Description: variable.Description,
+			})
+		}
+		res.Templates = append(res.Templates, &pb.Template{
+			Id:        uint64(template.ID),
+			Name:      template.Name,
+			Body:      template.Body,
+			Tags:      template.Tags,
+			CreatedAt: timestamppb.New(template.CreatedAt),
+			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Variables: variables,
+		})
+	}
+
+	return res, nil
+}
+
+func (s *GRPCServer) GetTemplateByName(_ context.Context, req *pb.GetTemplateByNameRequest) (*pb.Template, error) {
+	template, err := s.container.TemplatesService.GetByName(req.GetName())
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	variables := make([]*pb.TemplateVariables, 0)
+	for _, variable := range template.Variables {
+		variables = append(variables, &pb.TemplateVariables{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Default:     variable.Default,
+			Description: variable.Description,
+		})
+	}
+	res := &pb.Template{
+		Id:        uint64(template.ID),
+		Name:      template.Name,
+		Body:      template.Body,
+		Tags:      template.Tags,
+		CreatedAt: timestamppb.New(template.CreatedAt),
+		UpdatedAt: timestamppb.New(template.UpdatedAt),
+		Variables: variables,
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateRequest) (*pb.Template, error) {
+	variables := make([]domain.Variable, 0)
+	for _, variable := range req.GetVariables() {
+		variables = append(variables, domain.Variable{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Default:     variable.Default,
+			Description: variable.Description,
+		})
+	}
+	payload := &domain.Template{
+		ID:        uint(req.GetId()),
+		Name:      req.GetName(),
+		Body:      req.GetBody(),
+		Tags:      req.GetTags(),
+		Variables: variables,
+	}
+	template, err := s.container.TemplatesService.Upsert(payload)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	templateVariables := make([]*pb.TemplateVariables, 0)
+	for _, variable := range template.Variables {
+		templateVariables = append(templateVariables, &pb.TemplateVariables{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Default:     variable.Default,
+			Description: variable.Description,
+		})
+	}
+	res := &pb.Template{
+		Id:        uint64(template.ID),
+		Name:      template.Name,
+		Body:      template.Body,
+		Tags:      template.Tags,
+		CreatedAt: timestamppb.New(template.CreatedAt),
+		UpdatedAt: timestamppb.New(template.UpdatedAt),
+		Variables: templateVariables,
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) DeleteTemplate(_ context.Context, req *pb.DeleteTemplateRequest) (*pb.DeleteTemplateResponse, error) {
+	err := s.container.TemplatesService.Delete(req.GetName())
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.DeleteTemplateResponse{}, nil
+}
+
+func (s *GRPCServer) RenderTemplate(_ context.Context, req *pb.RenderTemplateRequest) (*pb.RenderTemplateResponse, error) {
+	body, err := s.container.TemplatesService.Render(req.GetName(), req.GetVariables())
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.RenderTemplateResponse{
+		Body: body,
+	}, nil
+}
