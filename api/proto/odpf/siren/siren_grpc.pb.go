@@ -26,6 +26,8 @@ type SirenServiceClient interface {
 	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error)
 	SendSlackNotification(ctx context.Context, in *SendSlackNotificationRequest, opts ...grpc.CallOption) (*SendSlackNotificationResponse, error)
+	GetRules(ctx context.Context, in *GetRulesRequest, opts ...grpc.CallOption) (*GetRulesResponse, error)
+	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*Rule, error)
 }
 
 type sirenServiceClient struct {
@@ -108,6 +110,24 @@ func (c *sirenServiceClient) SendSlackNotification(ctx context.Context, in *Send
 	return out, nil
 }
 
+func (c *sirenServiceClient) GetRules(ctx context.Context, in *GetRulesRequest, opts ...grpc.CallOption) (*GetRulesResponse, error) {
+	out := new(GetRulesResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetRules", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*Rule, error) {
+	out := new(Rule)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/UpdateRule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -120,6 +140,8 @@ type SirenServiceServer interface {
 	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error)
 	SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error)
+	GetRules(context.Context, *GetRulesRequest) (*GetRulesResponse, error)
+	UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -150,6 +172,12 @@ func (UnimplementedSirenServiceServer) UpdateAlertCredentials(context.Context, *
 }
 func (UnimplementedSirenServiceServer) SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSlackNotification not implemented")
+}
+func (UnimplementedSirenServiceServer) GetRules(context.Context, *GetRulesRequest) (*GetRulesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRules not implemented")
+}
+func (UnimplementedSirenServiceServer) UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRule not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -308,6 +336,42 @@ func _SirenService_SendSlackNotification_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_GetRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRulesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetRules(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/GetRules",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetRules(ctx, req.(*GetRulesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_UpdateRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRuleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).UpdateRule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.SirenService/UpdateRule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).UpdateRule(ctx, req.(*UpdateRuleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +410,14 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendSlackNotification",
 			Handler:    _SirenService_SendSlackNotification_Handler,
+		},
+		{
+			MethodName: "GetRules",
+			Handler:    _SirenService_GetRules_Handler,
+		},
+		{
+			MethodName: "UpdateRule",
+			Handler:    _SirenService_UpdateRule_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

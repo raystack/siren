@@ -3,16 +3,16 @@ package v1
 import (
 	"context"
 	"fmt"
-	"github.com/slack-go/slack"
-	"strings"
-
 	"github.com/newrelic/go-agent/v3/newrelic"
 	pb "github.com/odpf/siren/api/proto/odpf/siren"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
+	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 type GRPCServer struct {
@@ -224,6 +224,100 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackN
 	}
 	res := &pb.SendSlackNotificationResponse{
 		Ok: result.OK,
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) GetRules(_ context.Context, req *pb.GetRulesRequest) (*pb.GetRulesResponse, error) {
+	namespace := req.GetNamespace()
+	entity := req.GetEntity()
+	groupName := req.GetGroupName()
+	ruleStatus := req.GetStatus()
+	template := req.GetTemplate()
+
+	rules, err := s.container.RulesService.Get(namespace, entity, groupName, ruleStatus, template)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	res := &pb.GetRulesResponse{Rules: make([]*pb.Rule, 0)}
+	for _, rule := range rules {
+
+		variables := make([]*pb.Variables, 0)
+		for _, variable := range rule.Variables {
+			variables = append(variables, &pb.Variables{
+				Name:        variable.Name,
+				Type:        variable.Type,
+				Value:       variable.Value,
+				Description: variable.Description,
+			})
+		}
+		res.Rules = append(res.Rules, &pb.Rule{
+			Id:        uint64(rule.ID),
+			Name:      rule.Name,
+			Entity:    rule.Entity,
+			Namespace: rule.Namespace,
+			GroupName: rule.GroupName,
+			Template:  rule.Template,
+			Status:    rule.Status,
+			CreatedAt: timestamppb.New(rule.CreatedAt),
+			UpdatedAt: timestamppb.New(rule.UpdatedAt),
+			Variables: variables,
+		})
+	}
+
+	return res, nil
+}
+
+func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*pb.Rule, error) {
+	variables := make([]domain.RuleVariable, 0)
+	for _, variable := range req.Variables {
+		variables = append(variables, domain.RuleVariable{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Value:       variable.Value,
+			Description: variable.Description,
+		})
+	}
+
+	payload := &domain.Rule{
+		ID:        uint(req.GetId()),
+		Name:      req.GetName(),
+		Entity:    req.GetEntity(),
+		Namespace: req.GetNamespace(),
+		GroupName: req.GetGroupName(),
+		Template:  req.GetTemplate(),
+		Status:    req.GetStatus(),
+		Variables: variables,
+	}
+
+	rule, err := s.container.RulesService.Upsert(payload)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	responseVariables := make([]*pb.Variables, 0)
+	for _, variable := range rule.Variables {
+		responseVariables = append(responseVariables, &pb.Variables{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Value:       variable.Value,
+			Description: variable.Description,
+		})
+	}
+	res := &pb.Rule{
+		Id:        uint64(rule.ID),
+		Name:      rule.Name,
+		Entity:    rule.Entity,
+		Namespace: rule.Namespace,
+		GroupName: rule.GroupName,
+		Template:  rule.Template,
+		Status:    rule.Status,
+		CreatedAt: timestamppb.New(rule.CreatedAt),
+		UpdatedAt: timestamppb.New(rule.UpdatedAt),
+		Variables: responseVariables,
 	}
 	return res, nil
 }
