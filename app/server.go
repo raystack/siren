@@ -63,8 +63,6 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	grpc_zap.ReplaceGrpcLoggerV2WithVerbosity(logger, 2)
-
 	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
 
 	// init grpc server

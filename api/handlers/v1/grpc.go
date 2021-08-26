@@ -208,12 +208,14 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackN
 
 	b, err := json.Marshal(req.GetBlocks())
 	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
 	}
 
 	blocks := slack.Blocks{}
 	err = json.Unmarshal(b, &blocks)
 	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
 	}
 
