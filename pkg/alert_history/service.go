@@ -1,12 +1,11 @@
 package alert_history
 
 import (
+	"errors"
 	"fmt"
-	"time"
-
 	"github.com/odpf/siren/domain"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"time"
 )
 
 // Service handles business logic

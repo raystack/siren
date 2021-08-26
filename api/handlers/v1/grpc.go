@@ -258,7 +258,6 @@ func (s *GRPCServer) GetRules(_ context.Context, req *pb.GetRulesRequest) (*pb.G
 
 	res := &pb.GetRulesResponse{Rules: make([]*pb.Rule, 0)}
 	for _, rule := range rules {
-
 		variables := make([]*pb.Variables, 0)
 		for _, variable := range rule.Variables {
 			variables = append(variables, &pb.Variables{
@@ -346,7 +345,6 @@ func (s *GRPCServer) GetTemplates(_ context.Context, req *pb.GetTemplatesRequest
 
 	res := &pb.GetTemplatesResponse{Templates: make([]*pb.Template, 0)}
 	for _, template := range templates {
-
 		variables := make([]*pb.TemplateVariables, 0)
 		for _, variable := range template.Variables {
 			variables = append(variables, &pb.TemplateVariables{

@@ -2,7 +2,6 @@ package alert_history
 
 import (
 	"fmt"
-
 	"gorm.io/gorm"
 )
 
