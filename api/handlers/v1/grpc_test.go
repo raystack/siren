@@ -159,8 +159,11 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertHistoryService.AssertCalled(t, "Create", payload)
 	})
 
-	t.Run("should return error code 3 if parameters is missing", func(t *testing.T) {
+	t.Run("should not return error if parameters are missing", func(t *testing.T) {
 		mockedAlertHistoryService := &mocks.AlertHistoryService{}
+		dummyAlerts := []domain.AlertHistoryObject{{
+			ID: 1, Name: "foo", TemplateID: "bar", MetricName: "bar", MetricValue: "30", Level: "CRITICAL",
+		}}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
 				AlertHistoryService: mockedAlertHistoryService,
@@ -169,11 +172,17 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}
 
 		mockedAlertHistoryService.On("Create", payload).
-			Return(nil, errors.New("alert history parameters missing")).Once()
+			Return(dummyAlerts, errors.New("alert history parameters missing")).Once()
 
 		res, err := dummyGRPCServer.CreateAlertHistory(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = alert history parameters missing")
-		assert.Nil(t, res)
+		assert.Equal(t, 1, len(res.GetAlerts()))
+		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
+		assert.Equal(t, "foo", res.GetAlerts()[0].GetName())
+		assert.Equal(t, "bar", res.GetAlerts()[0].GetTemplateId())
+		assert.Equal(t, "bar", res.GetAlerts()[0].GetMetricName())
+		assert.Equal(t, "30", res.GetAlerts()[0].GetMetricValue())
+		assert.Equal(t, "CRITICAL", res.GetAlerts()[0].GetLevel())
+		assert.Nil(t, err)
 		mockedAlertHistoryService.AssertCalled(t, "Create", payload)
 	})
 }
@@ -538,6 +547,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 		assert.Equal(t, true, res.GetOk())
 		mockedSlackNotifierService.AssertCalled(t, "Notify", dummyPayload)
 	})
+
 	t.Run("should return error code 13 if send slack notification failed", func(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		dummyPayload := &domain.SlackMessage{
@@ -574,6 +584,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 	})
+
 	t.Run("should return error code 3 if provider is missing", func(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		dummyGRPCServer := GRPCServer{
@@ -651,6 +662,7 @@ func TestGRPCServer_GetRules(t *testing.T) {
 		assert.Equal(t, 1, len(res.GetRules()[0].GetVariables()))
 		mockedRuleService.AssertCalled(t, "Get", "test", "odpf", "foo", "enabled", "foo")
 	})
+
 	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 
@@ -704,6 +716,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			},
 		},
 	}
+
 	t.Run("should update rule", func(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 		dummyGRPCServer := GRPCServer{
