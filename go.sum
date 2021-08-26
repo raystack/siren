@@ -1009,8 +1009,12 @@ github.com/ncw/swift v1.0.50/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/
 github.com/newrelic/go-agent/v3 v3.0.0/go.mod h1:H28zDNUC0U/b7kLoY4EFOhuth10Xu/9dchozUiOseQQ=
 github.com/newrelic/go-agent/v3 v3.11.0 h1:14LGRRAh4tyaJcP7IsOSxZyaEfwa+OIIH80PQHUGJxw=
 github.com/newrelic/go-agent/v3 v3.11.0/go.mod h1:1A1dssWBwzB7UemzRU6ZVaGDsI+cEn5/bNxI0wiYlIc=
+github.com/newrelic/go-agent/v3 v3.12.0 h1:tcDo0Q8qRWAJqb9uykfmM8pxGSbv0HqSS3q1+PzdhAo=
+github.com/newrelic/go-agent/v3 v3.12.0/go.mod h1:1A1dssWBwzB7UemzRU6ZVaGDsI+cEn5/bNxI0wiYlIc=
 github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.0 h1:3RDWj/QcU5CBP0lJnkh4CwK7tIxsSH53C+GPo5OGFCE=
 github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.0/go.mod h1:1XnCVdRSKjS5ikMycFh7VKXBkk0oYPaKQb+sd6aSCoA=
+github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1 h1:/ar1Omo9luapTJYWXt86oQGBpWwpWF92x+UuYU9v/7o=
+github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1/go.mod h1:2q0u6qkNJ4ClDt920A4r+NpcO370lFze1NF4OPJjAks=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229/go.mod h1:0aYXnNPJ8l7uZxf45rWW1a/uME32OF0rhiYGNQ2oF2E=

@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/handlers v1.5.1 // indirect
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grafana/cortex-tools v0.7.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
@@ -24,13 +24,14 @@ require (
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/newrelic/go-agent/v3 v3.11.0
+	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.0
+	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
-	github.com/purini-to/zapmw v1.1.0
+	github.com/purini-to/zapmw v1.1.0 // indirect
 	github.com/slack-go/slack v0.9.3
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

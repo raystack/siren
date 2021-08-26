@@ -24,6 +24,8 @@ import (
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
+	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
@@ -70,11 +72,13 @@ func RunServer(c *domain.Config) error {
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
+			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_zap.UnaryServerInterceptor(logger, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
+			nrgrpc.StreamServerInterceptor(nr),
 			grpc_zap.StreamServerInterceptor(logger),
 		)),
 	}
