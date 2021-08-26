@@ -85,6 +85,13 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 		alerts.Alerts = append(alerts.Alerts, alert)
 	}
 	createdAlerts, err := s.container.AlertHistoryService.Create(&alerts)
+	if err != nil {
+		if strings.Contains(err.Error(), "alert history parameters missing") {
+			s.logger.Error(err.Error())
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
 	result := &pb.CreateAlertHistoryResponse{Alerts: make([]*pb.AlertHistory, 0)}
 	for _, item := range createdAlerts {
 		alertHistoryItem := &pb.AlertHistory{
@@ -98,13 +105,6 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 			UpdatedAt:   item.UpdatedAt.String(),
 		}
 		result.Alerts = append(result.Alerts, alertHistoryItem)
-	}
-	if err != nil {
-		if strings.Contains(err.Error(), "alert history parameters missing") {
-			s.logger.Error(err.Error())
-			return result, nil
-		}
-		return nil, err
 	}
 	return result, nil
 }

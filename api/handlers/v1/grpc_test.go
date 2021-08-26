@@ -83,6 +83,100 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 	})
 }
 
+func TestGRPCServer_CreateAlertHistory(t *testing.T) {
+	payload := &domain.Alerts{
+		Alerts: []domain.Alert{
+			{
+				Status: "foo",
+				Labels: domain.Labels{
+					Severity: "CRITICAL",
+				},
+				Annotations: domain.Annotations{
+					Resource:    "foo",
+					Template:    "random",
+					MetricName:  "bar",
+					MetricValue: "30",
+				},
+			},
+		},
+	}
+	dummyReq := &pb.CreateAlertHistoryRequest{
+		Alerts: []*pb.Alerts{
+			{
+				Status: "foo",
+				Labels: &pb.Labels{
+					Severity: "CRITICAL",
+				},
+				Annotations: &pb.Annotations{
+					Resource:    "foo",
+					Template:    "random",
+					MetricName:  "bar",
+					MetricValue: "30",
+				},
+			},
+		},
+	}
+
+	t.Run("should create alert history objects", func(t *testing.T) {
+		mockedAlertHistoryService := &mocks.AlertHistoryService{}
+		dummyAlerts := []domain.AlertHistoryObject{{
+			ID: 1, Name: "foo", TemplateID: "bar", MetricName: "bar", MetricValue: "30", Level: "CRITICAL",
+		}}
+		mockedAlertHistoryService.On("Create", payload).
+			Return(dummyAlerts, nil).Once()
+		dummyGRPCServer := GRPCServer{container: &service.Container{
+			AlertHistoryService: mockedAlertHistoryService,
+		}}
+
+		res, err := dummyGRPCServer.CreateAlertHistory(context.Background(), dummyReq)
+		assert.Equal(t, 1, len(res.GetAlerts()))
+		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
+		assert.Equal(t, "foo", res.GetAlerts()[0].GetName())
+		assert.Equal(t, "bar", res.GetAlerts()[0].GetTemplateId())
+		assert.Equal(t, "bar", res.GetAlerts()[0].GetMetricName())
+		assert.Equal(t, "30", res.GetAlerts()[0].GetMetricValue())
+		assert.Equal(t, "CRITICAL", res.GetAlerts()[0].GetLevel())
+		assert.Nil(t, err)
+		mockedAlertHistoryService.AssertCalled(t, "Create", payload)
+	})
+
+	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
+		mockedAlertHistoryService := &mocks.AlertHistoryService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertHistoryService: mockedAlertHistoryService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		mockedAlertHistoryService.On("Create", payload).
+			Return(nil, errors.New("random error")).Once()
+
+		res, err := dummyGRPCServer.CreateAlertHistory(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.Nil(t, res)
+		mockedAlertHistoryService.AssertCalled(t, "Create", payload)
+	})
+
+	t.Run("should return error code 3 if parameters is missing", func(t *testing.T) {
+		mockedAlertHistoryService := &mocks.AlertHistoryService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				AlertHistoryService: mockedAlertHistoryService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		mockedAlertHistoryService.On("Create", payload).
+			Return(nil, errors.New("alert history parameters missing")).Once()
+
+		res, err := dummyGRPCServer.CreateAlertHistory(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = alert history parameters missing")
+		assert.Nil(t, res)
+		mockedAlertHistoryService.AssertCalled(t, "Create", payload)
+	})
+}
+
 func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
 	t.Run("should return workspace data object", func(t *testing.T) {
 		mockedWorkspaceService := &mocks.WorkspaceService{}
