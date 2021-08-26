@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	pb "github.com/odpf/siren/api/proto/odpf/siren"
@@ -205,13 +206,24 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackN
 	var payload *domain.SlackMessage
 	provider := req.GetProvider()
 
+	b, err := json.Marshal(req.GetBlocks())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
+	}
+
+	blocks := slack.Blocks{}
+	err = json.Unmarshal(b, &blocks)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
+	}
+
 	if provider == "slack" {
 		payload = &domain.SlackMessage{
 			ReceiverName: req.GetReceiverName(),
 			ReceiverType: req.GetReceiverType(),
 			Entity:       req.GetEntity(),
 			Message:      req.GetMessage(),
-			Blocks:       slack.Blocks{},
+			Blocks:       blocks,
 		}
 	} else {
 		return nil, status.Errorf(codes.InvalidArgument, "provider not supported")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/slack-go/slack"
+	"google.golang.org/protobuf/types/known/structpb"
 	"testing"
 	"time"
 
@@ -470,7 +471,17 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 			ReceiverType: "channel",
 			Entity:       "foo",
 			Message:      "bar",
-			Blocks:       slack.Blocks{},
+			Blocks: slack.Blocks{
+				BlockSet: []slack.Block{
+					&slack.SectionBlock{
+						Type: slack.MBTSection,
+						Text: &slack.TextBlockObject{
+							Type: "mrkdwn",
+							Text: "Hello",
+						},
+					},
+				},
+			},
 		}
 		dummyResult := &domain.SlackMessageSendResponse{
 			OK: true,
@@ -491,6 +502,35 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 			ReceiverType: "channel",
 			Entity:       "foo",
 			Message:      "bar",
+			Blocks: []*structpb.Struct{
+				{
+					Fields: map[string]*structpb.Value{
+						"type": &structpb.Value{
+							Kind: &structpb.Value_StringValue{
+								StringValue: "section",
+							},
+						},
+						"text": &structpb.Value{
+							Kind: &structpb.Value_StructValue{
+								StructValue: &structpb.Struct{
+									Fields: map[string]*structpb.Value{
+										"type": &structpb.Value{
+											Kind: &structpb.Value_StringValue{
+												StringValue: "mrkdwn",
+											},
+										},
+										"text": &structpb.Value{
+											Kind: &structpb.Value_StringValue{
+												StringValue: "Hello",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		}
 		mockedSlackNotifierService.On("Notify", dummyPayload).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.SendSlackNotification(context.Background(), dummyReq)
@@ -534,7 +574,6 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 	})
-
 	t.Run("should return error code 3 if provider is missing", func(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		dummyGRPCServer := GRPCServer{
