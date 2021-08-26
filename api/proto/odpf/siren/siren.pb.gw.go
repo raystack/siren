@@ -130,14 +130,14 @@ func request_SirenService_GetWorkspaceChannels_0(ctx context.Context, marshaler 
 		_   = err
 	)
 
-	val, ok = pathParams["workspaceName"]
+	val, ok = pathParams["workspace_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspaceName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace_name")
 	}
 
 	protoReq.WorkspaceName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace_name", err)
 	}
 
 	msg, err := client.GetWorkspaceChannels(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -156,14 +156,14 @@ func local_request_SirenService_GetWorkspaceChannels_0(ctx context.Context, mars
 		_   = err
 	)
 
-	val, ok = pathParams["workspaceName"]
+	val, ok = pathParams["workspace_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspaceName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspace_name")
 	}
 
 	protoReq.WorkspaceName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace_name", err)
 	}
 
 	msg, err := server.GetWorkspaceChannels(ctx, &protoReq)
@@ -216,14 +216,14 @@ func request_SirenService_GetAlertCredentials_0(ctx context.Context, marshaler r
 		_   = err
 	)
 
-	val, ok = pathParams["teamName"]
+	val, ok = pathParams["team_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "teamName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "team_name")
 	}
 
 	protoReq.TeamName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "teamName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "team_name", err)
 	}
 
 	msg, err := client.GetAlertCredentials(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -242,14 +242,14 @@ func local_request_SirenService_GetAlertCredentials_0(ctx context.Context, marsh
 		_   = err
 	)
 
-	val, ok = pathParams["teamName"]
+	val, ok = pathParams["team_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "teamName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "team_name")
 	}
 
 	protoReq.TeamName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "teamName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "team_name", err)
 	}
 
 	msg, err := server.GetAlertCredentials(ctx, &protoReq)
@@ -276,14 +276,14 @@ func request_SirenService_UpdateAlertCredentials_0(ctx context.Context, marshale
 		_   = err
 	)
 
-	val, ok = pathParams["teamName"]
+	val, ok = pathParams["team_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "teamName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "team_name")
 	}
 
 	protoReq.TeamName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "teamName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "team_name", err)
 	}
 
 	msg, err := client.UpdateAlertCredentials(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -310,14 +310,14 @@ func local_request_SirenService_UpdateAlertCredentials_0(ctx context.Context, ma
 		_   = err
 	)
 
-	val, ok = pathParams["teamName"]
+	val, ok = pathParams["team_name"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "teamName")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "team_name")
 	}
 
 	protoReq.TeamName, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "teamName", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "team_name", err)
 	}
 
 	msg, err := server.UpdateAlertCredentials(ctx, &protoReq)
@@ -752,7 +752,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspaceName}/channels"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -798,7 +798,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertCredentials", runtime.WithHTTPPathPattern("/teams/{teamName}/credentials"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertCredentials", runtime.WithHTTPPathPattern("/teams/{team_name}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -821,7 +821,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/UpdateAlertCredentials", runtime.WithHTTPPathPattern("/teams/{teamName}/credentials"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/UpdateAlertCredentials", runtime.WithHTTPPathPattern("/teams/{team_name}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1127,7 +1127,7 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspaceName}/channels"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1167,7 +1167,7 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertCredentials", runtime.WithHTTPPathPattern("/teams/{teamName}/credentials"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertCredentials", runtime.WithHTTPPathPattern("/teams/{team_name}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1187,7 +1187,7 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/UpdateAlertCredentials", runtime.WithHTTPPathPattern("/teams/{teamName}/credentials"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/UpdateAlertCredentials", runtime.WithHTTPPathPattern("/teams/{team_name}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1373,13 +1373,13 @@ var (
 
 	pattern_SirenService_CreateAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
 
-	pattern_SirenService_GetWorkspaceChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"workspaces", "workspaceName", "channels"}, ""))
+	pattern_SirenService_GetWorkspaceChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"workspaces", "workspace_name", "channels"}, ""))
 
 	pattern_SirenService_ExchangeCode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"oauth", "slack", "token"}, ""))
 
-	pattern_SirenService_GetAlertCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"teams", "teamName", "credentials"}, ""))
+	pattern_SirenService_GetAlertCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"teams", "team_name", "credentials"}, ""))
 
-	pattern_SirenService_UpdateAlertCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"teams", "teamName", "credentials"}, ""))
+	pattern_SirenService_UpdateAlertCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"teams", "team_name", "credentials"}, ""))
 
 	pattern_SirenService_SendSlackNotification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"notifications"}, ""))
 
