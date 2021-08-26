@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"github.com/go-openapi/runtime/middleware"
 	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"net/http"
@@ -27,6 +29,9 @@ import (
 	"github.com/odpf/siren/store"
 	"golang.org/x/net/http2/h2c"
 )
+
+//go:embed siren.swagger.json
+var swaggerFile embed.FS
 
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
@@ -106,6 +111,14 @@ func RunServer(c *domain.Config) error {
 	}
 
 	baseMux := http.NewServeMux()
+	baseMux.HandleFunc("/siren.swagger.json", func(w http.ResponseWriter, r *http.Request) {
+		http.FileServer(http.FS(swaggerFile)).ServeHTTP(w, r)
+		return
+	})
+	baseMux.Handle("/documentation", middleware.SwaggerUI(middleware.SwaggerUIOpts{
+		SpecURL: "/siren.swagger.json",
+		Path:    "documentation",
+	}, http.NotFoundHandler()))
 	baseMux.Handle("/", gwmux)
 
 	server := &http.Server{
