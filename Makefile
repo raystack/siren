@@ -31,7 +31,6 @@ swagger-serve: check-swagger
 	swagger serve -F=swagger api/handlers/swagger.yaml
 
 generate-proto: ## regenerate protos
-	@echo " > cloning protobuf from odpf/proton"
-	@echo " > generating protobuf"
-	@buf generate --template buf.gen.yaml https://github.com/odpf/proton.git --path odpf/odin
+	@echo " > generating protobuf from odpf/proton"
+	@buf generate --template buf.gen.yaml https://github.com/odpf/proton.git --path odpf/siren
 	@echo " > protobuf compilation finished"
