@@ -35,7 +35,7 @@ func (s *GRPCServer) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResp
 	return &pb.PingResponse{Message: "Pong"}, nil
 }
 
-func (s *GRPCServer) GetAlertHistory(_ context.Context, req *pb.GetAlertHistoryRequest) (*pb.GetAlertHistoryResponse, error) {
+func (s *GRPCServer) ListAlertHistory(_ context.Context, req *pb.ListAlertHistoryRequest) (*pb.ListAlertHistoryResponse, error) {
 	name := req.GetResource()
 	startTime := req.GetStartTime()
 	endTime := req.GetEndTime()
@@ -47,7 +47,7 @@ func (s *GRPCServer) GetAlertHistory(_ context.Context, req *pb.GetAlertHistoryR
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.GetAlertHistoryResponse{
+	res := &pb.ListAlertHistoryResponse{
 		Alerts: make([]*pb.AlertHistory, 0),
 	}
 	for _, alert := range alerts {
@@ -111,14 +111,14 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 	return result, nil
 }
 
-func (s *GRPCServer) GetWorkspaceChannels(_ context.Context, req *pb.GetWorkspaceChannelsRequest) (*pb.GetWorkspaceChannelsResponse, error) {
+func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *pb.ListWorkspaceChannelsRequest) (*pb.ListWorkspaceChannelsResponse, error) {
 	workspace := req.GetWorkspaceName()
 	workspaces, err := s.container.WorkspaceService.GetChannels(workspace)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.GetWorkspaceChannelsResponse{
+	res := &pb.ListWorkspaceChannelsResponse{
 		Data: make([]*pb.Workspace, 0),
 	}
 	for _, workspace := range workspaces {
@@ -243,7 +243,7 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackN
 	return res, nil
 }
 
-func (s *GRPCServer) GetRules(_ context.Context, req *pb.GetRulesRequest) (*pb.GetRulesResponse, error) {
+func (s *GRPCServer) ListRules(_ context.Context, req *pb.ListRulesRequest) (*pb.ListRulesResponse, error) {
 	namespace := req.GetNamespace()
 	entity := req.GetEntity()
 	groupName := req.GetGroupName()
@@ -256,7 +256,7 @@ func (s *GRPCServer) GetRules(_ context.Context, req *pb.GetRulesRequest) (*pb.G
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	res := &pb.GetRulesResponse{Rules: make([]*pb.Rule, 0)}
+	res := &pb.ListRulesResponse{Rules: make([]*pb.Rule, 0)}
 	for _, rule := range rules {
 		variables := make([]*pb.Variables, 0)
 		for _, variable := range rule.Variables {
@@ -336,14 +336,14 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*
 	return res, nil
 }
 
-func (s *GRPCServer) GetTemplates(_ context.Context, req *pb.GetTemplatesRequest) (*pb.GetTemplatesResponse, error) {
+func (s *GRPCServer) ListTemplates(_ context.Context, req *pb.ListTemplatesRequest) (*pb.ListTemplatesResponse, error) {
 	templates, err := s.container.TemplatesService.Index(req.GetTag())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	res := &pb.GetTemplatesResponse{Templates: make([]*pb.Template, 0)}
+	res := &pb.ListTemplatesResponse{Templates: make([]*pb.Template, 0)}
 	for _, template := range templates {
 		variables := make([]*pb.TemplateVariables, 0)
 		for _, variable := range template.Variables {

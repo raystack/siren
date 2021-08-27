@@ -19,16 +19,16 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SirenServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
-	GetAlertHistory(ctx context.Context, in *GetAlertHistoryRequest, opts ...grpc.CallOption) (*GetAlertHistoryResponse, error)
+	ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
-	GetWorkspaceChannels(ctx context.Context, in *GetWorkspaceChannelsRequest, opts ...grpc.CallOption) (*GetWorkspaceChannelsResponse, error)
+	ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error)
 	ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error)
 	SendSlackNotification(ctx context.Context, in *SendSlackNotificationRequest, opts ...grpc.CallOption) (*SendSlackNotificationResponse, error)
-	GetRules(ctx context.Context, in *GetRulesRequest, opts ...grpc.CallOption) (*GetRulesResponse, error)
+	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*Rule, error)
-	GetTemplates(ctx context.Context, in *GetTemplatesRequest, opts ...grpc.CallOption) (*GetTemplatesResponse, error)
+	ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error)
 	GetTemplateByName(ctx context.Context, in *GetTemplateByNameRequest, opts ...grpc.CallOption) (*Template, error)
 	UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*Template, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error)
@@ -52,9 +52,9 @@ func (c *sirenServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetAlertHistory(ctx context.Context, in *GetAlertHistoryRequest, opts ...grpc.CallOption) (*GetAlertHistoryResponse, error) {
-	out := new(GetAlertHistoryResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetAlertHistory", in, out, opts...)
+func (c *sirenServiceClient) ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error) {
+	out := new(ListAlertHistoryResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/ListAlertHistory", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,9 +70,9 @@ func (c *sirenServiceClient) CreateAlertHistory(ctx context.Context, in *CreateA
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetWorkspaceChannels(ctx context.Context, in *GetWorkspaceChannelsRequest, opts ...grpc.CallOption) (*GetWorkspaceChannelsResponse, error) {
-	out := new(GetWorkspaceChannelsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetWorkspaceChannels", in, out, opts...)
+func (c *sirenServiceClient) ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error) {
+	out := new(ListWorkspaceChannelsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/ListWorkspaceChannels", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,9 +115,9 @@ func (c *sirenServiceClient) SendSlackNotification(ctx context.Context, in *Send
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetRules(ctx context.Context, in *GetRulesRequest, opts ...grpc.CallOption) (*GetRulesResponse, error) {
-	out := new(GetRulesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetRules", in, out, opts...)
+func (c *sirenServiceClient) ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error) {
+	out := new(ListRulesResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/ListRules", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,9 +133,9 @@ func (c *sirenServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleReque
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetTemplates(ctx context.Context, in *GetTemplatesRequest, opts ...grpc.CallOption) (*GetTemplatesResponse, error) {
-	out := new(GetTemplatesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/GetTemplates", in, out, opts...)
+func (c *sirenServiceClient) ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error) {
+	out := new(ListTemplatesResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.SirenService/ListTemplates", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,16 +183,16 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 // for forward compatibility
 type SirenServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
-	GetAlertHistory(context.Context, *GetAlertHistoryRequest) (*GetAlertHistoryResponse, error)
+	ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
-	GetWorkspaceChannels(context.Context, *GetWorkspaceChannelsRequest) (*GetWorkspaceChannelsResponse, error)
+	ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error)
 	ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
 	UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error)
 	SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error)
-	GetRules(context.Context, *GetRulesRequest) (*GetRulesResponse, error)
+	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error)
-	GetTemplates(context.Context, *GetTemplatesRequest) (*GetTemplatesResponse, error)
+	ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error)
 	GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*Template, error)
 	UpsertTemplate(context.Context, *UpsertTemplateRequest) (*Template, error)
 	DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error)
@@ -207,14 +207,14 @@ type UnimplementedSirenServiceServer struct {
 func (UnimplementedSirenServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedSirenServiceServer) GetAlertHistory(context.Context, *GetAlertHistoryRequest) (*GetAlertHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAlertHistory not implemented")
+func (UnimplementedSirenServiceServer) ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAlertHistory not implemented")
 }
 func (UnimplementedSirenServiceServer) CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertHistory not implemented")
 }
-func (UnimplementedSirenServiceServer) GetWorkspaceChannels(context.Context, *GetWorkspaceChannelsRequest) (*GetWorkspaceChannelsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWorkspaceChannels not implemented")
+func (UnimplementedSirenServiceServer) ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListWorkspaceChannels not implemented")
 }
 func (UnimplementedSirenServiceServer) ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExchangeCode not implemented")
@@ -228,14 +228,14 @@ func (UnimplementedSirenServiceServer) UpdateAlertCredentials(context.Context, *
 func (UnimplementedSirenServiceServer) SendSlackNotification(context.Context, *SendSlackNotificationRequest) (*SendSlackNotificationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSlackNotification not implemented")
 }
-func (UnimplementedSirenServiceServer) GetRules(context.Context, *GetRulesRequest) (*GetRulesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRules not implemented")
+func (UnimplementedSirenServiceServer) ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListRules not implemented")
 }
 func (UnimplementedSirenServiceServer) UpdateRule(context.Context, *UpdateRuleRequest) (*Rule, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRule not implemented")
 }
-func (UnimplementedSirenServiceServer) GetTemplates(context.Context, *GetTemplatesRequest) (*GetTemplatesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTemplates not implemented")
+func (UnimplementedSirenServiceServer) ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplates not implemented")
 }
 func (UnimplementedSirenServiceServer) GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*Template, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateByName not implemented")
@@ -280,20 +280,20 @@ func _SirenService_Ping_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAlertHistoryRequest)
+func _SirenService_ListAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAlertHistoryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetAlertHistory(ctx, in)
+		return srv.(SirenServiceServer).ListAlertHistory(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.SirenService/GetAlertHistory",
+		FullMethod: "/odpf.siren.SirenService/ListAlertHistory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetAlertHistory(ctx, req.(*GetAlertHistoryRequest))
+		return srv.(SirenServiceServer).ListAlertHistory(ctx, req.(*ListAlertHistoryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -316,20 +316,20 @@ func _SirenService_CreateAlertHistory_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetWorkspaceChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWorkspaceChannelsRequest)
+func _SirenService_ListWorkspaceChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListWorkspaceChannelsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetWorkspaceChannels(ctx, in)
+		return srv.(SirenServiceServer).ListWorkspaceChannels(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.SirenService/GetWorkspaceChannels",
+		FullMethod: "/odpf.siren.SirenService/ListWorkspaceChannels",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetWorkspaceChannels(ctx, req.(*GetWorkspaceChannelsRequest))
+		return srv.(SirenServiceServer).ListWorkspaceChannels(ctx, req.(*ListWorkspaceChannelsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -406,20 +406,20 @@ func _SirenService_SendSlackNotification_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRulesRequest)
+func _SirenService_ListRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRulesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetRules(ctx, in)
+		return srv.(SirenServiceServer).ListRules(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.SirenService/GetRules",
+		FullMethod: "/odpf.siren.SirenService/ListRules",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetRules(ctx, req.(*GetRulesRequest))
+		return srv.(SirenServiceServer).ListRules(ctx, req.(*ListRulesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -442,20 +442,20 @@ func _SirenService_UpdateRule_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTemplatesRequest)
+func _SirenService_ListTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplatesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetTemplates(ctx, in)
+		return srv.(SirenServiceServer).ListTemplates(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.SirenService/GetTemplates",
+		FullMethod: "/odpf.siren.SirenService/ListTemplates",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetTemplates(ctx, req.(*GetTemplatesRequest))
+		return srv.(SirenServiceServer).ListTemplates(ctx, req.(*ListTemplatesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -544,16 +544,16 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_Ping_Handler,
 		},
 		{
-			MethodName: "GetAlertHistory",
-			Handler:    _SirenService_GetAlertHistory_Handler,
+			MethodName: "ListAlertHistory",
+			Handler:    _SirenService_ListAlertHistory_Handler,
 		},
 		{
 			MethodName: "CreateAlertHistory",
 			Handler:    _SirenService_CreateAlertHistory_Handler,
 		},
 		{
-			MethodName: "GetWorkspaceChannels",
-			Handler:    _SirenService_GetWorkspaceChannels_Handler,
+			MethodName: "ListWorkspaceChannels",
+			Handler:    _SirenService_ListWorkspaceChannels_Handler,
 		},
 		{
 			MethodName: "ExchangeCode",
@@ -572,16 +572,16 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_SendSlackNotification_Handler,
 		},
 		{
-			MethodName: "GetRules",
-			Handler:    _SirenService_GetRules_Handler,
+			MethodName: "ListRules",
+			Handler:    _SirenService_ListRules_Handler,
 		},
 		{
 			MethodName: "UpdateRule",
 			Handler:    _SirenService_UpdateRule_Handler,
 		},
 		{
-			MethodName: "GetTemplates",
-			Handler:    _SirenService_GetTemplates_Handler,
+			MethodName: "ListTemplates",
+			Handler:    _SirenService_ListTemplates_Handler,
 		},
 		{
 			MethodName: "GetTemplateByName",

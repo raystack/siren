@@ -50,37 +50,37 @@ func local_request_SirenService_Ping_0(ctx context.Context, marshaler runtime.Ma
 }
 
 var (
-	filter_SirenService_GetAlertHistory_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SirenService_ListAlertHistory_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_SirenService_GetAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetAlertHistoryRequest
+func request_SirenService_ListAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAlertHistoryRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetAlertHistory_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlertHistory_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetAlertHistory(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListAlertHistory(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_GetAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetAlertHistoryRequest
+func local_request_SirenService_ListAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAlertHistoryRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetAlertHistory_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlertHistory_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetAlertHistory(ctx, &protoReq)
+	msg, err := server.ListAlertHistory(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -119,8 +119,8 @@ func local_request_SirenService_CreateAlertHistory_0(ctx context.Context, marsha
 
 }
 
-func request_SirenService_GetWorkspaceChannels_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetWorkspaceChannelsRequest
+func request_SirenService_ListWorkspaceChannels_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListWorkspaceChannelsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -140,13 +140,13 @@ func request_SirenService_GetWorkspaceChannels_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace_name", err)
 	}
 
-	msg, err := client.GetWorkspaceChannels(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListWorkspaceChannels(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_GetWorkspaceChannels_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetWorkspaceChannelsRequest
+func local_request_SirenService_ListWorkspaceChannels_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListWorkspaceChannelsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -166,7 +166,7 @@ func local_request_SirenService_GetWorkspaceChannels_0(ctx context.Context, mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspace_name", err)
 	}
 
-	msg, err := server.GetWorkspaceChannels(ctx, &protoReq)
+	msg, err := server.ListWorkspaceChannels(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -360,37 +360,37 @@ func local_request_SirenService_SendSlackNotification_0(ctx context.Context, mar
 }
 
 var (
-	filter_SirenService_GetRules_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SirenService_ListRules_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_SirenService_GetRules_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetRulesRequest
+func request_SirenService_ListRules_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListRulesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetRules_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListRules_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetRules(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListRules(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_GetRules_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetRulesRequest
+func local_request_SirenService_ListRules_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListRulesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetRules_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListRules_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetRules(ctx, &protoReq)
+	msg, err := server.ListRules(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -430,37 +430,37 @@ func local_request_SirenService_UpdateRule_0(ctx context.Context, marshaler runt
 }
 
 var (
-	filter_SirenService_GetTemplates_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SirenService_ListTemplates_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_SirenService_GetTemplates_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetTemplatesRequest
+func request_SirenService_ListTemplates_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTemplatesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetTemplates_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListTemplates_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.GetTemplates(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListTemplates(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_GetTemplates_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetTemplatesRequest
+func local_request_SirenService_ListTemplates_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListTemplatesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_GetTemplates_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListTemplates_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.GetTemplates(ctx, &protoReq)
+	msg, err := server.ListTemplates(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -700,18 +700,18 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/ListAlertHistory", runtime.WithHTTPPathPattern("/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_GetAlertHistory_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_ListAlertHistory_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -719,7 +719,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_GetAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -746,18 +746,18 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetWorkspaceChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListWorkspaceChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/ListWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_GetWorkspaceChannels_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_ListWorkspaceChannels_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -765,7 +765,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_GetWorkspaceChannels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListWorkspaceChannels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -861,18 +861,18 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetRules", runtime.WithHTTPPathPattern("/rules"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/ListRules", runtime.WithHTTPPathPattern("/rules"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_GetRules_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_ListRules_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -880,7 +880,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_GetRules_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListRules_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -907,18 +907,18 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetTemplates_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListTemplates_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/GetTemplates", runtime.WithHTTPPathPattern("/templates"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.SirenService/ListTemplates", runtime.WithHTTPPathPattern("/templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_GetTemplates_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_ListTemplates_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -926,7 +926,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_GetTemplates_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListTemplates_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1083,23 +1083,23 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/ListAlertHistory", runtime.WithHTTPPathPattern("/history"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_GetAlertHistory_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_ListAlertHistory_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_GetAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1123,23 +1123,23 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetWorkspaceChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListWorkspaceChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/ListWorkspaceChannels", runtime.WithHTTPPathPattern("/workspaces/{workspace_name}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_GetWorkspaceChannels_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_ListWorkspaceChannels_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_GetWorkspaceChannels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListWorkspaceChannels_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1223,23 +1223,23 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListRules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetRules", runtime.WithHTTPPathPattern("/rules"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/ListRules", runtime.WithHTTPPathPattern("/rules"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_GetRules_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_ListRules_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_GetRules_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListRules_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1263,23 +1263,23 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetTemplates_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListTemplates_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/GetTemplates", runtime.WithHTTPPathPattern("/templates"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.SirenService/ListTemplates", runtime.WithHTTPPathPattern("/templates"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_GetTemplates_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_ListTemplates_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_GetTemplates_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListTemplates_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1369,11 +1369,11 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 var (
 	pattern_SirenService_Ping_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ping"}, ""))
 
-	pattern_SirenService_GetAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
+	pattern_SirenService_ListAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
 
 	pattern_SirenService_CreateAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
 
-	pattern_SirenService_GetWorkspaceChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"workspaces", "workspace_name", "channels"}, ""))
+	pattern_SirenService_ListWorkspaceChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"workspaces", "workspace_name", "channels"}, ""))
 
 	pattern_SirenService_ExchangeCode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"oauth", "slack", "token"}, ""))
 
@@ -1383,11 +1383,11 @@ var (
 
 	pattern_SirenService_SendSlackNotification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"notifications"}, ""))
 
-	pattern_SirenService_GetRules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"rules"}, ""))
+	pattern_SirenService_ListRules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"rules"}, ""))
 
 	pattern_SirenService_UpdateRule_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"rules"}, ""))
 
-	pattern_SirenService_GetTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"templates"}, ""))
+	pattern_SirenService_ListTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"templates"}, ""))
 
 	pattern_SirenService_GetTemplateByName_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"templates", "name"}, ""))
 
@@ -1401,11 +1401,11 @@ var (
 var (
 	forward_SirenService_Ping_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_GetAlertHistory_0 = runtime.ForwardResponseMessage
+	forward_SirenService_ListAlertHistory_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_CreateAlertHistory_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_GetWorkspaceChannels_0 = runtime.ForwardResponseMessage
+	forward_SirenService_ListWorkspaceChannels_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_ExchangeCode_0 = runtime.ForwardResponseMessage
 
@@ -1415,11 +1415,11 @@ var (
 
 	forward_SirenService_SendSlackNotification_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_GetRules_0 = runtime.ForwardResponseMessage
+	forward_SirenService_ListRules_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_UpdateRule_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_GetTemplates_0 = runtime.ForwardResponseMessage
+	forward_SirenService_ListTemplates_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_GetTemplateByName_0 = runtime.ForwardResponseMessage
 

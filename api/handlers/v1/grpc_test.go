@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestGRPCServer_GetAlertHistory(t *testing.T) {
+func TestGRPCServer_ListAlertHistory(t *testing.T) {
 	t.Run("should return alert history objects", func(t *testing.T) {
 		mockedAlertHistoryService := &mocks.AlertHistoryService{}
 		dummyAlerts := []domain.AlertHistoryObject{{
@@ -28,12 +28,12 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 			AlertHistoryService: mockedAlertHistoryService,
 		}}
 
-		dummyReq := &pb.GetAlertHistoryRequest{
+		dummyReq := &pb.ListAlertHistoryRequest{
 			Resource:  "foo",
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListAlertHistory(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
 		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
 		assert.Equal(t, "foo", res.GetAlerts()[0].GetName())
@@ -51,11 +51,11 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 			AlertHistoryService: mockedAlertHistoryService,
 		}}
 
-		dummyReq := &pb.GetAlertHistoryRequest{
+		dummyReq := &pb.ListAlertHistoryRequest{
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListAlertHistory(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = resource name cannot be empty")
 		assert.Nil(t, res)
 	})
@@ -72,12 +72,12 @@ func TestGRPCServer_GetAlertHistory(t *testing.T) {
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).
 			Return(nil, errors.New("random error")).Once()
 
-		dummyReq := &pb.GetAlertHistoryRequest{
+		dummyReq := &pb.ListAlertHistoryRequest{
 			Resource:  "foo",
 			StartTime: 100,
 			EndTime:   200,
 		}
-		res, err := dummyGRPCServer.GetAlertHistory(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListAlertHistory(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedAlertHistoryService.AssertCalled(t, "Get", "foo", uint32(100), uint32(200))
@@ -187,7 +187,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	})
 }
 
-func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
+func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 	t.Run("should return workspace data object", func(t *testing.T) {
 		mockedWorkspaceService := &mocks.WorkspaceService{}
 		dummyResult := []domain.Channel{
@@ -198,11 +198,11 @@ func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
 			WorkspaceService: mockedWorkspaceService,
 		}}
 
-		dummyReq := &pb.GetWorkspaceChannelsRequest{
+		dummyReq := &pb.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetWorkspaceChannels(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListWorkspaceChannels(context.Background(), dummyReq)
 		assert.Equal(t, 2, len(res.GetData()))
 		assert.Equal(t, "1", res.GetData()[0].GetId())
 		assert.Equal(t, "foo", res.GetData()[0].GetName())
@@ -220,12 +220,12 @@ func TestGRPCServer_GetWorkspaceChannels(t *testing.T) {
 			}, logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.GetWorkspaceChannelsRequest{
+		dummyReq := &pb.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.GetWorkspaceChannels(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListWorkspaceChannels(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedWorkspaceService.AssertCalled(t, "GetChannels", "random")
@@ -609,8 +609,8 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 	})
 }
 
-func TestGRPCServer_GetRules(t *testing.T) {
-	dummyPayload := &pb.GetRulesRequest{
+func TestGRPCServer_ListRules(t *testing.T) {
+	dummyPayload := &pb.ListRulesRequest{
 		Namespace: "test",
 		Entity:    "odpf",
 		GroupName: "foo",
@@ -651,7 +651,7 @@ func TestGRPCServer_GetRules(t *testing.T) {
 		mockedRuleService.
 			On("Get", dummyPayload.Namespace, dummyPayload.Entity, dummyPayload.GroupName, dummyPayload.Status, dummyPayload.Template).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetRules(context.Background(), dummyPayload)
+		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetRules()))
 		assert.Equal(t, uint64(1), res.GetRules()[0].GetId())
@@ -675,7 +675,7 @@ func TestGRPCServer_GetRules(t *testing.T) {
 		mockedRuleService.
 			On("Get", dummyPayload.Namespace, dummyPayload.Entity, dummyPayload.GroupName, dummyPayload.Status, dummyPayload.Template).
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.GetRules(context.Background(), dummyPayload)
+		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
@@ -761,7 +761,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	})
 }
 
-func TestGRPCServer_GetTemplates(t *testing.T) {
+func TestGRPCServer_ListTemplates(t *testing.T) {
 	t.Run("should return list of all templates", func(t *testing.T) {
 		mockedTemplatesService := &mocks.TemplatesService{}
 		dummyGRPCServer := GRPCServer{
@@ -770,7 +770,7 @@ func TestGRPCServer_GetTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.GetTemplatesRequest{}
+		dummyReq := &pb.ListTemplatesRequest{}
 		dummyResult := []domain.Template{
 			{
 				ID:   1,
@@ -791,7 +791,7 @@ func TestGRPCServer_GetTemplates(t *testing.T) {
 		mockedTemplatesService.
 			On("Index", "").
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetTemplates(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListTemplates(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetTemplates()))
 		assert.Equal(t, "foo", res.GetTemplates()[0].GetName())
@@ -808,7 +808,7 @@ func TestGRPCServer_GetTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.GetTemplatesRequest{
+		dummyReq := &pb.ListTemplatesRequest{
 			Tag: "foo",
 		}
 
@@ -832,7 +832,7 @@ func TestGRPCServer_GetTemplates(t *testing.T) {
 		mockedTemplatesService.
 			On("Index", "foo").
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetTemplates(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListTemplates(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetTemplates()))
 		assert.Equal(t, "foo", res.GetTemplates()[0].GetName())
@@ -849,13 +849,13 @@ func TestGRPCServer_GetTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.GetTemplatesRequest{
+		dummyReq := &pb.ListTemplatesRequest{
 			Tag: "foo",
 		}
 		mockedTemplatesService.
 			On("Index", "foo").
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.GetTemplates(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.ListTemplates(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
