@@ -20,9 +20,10 @@ vendor/
 
 # Project specific ignore
 .env
-siren
 config.yaml
 .air.toml
 bin/air
 tmp
 dist/
+siren
+
