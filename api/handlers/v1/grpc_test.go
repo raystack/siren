@@ -102,7 +102,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		},
 	}
 	dummyReq := &pb.CreateAlertHistoryRequest{
-		Alerts: []*pb.Alerts{
+		Alerts: []*pb.Alert{
 			{
 				Status: "foo",
 				Labels: &pb.Labels{
