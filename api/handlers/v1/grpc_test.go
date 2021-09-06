@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/odpf/siren/api/proto/odpf/siren"
+	pb "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -734,12 +734,12 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
 		assert.Nil(t, err)
 
-		assert.Equal(t, uint64(1), res.GetId())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "odpf", res.GetEntity())
-		assert.Equal(t, "test", res.GetNamespace())
-		assert.Equal(t, "disabled", res.GetStatus())
-		assert.Equal(t, 1, len(res.GetVariables()))
+		assert.Equal(t, uint64(1), res.GetRule().GetId())
+		assert.Equal(t, "foo", res.GetRule().GetName())
+		assert.Equal(t, "odpf", res.GetRule().GetEntity())
+		assert.Equal(t, "test", res.GetRule().GetNamespace())
+		assert.Equal(t, "disabled", res.GetRule().GetStatus())
+		assert.Equal(t, 1, len(res.GetRule().GetVariables()))
 		mockedRuleService.AssertCalled(t, "Upsert", &dummyPayload)
 	})
 
@@ -893,10 +893,10 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetTemplateByName(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, uint64(1), res.GetId())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetBody())
-		assert.Equal(t, "foo", res.GetVariables()[0].GetName())
+		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
+		assert.Equal(t, "foo", res.GetTemplate().GetName())
+		assert.Equal(t, "bar", res.GetTemplate().GetBody())
+		assert.Equal(t, "foo", res.GetTemplate().GetVariables()[0].GetName())
 		mockedTemplatesService.AssertCalled(t, "GetByName", dummyReq.Name)
 	})
 
@@ -964,10 +964,10 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			Return(template, nil).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, uint64(1), res.GetId())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetBody())
-		assert.Equal(t, "foo", res.GetVariables()[0].GetName())
+		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
+		assert.Equal(t, "foo", res.GetTemplate().GetName())
+		assert.Equal(t, "bar", res.GetTemplate().GetBody())
+		assert.Equal(t, "foo", res.GetTemplate().GetVariables()[0].GetName())
 		mockedTemplatesService.AssertCalled(t, "Upsert", template)
 	})
 

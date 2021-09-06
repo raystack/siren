@@ -26,4 +26,5 @@ bin/air
 tmp
 dist/
 siren
+!siren/
 

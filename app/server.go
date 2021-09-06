@@ -16,9 +16,10 @@ import (
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	v1 "github.com/odpf/siren/api/handlers/v1"
-	pb "github.com/odpf/siren/api/proto/odpf/siren"
+	pb "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/logger"
 	"github.com/odpf/siren/metric"
 	"golang.org/x/net/http2"
@@ -73,12 +74,14 @@ func RunServer(c *domain.Config) error {
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
 			nrgrpc.UnaryServerInterceptor(nr),
+			grpc_validator.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(logger, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
 			nrgrpc.StreamServerInterceptor(nr),
+			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(logger),
 		)),
 	}

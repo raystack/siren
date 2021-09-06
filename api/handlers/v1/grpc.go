@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	pb "github.com/odpf/siren/api/proto/odpf/siren"
+	pb "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/slack-go/slack"
@@ -284,7 +284,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *pb.ListRulesRequest) (*pb
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*pb.Rule, error) {
+func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*pb.UpdateRuleResponse, error) {
 	variables := make([]domain.RuleVariable, 0)
 	for _, variable := range req.Variables {
 		variables = append(variables, domain.RuleVariable{
@@ -321,17 +321,19 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Rule{
-		Id:        uint64(rule.ID),
-		Name:      rule.Name,
-		Entity:    rule.Entity,
-		Namespace: rule.Namespace,
-		GroupName: rule.GroupName,
-		Template:  rule.Template,
-		Status:    rule.Status,
-		CreatedAt: timestamppb.New(rule.CreatedAt),
-		UpdatedAt: timestamppb.New(rule.UpdatedAt),
-		Variables: responseVariables,
+	res := &pb.UpdateRuleResponse{
+		Rule: &pb.Rule{
+			Id:        uint64(rule.ID),
+			Name:      rule.Name,
+			Entity:    rule.Entity,
+			Namespace: rule.Namespace,
+			GroupName: rule.GroupName,
+			Template:  rule.Template,
+			Status:    rule.Status,
+			CreatedAt: timestamppb.New(rule.CreatedAt),
+			UpdatedAt: timestamppb.New(rule.UpdatedAt),
+			Variables: responseVariables,
+		},
 	}
 	return res, nil
 }
@@ -368,7 +370,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *pb.ListTemplatesReque
 	return res, nil
 }
 
-func (s *GRPCServer) GetTemplateByName(_ context.Context, req *pb.GetTemplateByNameRequest) (*pb.Template, error) {
+func (s *GRPCServer) GetTemplateByName(_ context.Context, req *pb.GetTemplateByNameRequest) (*pb.TemplateResponse, error) {
 	template, err := s.container.TemplatesService.GetByName(req.GetName())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
@@ -384,19 +386,21 @@ func (s *GRPCServer) GetTemplateByName(_ context.Context, req *pb.GetTemplateByN
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Template{
-		Id:        uint64(template.ID),
-		Name:      template.Name,
-		Body:      template.Body,
-		Tags:      template.Tags,
-		CreatedAt: timestamppb.New(template.CreatedAt),
-		UpdatedAt: timestamppb.New(template.UpdatedAt),
-		Variables: variables,
+	res := &pb.TemplateResponse{
+		Template: &pb.Template{
+			Id:        uint64(template.ID),
+			Name:      template.Name,
+			Body:      template.Body,
+			Tags:      template.Tags,
+			CreatedAt: timestamppb.New(template.CreatedAt),
+			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Variables: variables,
+		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateRequest) (*pb.Template, error) {
+func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateRequest) (*pb.TemplateResponse, error) {
 	variables := make([]domain.Variable, 0)
 	for _, variable := range req.GetVariables() {
 		variables = append(variables, domain.Variable{
@@ -428,14 +432,16 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateReq
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Template{
-		Id:        uint64(template.ID),
-		Name:      template.Name,
-		Body:      template.Body,
-		Tags:      template.Tags,
-		CreatedAt: timestamppb.New(template.CreatedAt),
-		UpdatedAt: timestamppb.New(template.UpdatedAt),
-		Variables: templateVariables,
+	res := &pb.TemplateResponse{
+		Template: &pb.Template{
+			Id:        uint64(template.ID),
+			Name:      template.Name,
+			Body:      template.Body,
+			Tags:      template.Tags,
+			CreatedAt: timestamppb.New(template.CreatedAt),
+			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Variables: templateVariables,
+		},
 	}
 	return res, nil
 }
