@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -28,7 +28,7 @@ func TestGRPCServer_ListAlertHistory(t *testing.T) {
 			AlertHistoryService: mockedAlertHistoryService,
 		}}
 
-		dummyReq := &pb.ListAlertHistoryRequest{
+		dummyReq := &sirenv1.ListAlertHistoryRequest{
 			Resource:  "foo",
 			StartTime: 100,
 			EndTime:   200,
@@ -51,7 +51,7 @@ func TestGRPCServer_ListAlertHistory(t *testing.T) {
 			AlertHistoryService: mockedAlertHistoryService,
 		}}
 
-		dummyReq := &pb.ListAlertHistoryRequest{
+		dummyReq := &sirenv1.ListAlertHistoryRequest{
 			StartTime: 100,
 			EndTime:   200,
 		}
@@ -72,7 +72,7 @@ func TestGRPCServer_ListAlertHistory(t *testing.T) {
 		mockedAlertHistoryService.On("Get", "foo", uint32(100), uint32(200)).
 			Return(nil, errors.New("random error")).Once()
 
-		dummyReq := &pb.ListAlertHistoryRequest{
+		dummyReq := &sirenv1.ListAlertHistoryRequest{
 			Resource:  "foo",
 			StartTime: 100,
 			EndTime:   200,
@@ -101,14 +101,14 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		},
 	}
-	dummyReq := &pb.CreateAlertHistoryRequest{
-		Alerts: []*pb.Alert{
+	dummyReq := &sirenv1.CreateAlertHistoryRequest{
+		Alerts: []*sirenv1.Alert{
 			{
 				Status: "foo",
-				Labels: &pb.Labels{
+				Labels: &sirenv1.Labels{
 					Severity: "CRITICAL",
 				},
-				Annotations: &pb.Annotations{
+				Annotations: &sirenv1.Annotations{
 					Resource:    "foo",
 					Template:    "random",
 					MetricName:  "bar",
@@ -198,7 +198,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 			WorkspaceService: mockedWorkspaceService,
 		}}
 
-		dummyReq := &pb.ListWorkspaceChannelsRequest{
+		dummyReq := &sirenv1.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").Return(dummyResult, nil).Once()
@@ -220,7 +220,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 			}, logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.ListWorkspaceChannelsRequest{
+		dummyReq := &sirenv1.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").
@@ -245,7 +245,7 @@ func TestGRPCServer_ExchangeCode(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.ExchangeCodeRequest{
+		dummyReq := &sirenv1.ExchangeCodeRequest{
 			Code:      "foo",
 			Workspace: "bar",
 		}
@@ -266,7 +266,7 @@ func TestGRPCServer_ExchangeCode(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.ExchangeCodeRequest{
+		dummyReq := &sirenv1.ExchangeCodeRequest{
 			Code:      "foo",
 			Workspace: "bar",
 		}
@@ -303,7 +303,7 @@ func TestGRPCServer_GetAlertCredentials(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.GetAlertCredentialsRequest{
+		dummyReq := &sirenv1.GetAlertCredentialsRequest{
 			TeamName: "foo",
 		}
 		mockedAlertmanagerService.On("Get", "foo").Return(dummyResult, nil).Once()
@@ -326,7 +326,7 @@ func TestGRPCServer_GetAlertCredentials(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.GetAlertCredentialsRequest{
+		dummyReq := &sirenv1.GetAlertCredentialsRequest{
 			TeamName: "foo",
 		}
 		mockedAlertmanagerService.On("Get", "foo").
@@ -360,22 +360,22 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 				},
 			},
 		}
-		dummyReq := &pb.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
 			Entity:               "foo",
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &pb.SlackConfig{
-				Critical: &pb.Critical{
+			SlackConfig: &sirenv1.SlackConfig{
+				Critical: &sirenv1.Critical{
 					Channel: "foo",
 				},
-				Warning: &pb.Warning{
+				Warning: &sirenv1.Warning{
 					Channel: "bar",
 				},
 			},
 		}
 		mockedAlertmanagerService.On("Upsert", dummyPayload).Return(nil).Once()
 		result, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
-		assert.Equal(t, result, &pb.UpdateAlertCredentialsResponse{})
+		assert.Equal(t, result, &sirenv1.UpdateAlertCredentialsResponse{})
 		assert.Nil(t, err)
 		mockedAlertmanagerService.AssertCalled(t, "Upsert", dummyPayload)
 	})
@@ -401,15 +401,15 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 				},
 			},
 		}
-		dummyReq := &pb.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
 			Entity:               "foo",
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &pb.SlackConfig{
-				Critical: &pb.Critical{
+			SlackConfig: &sirenv1.SlackConfig{
+				Critical: &sirenv1.Critical{
 					Channel: "foo",
 				},
-				Warning: &pb.Warning{
+				Warning: &sirenv1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -429,14 +429,14 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &pb.SlackConfig{
-				Critical: &pb.Critical{
+			SlackConfig: &sirenv1.SlackConfig{
+				Critical: &sirenv1.Critical{
 					Channel: "foo",
 				},
-				Warning: &pb.Warning{
+				Warning: &sirenv1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -454,14 +454,14 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
 			Entity:   "foo",
 			TeamName: "bar",
-			SlackConfig: &pb.SlackConfig{
-				Critical: &pb.Critical{
+			SlackConfig: &sirenv1.SlackConfig{
+				Critical: &sirenv1.Critical{
 					Channel: "foo",
 				},
-				Warning: &pb.Warning{
+				Warning: &sirenv1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -505,7 +505,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.SendSlackNotificationRequest{
+		dummyReq := &sirenv1.SendSlackNotificationRequest{
 			Provider:     "slack",
 			ReceiverName: "foo",
 			ReceiverType: "channel",
@@ -570,7 +570,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.SendSlackNotificationRequest{
+		dummyReq := &sirenv1.SendSlackNotificationRequest{
 			Provider:     "slack",
 			ReceiverName: "foo",
 			ReceiverType: "channel",
@@ -596,7 +596,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &pb.SendSlackNotificationRequest{
+		dummyReq := &sirenv1.SendSlackNotificationRequest{
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Entity:       "foo",
@@ -610,7 +610,7 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 }
 
 func TestGRPCServer_ListRules(t *testing.T) {
-	dummyPayload := &pb.ListRulesRequest{
+	dummyPayload := &sirenv1.ListRulesRequest{
 		Namespace: "test",
 		Entity:    "odpf",
 		GroupName: "foo",
@@ -699,7 +699,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			},
 		},
 	}
-	dummyReq := &pb.UpdateRuleRequest{
+	dummyReq := &sirenv1.UpdateRuleRequest{
 		Id:        1,
 		Name:      "foo",
 		Namespace: "test",
@@ -707,7 +707,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		GroupName: "foo",
 		Template:  "foo",
 		Status:    "enabled",
-		Variables: []*pb.Variables{
+		Variables: []*sirenv1.Variables{
 			{
 				Name:        "foo",
 				Type:        "int",
@@ -770,7 +770,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.ListTemplatesRequest{}
+		dummyReq := &sirenv1.ListTemplatesRequest{}
 		dummyResult := []domain.Template{
 			{
 				ID:   1,
@@ -808,7 +808,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.ListTemplatesRequest{
+		dummyReq := &sirenv1.ListTemplatesRequest{
 			Tag: "foo",
 		}
 
@@ -849,7 +849,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.ListTemplatesRequest{
+		dummyReq := &sirenv1.ListTemplatesRequest{
 			Tag: "foo",
 		}
 		mockedTemplatesService.
@@ -870,7 +870,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.GetTemplateByNameRequest{
+		dummyReq := &sirenv1.GetTemplateByNameRequest{
 			Name: "foo",
 		}
 		dummyResult := &domain.Template{
@@ -908,7 +908,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.GetTemplateByNameRequest{
+		dummyReq := &sirenv1.GetTemplateByNameRequest{
 			Name: "foo",
 		}
 		mockedTemplatesService.
@@ -921,12 +921,12 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 }
 
 func TestGRPCServer_UpsertTemplate(t *testing.T) {
-	dummyReq := &pb.UpsertTemplateRequest{
+	dummyReq := &sirenv1.UpsertTemplateRequest{
 		Id:   1,
 		Name: "foo",
 		Body: "bar",
 		Tags: []string{"foo", "bar"},
-		Variables: []*pb.TemplateVariables{
+		Variables: []*sirenv1.TemplateVariables{
 			{
 				Name:        "foo",
 				Type:        "bar",
@@ -997,7 +997,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.DeleteTemplateRequest{
+		dummyReq := &sirenv1.DeleteTemplateRequest{
 			Name: "foo",
 		}
 
@@ -1006,7 +1006,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, &pb.DeleteTemplateResponse{}, res)
+		assert.Equal(t, &sirenv1.DeleteTemplateResponse{}, res)
 		mockedTemplatesService.AssertCalled(t, "Delete", "foo")
 	})
 
@@ -1018,7 +1018,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &pb.DeleteTemplateRequest{
+		dummyReq := &sirenv1.DeleteTemplateRequest{
 			Name: "foo",
 		}
 		mockedTemplatesService.
@@ -1031,7 +1031,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 }
 
 func TestGRPCServer_RenderTemplate(t *testing.T) {
-	dummyReq := &pb.RenderTemplateRequest{
+	dummyReq := &sirenv1.RenderTemplateRequest{
 		Name: "foo",
 		Variables: map[string]string{
 			"foo": "bar",

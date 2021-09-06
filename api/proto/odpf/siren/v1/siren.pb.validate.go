@@ -1597,7 +1597,7 @@ func (m *ExchangeCodeRequest) validate(all bool) error {
 	if !_ExchangeCodeRequest_Code_Pattern.MatchString(m.GetCode()) {
 		err := ExchangeCodeRequestValidationError{
 			field:  "Code",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9._-]+$\"",
 		}
 		if !all {
 			return err
@@ -1695,7 +1695,7 @@ var _ interface {
 	ErrorName() string
 } = ExchangeCodeRequestValidationError{}
 
-var _ExchangeCodeRequest_Code_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
+var _ExchangeCodeRequest_Code_Pattern = regexp.MustCompile("^[A-Za-z0-9._-]+$")
 
 var _ExchangeCodeRequest_Workspace_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
@@ -2775,7 +2775,7 @@ func (m *SendSlackNotificationRequest) validate(all bool) error {
 	if _, ok := _SendSlackNotificationRequest_ReceiverType_InLookup[m.GetReceiverType()]; !ok {
 		err := SendSlackNotificationRequestValidationError{
 			field:  "ReceiverType",
-			reason: "value must be in list [user channel]",
+			reason: "value must be in list [channel user]",
 		}
 		if !all {
 			return err
@@ -2902,8 +2902,8 @@ var _SendSlackNotificationRequest_Entity_Pattern = regexp.MustCompile("^[A-Za-z0
 var _SendSlackNotificationRequest_ReceiverName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _SendSlackNotificationRequest_ReceiverType_InLookup = map[string]struct{}{
-	"user":    {},
 	"channel": {},
+	"user":    {},
 }
 
 // Validate checks the field values on SendSlackNotificationResponse with the
@@ -3785,21 +3785,10 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateRuleRequest_Status_Pattern.MatchString(m.GetStatus()) {
+	if _, ok := _UpdateRuleRequest_Status_InLookup[m.GetStatus()]; !ok {
 		err := UpdateRuleRequestValidationError{
 			field:  "Status",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if len(m.GetVariables()) < 1 {
-		err := UpdateRuleRequestValidationError{
-			field:  "Variables",
-			reason: "value must contain at least 1 item(s)",
+			reason: "value must be in list [enabled disabled]",
 		}
 		if !all {
 			return err
@@ -3928,7 +3917,10 @@ var _UpdateRuleRequest_GroupName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$"
 
 var _UpdateRuleRequest_Template_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
-var _UpdateRuleRequest_Status_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
+var _UpdateRuleRequest_Status_InLookup = map[string]struct{}{
+	"enabled":  {},
+	"disabled": {},
+}
 
 // Validate checks the field values on ListTemplatesRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4567,10 +4559,12 @@ func (m *UpsertTemplateRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpsertTemplateRequest_Body_Pattern.MatchString(m.GetBody()) {
+	// no validation rules for Body
+
+	if len(m.GetTags()) < 1 {
 		err := UpsertTemplateRequestValidationError{
-			field:  "Body",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
+			field:  "Tags",
+			reason: "value must contain at least 1 item(s)",
 		}
 		if !all {
 			return err
@@ -4703,8 +4697,6 @@ var _ interface {
 } = UpsertTemplateRequestValidationError{}
 
 var _UpsertTemplateRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _UpsertTemplateRequest_Body_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on ListTemplatesResponse with the rules
 // defined in the proto definition for this message. If any rules are
