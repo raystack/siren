@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	pb "github.com/odpf/siren/api/proto/odpf/siren"
+	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/slack-go/slack"
@@ -20,7 +20,7 @@ type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
 	logger    *zap.Logger
-	pb.UnimplementedSirenServiceServer
+	sirenv1.UnimplementedSirenServiceServer
 }
 
 func NewGRPCServer(container *service.Container, nr *newrelic.Application, logger *zap.Logger) *GRPCServer {
@@ -31,11 +31,11 @@ func NewGRPCServer(container *service.Container, nr *newrelic.Application, logge
 	}
 }
 
-func (s *GRPCServer) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse, error) {
-	return &pb.PingResponse{Message: "Pong"}, nil
+func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv1.PingResponse, error) {
+	return &sirenv1.PingResponse{Message: "Pong"}, nil
 }
 
-func (s *GRPCServer) ListAlertHistory(_ context.Context, req *pb.ListAlertHistoryRequest) (*pb.ListAlertHistoryResponse, error) {
+func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
 	name := req.GetResource()
 	startTime := req.GetStartTime()
 	endTime := req.GetEndTime()
@@ -47,11 +47,11 @@ func (s *GRPCServer) ListAlertHistory(_ context.Context, req *pb.ListAlertHistor
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.ListAlertHistoryResponse{
-		Alerts: make([]*pb.AlertHistory, 0),
+	res := &sirenv1.ListAlertHistoryResponse{
+		Alerts: make([]*sirenv1.AlertHistory, 0),
 	}
 	for _, alert := range alerts {
-		item := &pb.AlertHistory{
+		item := &sirenv1.AlertHistory{
 			Name:        alert.Name,
 			Id:          alert.ID,
 			MetricName:  alert.MetricName,
@@ -66,7 +66,7 @@ func (s *GRPCServer) ListAlertHistory(_ context.Context, req *pb.ListAlertHistor
 	return res, nil
 }
 
-func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHistoryRequest) (*pb.CreateAlertHistoryResponse, error) {
+func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *sirenv1.CreateAlertHistoryRequest) (*sirenv1.CreateAlertHistoryResponse, error) {
 	alerts := domain.Alerts{Alerts: make([]domain.Alert, 0)}
 	for _, item := range req.GetAlerts() {
 		labels := domain.Labels{
@@ -86,9 +86,9 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 		alerts.Alerts = append(alerts.Alerts, alert)
 	}
 	createdAlerts, err := s.container.AlertHistoryService.Create(&alerts)
-	result := &pb.CreateAlertHistoryResponse{Alerts: make([]*pb.AlertHistory, 0)}
+	result := &sirenv1.CreateAlertHistoryResponse{Alerts: make([]*sirenv1.AlertHistory, 0)}
 	for _, item := range createdAlerts {
-		alertHistoryItem := &pb.AlertHistory{
+		alertHistoryItem := &sirenv1.AlertHistory{
 			Name:        item.Name,
 			Id:          item.ID,
 			MetricName:  item.MetricName,
@@ -111,18 +111,18 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *pb.CreateAlertHi
 	return result, nil
 }
 
-func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *pb.ListWorkspaceChannelsRequest) (*pb.ListWorkspaceChannelsResponse, error) {
+func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListWorkspaceChannelsRequest) (*sirenv1.ListWorkspaceChannelsResponse, error) {
 	workspace := req.GetWorkspaceName()
 	workspaces, err := s.container.WorkspaceService.GetChannels(workspace)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.ListWorkspaceChannelsResponse{
-		Data: make([]*pb.Workspace, 0),
+	res := &sirenv1.ListWorkspaceChannelsResponse{
+		Data: make([]*sirenv1.Workspace, 0),
 	}
 	for _, workspace := range workspaces {
-		item := &pb.Workspace{
+		item := &sirenv1.Workspace{
 			Id:   workspace.ID,
 			Name: workspace.Name,
 		}
@@ -131,7 +131,7 @@ func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *pb.ListWorksp
 	return res, nil
 }
 
-func (s *GRPCServer) ExchangeCode(_ context.Context, req *pb.ExchangeCodeRequest) (*pb.ExchangeCodeResponse, error) {
+func (s *GRPCServer) ExchangeCode(_ context.Context, req *sirenv1.ExchangeCodeRequest) (*sirenv1.ExchangeCodeResponse, error) {
 	code := req.GetCode()
 	workspace := req.GetWorkspace()
 	result, err := s.container.CodeExchangeService.Exchange(domain.OAuthPayload{
@@ -142,32 +142,32 @@ func (s *GRPCServer) ExchangeCode(_ context.Context, req *pb.ExchangeCodeRequest
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.ExchangeCodeResponse{
+	res := &sirenv1.ExchangeCodeResponse{
 		Ok: result.OK,
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *pb.GetAlertCredentialsRequest) (*pb.GetAlertCredentialsResponse, error) {
+func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *sirenv1.GetAlertCredentialsRequest) (*sirenv1.GetAlertCredentialsResponse, error) {
 	teamName := req.GetTeamName()
 	alertCredential, err := s.container.AlertmanagerService.Get(teamName)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.GetAlertCredentialsResponse{
+	res := &sirenv1.GetAlertCredentialsResponse{
 		Entity:               alertCredential.Entity,
 		TeamName:             alertCredential.TeamName,
 		PagerdutyCredentials: alertCredential.PagerdutyCredentials,
-		SlackConfig: &pb.SlackConfig{
-			Critical: &pb.Critical{Channel: alertCredential.SlackConfig.Critical.Channel},
-			Warning:  &pb.Warning{Channel: alertCredential.SlackConfig.Warning.Channel},
+		SlackConfig: &sirenv1.SlackConfig{
+			Critical: &sirenv1.Critical{Channel: alertCredential.SlackConfig.Critical.Channel},
+			Warning:  &sirenv1.Warning{Channel: alertCredential.SlackConfig.Warning.Channel},
 		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *pb.UpdateAlertCredentialsRequest) (*pb.UpdateAlertCredentialsResponse, error) {
+func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1.UpdateAlertCredentialsRequest) (*sirenv1.UpdateAlertCredentialsResponse, error) {
 	entity := req.GetEntity()
 	teamName := req.GetTeamName()
 	pagerdutyCredential := req.GetPagerdutyCredentials()
@@ -200,10 +200,10 @@ func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *pb.UpdateAle
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	return &pb.UpdateAlertCredentialsResponse{}, nil
+	return &sirenv1.UpdateAlertCredentialsResponse{}, nil
 }
 
-func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackNotificationRequest) (*pb.SendSlackNotificationResponse, error) {
+func (s *GRPCServer) SendSlackNotification(_ context.Context, req *sirenv1.SendSlackNotificationRequest) (*sirenv1.SendSlackNotificationResponse, error) {
 	var payload *domain.SlackMessage
 	provider := req.GetProvider()
 
@@ -237,13 +237,13 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *pb.SendSlackN
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	res := &pb.SendSlackNotificationResponse{
+	res := &sirenv1.SendSlackNotificationResponse{
 		Ok: result.OK,
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) ListRules(_ context.Context, req *pb.ListRulesRequest) (*pb.ListRulesResponse, error) {
+func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest) (*sirenv1.ListRulesResponse, error) {
 	namespace := req.GetNamespace()
 	entity := req.GetEntity()
 	groupName := req.GetGroupName()
@@ -256,18 +256,18 @@ func (s *GRPCServer) ListRules(_ context.Context, req *pb.ListRulesRequest) (*pb
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	res := &pb.ListRulesResponse{Rules: make([]*pb.Rule, 0)}
+	res := &sirenv1.ListRulesResponse{Rules: make([]*sirenv1.Rule, 0)}
 	for _, rule := range rules {
-		variables := make([]*pb.Variables, 0)
+		variables := make([]*sirenv1.Variables, 0)
 		for _, variable := range rule.Variables {
-			variables = append(variables, &pb.Variables{
+			variables = append(variables, &sirenv1.Variables{
 				Name:        variable.Name,
 				Type:        variable.Type,
 				Value:       variable.Value,
 				Description: variable.Description,
 			})
 		}
-		res.Rules = append(res.Rules, &pb.Rule{
+		res.Rules = append(res.Rules, &sirenv1.Rule{
 			Id:        uint64(rule.ID),
 			Name:      rule.Name,
 			Entity:    rule.Entity,
@@ -284,7 +284,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *pb.ListRulesRequest) (*pb
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*pb.Rule, error) {
+func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1.UpdateRuleRequest) (*sirenv1.UpdateRuleResponse, error) {
 	variables := make([]domain.RuleVariable, 0)
 	for _, variable := range req.Variables {
 		variables = append(variables, domain.RuleVariable{
@@ -312,49 +312,51 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *pb.UpdateRuleRequest) (*
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	responseVariables := make([]*pb.Variables, 0)
+	responseVariables := make([]*sirenv1.Variables, 0)
 	for _, variable := range rule.Variables {
-		responseVariables = append(responseVariables, &pb.Variables{
+		responseVariables = append(responseVariables, &sirenv1.Variables{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Value:       variable.Value,
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Rule{
-		Id:        uint64(rule.ID),
-		Name:      rule.Name,
-		Entity:    rule.Entity,
-		Namespace: rule.Namespace,
-		GroupName: rule.GroupName,
-		Template:  rule.Template,
-		Status:    rule.Status,
-		CreatedAt: timestamppb.New(rule.CreatedAt),
-		UpdatedAt: timestamppb.New(rule.UpdatedAt),
-		Variables: responseVariables,
+	res := &sirenv1.UpdateRuleResponse{
+		Rule: &sirenv1.Rule{
+			Id:        uint64(rule.ID),
+			Name:      rule.Name,
+			Entity:    rule.Entity,
+			Namespace: rule.Namespace,
+			GroupName: rule.GroupName,
+			Template:  rule.Template,
+			Status:    rule.Status,
+			CreatedAt: timestamppb.New(rule.CreatedAt),
+			UpdatedAt: timestamppb.New(rule.UpdatedAt),
+			Variables: responseVariables,
+		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) ListTemplates(_ context.Context, req *pb.ListTemplatesRequest) (*pb.ListTemplatesResponse, error) {
+func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1.ListTemplatesRequest) (*sirenv1.ListTemplatesResponse, error) {
 	templates, err := s.container.TemplatesService.Index(req.GetTag())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	res := &pb.ListTemplatesResponse{Templates: make([]*pb.Template, 0)}
+	res := &sirenv1.ListTemplatesResponse{Templates: make([]*sirenv1.Template, 0)}
 	for _, template := range templates {
-		variables := make([]*pb.TemplateVariables, 0)
+		variables := make([]*sirenv1.TemplateVariables, 0)
 		for _, variable := range template.Variables {
-			variables = append(variables, &pb.TemplateVariables{
+			variables = append(variables, &sirenv1.TemplateVariables{
 				Name:        variable.Name,
 				Type:        variable.Type,
 				Default:     variable.Default,
 				Description: variable.Description,
 			})
 		}
-		res.Templates = append(res.Templates, &pb.Template{
+		res.Templates = append(res.Templates, &sirenv1.Template{
 			Id:        uint64(template.ID),
 			Name:      template.Name,
 			Body:      template.Body,
@@ -368,35 +370,37 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *pb.ListTemplatesReque
 	return res, nil
 }
 
-func (s *GRPCServer) GetTemplateByName(_ context.Context, req *pb.GetTemplateByNameRequest) (*pb.Template, error) {
+func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1.GetTemplateByNameRequest) (*sirenv1.TemplateResponse, error) {
 	template, err := s.container.TemplatesService.GetByName(req.GetName())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	variables := make([]*pb.TemplateVariables, 0)
+	variables := make([]*sirenv1.TemplateVariables, 0)
 	for _, variable := range template.Variables {
-		variables = append(variables, &pb.TemplateVariables{
+		variables = append(variables, &sirenv1.TemplateVariables{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Default:     variable.Default,
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Template{
-		Id:        uint64(template.ID),
-		Name:      template.Name,
-		Body:      template.Body,
-		Tags:      template.Tags,
-		CreatedAt: timestamppb.New(template.CreatedAt),
-		UpdatedAt: timestamppb.New(template.UpdatedAt),
-		Variables: variables,
+	res := &sirenv1.TemplateResponse{
+		Template: &sirenv1.Template{
+			Id:        uint64(template.ID),
+			Name:      template.Name,
+			Body:      template.Body,
+			Tags:      template.Tags,
+			CreatedAt: timestamppb.New(template.CreatedAt),
+			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Variables: variables,
+		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateRequest) (*pb.Template, error) {
+func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1.UpsertTemplateRequest) (*sirenv1.TemplateResponse, error) {
 	variables := make([]domain.Variable, 0)
 	for _, variable := range req.GetVariables() {
 		variables = append(variables, domain.Variable{
@@ -419,43 +423,45 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *pb.UpsertTemplateReq
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	templateVariables := make([]*pb.TemplateVariables, 0)
+	templateVariables := make([]*sirenv1.TemplateVariables, 0)
 	for _, variable := range template.Variables {
-		templateVariables = append(templateVariables, &pb.TemplateVariables{
+		templateVariables = append(templateVariables, &sirenv1.TemplateVariables{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Default:     variable.Default,
 			Description: variable.Description,
 		})
 	}
-	res := &pb.Template{
-		Id:        uint64(template.ID),
-		Name:      template.Name,
-		Body:      template.Body,
-		Tags:      template.Tags,
-		CreatedAt: timestamppb.New(template.CreatedAt),
-		UpdatedAt: timestamppb.New(template.UpdatedAt),
-		Variables: templateVariables,
+	res := &sirenv1.TemplateResponse{
+		Template: &sirenv1.Template{
+			Id:        uint64(template.ID),
+			Name:      template.Name,
+			Body:      template.Body,
+			Tags:      template.Tags,
+			CreatedAt: timestamppb.New(template.CreatedAt),
+			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Variables: templateVariables,
+		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) DeleteTemplate(_ context.Context, req *pb.DeleteTemplateRequest) (*pb.DeleteTemplateResponse, error) {
+func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1.DeleteTemplateRequest) (*sirenv1.DeleteTemplateResponse, error) {
 	err := s.container.TemplatesService.Delete(req.GetName())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	return &pb.DeleteTemplateResponse{}, nil
+	return &sirenv1.DeleteTemplateResponse{}, nil
 }
 
-func (s *GRPCServer) RenderTemplate(_ context.Context, req *pb.RenderTemplateRequest) (*pb.RenderTemplateResponse, error) {
+func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1.RenderTemplateRequest) (*sirenv1.RenderTemplateResponse, error) {
 	body, err := s.container.TemplatesService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	return &pb.RenderTemplateResponse{
+	return &sirenv1.RenderTemplateResponse{
 		Body: body,
 	}, nil
 }

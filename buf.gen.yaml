@@ -9,6 +9,11 @@ plugins:
   - name: grpc-gateway
     out: api/proto
     opt: paths=source_relative
+  - name: validate
+    out: api/proto
+    opt:
+      - paths=source_relative
+      - lang=go
   - name: openapiv2
     out: third_party/OpenAPI
 
