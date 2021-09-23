@@ -11,7 +11,7 @@ type Service struct {
 	codeExchangeService domain.CodeExchangeService
 }
 
-func NewService(codeExchangeService domain.CodeExchangeService) domain.WorkspaceService {
+func NewService(codeExchangeService domain.CodeExchangeService) domain.SlackWorkspaceService {
 	return &Service{
 		client:              NewRepository(),
 		codeExchangeService: codeExchangeService}

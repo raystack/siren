@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 )
@@ -33,6 +34,97 @@ func NewGRPCServer(container *service.Container, nr *newrelic.Application, logge
 
 func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv1.PingResponse, error) {
 	return &sirenv1.PingResponse{Message: "Pong"}, nil
+}
+
+func (s *GRPCServer) ListWorkspaces(_ context.Context, _ *sirenv1.ListWorkspacesRequest) (*sirenv1.ListWorkspacesResponse, error) {
+	workspaces, err := s.container.WorkspaceService.ListWorkspaces()
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &sirenv1.ListWorkspacesResponse{
+		Workspaces: make([]*sirenv1.Workspace, 0),
+	}
+
+	for _, workspace := range workspaces {
+		item := &sirenv1.Workspace{
+			Id:        workspace.Id,
+			Name:      workspace.Name,
+			Urn:       workspace.Urn,
+			CreatedAt: timestamppb.New(workspace.CreatedAt),
+			UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+		}
+		res.Workspaces = append(res.Workspaces, item)
+	}
+	return res, nil
+}
+
+func (s *GRPCServer) CreateWorkspace(_ context.Context, req *sirenv1.CreateWorkspaceRequest) (*sirenv1.Workspace, error) {
+	urn := req.GetUrn()
+	name := req.GetName()
+	workspace, err := s.container.WorkspaceService.CreateWorkspace(&domain.Workspace{
+		Urn:  urn,
+		Name: name,
+	})
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) GetWorkspace(_ context.Context, req *sirenv1.GetWorkspaceRequest) (*sirenv1.Workspace, error) {
+	id := req.GetId()
+	workspace, err := s.container.WorkspaceService.GetWorkspace(uint64(id))
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) UpdateWorkspace(_ context.Context, req *sirenv1.UpdateWorkspaceRequest) (*sirenv1.Workspace, error) {
+	id := req.GetId()
+	name := req.GetName()
+	workspace, err := s.container.WorkspaceService.UpdateWorkspace(&domain.Workspace{
+		Id:   uint64(id),
+		Name: name,
+	})
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) DeleteWorkspace(_ context.Context, req *sirenv1.DeleteWorkspaceRequest) (*emptypb.Empty, error) {
+	id := req.GetId()
+
+	err := s.container.WorkspaceService.DeleteWorkspace(uint64(id))
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
@@ -113,7 +205,7 @@ func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *sirenv1.CreateAl
 
 func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListWorkspaceChannelsRequest) (*sirenv1.ListWorkspaceChannelsResponse, error) {
 	workspace := req.GetWorkspaceName()
-	workspaces, err := s.container.WorkspaceService.GetChannels(workspace)
+	workspaces, err := s.container.SlackWorkspaceService.GetChannels(workspace)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())

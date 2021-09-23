@@ -5,6 +5,6 @@ type Channel struct {
 	Name string `json:"name"`
 }
 
-type WorkspaceService interface {
+type SlackWorkspaceService interface {
 	GetChannels(string) ([]Channel, error)
 }

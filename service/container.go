@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/odpf/siren/pkg/slackworkspace"
+	"github.com/odpf/siren/pkg/workspace"
 	"net/http"
 
 	"github.com/grafana/cortex-tools/pkg/client"
@@ -18,13 +19,14 @@ import (
 )
 
 type Container struct {
-	TemplatesService    domain.TemplatesService
-	RulesService        domain.RuleService
-	AlertmanagerService domain.AlertmanagerService
-	AlertHistoryService domain.AlertHistoryService
-	CodeExchangeService domain.CodeExchangeService
-	NotifierServices    domain.NotifierServices
-	WorkspaceService    domain.WorkspaceService
+	TemplatesService      domain.TemplatesService
+	RulesService          domain.RuleService
+	AlertmanagerService   domain.AlertmanagerService
+	AlertHistoryService   domain.AlertHistoryService
+	CodeExchangeService   domain.CodeExchangeService
+	NotifierServices      domain.NotifierServices
+	SlackWorkspaceService domain.SlackWorkspaceService
+	WorkspaceService      domain.WorkspaceService
 }
 
 func Init(db *gorm.DB, c *domain.Config,
@@ -42,7 +44,8 @@ func Init(db *gorm.DB, c *domain.Config,
 	}
 	alertmanagerService := alert.NewService(db, newClient, c.SirenService, codeExchangeService)
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
-	workspaceService := slackworkspace.NewService(codeExchangeService)
+	slackworkspaceService := slackworkspace.NewService(codeExchangeService)
+	workspaceService := workspace.NewService(db)
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
@@ -52,7 +55,8 @@ func Init(db *gorm.DB, c *domain.Config,
 		NotifierServices: domain.NotifierServices{
 			Slack: slackNotifierService,
 		},
-		WorkspaceService: workspaceService,
+		SlackWorkspaceService: slackworkspaceService,
+		WorkspaceService:      workspaceService,
 	}, nil
 }
 
@@ -75,6 +79,10 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 		return err
 	}
 	err = container.CodeExchangeService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = container.WorkspaceService.Migrate()
 	if err != nil {
 		return err
 	}

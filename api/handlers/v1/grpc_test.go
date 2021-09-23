@@ -195,7 +195,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 			{Name: "bar", ID: "2"},
 		}
 		dummyGRPCServer := GRPCServer{container: &service.Container{
-			WorkspaceService: mockedWorkspaceService,
+			SlackWorkspaceService: mockedWorkspaceService,
 		}}
 
 		dummyReq := &sirenv1.ListWorkspaceChannelsRequest{
@@ -216,7 +216,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 		mockedWorkspaceService := &mocks.WorkspaceService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
-				WorkspaceService: mockedWorkspaceService,
+				SlackWorkspaceService: mockedWorkspaceService,
 			}, logger: zaptest.NewLogger(t),
 		}
 
