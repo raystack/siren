@@ -119,10 +119,10 @@ func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListW
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	res := &sirenv1.ListWorkspaceChannelsResponse{
-		Data: make([]*sirenv1.Workspace, 0),
+		Data: make([]*sirenv1.SlackWorkspace, 0),
 	}
 	for _, workspace := range workspaces {
-		item := &sirenv1.Workspace{
+		item := &sirenv1.SlackWorkspace{
 			Id:   workspace.ID,
 			Name: workspace.Name,
 		}

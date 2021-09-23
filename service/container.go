@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/odpf/siren/pkg/workspace"
+	"github.com/odpf/siren/pkg/slackworkspace"
 	"net/http"
 
 	"github.com/grafana/cortex-tools/pkg/client"
@@ -42,7 +42,7 @@ func Init(db *gorm.DB, c *domain.Config,
 	}
 	alertmanagerService := alert.NewService(db, newClient, c.SirenService, codeExchangeService)
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
-	workspaceService := workspace.NewService(codeExchangeService)
+	workspaceService := slackworkspace.NewService(codeExchangeService)
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
