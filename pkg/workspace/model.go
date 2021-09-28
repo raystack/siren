@@ -23,6 +23,9 @@ func (workspace *Workspace) fromDomain(t *domain.Workspace) (*Workspace, error) 
 }
 
 func (workspace *Workspace) toDomain() (*domain.Workspace, error) {
+	if workspace == nil {
+		return nil, nil
+	}
 	return &domain.Workspace{
 		Id:        workspace.Id,
 		Name:      workspace.Name,

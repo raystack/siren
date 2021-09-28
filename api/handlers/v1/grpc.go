@@ -81,7 +81,10 @@ func (s *GRPCServer) CreateWorkspace(_ context.Context, req *sirenv1.CreateWorks
 
 func (s *GRPCServer) GetWorkspace(_ context.Context, req *sirenv1.GetWorkspaceRequest) (*sirenv1.Workspace, error) {
 	id := req.GetId()
-	workspace, err := s.container.WorkspaceService.GetWorkspace(uint64(id))
+	workspace, err := s.container.WorkspaceService.GetWorkspace(id)
+	if workspace == nil {
+		return nil, status.Errorf(codes.NotFound, "workspace not found")
+	}
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
