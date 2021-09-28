@@ -51,27 +51,25 @@ func (r Repository) Create(workspace *Workspace) (*Workspace, error) {
 
 func (r Repository) Get(id uint64) (*Workspace, error) {
 	var workspace Workspace
-	result := r.db.Where(fmt.Sprintf("id = '%d'", id)).Find(&workspace)
+	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&workspace)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	if result.RowsAffected == 0 {
-		return nil, errors.New("no workspace found")
+		return nil, nil
 	}
-
 	return &workspace, nil
 }
 
 func (r Repository) Update(workspace *Workspace) (*Workspace, error) {
 	var newWorkspace, existingWorkspace Workspace
-	result := r.db.Where(fmt.Sprintf("id = '%d'", workspace.Id)).Find(&existingWorkspace)
+	result := r.db.Where(fmt.Sprintf("id = %d", workspace.Id)).Find(&existingWorkspace)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return nil, errors.New("workspace doesn't exits")
+		return nil, errors.New("workspace doesn't exist")
 	} else {
 		result = r.db.Where("id = ?", workspace.Id).Updates(workspace)
 	}
@@ -80,7 +78,7 @@ func (r Repository) Update(workspace *Workspace) (*Workspace, error) {
 		return nil, result.Error
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = '%d'", workspace.Id)).Find(&newWorkspace)
+	result = r.db.Where(fmt.Sprintf("id = %d", workspace.Id)).Find(&newWorkspace)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 )
@@ -37,136 +36,97 @@ func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv
 	return &sirenv1.PingResponse{Message: "Pong"}, nil
 }
 
-func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv1.ListProvidersResponse, error) {
-	providers, err := s.container.ProviderService.ListProviders()
+func (s *GRPCServer) ListWorkspaces(_ context.Context, _ *sirenv1.ListWorkspacesRequest) (*sirenv1.ListWorkspacesResponse, error) {
+	workspaces, err := s.container.WorkspaceService.ListWorkspaces()
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
-	res := &sirenv1.ListProvidersResponse{
-		Providers: make([]*sirenv1.Provider, 0),
+	res := &sirenv1.ListWorkspacesResponse{
+		Workspaces: make([]*sirenv1.Workspace, 0),
 	}
-	for _, provider := range providers {
-		credentials, err := structpb.NewStruct(provider.Credentials)
-		if err != nil {
-			s.logger.Error("handler", zap.Error(err))
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
 
-		item := &sirenv1.Provider{
-			Id:          provider.Id,
-			Host:        provider.Host,
-			Type:        provider.Type,
-			Name:        provider.Name,
-			Credentials: credentials,
-			Labels:      provider.Labels,
-			CreatedAt:   timestamppb.New(provider.CreatedAt),
-			UpdatedAt:   timestamppb.New(provider.UpdatedAt),
+	for _, workspace := range workspaces {
+		item := &sirenv1.Workspace{
+			Id:        workspace.Id,
+			Name:      workspace.Name,
+			Urn:       workspace.Urn,
+			CreatedAt: timestamppb.New(workspace.CreatedAt),
+			UpdatedAt: timestamppb.New(workspace.UpdatedAt),
 		}
-		res.Providers = append(res.Providers, item)
+		res.Workspaces = append(res.Workspaces, item)
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.CreateProvider(&domain.Provider{
-		Host:        req.GetHost(),
-		Name:        req.GetName(),
-		Type:        req.GetType(),
-		Credentials: req.GetCredentials().AsMap(),
-		Labels:      req.GetLabels(),
+func (s *GRPCServer) CreateWorkspace(_ context.Context, req *sirenv1.CreateWorkspaceRequest) (*sirenv1.Workspace, error) {
+	urn := req.GetUrn()
+	name := req.GetName()
+	workspace, err := s.container.WorkspaceService.CreateWorkspace(&domain.Workspace{
+		Urn:  urn,
+		Name: name,
+	})
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) GetWorkspace(_ context.Context, req *sirenv1.GetWorkspaceRequest) (*sirenv1.Workspace, error) {
+	id := req.GetId()
+	workspace, err := s.container.WorkspaceService.GetWorkspace(id)
+	if workspace == nil {
+		return nil, status.Errorf(codes.NotFound, "workspace not found")
+	}
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) UpdateWorkspace(_ context.Context, req *sirenv1.UpdateWorkspaceRequest) (*sirenv1.Workspace, error) {
+	id := req.GetId()
+	name := req.GetName()
+	workspace, err := s.container.WorkspaceService.UpdateWorkspace(&domain.Workspace{
+		Id:   uint64(id),
+		Name: name,
 	})
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
+	return &sirenv1.Workspace{
+		Id:        workspace.Id,
+		Urn:       workspace.Urn,
+		Name:      workspace.Name,
+		CreatedAt: timestamppb.New(workspace.CreatedAt),
+		UpdatedAt: timestamppb.New(workspace.UpdatedAt),
 	}, nil
 }
 
-func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.GetProvider(req.GetId())
-	if provider == nil {
-		return nil, status.Errorf(codes.NotFound, "provider not found")
-	}
+func (s *GRPCServer) DeleteWorkspace(_ context.Context, req *sirenv1.DeleteWorkspaceRequest) (*emptypb.Empty, error) {
+	id := req.GetId()
+
+	err := s.container.WorkspaceService.DeleteWorkspace(uint64(id))
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.UpdateProvider(&domain.Provider{
-		Id:          req.GetId(),
-		Host:        req.GetHost(),
-		Name:        req.GetName(),
-		Type:        req.GetType(),
-		Credentials: req.GetCredentials().AsMap(),
-		Labels:      req.GetLabels(),
-	})
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1.DeleteProviderRequest) (*emptypb.Empty, error) {
-	err := s.container.ProviderService.DeleteProvider(uint64(req.GetId()))
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	
 	return &emptypb.Empty{}, nil
 }
 
