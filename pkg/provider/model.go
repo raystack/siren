@@ -9,7 +9,6 @@ import (
 )
 
 type StringInterfaceMap map[string]interface{}
-
 type StringStringMap map[string]string
 
 func (m *StringInterfaceMap) Scan(value interface{}) error {
@@ -19,7 +18,6 @@ func (m *StringInterfaceMap) Scan(value interface{}) error {
 	}
 	return json.Unmarshal(b, &m)
 }
-
 func (a StringInterfaceMap) Value() (driver.Value, error) {
 	if len(a) == 0 {
 		return nil, nil
@@ -53,35 +51,32 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (provider *Provider) fromDomain(t *domain.Provider) *Provider {
-	if t == nil {
-		return nil
-	}
-	provider.Id = t.Id
-	provider.Host = t.Host
-	provider.Name = t.Name
-	provider.Type = t.Type
-	provider.Credentials = t.Credentials
-	provider.Labels = t.Labels
-	provider.CreatedAt = t.CreatedAt
-	provider.UpdatedAt = t.UpdatedAt
-	return provider
+func (Provider *Provider) fromDomain(t *domain.Provider) (*Provider, error) {
+	Provider.Id = t.Id
+	Provider.Host = t.Host
+	Provider.Name = t.Name
+	Provider.Type = t.Type
+	Provider.Credentials = t.Credentials
+	Provider.Labels = t.Labels
+	Provider.CreatedAt = t.CreatedAt
+	Provider.UpdatedAt = t.UpdatedAt
+	return Provider, nil
 }
 
-func (provider *Provider) toDomain() *domain.Provider {
-	if provider == nil {
-		return nil
+func (Provider *Provider) toDomain() (*domain.Provider, error) {
+	if Provider == nil {
+		return nil, nil
 	}
 	return &domain.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: provider.Credentials,
-		Labels:      provider.Labels,
-		CreatedAt:   provider.CreatedAt,
-		UpdatedAt:   provider.UpdatedAt,
-	}
+		Id:          Provider.Id,
+		Host:        Provider.Host,
+		Name:        Provider.Name,
+		Type:        Provider.Type,
+		Credentials: Provider.Credentials,
+		Labels:      Provider.Labels,
+		CreatedAt:   Provider.CreatedAt,
+		UpdatedAt:   Provider.UpdatedAt,
+	}, nil
 }
 
 type ProviderRepository interface {

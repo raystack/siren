@@ -20,11 +20,11 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SirenServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
-	ListWorkspaces(ctx context.Context, in *ListWorkspacesRequest, opts ...grpc.CallOption) (*ListWorkspacesResponse, error)
-	CreateWorkspace(ctx context.Context, in *CreateWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error)
-	GetWorkspace(ctx context.Context, in *GetWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error)
-	UpdateWorkspace(ctx context.Context, in *UpdateWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error)
-	DeleteWorkspace(ctx context.Context, in *DeleteWorkspaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListProviders(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProvidersResponse, error)
+	CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
+	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
+	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
+	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
 	ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error)
@@ -58,45 +58,45 @@ func (c *sirenServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListWorkspaces(ctx context.Context, in *ListWorkspacesRequest, opts ...grpc.CallOption) (*ListWorkspacesResponse, error) {
-	out := new(ListWorkspacesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListWorkspaces", in, out, opts...)
+func (c *sirenServiceClient) ListProviders(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProvidersResponse, error) {
+	out := new(ListProvidersResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListProviders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateWorkspace(ctx context.Context, in *CreateWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error) {
-	out := new(Workspace)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/CreateWorkspace", in, out, opts...)
+func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
+	out := new(Provider)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/CreateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetWorkspace(ctx context.Context, in *GetWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error) {
-	out := new(Workspace)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/GetWorkspace", in, out, opts...)
+func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
+	out := new(Provider)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/GetProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpdateWorkspace(ctx context.Context, in *UpdateWorkspaceRequest, opts ...grpc.CallOption) (*Workspace, error) {
-	out := new(Workspace)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/UpdateWorkspace", in, out, opts...)
+func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
+	out := new(Provider)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/UpdateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) DeleteWorkspace(ctx context.Context, in *DeleteWorkspaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/DeleteWorkspace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/DeleteProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -234,11 +234,11 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 // for forward compatibility
 type SirenServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
-	ListWorkspaces(context.Context, *ListWorkspacesRequest) (*ListWorkspacesResponse, error)
-	CreateWorkspace(context.Context, *CreateWorkspaceRequest) (*Workspace, error)
-	GetWorkspace(context.Context, *GetWorkspaceRequest) (*Workspace, error)
-	UpdateWorkspace(context.Context, *UpdateWorkspaceRequest) (*Workspace, error)
-	DeleteWorkspace(context.Context, *DeleteWorkspaceRequest) (*emptypb.Empty, error)
+	ListProviders(context.Context, *emptypb.Empty) (*ListProvidersResponse, error)
+	CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error)
+	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
+	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
+	DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error)
 	ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
 	ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error)
@@ -263,20 +263,20 @@ type UnimplementedSirenServiceServer struct {
 func (UnimplementedSirenServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedSirenServiceServer) ListWorkspaces(context.Context, *ListWorkspacesRequest) (*ListWorkspacesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListWorkspaces not implemented")
+func (UnimplementedSirenServiceServer) ListProviders(context.Context, *emptypb.Empty) (*ListProvidersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProviders not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateWorkspace(context.Context, *CreateWorkspaceRequest) (*Workspace, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateWorkspace not implemented")
+func (UnimplementedSirenServiceServer) CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) GetWorkspace(context.Context, *GetWorkspaceRequest) (*Workspace, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWorkspace not implemented")
+func (UnimplementedSirenServiceServer) GetProvider(context.Context, *GetProviderRequest) (*Provider, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) UpdateWorkspace(context.Context, *UpdateWorkspaceRequest) (*Workspace, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateWorkspace not implemented")
+func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) DeleteWorkspace(context.Context, *DeleteWorkspaceRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteWorkspace not implemented")
+func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProvider not implemented")
 }
 func (UnimplementedSirenServiceServer) ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlertHistory not implemented")
@@ -351,92 +351,92 @@ func _SirenService_Ping_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_ListWorkspaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorkspacesRequest)
+func _SirenService_ListProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).ListWorkspaces(ctx, in)
+		return srv.(SirenServiceServer).ListProviders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/ListWorkspaces",
+		FullMethod: "/odpf.siren.v1.SirenService/ListProviders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListWorkspaces(ctx, req.(*ListWorkspacesRequest))
+		return srv.(SirenServiceServer).ListProviders(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_CreateWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateWorkspaceRequest)
+func _SirenService_CreateProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProviderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).CreateWorkspace(ctx, in)
+		return srv.(SirenServiceServer).CreateProvider(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/CreateWorkspace",
+		FullMethod: "/odpf.siren.v1.SirenService/CreateProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).CreateWorkspace(ctx, req.(*CreateWorkspaceRequest))
+		return srv.(SirenServiceServer).CreateProvider(ctx, req.(*CreateProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWorkspaceRequest)
+func _SirenService_GetProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProviderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetWorkspace(ctx, in)
+		return srv.(SirenServiceServer).GetProvider(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/GetWorkspace",
+		FullMethod: "/odpf.siren.v1.SirenService/GetProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetWorkspace(ctx, req.(*GetWorkspaceRequest))
+		return srv.(SirenServiceServer).GetProvider(ctx, req.(*GetProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_UpdateWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateWorkspaceRequest)
+func _SirenService_UpdateProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateProviderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).UpdateWorkspace(ctx, in)
+		return srv.(SirenServiceServer).UpdateProvider(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/UpdateWorkspace",
+		FullMethod: "/odpf.siren.v1.SirenService/UpdateProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).UpdateWorkspace(ctx, req.(*UpdateWorkspaceRequest))
+		return srv.(SirenServiceServer).UpdateProvider(ctx, req.(*UpdateProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_DeleteWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteWorkspaceRequest)
+func _SirenService_DeleteProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProviderRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).DeleteWorkspace(ctx, in)
+		return srv.(SirenServiceServer).DeleteProvider(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/DeleteWorkspace",
+		FullMethod: "/odpf.siren.v1.SirenService/DeleteProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).DeleteWorkspace(ctx, req.(*DeleteWorkspaceRequest))
+		return srv.(SirenServiceServer).DeleteProvider(ctx, req.(*DeleteProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -705,24 +705,24 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_Ping_Handler,
 		},
 		{
-			MethodName: "ListWorkspaces",
-			Handler:    _SirenService_ListWorkspaces_Handler,
+			MethodName: "ListProviders",
+			Handler:    _SirenService_ListProviders_Handler,
 		},
 		{
-			MethodName: "CreateWorkspace",
-			Handler:    _SirenService_CreateWorkspace_Handler,
+			MethodName: "CreateProvider",
+			Handler:    _SirenService_CreateProvider_Handler,
 		},
 		{
-			MethodName: "GetWorkspace",
-			Handler:    _SirenService_GetWorkspace_Handler,
+			MethodName: "GetProvider",
+			Handler:    _SirenService_GetProvider_Handler,
 		},
 		{
-			MethodName: "UpdateWorkspace",
-			Handler:    _SirenService_UpdateWorkspace_Handler,
+			MethodName: "UpdateProvider",
+			Handler:    _SirenService_UpdateProvider_Handler,
 		},
 		{
-			MethodName: "DeleteWorkspace",
-			Handler:    _SirenService_DeleteWorkspace_Handler,
+			MethodName: "DeleteProvider",
+			Handler:    _SirenService_DeleteProvider_Handler,
 		},
 		{
 			MethodName: "ListAlertHistory",

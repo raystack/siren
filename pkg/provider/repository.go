@@ -17,6 +17,14 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
+func (r Repository) Migrate() error {
+	err := r.db.AutoMigrate(&Provider{})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r Repository) List() ([]*Provider, error) {
 	var providers []*Provider
 	selectQuery := fmt.Sprintf("select * from providers")
@@ -24,12 +32,12 @@ func (r Repository) List() ([]*Provider, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	return providers, nil
 }
 
 func (r Repository) Create(provider *Provider) (*Provider, error) {
 	var newProvider Provider
+
 	result := r.db.Create(provider)
 	if result.Error != nil {
 		return nil, result.Error
@@ -39,7 +47,6 @@ func (r Repository) Create(provider *Provider) (*Provider, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	return &newProvider, nil
 }
 
@@ -52,7 +59,6 @@ func (r Repository) Get(id uint64) (*Provider, error) {
 	if result.RowsAffected == 0 {
 		return nil, nil
 	}
-
 	return &provider, nil
 }
 
@@ -62,13 +68,15 @@ func (r Repository) Update(provider *Provider) (*Provider, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	if result.RowsAffected == 0 {
 		return nil, errors.New("provider doesn't exist")
 	} else {
 		result = r.db.Where("id = ?", provider.Id).Updates(provider)
-		if result.Error != nil {
-			return nil, result.Error
-		}
+	}
+
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	result = r.db.Where(fmt.Sprintf("id = %d", provider.Id)).Find(&newProvider)
@@ -84,10 +92,3 @@ func (r Repository) Delete(id uint64) error {
 	return result.Error
 }
 
-func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Provider{})
-	if err != nil {
-		return err
-	}
-	return nil
-}

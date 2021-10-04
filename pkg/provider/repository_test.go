@@ -43,8 +43,10 @@ func (s *RepositoryTestSuite) TearDownTest() {
 func (s *RepositoryTestSuite) TestList() {
 	s.Run("should get all providers", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from providers`)
+
 		credentials := make(StringInterfaceMap)
 		credentials["foo"] = "bar"
+
 		labels := make(StringStringMap)
 		labels["foo"] = "bar"
 
@@ -81,9 +83,11 @@ func (s *RepositoryTestSuite) TestList() {
 	})
 }
 
+
 func (s *RepositoryTestSuite) TestCreate() {
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
+
 	labels := make(StringStringMap)
 	labels["foo"] = "bar"
 
@@ -102,7 +106,6 @@ func (s *RepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedProvider.Host,
 			expectedProvider.Name, expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			expectedProvider.CreatedAt, expectedProvider.UpdatedAt, expectedProvider.Id).
@@ -134,12 +137,10 @@ func (s *RepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedProvider.Host,
 			expectedProvider.Name, expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			expectedProvider.CreatedAt, expectedProvider.UpdatedAt, expectedProvider.Id).
 			WillReturnError(errors.New("random error"))
-
 		actualProvider, err := s.repository.Create(expectedProvider)
 		s.EqualError(err, "random error")
 		s.Nil(actualProvider)
@@ -160,22 +161,23 @@ func (s *RepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedProvider.Host,
 			expectedProvider.Name, expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			expectedProvider.CreatedAt, expectedProvider.UpdatedAt, expectedProvider.Id).
 			WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
 
+		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
 		actualProvider, err := s.repository.Create(expectedProvider)
 		s.EqualError(err, "random error")
 		s.Nil(actualProvider)
 	})
 }
 
+
 func (s *RepositoryTestSuite) TestGet() {
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
+
 	labels := make(StringStringMap)
 	labels["foo"] = "bar"
 
@@ -197,16 +199,15 @@ func (s *RepositoryTestSuite) TestGet() {
 			AddRow(expectedProvider.Host, expectedProvider.Name, expectedProvider.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
 				expectedProvider.UpdatedAt, expectedProvider.Id)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
+		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 		actualProvider, err := s.repository.Get(1)
 		s.Equal(expectedProvider, actualProvider)
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if provider of given id does not exist", func() {
+	s.Run("should return nil if providers of given id does not exist", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 
 		actualProvider, err := s.repository.Get(1)
@@ -216,7 +217,6 @@ func (s *RepositoryTestSuite) TestGet() {
 
 	s.Run("should return error in getting provider of given id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
 
 		actualProvider, err := s.repository.Get(1)
@@ -228,6 +228,7 @@ func (s *RepositoryTestSuite) TestGet() {
 func (s *RepositoryTestSuite) TestUpdate() {
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
+
 	labels := make(StringStringMap)
 	labels["foo"] = "bar"
 
@@ -248,6 +249,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
+
 		input := &Provider{
 			Id:          10,
 			Host:        "foo",
@@ -264,18 +266,19 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			AddRow(expectedProvider.Host, expectedProvider.Name, expectedProvider.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
 				expectedProvider.UpdatedAt, expectedProvider.Id)
+
 		expectedRows2 := sqlmock.
 			NewRows([]string{"host", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
 			AddRow(expectedProvider.Host, "baz", expectedProvider.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
 				expectedProvider.UpdatedAt, expectedProvider.Id)
+
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
 		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedProvider.Host,
 			"baz", expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			AnyTime{}, AnyTime{}, expectedProvider.Id, expectedProvider.Id).
 			WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows2)
-
 		actualProvider, err := s.repository.Update(input)
 		s.Equal("baz", actualProvider.Name)
 		s.Nil(err)
@@ -294,9 +297,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
-
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
 		s.EqualError(err, "provider doesn't exist")
@@ -315,9 +316,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnError(errors.New("random error"))
-
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
 		s.EqualError(err, "random error")
@@ -329,6 +328,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						SET "host"=$1,"name"=$2,"type"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7 
 						WHERE id = $8 AND "id" = $9`)
 		timeNow := time.Now()
+
 		expectedProvider := &Provider{
 			Id:          10,
 			Host:        "foo",
@@ -339,6 +339,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
+
 		input := &Provider{
 			Id:          10,
 			Host:        "foo",
@@ -350,17 +351,17 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			UpdatedAt:   timeNow,
 		}
 
-		expectedRows := sqlmock.
+		expectedRows1 := sqlmock.
 			NewRows([]string{"host", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
 			AddRow(expectedProvider.Host, expectedProvider.Name, expectedProvider.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
 				expectedProvider.UpdatedAt, expectedProvider.Id)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
+
+		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
 		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedProvider.Host,
 			"baz", expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			AnyTime{}, AnyTime{}, expectedProvider.Id, expectedProvider.Id).
 			WillReturnError(errors.New("random error"))
-
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
 		s.EqualError(err, "random error")
@@ -383,6 +384,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
+
 		input := &Provider{
 			Id:          10,
 			Host:        "foo",
@@ -394,18 +396,18 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			UpdatedAt:   timeNow,
 		}
 
-		expectedRows := sqlmock.
+		expectedRows1 := sqlmock.
 			NewRows([]string{"host", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
 			AddRow(expectedProvider.Host, expectedProvider.Name, expectedProvider.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
 				expectedProvider.UpdatedAt, expectedProvider.Id)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
+
+		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
 		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedProvider.Host,
 			"baz", expectedProvider.Type, expectedProvider.Credentials, expectedProvider.Labels,
 			AnyTime{}, AnyTime{}, expectedProvider.Id, expectedProvider.Id).
 			WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New("random error"))
-		
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
 		s.EqualError(err, "random error")
