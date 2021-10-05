@@ -18,6 +18,9 @@ import (
 	"strings"
 )
 
+var jsonMarshal = json.Marshal
+var jsonUnmarshal = json.Unmarshal
+
 type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
@@ -43,17 +46,26 @@ func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+
 	res := &sirenv1.ListProvidersResponse{
 		Providers: make([]*sirenv1.Provider, 0),
 	}
-
 	for _, provider := range providers {
-		item := &sirenv1.Provider{
-			Id:   provider.Id,
-			Name: provider.Name,
+		credentials, err := structpb.NewStruct(provider.Credentials)
+		if err != nil {
+			s.logger.Error("handler", zap.Error(err))
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 
-			CreatedAt: timestamppb.New(provider.CreatedAt),
-			UpdatedAt: timestamppb.New(provider.UpdatedAt),
+		item := &sirenv1.Provider{
+			Id:          provider.Id,
+			Host:        provider.Host,
+			Type:        provider.Type,
+			Name:        provider.Name,
+			Credentials: credentials,
+			Labels:      provider.Labels,
+			CreatedAt:   timestamppb.New(provider.CreatedAt),
+			UpdatedAt:   timestamppb.New(provider.UpdatedAt),
 		}
 		res.Providers = append(res.Providers, item)
 	}
@@ -61,14 +73,14 @@ func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv
 }
 
 func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProviderRequest) (*sirenv1.Provider, error) {
-	c, err := json.Marshal(req.GetCredentials())
+	c, err := jsonMarshal(req.GetCredentials())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid credentials")
 	}
 
 	credentials := make(map[string]interface{})
-	err = json.Unmarshal(c, &credentials)
+	err = jsonUnmarshal(c, &credentials)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "unable to parse credentials")
@@ -81,7 +93,6 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProvid
 		Credentials: credentials,
 		Labels:      req.GetLabels(),
 	})
-
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -106,8 +117,7 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProvid
 }
 
 func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequest) (*sirenv1.Provider, error) {
-	id := req.GetId()
-	provider, err := s.container.ProviderService.GetProvider(id)
+	provider, err := s.container.ProviderService.GetProvider(req.GetId())
 	if provider == nil {
 		return nil, status.Errorf(codes.NotFound, "provider not found")
 	}
@@ -135,14 +145,14 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequ
 }
 
 func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProviderRequest) (*sirenv1.Provider, error) {
-	c, err := json.Marshal(req.GetCredentials())
+	c, err := jsonMarshal(req.GetCredentials())
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid credentials")
 	}
 
 	credentials := make(map[string]interface{})
-	err = json.Unmarshal(c, &credentials)
+	err = jsonUnmarshal(c, &credentials)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "unable to parse credentials")
@@ -178,12 +188,14 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProvid
 		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
 	}, nil
 }
+
 func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1.DeleteProviderRequest) (*emptypb.Empty, error) {
 	err := s.container.ProviderService.DeleteProvider(uint64(req.GetId()))
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
+	
 	return &emptypb.Empty{}, nil
 }
 

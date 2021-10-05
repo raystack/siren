@@ -874,49 +874,37 @@ func (m *UpdateProviderRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if m.GetHost() != "" {
-
-		if !_UpdateProviderRequest_Host_Pattern.MatchString(m.GetHost()) {
-			err := UpdateProviderRequestValidationError{
-				field:  "Host",
-				reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
+	if !_UpdateProviderRequest_Host_Pattern.MatchString(m.GetHost()) {
+		err := UpdateProviderRequestValidationError{
+			field:  "Host",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
 		}
-
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if m.GetName() != "" {
-
-		if !_UpdateProviderRequest_Name_Pattern.MatchString(m.GetName()) {
-			err := UpdateProviderRequestValidationError{
-				field:  "Name",
-				reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
+	if !_UpdateProviderRequest_Name_Pattern.MatchString(m.GetName()) {
+		err := UpdateProviderRequestValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
 		}
-
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
-	if m.GetType() != "" {
-
-		if _, ok := _UpdateProviderRequest_Type_InLookup[m.GetType()]; !ok {
-			err := UpdateProviderRequestValidationError{
-				field:  "Type",
-				reason: "value must be in list [cortex]",
-			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
+	if _, ok := _UpdateProviderRequest_Type_InLookup[m.GetType()]; !ok {
+		err := UpdateProviderRequestValidationError{
+			field:  "Type",
+			reason: "value must be in list [cortex]",
 		}
-
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if all {
