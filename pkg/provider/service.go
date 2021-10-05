@@ -2,6 +2,7 @@ package provider
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -15,37 +16,30 @@ func NewService(db *gorm.DB) domain.ProviderService {
 	return &Service{NewRepository(db)}
 }
 
-func (service Service) Migrate() error {
-	return service.repository.Migrate()
-}
-
 func (service Service) ListProviders() ([]*domain.Provider, error) {
 	providers, err := service.repository.List()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "service.repository.List")
 	}
 
 	domainProviders := make([]*domain.Provider, 0, len(providers))
 	for i := 0; i < len(providers); i++ {
-		provider, _ := providers[i].toDomain()
+		provider := providers[i].toDomain()
 		domainProviders = append(domainProviders, provider)
 	}
+
 	return domainProviders, nil
 
 }
 
 func (service Service) CreateProvider(provider *domain.Provider) (*domain.Provider, error) {
 	p := &Provider{}
-	p, err := p.fromDomain(provider)
+	newProvider, err := service.repository.Create(p.fromDomain(provider))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "service.repository.Create")
 	}
 
-	newProvider, err := service.repository.Create(p)
-	if err != nil {
-		return nil, err
-	}
-	return newProvider.toDomain()
+	return newProvider.toDomain(), nil
 }
 
 func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
@@ -53,27 +47,24 @@ func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	return provider.toDomain()
+
+	return provider.toDomain(), nil
 }
 
 func (service Service) UpdateProvider(provider *domain.Provider) (*domain.Provider, error) {
 	w := &Provider{}
-	w, err := w.fromDomain(provider)
+	newProvider, err := service.repository.Update(w.fromDomain(provider))
 	if err != nil {
 		return nil, err
 	}
-
-	newProvider, err := service.repository.Update(w)
-	if err != nil {
-		return nil, err
-	}
-	return newProvider.toDomain()
+	
+	return newProvider.toDomain(), nil
 }
 
 func (service Service) DeleteProvider(id uint64) error {
-	err := service.repository.Delete(id)
-	if err != nil {
-		return err
-	}
-	return nil
+	return service.repository.Delete(id)
+}
+
+func (service Service) Migrate() error {
+	return service.repository.Migrate()
 }

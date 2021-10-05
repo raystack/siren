@@ -9,6 +9,7 @@ import (
 )
 
 type StringInterfaceMap map[string]interface{}
+
 type StringStringMap map[string]string
 
 func (m *StringInterfaceMap) Scan(value interface{}) error {
@@ -18,6 +19,7 @@ func (m *StringInterfaceMap) Scan(value interface{}) error {
 	}
 	return json.Unmarshal(b, &m)
 }
+
 func (a StringInterfaceMap) Value() (driver.Value, error) {
 	if len(a) == 0 {
 		return nil, nil
@@ -51,7 +53,10 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (Provider *Provider) fromDomain(t *domain.Provider) (*Provider, error) {
+func (Provider *Provider) fromDomain(t *domain.Provider) *Provider {
+	if t == nil {
+		return nil
+	}
 	Provider.Id = t.Id
 	Provider.Host = t.Host
 	Provider.Name = t.Name
@@ -60,12 +65,12 @@ func (Provider *Provider) fromDomain(t *domain.Provider) (*Provider, error) {
 	Provider.Labels = t.Labels
 	Provider.CreatedAt = t.CreatedAt
 	Provider.UpdatedAt = t.UpdatedAt
-	return Provider, nil
+	return Provider
 }
 
-func (Provider *Provider) toDomain() (*domain.Provider, error) {
+func (Provider *Provider) toDomain() *domain.Provider {
 	if Provider == nil {
-		return nil, nil
+		return nil
 	}
 	return &domain.Provider{
 		Id:          Provider.Id,
@@ -76,7 +81,7 @@ func (Provider *Provider) toDomain() (*domain.Provider, error) {
 		Labels:      Provider.Labels,
 		CreatedAt:   Provider.CreatedAt,
 		UpdatedAt:   Provider.UpdatedAt,
-	}, nil
+	}
 }
 
 type ProviderRepository interface {

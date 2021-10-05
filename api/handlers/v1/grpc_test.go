@@ -1155,7 +1155,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("ListProviders").
-			Return(dummyResult, nil)
+			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -1242,10 +1242,50 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("CreateProvider", mock.Anything).
-			Return(newPayload, nil)
+			Return(newPayload, nil).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+	})
+
+	t.Run("should return error code 13 if json marshal failed", func(t *testing.T) {
+		oldJsonMarshal := jsonMarshal
+		defer func() { jsonMarshal = oldJsonMarshal }()
+
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ProviderService: mockedProviderService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		jsonMarshal = func(interface{}) ([]byte, error) {
+			return nil, errors.New("random error")
+		}
+		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = Invalid credentials")
+	})
+
+	t.Run("should return error code 13 if json unmarshal failed", func(t *testing.T) {
+		oldJsonUnmarshal := jsonUnmarshal
+		defer func() { jsonUnmarshal = oldJsonUnmarshal }()
+
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ProviderService: mockedProviderService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		jsonUnmarshal = func([]byte, interface{}) error {
+			return errors.New("random error")
+		}
+		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = unable to parse credentials")
 	})
 }
 
@@ -1360,7 +1400,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("GetProvider", providerId).
-			Return(dummyResult, nil)
+			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
@@ -1428,6 +1468,46 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
+	t.Run("should return error code 13 if json marshal failed", func(t *testing.T) {
+		oldJsonMarshal := jsonMarshal
+		defer func() { jsonMarshal = oldJsonMarshal }()
+
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ProviderService: mockedProviderService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		jsonMarshal = func(interface{}) ([]byte, error) {
+			return nil, errors.New("random error")
+		}
+		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = Invalid credentials")
+	})
+
+	t.Run("should return error code 13 if json unmarshal failed", func(t *testing.T) {
+		oldJsonUnmarshal := jsonUnmarshal
+		defer func() { jsonUnmarshal = oldJsonUnmarshal }()
+
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ProviderService: mockedProviderService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		jsonUnmarshal = func([]byte, interface{}) error {
+			return errors.New("random error")
+		}
+		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = unable to parse credentials")
+	})
+
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
@@ -1448,7 +1528,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("UpdateProvider", mock.Anything).
-			Return(newPayload, nil)
+			Return(newPayload, nil).Once()
 		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
