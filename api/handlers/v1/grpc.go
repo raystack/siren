@@ -218,6 +218,27 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 	}, nil
 }
 
+func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequest) (*sirenv1.Receiver, error) {
+	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	if receiver == nil {
+		return nil, status.Errorf(codes.NotFound, "receiver not found")
+	}
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &sirenv1.Receiver{
+		Id:            receiver.Id,
+		Urn:           receiver.Urn,
+		Type:          receiver.Type,
+		Labels:        receiver.Labels,
+		Configuration: receiver.Configuration,
+		CreatedAt:     timestamppb.New(receiver.CreatedAt),
+		UpdatedAt:     timestamppb.New(receiver.UpdatedAt),
+	}, nil
+}
+
 func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
 	name := req.GetResource()
 	startTime := req.GetStartTime()

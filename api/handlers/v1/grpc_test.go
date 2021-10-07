@@ -1604,3 +1604,75 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
+
+func TestGRPCServer_GetReceiver(t *testing.T) {
+	configuration := make(map[string]string)
+	configuration["foo"] = "bar"
+	labels := make(map[string]string)
+	labels["foo"] = "bar"
+
+	receiverId := uint64(1)
+	dummyReq := &sirenv1.GetReceiverRequest{
+		Id: 1,
+	}
+	payload := &domain.Receiver{
+		Urn:           "foo",
+		Type:          "bar",
+		Labels:        labels,
+		Configuration: configuration,
+	}
+
+	t.Run("should return a receiver", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("GetReceiver", receiverId).
+			Return(payload, nil).Once()
+
+		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
+		assert.Nil(t, err)
+		assert.Equal(t, "foo", res.GetUrn())
+		assert.Equal(t, "bar", res.GetType())
+		assert.Equal(t, "bar", res.GetLabels()["foo"])
+		assert.Equal(t, "bar", res.GetConfiguration()["foo"])
+	})
+
+	t.Run("should return error code 5 if no receiver found", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("GetReceiver", receiverId).
+			Return(nil, nil).Once()
+
+		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = receiver not found")
+	})
+
+	t.Run("should return error code 13 if getting receiver failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("GetReceiver", receiverId).
+			Return(payload, errors.New("random error")).Once()
+
+		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+	})
+}
