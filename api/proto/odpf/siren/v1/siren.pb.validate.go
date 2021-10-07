@@ -1128,6 +1128,800 @@ var _ interface {
 	ErrorName() string
 } = DeleteProviderRequestValidationError{}
 
+// Validate checks the field values on Receiver with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Receiver) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Receiver with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ReceiverMultiError, or nil
+// if none found.
+func (m *Receiver) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Receiver) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Urn
+
+	if _, ok := _Receiver_Type_InLookup[m.GetType()]; !ok {
+		err := ReceiverValidationError{
+			field:  "Type",
+			reason: "value must be in list [slack pagerduty http]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Configuration
+
+	if all {
+		switch v := interface{}(m.GetCreatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "CreatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ReceiverValidationError{
+				field:  "CreatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpdatedAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "UpdatedAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpdatedAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ReceiverValidationError{
+				field:  "UpdatedAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ReceiverMultiError(errors)
+	}
+	return nil
+}
+
+// ReceiverMultiError is an error wrapping multiple validation errors returned
+// by Receiver.ValidateAll() if the designated constraints aren't met.
+type ReceiverMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ReceiverMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ReceiverMultiError) AllErrors() []error { return m }
+
+// ReceiverValidationError is the validation error returned by
+// Receiver.Validate if the designated constraints aren't met.
+type ReceiverValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ReceiverValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ReceiverValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ReceiverValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ReceiverValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ReceiverValidationError) ErrorName() string { return "ReceiverValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ReceiverValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sReceiver.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ReceiverValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ReceiverValidationError{}
+
+var _Receiver_Type_InLookup = map[string]struct{}{
+	"slack":     {},
+	"pagerduty": {},
+	"http":      {},
+}
+
+// Validate checks the field values on ListReceiversResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListReceiversResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListReceiversResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListReceiversResponseMultiError, or nil if none found.
+func (m *ListReceiversResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListReceiversResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetReceivers() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListReceiversResponseValidationError{
+						field:  fmt.Sprintf("Receivers[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListReceiversResponseValidationError{
+						field:  fmt.Sprintf("Receivers[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListReceiversResponseValidationError{
+					field:  fmt.Sprintf("Receivers[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListReceiversResponseMultiError(errors)
+	}
+	return nil
+}
+
+// ListReceiversResponseMultiError is an error wrapping multiple validation
+// errors returned by ListReceiversResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListReceiversResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListReceiversResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListReceiversResponseMultiError) AllErrors() []error { return m }
+
+// ListReceiversResponseValidationError is the validation error returned by
+// ListReceiversResponse.Validate if the designated constraints aren't met.
+type ListReceiversResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListReceiversResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListReceiversResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListReceiversResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListReceiversResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListReceiversResponseValidationError) ErrorName() string {
+	return "ListReceiversResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListReceiversResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListReceiversResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListReceiversResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListReceiversResponseValidationError{}
+
+// Validate checks the field values on CreateReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateReceiverRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateReceiverRequestMultiError, or nil if none found.
+func (m *CreateReceiverRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateReceiverRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CreateReceiverRequest_Urn_Pattern.MatchString(m.GetUrn()) {
+		err := CreateReceiverRequestValidationError{
+			field:  "Urn",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _CreateReceiverRequest_Type_InLookup[m.GetType()]; !ok {
+		err := CreateReceiverRequestValidationError{
+			field:  "Type",
+			reason: "value must be in list [slack pagerduty http]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Configuration
+
+	if len(errors) > 0 {
+		return CreateReceiverRequestMultiError(errors)
+	}
+	return nil
+}
+
+// CreateReceiverRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateReceiverRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateReceiverRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateReceiverRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateReceiverRequestMultiError) AllErrors() []error { return m }
+
+// CreateReceiverRequestValidationError is the validation error returned by
+// CreateReceiverRequest.Validate if the designated constraints aren't met.
+type CreateReceiverRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateReceiverRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateReceiverRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateReceiverRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateReceiverRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateReceiverRequestValidationError) ErrorName() string {
+	return "CreateReceiverRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateReceiverRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateReceiverRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateReceiverRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateReceiverRequestValidationError{}
+
+var _CreateReceiverRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
+
+var _CreateReceiverRequest_Type_InLookup = map[string]struct{}{
+	"slack":     {},
+	"pagerduty": {},
+	"http":      {},
+}
+
+// Validate checks the field values on GetReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetReceiverRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetReceiverRequestMultiError, or nil if none found.
+func (m *GetReceiverRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetReceiverRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if len(errors) > 0 {
+		return GetReceiverRequestMultiError(errors)
+	}
+	return nil
+}
+
+// GetReceiverRequestMultiError is an error wrapping multiple validation errors
+// returned by GetReceiverRequest.ValidateAll() if the designated constraints
+// aren't met.
+type GetReceiverRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetReceiverRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetReceiverRequestMultiError) AllErrors() []error { return m }
+
+// GetReceiverRequestValidationError is the validation error returned by
+// GetReceiverRequest.Validate if the designated constraints aren't met.
+type GetReceiverRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetReceiverRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetReceiverRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetReceiverRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetReceiverRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetReceiverRequestValidationError) ErrorName() string {
+	return "GetReceiverRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetReceiverRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetReceiverRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetReceiverRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetReceiverRequestValidationError{}
+
+// Validate checks the field values on UpdateReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateReceiverRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateReceiverRequestMultiError, or nil if none found.
+func (m *UpdateReceiverRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateReceiverRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if !_UpdateReceiverRequest_Urn_Pattern.MatchString(m.GetUrn()) {
+		err := UpdateReceiverRequestValidationError{
+			field:  "Urn",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _UpdateReceiverRequest_Type_InLookup[m.GetType()]; !ok {
+		err := UpdateReceiverRequestValidationError{
+			field:  "Type",
+			reason: "value must be in list [slack pagerduty http]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for Configuration
+
+	if len(errors) > 0 {
+		return UpdateReceiverRequestMultiError(errors)
+	}
+	return nil
+}
+
+// UpdateReceiverRequestMultiError is an error wrapping multiple validation
+// errors returned by UpdateReceiverRequest.ValidateAll() if the designated
+// constraints aren't met.
+type UpdateReceiverRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateReceiverRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateReceiverRequestMultiError) AllErrors() []error { return m }
+
+// UpdateReceiverRequestValidationError is the validation error returned by
+// UpdateReceiverRequest.Validate if the designated constraints aren't met.
+type UpdateReceiverRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateReceiverRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateReceiverRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateReceiverRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateReceiverRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateReceiverRequestValidationError) ErrorName() string {
+	return "UpdateReceiverRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateReceiverRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateReceiverRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateReceiverRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateReceiverRequestValidationError{}
+
+var _UpdateReceiverRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
+
+var _UpdateReceiverRequest_Type_InLookup = map[string]struct{}{
+	"slack":     {},
+	"pagerduty": {},
+	"http":      {},
+}
+
+// Validate checks the field values on DeleteReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteReceiverRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteReceiverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteReceiverRequestMultiError, or nil if none found.
+func (m *DeleteReceiverRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteReceiverRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	if len(errors) > 0 {
+		return DeleteReceiverRequestMultiError(errors)
+	}
+	return nil
+}
+
+// DeleteReceiverRequestMultiError is an error wrapping multiple validation
+// errors returned by DeleteReceiverRequest.ValidateAll() if the designated
+// constraints aren't met.
+type DeleteReceiverRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteReceiverRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteReceiverRequestMultiError) AllErrors() []error { return m }
+
+// DeleteReceiverRequestValidationError is the validation error returned by
+// DeleteReceiverRequest.Validate if the designated constraints aren't met.
+type DeleteReceiverRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteReceiverRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteReceiverRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteReceiverRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteReceiverRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteReceiverRequestValidationError) ErrorName() string {
+	return "DeleteReceiverRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteReceiverRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteReceiverRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteReceiverRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteReceiverRequestValidationError{}
+
 // Validate checks the field values on ListAlertHistoryRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

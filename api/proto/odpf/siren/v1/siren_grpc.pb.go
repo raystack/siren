@@ -25,6 +25,11 @@ type SirenServiceClient interface {
 	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListReceivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReceiversResponse, error)
+	CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
+	GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
+	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
+	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
 	ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error)
@@ -97,6 +102,51 @@ func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProvi
 func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/DeleteProvider", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReceiversResponse, error) {
+	out := new(ListReceiversResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListReceivers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
+	out := new(Receiver)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/CreateReceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
+	out := new(Receiver)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/GetReceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
+	out := new(Receiver)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/UpdateReceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/DeleteReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -239,6 +289,11 @@ type SirenServiceServer interface {
 	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
 	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
 	DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error)
+	ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error)
+	CreateReceiver(context.Context, *CreateReceiverRequest) (*Receiver, error)
+	GetReceiver(context.Context, *GetReceiverRequest) (*Receiver, error)
+	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error)
+	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error)
 	ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error)
 	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
 	ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error)
@@ -277,6 +332,21 @@ func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdatePr
 }
 func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProvider not implemented")
+}
+func (UnimplementedSirenServiceServer) ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListReceivers not implemented")
+}
+func (UnimplementedSirenServiceServer) CreateReceiver(context.Context, *CreateReceiverRequest) (*Receiver, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateReceiver not implemented")
+}
+func (UnimplementedSirenServiceServer) GetReceiver(context.Context, *GetReceiverRequest) (*Receiver, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReceiver not implemented")
+}
+func (UnimplementedSirenServiceServer) UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateReceiver not implemented")
+}
+func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteReceiver not implemented")
 }
 func (UnimplementedSirenServiceServer) ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlertHistory not implemented")
@@ -437,6 +507,96 @@ func _SirenService_DeleteProvider_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteProvider(ctx, req.(*DeleteProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_ListReceivers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).ListReceivers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1.SirenService/ListReceivers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).ListReceivers(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_CreateReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateReceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).CreateReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1.SirenService/CreateReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).CreateReceiver(ctx, req.(*CreateReceiverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_GetReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1.SirenService/GetReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetReceiver(ctx, req.(*GetReceiverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_UpdateReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateReceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).UpdateReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1.SirenService/UpdateReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).UpdateReceiver(ctx, req.(*UpdateReceiverRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_DeleteReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteReceiverRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).DeleteReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1.SirenService/DeleteReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).DeleteReceiver(ctx, req.(*DeleteReceiverRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -723,6 +883,26 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProvider",
 			Handler:    _SirenService_DeleteProvider_Handler,
+		},
+		{
+			MethodName: "ListReceivers",
+			Handler:    _SirenService_ListReceivers_Handler,
+		},
+		{
+			MethodName: "CreateReceiver",
+			Handler:    _SirenService_CreateReceiver_Handler,
+		},
+		{
+			MethodName: "GetReceiver",
+			Handler:    _SirenService_GetReceiver_Handler,
+		},
+		{
+			MethodName: "UpdateReceiver",
+			Handler:    _SirenService_UpdateReceiver_Handler,
+		},
+		{
+			MethodName: "DeleteReceiver",
+			Handler:    _SirenService_DeleteReceiver_Handler,
 		},
 		{
 			MethodName: "ListAlertHistory",
