@@ -1548,3 +1548,59 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
+
+func TestGRPCServer_CreateReceiver(t *testing.T) {
+	configuration := make(map[string]string)
+	configuration["foo"] = "bar"
+	labels := make(map[string]string)
+	labels["foo"] = "bar"
+	dummyReq := &sirenv1.CreateReceiverRequest{
+		Urn:           "foo",
+		Type:          "bar",
+		Labels:        labels,
+		Configuration: configuration,
+	}
+	payload := &domain.Receiver{
+		Urn:           "foo",
+		Type:          "bar",
+		Labels:        labels,
+		Configuration: configuration,
+	}
+
+	t.Run("Should create a receiver object", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("CreateReceiver", payload).
+			Return(payload, nil).Once()
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, err)
+		assert.Equal(t, "foo", res.GetUrn())
+		assert.Equal(t, "bar", res.GetType())
+		assert.Equal(t, "bar", res.GetLabels()["foo"])
+		assert.Equal(t, "bar", res.GetConfiguration()["foo"])
+	})
+
+	t.Run("should return error code 13 if creating receiver failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("CreateReceiver", payload).
+			Return(nil, errors.New("random error")).Once()
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+	})
+}
