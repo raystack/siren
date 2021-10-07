@@ -166,8 +166,33 @@ func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1.DeleteProvid
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	
+
 	return &emptypb.Empty{}, nil
+}
+
+func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1.ListReceiversResponse, error) {
+	receivers, err := s.container.ReceiverService.ListReceivers()
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	res := &sirenv1.ListReceiversResponse{
+		Receivers: make([]*sirenv1.Receiver, 0),
+	}
+	for _, provider := range receivers {
+		item := &sirenv1.Receiver{
+			Id:            provider.Id,
+			Urn:           provider.Urn,
+			Type:          provider.Type,
+			Configuration: provider.Configuration,
+			Labels:        provider.Labels,
+			CreatedAt:     timestamppb.New(provider.CreatedAt),
+			UpdatedAt:     timestamppb.New(provider.UpdatedAt),
+		}
+		res.Receivers = append(res.Receivers, item)
+	}
+	return res, nil
 }
 
 func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {

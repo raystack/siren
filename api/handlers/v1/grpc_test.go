@@ -1496,3 +1496,55 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
+
+func TestGRPCServer_ListReceiver(t *testing.T) {
+	configuration := make(map[string]string)
+	configuration["foo"] = "bar"
+	labels := make(map[string]string)
+	labels["foo"] = "bar"
+	dummyResult := []*domain.Receiver{
+		{
+			Id:            1,
+			Urn:           "foo",
+			Type:          "bar",
+			Labels:        labels,
+			Configuration: configuration,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		},
+	}
+
+	t.Run("should return list of all receiver", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("ListReceivers").
+			Return(dummyResult, nil).Once()
+
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		assert.Nil(t, err)
+		assert.Equal(t, 1, len(res.GetReceivers()))
+	})
+
+	t.Run("should return error code 13 if getting providers failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		mockedReceiverService.
+			On("ListReceivers").
+			Return(nil, errors.New("random error"))
+
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+	})
+}

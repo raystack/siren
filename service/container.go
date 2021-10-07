@@ -27,6 +27,7 @@ type Container struct {
 	NotifierServices      domain.NotifierServices
 	SlackWorkspaceService domain.SlackWorkspaceService
 	ProviderService       domain.ProviderService
+	ReceiverService       domain.ReceiverService
 }
 
 func Init(db *gorm.DB, c *domain.Config,
@@ -46,6 +47,7 @@ func Init(db *gorm.DB, c *domain.Config,
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
 	slackworkspaceService := slackworkspace.NewService(codeExchangeService)
 	providerService := provider.NewService(db)
+
 	return &Container{
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
