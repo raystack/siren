@@ -18,9 +18,6 @@ import (
 	"strings"
 )
 
-var jsonMarshal = json.Marshal
-var jsonUnmarshal = json.Unmarshal
-
 type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
@@ -73,24 +70,11 @@ func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv
 }
 
 func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProviderRequest) (*sirenv1.Provider, error) {
-	c, err := jsonMarshal(req.GetCredentials())
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid credentials")
-	}
-
-	credentials := make(map[string]interface{})
-	err = jsonUnmarshal(c, &credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "unable to parse credentials")
-	}
-
 	provider, err := s.container.ProviderService.CreateProvider(&domain.Provider{
 		Host:        req.GetHost(),
 		Name:        req.GetName(),
 		Type:        req.GetType(),
-		Credentials: credentials,
+		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
@@ -145,25 +129,12 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequ
 }
 
 func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProviderRequest) (*sirenv1.Provider, error) {
-	c, err := jsonMarshal(req.GetCredentials())
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid credentials")
-	}
-
-	credentials := make(map[string]interface{})
-	err = jsonUnmarshal(c, &credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "unable to parse credentials")
-	}
-
 	provider, err := s.container.ProviderService.UpdateProvider(&domain.Provider{
 		Id:          req.GetId(),
 		Host:        req.GetHost(),
 		Name:        req.GetName(),
 		Type:        req.GetType(),
-		Credentials: credentials,
+		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
