@@ -1155,7 +1155,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("ListProviders").
-			Return(dummyResult, nil).Once()
+			Return(dummyResult, nil)
 		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -1242,7 +1242,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("CreateProvider", mock.Anything).
-			Return(newPayload, nil).Once()
+			Return(newPayload, nil)
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -1360,7 +1360,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("GetProvider", providerId).
-			Return(dummyResult, nil).Once()
+			Return(dummyResult, nil)
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
@@ -1448,7 +1448,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("UpdateProvider", mock.Anything).
-			Return(newPayload, nil).Once()
+			Return(newPayload, nil)
 		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
