@@ -263,6 +263,16 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiv
 	}, nil
 }
 
+func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1.DeleteReceiverRequest) (*emptypb.Empty, error) {
+	err := s.container.ReceiverService.DeleteReceiver(uint64(req.GetId()))
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
 	name := req.GetResource()
 	startTime := req.GetStartTime()
