@@ -180,15 +180,21 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 	res := &sirenv1.ListReceiversResponse{
 		Receivers: make([]*sirenv1.Receiver, 0),
 	}
-	for _, provider := range receivers {
+	for _, receiver := range receivers {
+		configurations, err := structpb.NewStruct(receiver.Configurations)
+		if err != nil {
+			s.logger.Error("handler", zap.Error(err))
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
+
 		item := &sirenv1.Receiver{
-			Id:            provider.Id,
-			Urn:           provider.Urn,
-			Type:          provider.Type,
-			Configuration: provider.Configuration,
-			Labels:        provider.Labels,
-			CreatedAt:     timestamppb.New(provider.CreatedAt),
-			UpdatedAt:     timestamppb.New(provider.UpdatedAt),
+			Id:             receiver.Id,
+			Urn:            receiver.Urn,
+			Type:           receiver.Type,
+			Configurations: configurations,
+			Labels:         receiver.Labels,
+			CreatedAt:      timestamppb.New(receiver.CreatedAt),
+			UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
 		}
 		res.Receivers = append(res.Receivers, item)
 	}
@@ -196,25 +202,58 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 }
 
 func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiverRequest) (*sirenv1.Receiver, error) {
+	var configurations map[string]interface{}
+
+	switch receiverType := req.GetType(); receiverType {
+	case "slack":
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["client_id"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+		}
+
+		_, ok = configurations["client_secret"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+		}
+
+		_, ok = configurations["auth_code"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+		}
+	case "pagerduty":
+		fmt.Println("handle pagerduty")
+	case "http":
+		fmt.Println("http")
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
+	}
+
 	receiver, err := s.container.ReceiverService.CreateReceiver(&domain.Receiver{
-		Urn:           req.GetUrn(),
-		Type:          req.GetType(),
-		Labels:        req.GetLabels(),
-		Configuration: req.Configuration,
+		Urn:            req.GetUrn(),
+		Type:           req.GetType(),
+		Labels:         req.GetLabels(),
+		Configurations: configurations,
 	})
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
+	c, err := structpb.NewStruct(receiver.Configurations)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
 	return &sirenv1.Receiver{
-		Id:            receiver.Id,
-		Urn:           receiver.Urn,
-		Type:          receiver.Type,
-		Labels:        receiver.Labels,
-		Configuration: receiver.Configuration,
-		CreatedAt:     timestamppb.New(receiver.CreatedAt),
-		UpdatedAt:     timestamppb.New(receiver.UpdatedAt),
+		Id:             receiver.Id,
+		Urn:            receiver.Urn,
+		Type:           receiver.Type,
+		Labels:         receiver.Labels,
+		Configurations: c,
+		CreatedAt:      timestamppb.New(receiver.CreatedAt),
+		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
 	}, nil
 }
 
@@ -228,38 +267,50 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	return &sirenv1.Receiver{
-		Id:            receiver.Id,
-		Urn:           receiver.Urn,
-		Type:          receiver.Type,
-		Labels:        receiver.Labels,
-		Configuration: receiver.Configuration,
-		CreatedAt:     timestamppb.New(receiver.CreatedAt),
-		UpdatedAt:     timestamppb.New(receiver.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiverRequest) (*sirenv1.Receiver, error) {
-	provider, err := s.container.ReceiverService.UpdateReceiver(&domain.Receiver{
-		Id:            req.GetId(),
-		Urn:           req.GetUrn(),
-		Type:          req.GetType(),
-		Labels:        req.GetLabels(),
-		Configuration: req.Configuration,
-	})
+	configuration, err := structpb.NewStruct(receiver.Configurations)
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &sirenv1.Receiver{
-		Id:            provider.Id,
-		Urn:           provider.Urn,
-		Type:          provider.Type,
-		Labels:        provider.Labels,
-		Configuration: provider.Configuration,
-		CreatedAt:     timestamppb.New(provider.CreatedAt),
-		UpdatedAt:     timestamppb.New(provider.UpdatedAt),
+		Id:             receiver.Id,
+		Urn:            receiver.Urn,
+		Type:           receiver.Type,
+		Labels:         receiver.Labels,
+		Configurations: configuration,
+		CreatedAt:      timestamppb.New(receiver.CreatedAt),
+		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
+	}, nil
+}
+
+func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiverRequest) (*sirenv1.Receiver, error) {
+	receiver, err := s.container.ReceiverService.UpdateReceiver(&domain.Receiver{
+		Id:             req.GetId(),
+		Urn:            req.GetUrn(),
+		Type:           req.GetType(),
+		Labels:         req.GetLabels(),
+		Configurations: req.GetConfigurations().AsMap(),
+	})
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	configuration, err := structpb.NewStruct(receiver.Configurations)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &sirenv1.Receiver{
+		Id:             receiver.Id,
+		Urn:            receiver.Urn,
+		Type:           receiver.Type,
+		Labels:         receiver.Labels,
+		Configurations: configuration,
+		CreatedAt:      timestamppb.New(receiver.CreatedAt),
+		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
 	}, nil
 }
 

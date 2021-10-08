@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
+	"strings"
 	"testing"
 	"time"
 
@@ -1155,10 +1156,11 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("ListProviders").
-			Return(dummyResult, nil)
+			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -1242,10 +1244,11 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("CreateProvider", mock.Anything).
-			Return(newPayload, nil)
+			Return(newPayload, nil).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -1360,10 +1363,10 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("GetProvider", providerId).
-			Return(dummyResult, nil)
+			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err,
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
@@ -1448,10 +1451,10 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 		mockedProviderService.
 			On("UpdateProvider", mock.Anything).
-			Return(newPayload, nil)
+			Return(newPayload, nil).Once()
 		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err,
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
@@ -1498,19 +1501,19 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 }
 
 func TestGRPCServer_ListReceiver(t *testing.T) {
-	configuration := make(map[string]string)
-	configuration["foo"] = "bar"
+	configurations := make(map[string]interface{})
+	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 	dummyResult := []*domain.Receiver{
 		{
-			Id:            1,
-			Urn:           "foo",
-			Type:          "bar",
-			Labels:        labels,
-			Configuration: configuration,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			Id:             1,
+			Urn:            "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurations,
+			CreatedAt:      time.Now(),
+			UpdatedAt:      time.Now(),
 		},
 	}
 
@@ -1547,27 +1550,61 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
+
+	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		configurations["foo"] = string([]byte{0xff})
+		dummyResult := []*domain.Receiver{
+			{
+				Id:             1,
+				Urn:            "foo",
+				Type:           "bar",
+				Labels:         labels,
+				Configurations: configurations,
+				CreatedAt:      time.Now(),
+				UpdatedAt:      time.Now(),
+			},
+		}
+
+		mockedReceiverService.
+			On("ListReceivers").
+			Return(dummyResult, nil)
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		assert.Nil(t, res)
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+	})
 }
 
 func TestGRPCServer_CreateReceiver(t *testing.T) {
-	configuration := make(map[string]string)
-	configuration["foo"] = "bar"
+	configurations := make(map[string]interface{})
+	configurations["client_id"] = "foo"
+	configurations["client_secret"] = "bar"
+	configurations["auth_code"] = "foo"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
+
+	configurationsData, _ := structpb.NewStruct(configurations)
 	dummyReq := &sirenv1.CreateReceiverRequest{
-		Urn:           "foo",
-		Type:          "bar",
-		Labels:        labels,
-		Configuration: configuration,
+		Urn:            "foo",
+		Type:           "slack",
+		Labels:         labels,
+		Configurations: configurationsData,
 	}
 	payload := &domain.Receiver{
-		Urn:           "foo",
-		Type:          "bar",
-		Labels:        labels,
-		Configuration: configuration,
+		Urn:            "foo",
+		Type:           "slack",
+		Labels:         labels,
+		Configurations: configurations,
 	}
 
-	t.Run("Should create a receiver object", func(t *testing.T) {
+	t.Run("Should create a slack receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
@@ -1582,9 +1619,84 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "foo", res.GetUrn())
-		assert.Equal(t, "bar", res.GetType())
+		assert.Equal(t, "slack", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
-		assert.Equal(t, "bar", res.GetConfiguration()["foo"])
+		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["client_id"])
+	})
+
+	t.Run("should return error code 3 if slack client_id configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_secret"] = "foo"
+		slackConfigurations["auth_code"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Urn:            "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if slack client_secret configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["auth_code"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Urn:            "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if slack auth_code configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["client_secret"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Urn:            "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.Nil(t, res)
 	})
 
 	t.Run("should return error code 13 if creating receiver failed", func(t *testing.T) {
@@ -1603,11 +1715,59 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
+
+	t.Run("should return error code 3 if receiver is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		configurationsData, _ := structpb.NewStruct(configurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Urn:            "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver not supported")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		configurations["workspace"] = string([]byte{0xff})
+		newPayload := &domain.Receiver{
+			Urn:            "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		mockedReceiverService.
+			On("CreateReceiver", mock.Anything).
+			Return(newPayload, nil)
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+	})
 }
 
 func TestGRPCServer_GetReceiver(t *testing.T) {
-	configuration := make(map[string]string)
-	configuration["foo"] = "bar"
+	configurations := make(map[string]interface{})
+	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
@@ -1616,10 +1776,10 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		Id: 1,
 	}
 	payload := &domain.Receiver{
-		Urn:           "foo",
-		Type:          "bar",
-		Labels:        labels,
-		Configuration: configuration,
+		Urn:            "foo",
+		Type:           "bar",
+		Labels:         labels,
+		Configurations: configurations,
 	}
 
 	t.Run("should return a receiver", func(t *testing.T) {
@@ -1639,7 +1799,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		assert.Equal(t, "foo", res.GetUrn())
 		assert.Equal(t, "bar", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
-		assert.Equal(t, "bar", res.GetConfiguration()["foo"])
+		assert.Equal(t, "bar", res.GetConfigurations().AsMap()["foo"])
 	})
 
 	t.Run("should return error code 5 if no receiver found", func(t *testing.T) {
@@ -1675,25 +1835,52 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
+
+	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		configurations["foo"] = string([]byte{0xff})
+		payload := &domain.Receiver{
+			Urn:            "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		mockedReceiverService.
+			On("GetReceiver", receiverId).
+			Return(payload, nil)
+		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+	})
 }
 
 func TestGRPCServer_UpdateReceiver(t *testing.T) {
-	configuration := make(map[string]string)
-	configuration["foo"] = "bar"
+	configurations := make(map[string]interface{})
+	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
+	configurationsData, _ := structpb.NewStruct(configurations)
 	dummyReq := &sirenv1.UpdateReceiverRequest{
-		Urn:           "foo",
-		Type:          "bar",
-		Labels:        labels,
-		Configuration: configuration,
+		Urn:            "foo",
+		Type:           "bar",
+		Labels:         labels,
+		Configurations: configurationsData,
 	}
 	payload := &domain.Receiver{
-		Urn:           "foo",
-		Type:          "bar",
-		Labels:        labels,
-		Configuration: configuration,
+		Urn:            "foo",
+		Type:           "bar",
+		Labels:         labels,
+		Configurations: configurations,
 	}
 
 	t.Run("should update receiver object", func(t *testing.T) {
@@ -1713,7 +1900,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		assert.Equal(t, "foo", res.GetUrn())
 		assert.Equal(t, "bar", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
-		assert.Equal(t, "bar", res.GetConfiguration()["foo"])
+		assert.Equal(t, "bar", res.GetConfigurations().AsMap()["foo"])
 	})
 
 	t.Run("should return error code 13 if updating receiver failed", func(t *testing.T) {
@@ -1731,6 +1918,31 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+	})
+
+	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		configurations["foo"] = string([]byte{0xff})
+		newPayload := &domain.Receiver{
+			Urn:            "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		mockedReceiverService.
+			On("UpdateReceiver", mock.Anything).
+			Return(newPayload, nil)
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 

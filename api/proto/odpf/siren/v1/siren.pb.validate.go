@@ -1167,7 +1167,34 @@ func (m *Receiver) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Configuration
+	if all {
+		switch v := interface{}(m.GetConfigurations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ReceiverValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfigurations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ReceiverValidationError{
+				field:  "Configurations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
@@ -1490,7 +1517,34 @@ func (m *CreateReceiverRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Configuration
+	if all {
+		switch v := interface{}(m.GetConfigurations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateReceiverRequestValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateReceiverRequestValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfigurations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateReceiverRequestValidationError{
+				field:  "Configurations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return CreateReceiverRequestMultiError(errors)
@@ -1730,7 +1784,34 @@ func (m *UpdateReceiverRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for Configuration
+	if all {
+		switch v := interface{}(m.GetConfigurations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateReceiverRequestValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateReceiverRequestValidationError{
+					field:  "Configurations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfigurations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateReceiverRequestValidationError{
+				field:  "Configurations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return UpdateReceiverRequestMultiError(errors)
