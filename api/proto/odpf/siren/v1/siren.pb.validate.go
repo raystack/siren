@@ -1152,7 +1152,7 @@ func (m *Receiver) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for Urn
+	// no validation rules for Name
 
 	if _, ok := _Receiver_Type_InLookup[m.GetType()]; !ok {
 		err := ReceiverValidationError{
@@ -1493,9 +1493,9 @@ func (m *CreateReceiverRequest) validate(all bool) error {
 
 	var errors []error
 
-	if !_CreateReceiverRequest_Urn_Pattern.MatchString(m.GetUrn()) {
+	if !_CreateReceiverRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := CreateReceiverRequestValidationError{
-			field:  "Urn",
+			field:  "Name",
 			reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
 		}
 		if !all {
@@ -1625,7 +1625,7 @@ var _ interface {
 	ErrorName() string
 } = CreateReceiverRequestValidationError{}
 
-var _CreateReceiverRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
+var _CreateReceiverRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
 
 var _CreateReceiverRequest_Type_InLookup = map[string]struct{}{
 	"slack":     {},
@@ -1760,9 +1760,9 @@ func (m *UpdateReceiverRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if !_UpdateReceiverRequest_Urn_Pattern.MatchString(m.GetUrn()) {
+	if !_UpdateReceiverRequest_Name_Pattern.MatchString(m.GetName()) {
 		err := UpdateReceiverRequestValidationError{
-			field:  "Urn",
+			field:  "Name",
 			reason: "value does not match regex pattern \"^[A-Za-z0-9_.-]+$\"",
 		}
 		if !all {
@@ -1892,7 +1892,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateReceiverRequestValidationError{}
 
-var _UpdateReceiverRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
+var _UpdateReceiverRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
 
 var _UpdateReceiverRequest_Type_InLookup = map[string]struct{}{
 	"slack":     {},

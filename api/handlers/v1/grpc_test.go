@@ -1508,7 +1508,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	dummyResult := []*domain.Receiver{
 		{
 			Id:             1,
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
 			Configurations: configurations,
@@ -1563,7 +1563,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		dummyResult := []*domain.Receiver{
 			{
 				Id:             1,
-				Urn:            "foo",
+				Name:           "foo",
 				Type:           "bar",
 				Labels:         labels,
 				Configurations: configurations,
@@ -1592,13 +1592,13 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 	configurationsData, _ := structpb.NewStruct(configurations)
 	dummyReq := &sirenv1.CreateReceiverRequest{
-		Urn:            "foo",
+		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurationsData,
 	}
 	payload := &domain.Receiver{
-		Urn:            "foo",
+		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurations,
@@ -1618,7 +1618,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetUrn())
+		assert.Equal(t, "foo", res.GetName())
 		assert.Equal(t, "slack", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
 		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["client_id"])
@@ -1638,14 +1638,15 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
 		dummyReq := &sirenv1.CreateReceiverRequest{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
 			Configurations: configurationsData,
 		}
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing client_id")
 		assert.Nil(t, res)
 	})
 
@@ -1663,14 +1664,15 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
 		dummyReq := &sirenv1.CreateReceiverRequest{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
 			Configurations: configurationsData,
 		}
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing client_secret")
 		assert.Nil(t, res)
 	})
 
@@ -1688,14 +1690,15 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
 		dummyReq := &sirenv1.CreateReceiverRequest{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
 			Configurations: configurationsData,
 		}
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver configuration not valid")
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing auth_code")
 		assert.Nil(t, res)
 	})
 
@@ -1727,7 +1730,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		configurationsData, _ := structpb.NewStruct(configurations)
 		dummyReq := &sirenv1.CreateReceiverRequest{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
 			Configurations: configurationsData,
@@ -1749,7 +1752,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		configurations["workspace"] = string([]byte{0xff})
 		newPayload := &domain.Receiver{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
 			Configurations: configurations,
@@ -1776,7 +1779,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		Id: 1,
 	}
 	payload := &domain.Receiver{
-		Urn:            "foo",
+		Name:           "foo",
 		Type:           "bar",
 		Labels:         labels,
 		Configurations: configurations,
@@ -1796,7 +1799,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetUrn())
+		assert.Equal(t, "foo", res.GetName())
 		assert.Equal(t, "bar", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
 		assert.Equal(t, "bar", res.GetConfigurations().AsMap()["foo"])
@@ -1847,7 +1850,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 		configurations["foo"] = string([]byte{0xff})
 		payload := &domain.Receiver{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
 			Configurations: configurations,
@@ -1865,20 +1868,23 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	configurations := make(map[string]interface{})
-	configurations["foo"] = "bar"
+	configurations["client_id"] = "foo"
+	configurations["client_secret"] = "bar"
+	configurations["auth_code"] = "foo"
+
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
 	configurationsData, _ := structpb.NewStruct(configurations)
 	dummyReq := &sirenv1.UpdateReceiverRequest{
-		Urn:            "foo",
-		Type:           "bar",
+		Name:           "foo",
+		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurationsData,
 	}
 	payload := &domain.Receiver{
-		Urn:            "foo",
-		Type:           "bar",
+		Name:           "foo",
+		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurations,
 	}
@@ -1897,10 +1903,110 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetUrn())
-		assert.Equal(t, "bar", res.GetType())
+		assert.Equal(t, "foo", res.GetName())
+		assert.Equal(t, "slack", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
-		assert.Equal(t, "bar", res.GetConfigurations().AsMap()["foo"])
+		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["client_id"])
+	})
+
+	t.Run("should return error code 3 if slack client_id configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_secret"] = "foo"
+		slackConfigurations["auth_code"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing client_id")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if slack client_secret configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["auth_code"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing client_secret")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if slack auth_code configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["client_secret"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "slack",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing auth_code")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if receiver is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		configurationsData, _ := structpb.NewStruct(configurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = receiver not supported")
+		assert.Nil(t, res)
 	})
 
 	t.Run("should return error code 13 if updating receiver failed", func(t *testing.T) {
@@ -1930,7 +2036,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		}
 		configurations["foo"] = string([]byte{0xff})
 		newPayload := &domain.Receiver{
-			Urn:            "foo",
+			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
 			Configurations: configurations,

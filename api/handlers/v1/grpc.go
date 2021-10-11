@@ -189,7 +189,7 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 
 		item := &sirenv1.Receiver{
 			Id:             receiver.Id,
-			Urn:            receiver.Urn,
+			Name:           receiver.Name,
 			Type:           receiver.Type,
 			Configurations: configurations,
 			Labels:         receiver.Labels,
@@ -209,17 +209,17 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 		configurations = req.GetConfigurations().AsMap()
 		_, ok := configurations["client_id"].(string)
 		if !ok {
-			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing client_id")
 		}
 
 		_, ok = configurations["client_secret"].(string)
 		if !ok {
-			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing client_secret")
 		}
 
 		_, ok = configurations["auth_code"].(string)
 		if !ok {
-			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid")
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing auth_code")
 		}
 	case "pagerduty":
 		fmt.Println("handle pagerduty")
@@ -230,7 +230,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 	}
 
 	receiver, err := s.container.ReceiverService.CreateReceiver(&domain.Receiver{
-		Urn:            req.GetUrn(),
+		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
@@ -248,7 +248,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 
 	return &sirenv1.Receiver{
 		Id:             receiver.Id,
-		Urn:            receiver.Urn,
+		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: c,
@@ -275,7 +275,7 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 
 	return &sirenv1.Receiver{
 		Id:             receiver.Id,
-		Urn:            receiver.Urn,
+		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: configuration,
@@ -285,12 +285,42 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 }
 
 func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiverRequest) (*sirenv1.Receiver, error) {
+	var configurations map[string]interface{}
+
+	switch receiverType := req.GetType(); receiverType {
+	case "slack":
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["client_id"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"receiver configuration not valid: missing client_id")
+		}
+
+		_, ok = configurations["client_secret"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"receiver configuration not valid: missing client_secret")
+		}
+
+		_, ok = configurations["auth_code"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument,
+				"receiver configuration not valid: missing auth_code")
+		}
+	case "pagerduty":
+		fmt.Println("handle pagerduty")
+	case "http":
+		fmt.Println("http")
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
+	}
+
 	receiver, err := s.container.ReceiverService.UpdateReceiver(&domain.Receiver{
 		Id:             req.GetId(),
-		Urn:            req.GetUrn(),
+		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
-		Configurations: req.GetConfigurations().AsMap(),
+		Configurations: configurations,
 	})
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
@@ -305,7 +335,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiv
 
 	return &sirenv1.Receiver{
 		Id:             receiver.Id,
-		Urn:            receiver.Urn,
+		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: configuration,

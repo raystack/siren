@@ -1,37 +1,123 @@
 package receiver
 
 import (
+	"bytes"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"github.com/gtank/cryptopasta"
 	"gorm.io/gorm"
+	"io"
 )
 
 // Repository talks to the store to read or insert data
 type Repository struct {
-	db *gorm.DB
+	db            *gorm.DB
+	encryptionKey *[32]byte
+}
+
+var cryptopastaEncryptor = cryptopasta.Encrypt
+
+func encryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
+	cipher, err := cryptopastaEncryptor([]byte(accessToken), encryptionKey)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(cipher), nil
+}
+
+var cryptopastaDecryptor = cryptopasta.Decrypt
+
+func decryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
+	encrypted, err := base64.StdEncoding.DecodeString(accessToken)
+	if err != nil {
+		return "", err
+	}
+	decryptedToken, err := cryptopastaDecryptor(encrypted, encryptionKey)
+	if err != nil {
+		return "", err
+	}
+	return string(decryptedToken), nil
 }
 
 // NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+func NewRepository(db *gorm.DB, encryptionKey string) (*Repository, error) {
+	secretKey := &[32]byte{}
+	if len(encryptionKey) < 32 {
+		return nil, errors.New("random hash should be 32 chars in length")
+	}
+	_, err := io.ReadFull(bytes.NewBufferString(encryptionKey), secretKey[:])
+	if err != nil {
+		return nil, err
+	}
+	return &Repository{db, secretKey}, nil
 }
 
 func (r Repository) List() ([]*Receiver, error) {
-	panic("implement me")
+	var receivers []*Receiver
+	selectQuery := fmt.Sprintf("select * from receivers")
+	result := r.db.Raw(selectQuery).Find(&receivers)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return receivers, nil
 }
 
 func (r Repository) Create(receiver *Receiver) (*Receiver, error) {
-	panic("implement me")
+	var newReceiver Receiver
+	result := r.db.Create(receiver)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	result = r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&newReceiver)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &newReceiver, nil
 }
 
-func (r Repository) Get(u uint64) (*Receiver, error) {
-	panic("implement me")
+func (r Repository) Get(id uint64) (*Receiver, error) {
+	var receiver Receiver
+	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&receiver)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, nil
+	}
+
+	return &receiver, nil
 }
 
 func (r Repository) Update(receiver *Receiver) (*Receiver, error) {
-	panic("implement me")
+	var newReceiver, existingReceiver Receiver
+	result := r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&existingReceiver)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("receiver doesn't exist")
+	} else {
+		result = r.db.Where("id = ?", receiver.Id).Updates(receiver)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+	}
+
+	result = r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&newReceiver)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &newReceiver, nil
 }
 
-func (r Repository) Delete(u uint64) error {
-	panic("implement me")
+func (r Repository) Delete(id uint64) error {
+	var receiver Receiver
+	result := r.db.Where("id = ?", id).Delete(&receiver)
+	return result.Error
 }
 
 func (r Repository) Migrate() error {

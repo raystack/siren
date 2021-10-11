@@ -43,7 +43,7 @@ func (a StringStringMap) Value() (driver.Value, error) {
 
 type Receiver struct {
 	Id             uint64 `gorm:"primarykey"`
-	Urn            string
+	Name           string
 	Type           string
 	Labels         StringStringMap    `gorm:"type:jsonb" sql:"type:jsonb" `
 	Configurations StringInterfaceMap `gorm:"type:jsonb" sql:"type:jsonb" `
@@ -56,7 +56,7 @@ func (receiver *Receiver) fromDomain(t *domain.Receiver) *Receiver {
 		return nil
 	}
 	receiver.Id = t.Id
-	receiver.Urn = t.Urn
+	receiver.Name = t.Name
 	receiver.Type = t.Type
 	receiver.Labels = t.Labels
 	receiver.Configurations = t.Configurations
@@ -71,7 +71,7 @@ func (receiver *Receiver) toDomain() *domain.Receiver {
 	}
 	return &domain.Receiver{
 		Id:             receiver.Id,
-		Urn:            receiver.Urn,
+		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: receiver.Configurations,

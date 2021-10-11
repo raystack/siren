@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/odpf/siren/pkg/provider"
+	"github.com/odpf/siren/pkg/receiver"
 	"github.com/odpf/siren/pkg/slackworkspace"
 	"net/http"
 
@@ -47,6 +48,10 @@ func Init(db *gorm.DB, c *domain.Config,
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
 	slackworkspaceService := slackworkspace.NewService(codeExchangeService)
 	providerService := provider.NewService(db)
+	receiverService, err := receiver.NewService(db, httpClient, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create receiver service")
+	}
 
 	return &Container{
 		TemplatesService:    templatesService,
@@ -59,6 +64,7 @@ func Init(db *gorm.DB, c *domain.Config,
 		},
 		SlackWorkspaceService: slackworkspaceService,
 		ProviderService:       providerService,
+		ReceiverService:       receiverService,
 	}, nil
 }
 
@@ -85,6 +91,10 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 		return err
 	}
 	err = container.ProviderService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = container.ReceiverService.Migrate()
 	if err != nil {
 		return err
 	}
