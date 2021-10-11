@@ -61,7 +61,7 @@ func TestListProviders(t *testing.T) {
 	})
 }
 
-func TestCreateProviders(t *testing.T) {
+func TestCreateProvider(t *testing.T) {
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
 	labels := make(StringStringMap)
@@ -110,7 +110,7 @@ func TestCreateProviders(t *testing.T) {
 	})
 }
 
-func TestGetProviders(t *testing.T) {
+func TestGetProvider(t *testing.T) {
 	providerID := uint64(10)
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
@@ -160,7 +160,7 @@ func TestGetProviders(t *testing.T) {
 	})
 }
 
-func TestUpdateProviders(t *testing.T) {
+func TestUpdateProvider(t *testing.T) {
 	timenow := time.Now()
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
@@ -209,7 +209,7 @@ func TestUpdateProviders(t *testing.T) {
 	})
 }
 
-func TestDeleteProviders(t *testing.T) {
+func TestDeleteProvider(t *testing.T) {
 	credentials := make(StringInterfaceMap)
 	credentials["foo"] = "bar"
 	labels := make(StringStringMap)

@@ -53,34 +53,34 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (Provider *Provider) fromDomain(t *domain.Provider) *Provider {
+func (provider *Provider) fromDomain(t *domain.Provider) *Provider {
 	if t == nil {
 		return nil
 	}
-	Provider.Id = t.Id
-	Provider.Host = t.Host
-	Provider.Name = t.Name
-	Provider.Type = t.Type
-	Provider.Credentials = t.Credentials
-	Provider.Labels = t.Labels
-	Provider.CreatedAt = t.CreatedAt
-	Provider.UpdatedAt = t.UpdatedAt
-	return Provider
+	provider.Id = t.Id
+	provider.Host = t.Host
+	provider.Name = t.Name
+	provider.Type = t.Type
+	provider.Credentials = t.Credentials
+	provider.Labels = t.Labels
+	provider.CreatedAt = t.CreatedAt
+	provider.UpdatedAt = t.UpdatedAt
+	return provider
 }
 
-func (Provider *Provider) toDomain() *domain.Provider {
-	if Provider == nil {
+func (provider *Provider) toDomain() *domain.Provider {
+	if provider == nil {
 		return nil
 	}
 	return &domain.Provider{
-		Id:          Provider.Id,
-		Host:        Provider.Host,
-		Name:        Provider.Name,
-		Type:        Provider.Type,
-		Credentials: Provider.Credentials,
-		Labels:      Provider.Labels,
-		CreatedAt:   Provider.CreatedAt,
-		UpdatedAt:   Provider.UpdatedAt,
+		Id:          provider.Id,
+		Host:        provider.Host,
+		Name:        provider.Name,
+		Type:        provider.Type,
+		Credentials: provider.Credentials,
+		Labels:      provider.Labels,
+		CreatedAt:   provider.CreatedAt,
+		UpdatedAt:   provider.UpdatedAt,
 	}
 }
 

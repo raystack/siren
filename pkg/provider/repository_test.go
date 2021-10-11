@@ -204,7 +204,7 @@ func (s *RepositoryTestSuite) TestGet() {
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if providers of given id does not exist", func() {
+	s.Run("should return nil if provider of given id does not exist", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
 
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
