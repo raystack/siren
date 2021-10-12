@@ -20,8 +20,8 @@ type CodeExchangeHTTPResponse struct {
 
 // Service handles business logic
 type Service struct {
-	repository ReceiverRepository
-	exchanger  Exchanger
+	repository  ReceiverRepository
+	slackHelper SlackHelper
 }
 
 // NewService returns repository struct
@@ -31,9 +31,14 @@ func NewService(db *gorm.DB, httpClient Doer, encryptionKey string) (domain.Rece
 		return nil, errors.Wrap(err, "failed to create receiver repository")
 	}
 
+	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create slack helper")
+	}
+
 	return &Service{
-		repository: repository,
-		exchanger:  NewSlackClient(httpClient),
+		repository:  repository,
+		slackHelper: slackHelper,
 	}, nil
 }
 
@@ -54,27 +59,18 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 }
 
 func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
+	var data *domain.Receiver
+	var err error
 	p := &Receiver{}
-	payload := p.fromDomain(receiver)
 
-	if payload.Type == Slack {
-		configurations := payload.Configurations
-		clientId := configurations["client_id"].(string)
-		clientSecret := configurations["client_secret"].(string)
-		code := configurations["auth_code"].(string)
-
-		response, err := service.exchanger.Exchange(code, clientId, clientSecret)
+	if receiver.Type == Slack {
+		data, err = service.slackHelper.Transform(receiver)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to exchange code with slack OAuth server")
+			return nil, errors.Wrap(err, "slackHelper.Transform")
 		}
-
-		newConfigurations := map[string]interface{}{}
-		newConfigurations["workspace"] = response.Team.Name
-		newConfigurations["token"] = response.AccessToken
-		payload.Configurations = newConfigurations
-		//transormedReceiver := service.slackTransformer.transform()
 	}
 
+	payload := p.fromDomain(data)
 	newReceiver, err := service.repository.Create(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.Create")
@@ -93,26 +89,18 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 }
 
 func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
+	var data *domain.Receiver
+	var err error
 	p := &Receiver{}
-	payload := p.fromDomain(receiver)
 
-	if payload.Type == Slack {
-		configurations := payload.Configurations
-		clientId := configurations["client_id"].(string)
-		clientSecret := configurations["client_secret"].(string)
-		code := configurations["auth_code"].(string)
-
-		response, err := service.exchanger.Exchange(code, clientId, clientSecret)
+	if receiver.Type == Slack {
+		data, err = service.slackHelper.Transform(receiver)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to exchange code with slack OAuth server")
+			return nil, errors.Wrap(err, "slackHelper.Transform")
 		}
-
-		newConfigurations := map[string]interface{}{}
-		newConfigurations["workspace"] = response.Team.Name
-		newConfigurations["token"] = response.AccessToken
-		payload.Configurations = newConfigurations
 	}
 
+	payload := p.fromDomain(data)
 	newReceiver, err := service.repository.Update(payload)
 	if err != nil {
 		return nil, err

@@ -2,10 +2,8 @@ package receiver
 
 import (
 	"bytes"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/gtank/cryptopasta"
 	"gorm.io/gorm"
 	"io"
 )
@@ -16,29 +14,6 @@ type Repository struct {
 	encryptionKey *[32]byte
 }
 
-var cryptopastaEncryptor = cryptopasta.Encrypt
-
-func encryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
-	cipher, err := cryptopastaEncryptor([]byte(accessToken), encryptionKey)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(cipher), nil
-}
-
-var cryptopastaDecryptor = cryptopasta.Decrypt
-
-func decryptToken(accessToken string, encryptionKey *[32]byte) (string, error) {
-	encrypted, err := base64.StdEncoding.DecodeString(accessToken)
-	if err != nil {
-		return "", err
-	}
-	decryptedToken, err := cryptopastaDecryptor(encrypted, encryptionKey)
-	if err != nil {
-		return "", err
-	}
-	return string(decryptedToken), nil
-}
 
 // NewRepository returns repository struct
 func NewRepository(db *gorm.DB, encryptionKey string) (*Repository, error) {
