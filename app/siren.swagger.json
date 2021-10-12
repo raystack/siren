@@ -179,6 +179,175 @@
         ]
       }
     },
+    "/providers": {
+      "get": {
+        "operationId": "SirenService_ListProviders",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListProvidersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "post": {
+        "operationId": "SirenService_CreateProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Provider"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateProviderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      }
+    },
+    "/providers/{id}": {
+      "get": {
+        "operationId": "SirenService_GetProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Provider"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "delete": {
+        "operationId": "SirenService_DeleteProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "put": {
+        "operationId": "SirenService_UpdateProvider",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Provider"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "credentials": {
+                  "type": "object"
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      }
+    },
     "/rules": {
       "get": {
         "operationId": "SirenService_ListRules",
@@ -256,6 +425,36 @@
             "schema": {
               "$ref": "#/definitions/v1UpdateRuleRequest"
             }
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      }
+    },
+    "/slackworkspaces/{workspaceName}/channels": {
+      "get": {
+        "operationId": "SirenService_ListWorkspaceChannels",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListWorkspaceChannelsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workspaceName",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -503,36 +702,6 @@
           "SirenService"
         ]
       }
-    },
-    "/workspaces/{workspaceName}/channels": {
-      "get": {
-        "operationId": "SirenService_ListWorkspaceChannels",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListWorkspaceChannelsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "workspaceName",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SirenService"
-        ]
-      }
     }
   },
   "definitions": {
@@ -657,6 +826,29 @@
         }
       }
     },
+    "v1CreateProviderRequest": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "credentials": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1Critical": {
       "type": "object",
       "properties": {
@@ -723,6 +915,17 @@
         }
       }
     },
+    "v1ListProvidersResponse": {
+      "type": "object",
+      "properties": {
+        "providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Provider"
+          }
+        }
+      }
+    },
     "v1ListRulesResponse": {
       "type": "object",
       "properties": {
@@ -751,7 +954,7 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Workspace"
+            "$ref": "#/definitions/v1SlackWorkspace"
           }
         }
       }
@@ -761,6 +964,41 @@
       "properties": {
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "v1Provider": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "host": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "credentials": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -855,6 +1093,17 @@
         },
         "warning": {
           "$ref": "#/definitions/v1Warning"
+        }
+      }
+    },
+    "v1SlackWorkspace": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
         }
       }
     },
@@ -1010,17 +1259,6 @@
       "type": "object",
       "properties": {
         "channel": {
-          "type": "string"
-        }
-      }
-    },
-    "v1Workspace": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
           "type": "string"
         }
       }

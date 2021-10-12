@@ -1,4 +1,4 @@
-package workspace
+package slackworkspace
 
 import (
 	"github.com/odpf/siren/domain"
