@@ -6,12 +6,17 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/suite"
+	"testing"
 )
 
 type SlackRepositoryTestSuite struct {
 	suite.Suite
 	repository SlackRepository
 	slacker    *mocks.SlackService
+}
+
+func TestSlackRepository(t *testing.T) {
+	suite.Run(t, new(SlackRepositoryTestSuite))
 }
 
 func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {

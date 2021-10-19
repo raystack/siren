@@ -222,9 +222,17 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing auth_code")
 		}
 	case "pagerduty":
-		fmt.Println("handle pagerduty")
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["service_key"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing service_key")
+		}
 	case "http":
-		fmt.Println("http")
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["url"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing url")
+		}
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
@@ -315,9 +323,17 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiv
 				"receiver configuration not valid: missing auth_code")
 		}
 	case "pagerduty":
-		fmt.Println("handle pagerduty")
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["service_key"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing service_key")
+		}
 	case "http":
-		fmt.Println("http")
+		configurations = req.GetConfigurations().AsMap()
+		_, ok := configurations["url"].(string)
+		if !ok {
+			return nil, status.Errorf(codes.InvalidArgument, "receiver configuration not valid: missing url")
+		}
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}

@@ -201,14 +201,14 @@ func (s *RepositoryTestSuite) TestGet() {
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if receiver of given id does not exist", func() {
+	s.Run("should return error if receiver of given id does not exist", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
 
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 
 		actualReceiver, err := s.repository.Get(1)
 		s.Nil(actualReceiver)
-		s.Nil(err)
+		s.EqualError(err, "receiver not found: 1")
 	})
 
 	s.Run("should return error in getting receiver of given id", func() {

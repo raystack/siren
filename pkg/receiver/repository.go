@@ -50,7 +50,7 @@ func (r Repository) Get(id uint64) (*Receiver, error) {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, nil
+		return nil, errors.New(fmt.Sprintf("receiver not found: %d", id))
 	}
 
 	return &receiver, nil

@@ -12,6 +12,10 @@ const (
 	Slack string = "slack"
 )
 
+var (
+	jsonMarshal = json.Marshal
+)
+
 type CodeExchangeHTTPResponse struct {
 	AccessToken string `json:"access_token"`
 	Team        struct {
@@ -59,18 +63,17 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 }
 
 func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
-	var data *domain.Receiver
 	var err error
 	p := &Receiver{}
 
 	if receiver.Type == Slack {
-		data, err = service.slackHelper.Transform(receiver)
+		receiver, err = service.slackHelper.Transform(receiver)
 		if err != nil {
 			return nil, errors.Wrap(err, "slackHelper.Transform")
 		}
 	}
 
-	payload := p.fromDomain(data)
+	payload := p.fromDomain(receiver)
 	newReceiver, err := service.repository.Create(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.Create")
@@ -99,7 +102,7 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 			return nil, errors.Wrap(err, fmt.Sprintf("could not get channels"))
 		}
 
-		data, err := json.Marshal(channels)
+		data, err := jsonMarshal(channels)
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("invalid channels"))
 		}
@@ -112,18 +115,17 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 }
 
 func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
-	var data *domain.Receiver
 	var err error
 	p := &Receiver{}
 
 	if receiver.Type == Slack {
-		data, err = service.slackHelper.Transform(receiver)
+		receiver, err = service.slackHelper.Transform(receiver)
 		if err != nil {
 			return nil, errors.Wrap(err, "slackHelper.Transform")
 		}
 	}
 
-	payload := p.fromDomain(data)
+	payload := p.fromDomain(receiver)
 	newReceiver, err := service.repository.Update(payload)
 	if err != nil {
 		return nil, err

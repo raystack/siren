@@ -190,13 +190,14 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 	s.Run("should call repository Get method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		configurations["token"] = "key"
+		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("Decrypt", "key").
 			Return("token", nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "token").
 			Return([]Channel{
 				{ID: "1", Name: "foo"},
 			}, nil).Once()
-		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 
 		result, err := dummyService.GetReceiver(receiverID)
 		s.Nil(err)
@@ -206,6 +207,10 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 	s.Run("should call repository Get method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock}
+		newConfigurations := make(StringInterfaceMap)
+		newConfigurations["token"] = "key"
+		receiver.Configurations = newConfigurations
+
 		s.repositoryMock.On("Get", receiverID).
 			Return(nil, errors.New("random error")).Once()
 
@@ -215,6 +220,58 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
 	})
 
+	s.Run("should return error if slack token decryption failed", func() {
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
+		s.slackHelperMock.On("Decrypt", "key").
+			Return("", errors.New("random error")).Once()
+
+		result, err := dummyService.GetReceiver(receiverID)
+		s.Nil(result)
+		s.EqualError(err, "slackHelper.Decrypt: random error")
+		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
+		s.slackHelperMock.AssertCalled(s.T(), "Decrypt", "key")
+	})
+
+	s.Run("should return error if getting slack channels failed", func() {
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
+		s.slackHelperMock.On("Decrypt", "key").
+			Return("token", nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "token").
+			Return(nil, errors.New("random error")).Once()
+
+		result, err := dummyService.GetReceiver(receiverID)
+		s.Nil(result)
+		s.EqualError(err, "could not get channels: random error")
+		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
+	})
+
+	s.Run("should return error if invalid slack channels", func() {
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		oldjsonMarshal := jsonMarshal
+		jsonMarshal = func(interface{}) ([]byte, error) {
+			return nil, errors.New("random error")
+		}
+		defer func() { jsonMarshal = oldjsonMarshal }()
+
+		newConfigurations := make(StringInterfaceMap)
+		newConfigurations["token"] = "key"
+		receiver.Configurations = newConfigurations
+
+		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
+		s.slackHelperMock.On("Decrypt", "key").
+			Return("token", nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "token").
+			Return([]Channel{
+				{ID: "1", Name: string([]byte{0xff})},
+			}, nil).Once()
+
+		result, err := dummyService.GetReceiver(receiverID)
+		s.Nil(result)
+		s.EqualError(err, "invalid channels: random error")
+		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
+	})
 }
 
 func (s *ServiceTestSuite) TestService_UpdateReceiver() {

@@ -1532,6 +1532,11 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetReceivers()))
+		assert.Equal(t, uint64(1), res.GetReceivers()[0].GetId())
+		assert.Equal(t, "foo", res.GetReceivers()[0].GetName())
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetType())
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetConfigurations().AsMap()["foo"])
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetLabels()["foo"])
 	})
 
 	t.Run("should return error code 13 if getting providers failed", func(t *testing.T) {
@@ -1702,6 +1707,52 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
+	t.Run("should return error code 3 if pagerduty service_key configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Name:           "foo",
+			Type:           "pagerduty",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing service_key")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if http url configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Name:           "foo",
+			Type:           "http",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing url")
+		assert.Nil(t, res)
+	})
+
 	t.Run("should return error code 13 if creating receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
@@ -1839,7 +1890,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+	t.Run("should return error code 13 if NewStruct conversion of configuration failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
@@ -1854,6 +1905,33 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Type:           "bar",
 			Labels:         labels,
 			Configurations: configurations,
+		}
+
+		mockedReceiverService.
+			On("GetReceiver", receiverId).
+			Return(payload, nil)
+		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
+			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+	})
+
+	t.Run("should return error code 13 if data NewStruct conversion of data failed", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		data := make(map[string]interface{})
+		data["channels"] = string([]byte{0xff})
+		payload := &domain.Receiver{
+			Name:           "foo",
+			Type:           "bar",
+			Labels:         labels,
+			Configurations: configurations,
+			Data:           data,
 		}
 
 		mockedReceiverService.
@@ -1984,6 +2062,58 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
 			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing auth_code")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if pagerduty service_key configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["client_secret"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "pagerduty",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing service_key")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if http url configuration is missing", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		slackConfigurations := make(map[string]interface{})
+		slackConfigurations["client_id"] = "foo"
+		slackConfigurations["client_secret"] = "foo"
+
+		configurationsData, _ := structpb.NewStruct(slackConfigurations)
+		dummyReq := &sirenv1.UpdateReceiverRequest{
+			Name:           "foo",
+			Type:           "http",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
+		assert.EqualError(t, err,
+			"rpc error: code = InvalidArgument desc = receiver configuration not valid: missing url")
 		assert.Nil(t, res)
 	})
 
