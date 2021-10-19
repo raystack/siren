@@ -12,11 +12,13 @@ type ServiceTestSuite struct {
 	suite.Suite
 	slackHelperMock *MockSlackHelper
 	repositoryMock  *MockReceiverRepository
+	slacker         *MockSlackRepository
 }
 
 func (s *ServiceTestSuite) SetupTest() {
 	s.slackHelperMock = &MockSlackHelper{}
 	s.repositoryMock = &MockReceiverRepository{}
+	s.slacker = &MockSlackRepository{}
 }
 
 func TestService(t *testing.T) {
@@ -157,10 +159,14 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 func (s *ServiceTestSuite) TestService_GetReceiver() {
 	receiverID := uint64(10)
 	configurations := make(StringInterfaceMap)
-	configurations["foo"] = "bar"
+	configurations["token"] = "key"
 
 	labels := make(StringStringMap)
 	labels["foo"] = "bar"
+
+	data := make(StringInterfaceMap)
+	data["channels"] = "[{\"id\":\"1\",\"name\":\"foo\"}]"
+
 	timenow := time.Now()
 	dummyReceiver := &domain.Receiver{
 		Id:             10,
@@ -168,6 +174,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurations,
+		Data:           data,
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
@@ -182,7 +189,13 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 	}
 
 	s.Run("should call repository Get method and return result in domain's type", func() {
-		dummyService := Service{repository: s.repositoryMock}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		s.slackHelperMock.On("Decrypt", "key").
+			Return("token", nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "token").
+			Return([]Channel{
+				{ID: "1", Name: "foo"},
+			}, nil).Once()
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 
 		result, err := dummyService.GetReceiver(receiverID)

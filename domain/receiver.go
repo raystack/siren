@@ -10,6 +10,7 @@ type Receiver struct {
 	Type           string                 `json:"type"`
 	Labels         map[string]string      `json:"labels"`
 	Configurations map[string]interface{} `json:"configurations"`
+	Data           map[string]interface{} `json:"data"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
 }

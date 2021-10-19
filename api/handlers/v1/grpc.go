@@ -273,12 +273,19 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
+	data, err := structpb.NewStruct(receiver.Data)
+	if err != nil {
+		s.logger.Error("handler", zap.Error(err))
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
 	return &sirenv1.Receiver{
 		Id:             receiver.Id,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: configuration,
+		Data:           data,
 		CreatedAt:      timestamppb.New(receiver.CreatedAt),
 		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
 	}, nil

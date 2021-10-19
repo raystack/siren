@@ -54,9 +54,14 @@ func (sh *slackHelper) Transform(payload *domain.Receiver) (*domain.Receiver, er
 		return nil, errors.Wrap(err, "failed to exchange code with slack OAuth server")
 	}
 
+	token, err := sh.Encrypt(response.AccessToken)
+	if err != nil {
+		return nil, errors.Wrap(err, "encryption failed")
+	}
+	
 	newConfigurations := map[string]interface{}{}
 	newConfigurations["workspace"] = response.Team.Name
-	newConfigurations["token"] = response.AccessToken
+	newConfigurations["token"] = token
 	payload.Configurations = newConfigurations
 
 	return payload, nil

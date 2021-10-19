@@ -1,31 +1,20 @@
 package receiver
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
-	"io"
 )
 
 // Repository talks to the store to read or insert data
 type Repository struct {
 	db            *gorm.DB
-	encryptionKey *[32]byte
 }
 
 
 // NewRepository returns repository struct
-func NewRepository(db *gorm.DB, encryptionKey string) (*Repository, error) {
-	secretKey := &[32]byte{}
-	if len(encryptionKey) < 32 {
-		return nil, errors.New("random hash should be 32 chars in length")
-	}
-	_, err := io.ReadFull(bytes.NewBufferString(encryptionKey), secretKey[:])
-	if err != nil {
-		return nil, err
-	}
-	return &Repository{db, secretKey}, nil
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db}
 }
 
 func (r Repository) List() ([]*Receiver, error) {

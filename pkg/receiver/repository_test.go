@@ -29,12 +29,10 @@ type RepositoryTestSuite struct {
 	repository ReceiverRepository
 }
 
-const encryptionKey = "ASBzXLpOI0GOorN41dKF47gcFnaILuVh"
 
 func (s *RepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
-	repo, _ := NewRepository(db, encryptionKey)
-	
+	repo := NewRepository(db)
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
 	s.repository = repo

@@ -47,6 +47,7 @@ type Receiver struct {
 	Type           string
 	Labels         StringStringMap    `gorm:"type:jsonb" sql:"type:jsonb" `
 	Configurations StringInterfaceMap `gorm:"type:jsonb" sql:"type:jsonb" `
+	Data           StringInterfaceMap `gorm:"-"`
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -60,6 +61,7 @@ func (receiver *Receiver) fromDomain(t *domain.Receiver) *Receiver {
 	receiver.Type = t.Type
 	receiver.Labels = t.Labels
 	receiver.Configurations = t.Configurations
+	receiver.Data = t.Data
 	receiver.CreatedAt = t.CreatedAt
 	receiver.UpdatedAt = t.UpdatedAt
 	return receiver
@@ -75,6 +77,7 @@ func (receiver *Receiver) toDomain() *domain.Receiver {
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
 		Configurations: receiver.Configurations,
+		Data:           receiver.Data,
 		CreatedAt:      receiver.CreatedAt,
 		UpdatedAt:      receiver.UpdatedAt,
 	}
@@ -88,3 +91,20 @@ type ReceiverRepository interface {
 	Update(*Receiver) (*Receiver, error)
 	Delete(uint64) error
 }
+
+type Channel struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (c *Channel) toDomain() domain.Channel {
+	return domain.Channel{
+		ID:   c.ID,
+		Name: c.Name,
+	}
+}
+
+type SlackRepository interface {
+	GetWorkspaceChannels(string) ([]Channel, error)
+}
+
