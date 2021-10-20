@@ -31,7 +31,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 	labels["foo"] = "bar"
 
 	s.Run("should call repository List method and return result in domain's type", func() {
-		dummyService := Service{repository: s.repositoryMock}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		dummyReceivers := []*domain.Receiver{
 			{
 				Id:             10,
@@ -54,7 +54,11 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 				UpdatedAt:      time.Now(),
 			},
 		}
+		configurations["token"] = "key"
+
 		s.repositoryMock.On("List").Return(receivers, nil).Once()
+		s.slackHelperMock.On("PostTransform", receivers[0]).
+			Return(receivers[0], nil).Once()
 
 		result, err := dummyService.ListReceivers()
 		s.Nil(err)
@@ -65,12 +69,39 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 
 	s.Run("should call repository List method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock}
+		configurations["token"] = "key"
 		s.repositoryMock.On("List").
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.ListReceivers()
 		s.Nil(result)
 		s.EqualError(err, "service.repository.List: random error")
+		s.repositoryMock.AssertCalled(s.T(), "List")
+	})
+
+	s.Run("should call repository List method and return error if post slack transformation failed", func() {
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
+		receivers := []*Receiver{
+			{
+				Id:             10,
+				Name:           "foo",
+				Type:           "slack",
+				Labels:         labels,
+				Configurations: configurations,
+				CreatedAt:      time.Now(),
+				UpdatedAt:      time.Now(),
+			},
+		}
+		configurations["token"] = "key"
+
+		s.repositoryMock.On("List").
+			Return(receivers, nil).Once()
+		s.slackHelperMock.On("PostTransform", receivers[0]).
+			Return(nil, errors.New("random error")).Once()
+
+		result, err := dummyService.ListReceivers()
+		s.Nil(result)
+		s.EqualError(err, "slackHelper.PostTransform: random error")
 		s.repositoryMock.AssertCalled(s.T(), "List")
 	})
 }
@@ -85,6 +116,10 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 	labels["foo"] = "bar"
 	timenow := time.Now()
 
+	tokenConfigurations := map[string]interface{}{
+		"workspace": "test-name",
+		"token":     "key",
+	}
 	receiverRequest := &domain.Receiver{
 		Id:             10,
 		Name:           "foo",
@@ -94,65 +129,73 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
-
-	receiver := &Receiver{
-		Id:     10,
-		Name:   "foo",
-		Type:   "slack",
-		Labels: labels,
-		Configurations: map[string]interface{}{
-			"workspace": "test-name",
-			"token":     "token",
-		},
-		CreatedAt: timenow,
-		UpdatedAt: timenow,
+	transfromResponse := &domain.Receiver{
+		Id:             10,
+		Name:           "foo",
+		Type:           "slack",
+		Labels:         labels,
+		Configurations: tokenConfigurations,
+		CreatedAt:      timenow,
+		UpdatedAt:      timenow,
 	}
-
-	receiverResponse := &domain.Receiver{
-		Id:     10,
-		Name:   "foo",
-		Type:   "slack",
-		Labels: labels,
-		Configurations: map[string]interface{}{
-			"workspace": "test-name",
-			"token":     "token",
-		},
-		CreatedAt: timenow,
-		UpdatedAt: timenow,
+	receiver := &Receiver{
+		Id:             10,
+		Name:           "foo",
+		Type:           "slack",
+		Labels:         labels,
+		Configurations: tokenConfigurations,
+		CreatedAt:      timenow,
+		UpdatedAt:      timenow,
 	}
 
 	s.Run("should call repository Create method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
-			Return(receiverResponse, nil).Once()
+		s.slackHelperMock.On("PreTransform", receiverRequest).
+			Return(transfromResponse, nil).Once()
 		s.repositoryMock.On("Create", receiver).Return(receiver, nil).Once()
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(receiver, nil).Once()
+
 		result, err := dummyService.CreateReceiver(receiverRequest)
 		s.Nil(err)
-		s.Equal(receiverResponse, result)
+		s.Equal(transfromResponse, result)
 		s.repositoryMock.AssertCalled(s.T(), "Create", receiver)
 	})
 
-	s.Run("should call repository Create method and return error if transformation failed", func() {
+	s.Run("should call repository Create method and return error if pre transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
+		s.slackHelperMock.On("PreTransform", receiverRequest).
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.CreateReceiver(receiverRequest)
 		s.Nil(result)
-		s.EqualError(err, "slackHelper.Transform: random error")
+		s.EqualError(err, "slackHelper.PreTransform: random error")
 	})
 
 	s.Run("should call repository Create method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
-			Return(receiverResponse, nil).Once()
+
+		s.slackHelperMock.On("PreTransform", receiverRequest).
+			Return(transfromResponse, nil).Once()
 		s.repositoryMock.On("Create", receiver).
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.CreateReceiver(receiverRequest)
 		s.Nil(result)
 		s.EqualError(err, "service.repository.Create: random error")
-		s.repositoryMock.AssertCalled(s.T(), "Create", receiver)
+	})
+
+	s.Run("should call repository Create method and return error if post transformation failed", func() {
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
+		s.slackHelperMock.On("PreTransform", receiverRequest).
+			Return(transfromResponse, nil).Once()
+		s.repositoryMock.On("Create", receiver).Return(receiver, nil).Once()
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(nil, errors.New("random error")).Once()
+
+		result, err := dummyService.CreateReceiver(receiverRequest)
+		s.Nil(result)
+		s.EqualError(err, "slackHelper.PostTransform: random error")
 	})
 }
 
@@ -190,11 +233,10 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 	s.Run("should call repository Get method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
-		configurations["token"] = "key"
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
-		s.slackHelperMock.On("Decrypt", "key").
-			Return("token", nil).Once()
-		s.slacker.On("GetWorkspaceChannels", "token").
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(receiver, nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "key").
 			Return([]Channel{
 				{ID: "1", Name: "foo"},
 			}, nil).Once()
@@ -220,25 +262,25 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
 	})
 
-	s.Run("should return error if slack token decryption failed", func() {
+	s.Run("should return error if post transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
-		s.slackHelperMock.On("Decrypt", "key").
-			Return("", errors.New("random error")).Once()
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.GetReceiver(receiverID)
 		s.Nil(result)
-		s.EqualError(err, "slackHelper.Decrypt: random error")
+		s.EqualError(err, "slackHelper.PostTransform: random error")
 		s.repositoryMock.AssertCalled(s.T(), "Get", receiverID)
-		s.slackHelperMock.AssertCalled(s.T(), "Decrypt", "key")
+		s.slackHelperMock.AssertCalled(s.T(), "PostTransform", receiver)
 	})
 
 	s.Run("should return error if getting slack channels failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
-		s.slackHelperMock.On("Decrypt", "key").
-			Return("token", nil).Once()
-		s.slacker.On("GetWorkspaceChannels", "token").
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(receiver, nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "key").
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.GetReceiver(receiverID)
@@ -260,9 +302,9 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		receiver.Configurations = newConfigurations
 
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
-		s.slackHelperMock.On("Decrypt", "key").
-			Return("token", nil).Once()
-		s.slacker.On("GetWorkspaceChannels", "token").
+		s.slackHelperMock.On("PostTransform", receiver).
+			Return(receiver, nil).Once()
+		s.slacker.On("GetWorkspaceChannels", "key").
 			Return([]Channel{
 				{ID: "1", Name: string([]byte{0xff})},
 			}, nil).Once()
@@ -321,7 +363,7 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 
 	s.Run("should call repository Update method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
+		s.slackHelperMock.On("PreTransform", receiverRequest).
 			Return(receiverResponse, nil).Once()
 		s.repositoryMock.On("Update", receiver).Return(receiver, nil).Once()
 
@@ -333,17 +375,17 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 
 	s.Run("should call repository Create method and return error if transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
+		s.slackHelperMock.On("PreTransform", receiverRequest).
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.UpdateReceiver(receiverRequest)
 		s.Nil(result)
-		s.EqualError(err, "slackHelper.Transform: random error")
+		s.EqualError(err, "slackHelper.PreTransform: random error")
 	})
 
 	s.Run("should call repository Update method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		s.slackHelperMock.On("Transform", receiverRequest).
+		s.slackHelperMock.On("PreTransform", receiverRequest).
 			Return(receiverResponse, nil).Once()
 		s.repositoryMock.On("Update", receiver).
 			Return(nil, errors.New("random error")).Once()
