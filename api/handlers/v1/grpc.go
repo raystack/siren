@@ -7,13 +7,12 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/helper"
 	"github.com/odpf/siren/service"
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 )
@@ -37,138 +36,6 @@ func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv
 	return &sirenv1.PingResponse{Message: "Pong"}, nil
 }
 
-func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv1.ListProvidersResponse, error) {
-	providers, err := s.container.ProviderService.ListProviders()
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	res := &sirenv1.ListProvidersResponse{
-		Providers: make([]*sirenv1.Provider, 0),
-	}
-	for _, provider := range providers {
-		credentials, err := structpb.NewStruct(provider.Credentials)
-		if err != nil {
-			s.logger.Error("handler", zap.Error(err))
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
-
-		item := &sirenv1.Provider{
-			Id:          provider.Id,
-			Host:        provider.Host,
-			Type:        provider.Type,
-			Name:        provider.Name,
-			Credentials: credentials,
-			Labels:      provider.Labels,
-			CreatedAt:   timestamppb.New(provider.CreatedAt),
-			UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-		}
-		res.Providers = append(res.Providers, item)
-	}
-	return res, nil
-}
-
-func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.CreateProvider(&domain.Provider{
-		Host:        req.GetHost(),
-		Name:        req.GetName(),
-		Type:        req.GetType(),
-		Credentials: req.GetCredentials().AsMap(),
-		Labels:      req.GetLabels(),
-	})
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.GetProvider(req.GetId())
-	if provider == nil {
-		return nil, status.Errorf(codes.NotFound, "provider not found")
-	}
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProviderRequest) (*sirenv1.Provider, error) {
-	provider, err := s.container.ProviderService.UpdateProvider(&domain.Provider{
-		Id:          req.GetId(),
-		Host:        req.GetHost(),
-		Name:        req.GetName(),
-		Type:        req.GetType(),
-		Credentials: req.GetCredentials().AsMap(),
-		Labels:      req.GetLabels(),
-	})
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return &sirenv1.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Type:        provider.Type,
-		Credentials: grpcCredentials,
-		Labels:      provider.Labels,
-		CreatedAt:   timestamppb.New(provider.CreatedAt),
-		UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-	}, nil
-}
-
-func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1.DeleteProviderRequest) (*emptypb.Empty, error) {
-	err := s.container.ProviderService.DeleteProvider(uint64(req.GetId()))
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	
-	return &emptypb.Empty{}, nil
-}
 
 func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
 	name := req.GetResource()
@@ -179,8 +46,7 @@ func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertH
 	}
 	alerts, err := s.container.AlertHistoryService.Get(name, startTime, endTime)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1.ListAlertHistoryResponse{
 		Alerts: make([]*sirenv1.AlertHistory, 0),
@@ -250,8 +116,7 @@ func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListW
 	workspace := req.GetWorkspaceName()
 	workspaces, err := s.container.SlackWorkspaceService.GetChannels(workspace)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1.ListWorkspaceChannelsResponse{
 		Data: make([]*sirenv1.SlackWorkspace, 0),
@@ -274,8 +139,7 @@ func (s *GRPCServer) ExchangeCode(_ context.Context, req *sirenv1.ExchangeCodeRe
 		Workspace: workspace,
 	})
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1.ExchangeCodeResponse{
 		Ok: result.OK,
@@ -287,8 +151,7 @@ func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *sirenv1.GetAler
 	teamName := req.GetTeamName()
 	alertCredential, err := s.container.AlertmanagerService.Get(teamName)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1.GetAlertCredentialsResponse{
 		Entity:               alertCredential.Entity,
@@ -332,8 +195,7 @@ func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1.Upda
 
 	err := s.container.AlertmanagerService.Upsert(payload)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1.UpdateAlertCredentialsResponse{}, nil
 }
@@ -369,8 +231,7 @@ func (s *GRPCServer) SendSlackNotification(_ context.Context, req *sirenv1.SendS
 
 	result, err := s.container.NotifierServices.Slack.Notify(payload)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1.SendSlackNotificationResponse{
 		Ok: result.OK,
@@ -387,8 +248,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest)
 
 	rules, err := s.container.RulesService.Get(namespace, entity, groupName, ruleStatus, template)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1.ListRulesResponse{Rules: make([]*sirenv1.Rule, 0)}
@@ -443,8 +303,7 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1.UpdateRuleReques
 
 	rule, err := s.container.RulesService.Upsert(payload)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	responseVariables := make([]*sirenv1.Variables, 0)
@@ -476,8 +335,7 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1.UpdateRuleReques
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1.ListTemplatesRequest) (*sirenv1.ListTemplatesResponse, error) {
 	templates, err := s.container.TemplatesService.Index(req.GetTag())
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1.ListTemplatesResponse{Templates: make([]*sirenv1.Template, 0)}
@@ -508,8 +366,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1.ListTemplates
 func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1.GetTemplateByNameRequest) (*sirenv1.TemplateResponse, error) {
 	template, err := s.container.TemplatesService.GetByName(req.GetName())
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	variables := make([]*sirenv1.TemplateVariables, 0)
@@ -554,8 +411,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1.UpsertTempla
 	}
 	template, err := s.container.TemplatesService.Upsert(payload)
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	templateVariables := make([]*sirenv1.TemplateVariables, 0)
@@ -584,8 +440,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1.UpsertTempla
 func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1.DeleteTemplateRequest) (*sirenv1.DeleteTemplateResponse, error) {
 	err := s.container.TemplatesService.Delete(req.GetName())
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1.DeleteTemplateResponse{}, nil
 }
@@ -593,8 +448,7 @@ func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1.DeleteTempla
 func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1.RenderTemplateRequest) (*sirenv1.RenderTemplateResponse, error) {
 	body, err := s.container.TemplatesService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1.RenderTemplateResponse{
 		Body: body,
