@@ -13,7 +13,8 @@ var cryptopastaEncryptor = cryptopasta.Encrypt
 var cryptopastaDecryptor = cryptopasta.Decrypt
 
 type Transformer interface {
-	Transform(*domain.Receiver) (*domain.Receiver, error)
+	PreTransform(*domain.Receiver) (*domain.Receiver, error)
+	PostTransform(*Receiver) (*Receiver, error)
 }
 
 type SlackHelper interface {
@@ -43,7 +44,7 @@ func NewSlackHelper(httpClient Doer, encryptionKey string) (*slackHelper, error)
 	}, nil
 }
 
-func (sh *slackHelper) Transform(payload *domain.Receiver) (*domain.Receiver, error) {
+func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver, error) {
 	configurations := payload.Configurations
 	clientId := configurations["client_id"].(string)
 	clientSecret := configurations["client_secret"].(string)
@@ -58,13 +59,23 @@ func (sh *slackHelper) Transform(payload *domain.Receiver) (*domain.Receiver, er
 	if err != nil {
 		return nil, errors.Wrap(err, "encryption failed")
 	}
-	
+
 	newConfigurations := map[string]interface{}{}
 	newConfigurations["workspace"] = response.Team.Name
 	newConfigurations["token"] = token
 	payload.Configurations = newConfigurations
 
 	return payload, nil
+}
+
+func (sh *slackHelper) PostTransform(r *Receiver) (*Receiver, error) {
+	encryptedToken := r.Configurations["token"].(string)
+	token, err := sh.Decrypt(encryptedToken)
+	if err != nil {
+		return nil, errors.Wrap(err, "slackHelper.Decrypt")
+	}
+	r.Configurations["token"] = token
+	return r, nil
 }
 
 func (sh *slackHelper) Encrypt(s string) (string, error) {
