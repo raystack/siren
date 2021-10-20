@@ -31,7 +31,7 @@ type Service struct {
 	slackHelper     SlackHelper
 }
 
-// NewService returns repository struct
+// NewService returns service struct
 func NewService(db *gorm.DB, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
 	repository := NewRepository(db)
 	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
