@@ -46,10 +46,10 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
-func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, templateService domain.TemplatesService) error {
+func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, templateService domain.TemplatesService, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
-		if rulesWithinGroup[i].Status == "disabled" {
+		if *rulesWithinGroup[i].Enabled == false {
 			continue
 		}
 		inputValue := make(map[string]string)
@@ -65,7 +65,7 @@ func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller,
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
-	ctx := cortexClient.NewContextWithTenantId(context.Background(), rule.Entity)
+	ctx := cortexClient.NewContextWithTenantId(context.Background(), tenantName)
 	if renderedBodyForThisGroup == "" {
 		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
 		if err != nil {
@@ -118,8 +118,8 @@ func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVar
 }
 
 func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s", namePrefix,
-		rule.Entity, rule.Namespace, rule.GroupName, rule.Template)
+	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix,
+		rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
 	var rulesWithinGroup []Rule
 	template, err := templatesService.GetByName(rule.Template)
@@ -139,33 +139,64 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 	}
 	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, ruleVariables)
 	jsonBytes, err := json.Marshal(finalRuleVariables)
-	rule.Variables = string(jsonBytes)
 	if err != nil {
 		return nil, err
 	}
+	
+	rule.Variables = string(jsonBytes)
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		result := tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
+		var data struct {
+			NamespaceUrn string
+			ProviderUrn  string
+			ProviderType string
+		}
+		result := r.db.Table("namespaces").
+			Select("namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type").
+			Joins("RIGHT JOIN providers on providers.id = namespaces.provider_id").
+			Where("namespaces.id = ?", rule.ProviderNamespace).
+			Find(&data)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errors.New("provider not found")
+		}
+
+		rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, data.ProviderUrn, data.NamespaceUrn,
+			rule.Namespace, rule.GroupName, rule.Template)
+
+		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
 		if result.Error != nil {
 			return result.Error
 		}
 		if result.RowsAffected == 0 {
 			result = tx.Create(rule)
 		} else {
-			result = tx.Where("id = ?", existingRule.ID).Updates(rule)
+			rule.Id = existingRule.Id
+			result = tx.Where("id = ?", existingRule.Id).Updates(rule)
 		}
 		if result.Error != nil {
 			return result.Error
 		}
 		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
-		result = tx.Where(fmt.Sprintf("namespace = '%s' AND entity = '%s' AND group_name = '%s'",
-			rule.Namespace, rule.Entity, rule.GroupName)).Find(&rulesWithinGroup)
 		if result.Error != nil {
 			return result.Error
 		}
-		err = postRuleGroupWith(rule, rulesWithinGroup, client, templatesService)
-		if err != nil {
-			return err
+
+		if data.ProviderType == "cortex" {
+			result = tx.Where(fmt.Sprintf("namespace = '%s' AND group_name = '%s' AND provider_namespace = '%d'",
+				rule.Namespace, rule.GroupName, rule.ProviderNamespace)).Find(&rulesWithinGroup)
+			if result.Error != nil {
+				return result.Error
+			}
+			err = postRuleGroupWith(rule, rulesWithinGroup, client, templatesService, data.NamespaceUrn)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("provider not supported")
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -174,22 +205,19 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 	return &existingRule, err
 }
 
-func (r Repository) Get(namespace string, entity string, groupName string, status string, template string) ([]Rule, error) {
+func (r Repository) Get(name, namespace, groupName, template string) ([]Rule, error) {
 	var rules []Rule
 	selectQuery := `SELECT * from rules`
 	selectQueryWithWhereClause := `SELECT * from rules WHERE `
 	var filterConditions []string
+	if name != "" {
+		filterConditions = append(filterConditions, fmt.Sprintf("name = '%s' ", name))
+	}
 	if namespace != "" {
 		filterConditions = append(filterConditions, fmt.Sprintf("namespace = '%s' ", namespace))
 	}
-	if entity != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("entity = '%s' ", entity))
-	}
 	if groupName != "" {
 		filterConditions = append(filterConditions, fmt.Sprintf("group_name = '%s' ", groupName))
-	}
-	if status != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("status = '%s' ", status))
 	}
 	if template != "" {
 		filterConditions = append(filterConditions, fmt.Sprintf("template = '%s' ", template))

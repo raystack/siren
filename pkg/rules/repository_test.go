@@ -63,6 +63,9 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Description: "test",
 			Type:        "string"},
 		}}
+	var truebool = true
+	var falsebool = false
+
 	dummyTemplateBody := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '20m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
 	s.Run("should insert rule merged with defaults and call cortex APIs", func() {
@@ -71,49 +74,63 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			Variables:         `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			ProviderNamespace: 1,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			Variables:         `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			ProviderNamespace: 1,
 		}
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
-				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
 
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
@@ -129,48 +146,71 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"group_name"=$4,"template"=$5,"enabled"=$6,"variables"=$7,"provider_namespace"=$8 WHERE id = $9 AND "id" = $10`)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}
 
-		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
-				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
 
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
-		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables, expectedRule.ID).WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
+		s.dbmock.ExpectExec(updateRuleQuery).
+			WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+				expectedRule.ProviderNamespace, expectedRule.Id, expectedRule.Id).
+			WillReturnResult(sqlmock.NewResult(10, 1))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -184,48 +224,66 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"group_name"=$4,"template"=$5,"enabled"=$6,"variables"=$7,"provider_namespace"=$8 WHERE id = $9 AND "id" = $10`)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
-
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
 		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables, expectedRule.ID).WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace, expectedRule.Id, expectedRule.Id).WillReturnResult(sqlmock.NewResult(10, 1))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -242,55 +300,195 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
-
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
-			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+		s.dbmock.ExpectQuery(insertRuleQuery).
+			WithArgs(AnyTime{},
+				AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+				expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
+		if err := s.dbmock.ExpectationsWereMet(); err != nil {
+			s.T().Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	s.Run("should rollback if namespace select query fails", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+		}
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnError(errors.New("random error"))
+		s.dbmock.ExpectRollback()
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "random error")
+		s.Nil(actualRule)
+		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
+		if err := s.dbmock.ExpectationsWereMet(); err != nil {
+			s.T().Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	s.Run("should rollback if namespace select query returns no result", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+		}
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectRollback()
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "provider not found")
+		s.Nil(actualRule)
+		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
+		if err := s.dbmock.ExpectationsWereMet(); err != nil {
+			s.T().Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	s.Run("should rollback if provider not supported", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+		}
+		expectedRule := &Rule{
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "random",
+		}
+
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
+		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
+			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
+			WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
+		s.dbmock.ExpectRollback()
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "provider not supported")
+		s.Nil(actualRule)
+		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
 			s.T().Errorf("there were unfulfilled expectations: %s", err)
 		}
@@ -302,34 +500,50 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}
+
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -347,16 +561,32 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -373,42 +603,118 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
-				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
+			WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnError(errors.New("random error"))
+		s.dbmock.ExpectRollback()
+		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "random error")
+		s.Nil(actualRule)
+		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
+		if err := s.dbmock.ExpectationsWereMet(); err != nil {
+			s.T().Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	s.Run("should rollback if third select query fails", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+		}
+		expectedRule := &Rule{
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
+		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
+			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnError(errors.New("random error"))
@@ -428,44 +734,57 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -485,43 +804,57 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("random error"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -540,44 +873,57 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("requested resource not found"))
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
@@ -596,12 +942,12 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("GetByName", "tmpl").Return(nil, errors.New("random error"))
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -618,48 +964,62 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return("", errors.New("random error"))
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
-				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
 
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
@@ -678,12 +1038,12 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `{}`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `{}`,
 		}
 
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -709,49 +1069,62 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(badTemplate.Body, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(badTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","entity","group_name","template","status","variables") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
-				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
 
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertRuleQuery).WithArgs(AnyTime{},
 			AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables).
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
@@ -770,48 +1143,63 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(nil)
-		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_gojek_foo_bar_tmpl'`)
-		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND entity = 'gojek' AND group_name = 'bar'`)
-		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"entity"=$4,"group_name"=$5,"template"=$6,"status"=$7,"variables"=$8 WHERE id = $9`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
+		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"group_name"=$4,"template"=$5,"enabled"=$6,"variables"=$7,"provider_namespace"=$8 WHERE id = $9 AND "id" = $10`)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &falsebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		expectedRule := &Rule{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "disabled",
-			Variables: `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &falsebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
 		}
 
-		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
-
-		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRule.ID, expectedRule.CreatedAt,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRowsInGroup := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
 				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
-				expectedRule.Entity, expectedRule.GroupName, expectedRule.Template,
-				expectedRule.Status, expectedRule.Variables)
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
 
 		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
-		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
-			expectedRule.Entity, expectedRule.GroupName, expectedRule.Template, expectedRule.Status,
-			expectedRule.Variables, expectedRule.ID).WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
+		s.dbmock.ExpectExec(updateRuleQuery).
+			WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace, expectedRule.Id, expectedRule.Id).
+			WillReturnResult(sqlmock.NewResult(10, 1))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
@@ -829,44 +1217,85 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("GetByName", "tmpl").Return(nil, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		input := &Rule{
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
 		s.EqualError(err, "template not found")
 		s.Nil(actualRule)
 	})
 
+	s.Run("should not insert rule if enable is false", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
+
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &falsebool,
+			Variables:         `[{"name":"for", "type":"string", "value":"10m", "description":"test"}]`,
+			ProviderNamespace: 1,
+		}
+
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
+		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectQuery(insertRuleQuery).WillReturnError(errors.New("random error"))
+		s.dbmock.ExpectCommit()
+		result, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		s.EqualError(err, "random error")
+		s.Nil(result)
+	})
 }
 
 func (s *RepositoryTestSuite) TestGet() {
+	var truebool = true
 	s.Run("should get rules filtered on parameters", func() {
-		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules WHERE namespace = 'test-namespace' AND entity = 'test-entity' AND group_name = 'test-group' AND status = 'test-enabled' AND template = 'test-template'`)
+		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules WHERE name = 'test-name' AND namespace = 'test-namespace' AND group_name = 'test-group'  AND template = 'test-template'`)
 		expectedRules := []Rule{{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_gojek_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}}
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRules[0].ID, expectedRules[0].CreatedAt,
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRules[0].Id, expectedRules[0].CreatedAt,
 				expectedRules[0].UpdatedAt, expectedRules[0].Name, expectedRules[0].Namespace,
-				expectedRules[0].Entity, expectedRules[0].GroupName, expectedRules[0].Template,
-				expectedRules[0].Status, expectedRules[0].Variables)
+				expectedRules[0].GroupName, expectedRules[0].Template, expectedRules[0].Enabled,
+				expectedRules[0].Variables, expectedRules[0].ProviderNamespace)
 
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnRows(expectedRuleRows)
 
-		actualRules, err := s.repository.Get("test-namespace", "test-entity", "test-group", "test-enabled", "test-template")
+		actualRules, err := s.repository.Get("test-name", "test-namespace", "test-group", "test-template")
 		s.Equal(expectedRules, actualRules)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -877,37 +1306,36 @@ func (s *RepositoryTestSuite) TestGet() {
 	s.Run("should get rules all rules if empty filters passes", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules`)
 		expectedRules := []Rule{{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "siren_api_gojek_foo_bar_tmpl",
-			Namespace: "foo",
-			GroupName: "bar",
-			Entity:    "gojek",
-			Template:  "tmpl",
-			Status:    "enabled",
-			Variables: `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_gojek_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
 		}}
-		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "entity", "group_name", "template", "status", "variables"}).
-			AddRow(expectedRules[0].ID, expectedRules[0].CreatedAt,
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRules[0].Id, expectedRules[0].CreatedAt,
 				expectedRules[0].UpdatedAt, expectedRules[0].Name, expectedRules[0].Namespace,
-				expectedRules[0].Entity, expectedRules[0].GroupName, expectedRules[0].Template,
-				expectedRules[0].Status, expectedRules[0].Variables)
+				expectedRules[0].GroupName, expectedRules[0].Template, expectedRules[0].Enabled,
+				expectedRules[0].Variables, expectedRules[0].ProviderNamespace)
 
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnRows(expectedRuleRows)
 
-		actualRules, err := s.repository.Get("", "", "", "", "")
+		actualRules, err := s.repository.Get("", "", "", "")
 		s.Equal(expectedRules, actualRules)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
 			s.T().Errorf("there were unfulfilled expectations: %s", err)
 		}
 	})
-
 	s.Run("should return error if any", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules`)
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnError(errors.New("random error"))
-		actualRules, err := s.repository.Get("", "", "", "", "")
+		actualRules, err := s.repository.Get("", "", "", "")
 		s.EqualError(err, "random error; random error")
 		s.Nil(actualRules)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {

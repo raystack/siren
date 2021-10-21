@@ -5768,13 +5768,11 @@ func (m *ListRulesRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Name
+
 	// no validation rules for Namespace
 
-	// no validation rules for Entity
-
 	// no validation rules for GroupName
-
-	// no validation rules for Status
 
 	// no validation rules for Template
 
@@ -5888,8 +5886,6 @@ func (m *Variables) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Type
-
 	if !_Variables_Value_Pattern.MatchString(m.GetValue()) {
 		err := VariablesValidationError{
 			field:  "Value",
@@ -5900,6 +5896,8 @@ func (m *Variables) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Type
 
 	// no validation rules for Description
 
@@ -6008,15 +6006,47 @@ func (m *Rule) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for Entity
-
-	// no validation rules for Namespace
+	// no validation rules for Enabled
 
 	// no validation rules for GroupName
 
+	// no validation rules for Namespace
+
 	// no validation rules for Template
 
-	// no validation rules for Status
+	for idx, item := range m.GetVariables() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, RuleValidationError{
+						field:  fmt.Sprintf("Variables[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, RuleValidationError{
+						field:  fmt.Sprintf("Variables[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RuleValidationError{
+					field:  fmt.Sprintf("Variables[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	if all {
 		switch v := interface{}(m.GetCreatedAt()).(type) {
@@ -6076,38 +6106,15 @@ func (m *Rule) validate(all bool) error {
 		}
 	}
 
-	for idx, item := range m.GetVariables() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, RuleValidationError{
-						field:  fmt.Sprintf("Variables[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, RuleValidationError{
-						field:  fmt.Sprintf("Variables[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return RuleValidationError{
-					field:  fmt.Sprintf("Variables[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
+	if m.GetProviderNamespace() < 0 {
+		err := RuleValidationError{
+			field:  "ProviderNamespace",
+			reason: "value must be greater than or equal to 0",
 		}
-
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {
@@ -6473,13 +6480,11 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	// no validation rules for Enabled
 
-	// no validation rules for Name
-
-	if !_UpdateRuleRequest_Entity_Pattern.MatchString(m.GetEntity()) {
+	if !_UpdateRuleRequest_GroupName_Pattern.MatchString(m.GetGroupName()) {
 		err := UpdateRuleRequestValidationError{
-			field:  "Entity",
+			field:  "GroupName",
 			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
 		}
 		if !all {
@@ -6499,32 +6504,10 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateRuleRequest_GroupName_Pattern.MatchString(m.GetGroupName()) {
-		err := UpdateRuleRequestValidationError{
-			field:  "GroupName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if !_UpdateRuleRequest_Template_Pattern.MatchString(m.GetTemplate()) {
 		err := UpdateRuleRequestValidationError{
 			field:  "Template",
 			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if _, ok := _UpdateRuleRequest_Status_InLookup[m.GetStatus()]; !ok {
-		err := UpdateRuleRequestValidationError{
-			field:  "Status",
-			reason: "value must be in list [enabled disabled]",
 		}
 		if !all {
 			return err
@@ -6565,6 +6548,8 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for ProviderNamespace
 
 	if len(errors) > 0 {
 		return UpdateRuleRequestMultiError(errors)
@@ -6645,18 +6630,11 @@ var _ interface {
 	ErrorName() string
 } = UpdateRuleRequestValidationError{}
 
-var _UpdateRuleRequest_Entity_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
+var _UpdateRuleRequest_GroupName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _UpdateRuleRequest_Namespace_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
-var _UpdateRuleRequest_GroupName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
 var _UpdateRuleRequest_Template_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _UpdateRuleRequest_Status_InLookup = map[string]struct{}{
-	"enabled":  {},
-	"disabled": {},
-}
 
 // Validate checks the field values on ListTemplatesRequest with the rules
 // defined in the proto definition for this message. If any rules are
