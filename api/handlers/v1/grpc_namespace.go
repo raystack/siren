@@ -67,6 +67,7 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1.CreateNames
 
 	return &sirenv1.Namespace{
 		Id:          namespace.Id,
+		Provider:    namespace.Provider,
 		Name:        namespace.Name,
 		Credentials: grpcCredentials,
 		Labels:      namespace.Labels,
