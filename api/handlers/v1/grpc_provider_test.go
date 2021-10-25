@@ -137,9 +137,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		mockedProviderService.
-			On("CreateProvider", payload).
-			Return(payload, nil).Once()
+		mockedProviderService.On("CreateProvider", payload).Return(payload, nil).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, "foo", res.GetName())
@@ -184,8 +182,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 		}
 
 		mockedProviderService.
-			On("CreateProvider", mock.Anything).
-			Return(newPayload, nil).Once()
+			On("CreateProvider", mock.Anything).Return(newPayload, nil).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),

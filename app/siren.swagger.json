@@ -93,6 +93,173 @@
         ]
       }
     },
+    "/namespaces": {
+      "get": {
+        "operationId": "SirenService_ListNamespaces",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNamespacesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "post": {
+        "operationId": "SirenService_CreateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Namespace"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      }
+    },
+    "/namespaces/{id}": {
+      "get": {
+        "operationId": "SirenService_GetNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Namespace"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "delete": {
+        "operationId": "SirenService_DeleteNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      },
+      "put": {
+        "operationId": "SirenService_UpdateNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Namespace"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "provider": {
+                  "type": "string",
+                  "format": "uint64"
+                },
+                "credentials": {
+                  "type": "object"
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "SirenService"
+        ]
+      }
+    },
     "/notifications": {
       "post": {
         "operationId": "SirenService_SendSlackNotification",
@@ -989,6 +1156,35 @@
         }
       }
     },
+    "v1CreateNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "credentials": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "v1CreateProviderRequest": {
       "type": "object",
       "properties": {
@@ -1098,6 +1294,17 @@
         }
       }
     },
+    "v1ListNamespacesResponse": {
+      "type": "object",
+      "properties": {
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Namespace"
+          }
+        }
+      }
+    },
     "v1ListProvidersResponse": {
       "type": "object",
       "properties": {
@@ -1150,6 +1357,39 @@
           "items": {
             "$ref": "#/definitions/v1SlackWorkspace"
           }
+        }
+      }
+    },
+    "v1Namespace": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "credentials": {
+          "type": "object"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

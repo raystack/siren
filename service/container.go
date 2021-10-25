@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
 	"github.com/odpf/siren/pkg/slackworkspace"
@@ -28,6 +29,7 @@ type Container struct {
 	NotifierServices      domain.NotifierServices
 	SlackWorkspaceService domain.SlackWorkspaceService
 	ProviderService       domain.ProviderService
+	NamespaceService      domain.NamespaceService
 	ReceiverService       domain.ReceiverService
 }
 
@@ -48,6 +50,10 @@ func Init(db *gorm.DB, c *domain.Config,
 	slackNotifierService := slacknotifier.NewService(codeExchangeService)
 	slackworkspaceService := slackworkspace.NewService(codeExchangeService)
 	providerService := provider.NewService(db)
+	namespaceService, err := namespace.NewService(db, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create namespace service")
+	}
 	receiverService, err := receiver.NewService(db, httpClient, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
@@ -64,6 +70,7 @@ func Init(db *gorm.DB, c *domain.Config,
 		},
 		SlackWorkspaceService: slackworkspaceService,
 		ProviderService:       providerService,
+		NamespaceService:      namespaceService,
 		ReceiverService:       receiverService,
 	}, nil
 }
@@ -91,6 +98,10 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 		return err
 	}
 	err = container.ProviderService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = container.NamespaceService.Migrate()
 	if err != nil {
 		return err
 	}
