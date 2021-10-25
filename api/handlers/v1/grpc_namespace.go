@@ -77,12 +77,12 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1.CreateNames
 
 func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1.GetNamespaceRequest) (*sirenv1.Namespace, error) {
 	namespace, err := s.container.NamespaceService.GetNamespace(req.GetId())
-	if namespace == nil {
-		return nil, status.Errorf(codes.NotFound, "namespace not found")
-	}
 	if err != nil {
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	if namespace == nil {
+		return nil, status.Errorf(codes.NotFound, "namespace not found")
 	}
 
 	credentials, err := structpb.NewStruct(namespace.Credentials)

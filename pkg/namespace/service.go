@@ -133,7 +133,7 @@ func (s Service) UpdateNamespace(namespace *domain.Namespace) (*domain.Namespace
 	w := &Namespace{}
 	_, err := w.fromDomain(namespace)
 	if err != nil {
-		return nil, errors.Wrap(err, "n.fromDomain")
+		return nil, errors.Wrap(err, "n.fromDomain()")
 	}
 	plainTextCredentials := w.Credentials
 	encryptedCredentials, err := s.transformer.Encrypt(w.Credentials)
