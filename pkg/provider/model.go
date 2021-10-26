@@ -45,6 +45,7 @@ func (a StringStringMap) Value() (driver.Value, error) {
 type Provider struct {
 	Id          uint64 `gorm:"primarykey"`
 	Host        string
+	Urn         string `gorm:"unique:urn"`
 	Name        string
 	Type        string
 	Credentials StringInterfaceMap `gorm:"type:jsonb" sql:"type:jsonb" `
@@ -59,6 +60,7 @@ func (provider *Provider) fromDomain(t *domain.Provider) *Provider {
 	}
 	provider.Id = t.Id
 	provider.Host = t.Host
+	provider.Urn = t.Urn
 	provider.Name = t.Name
 	provider.Type = t.Type
 	provider.Credentials = t.Credentials
@@ -76,6 +78,7 @@ func (provider *Provider) toDomain() *domain.Provider {
 		Id:          provider.Id,
 		Host:        provider.Host,
 		Name:        provider.Name,
+		Urn:         provider.Urn,
 		Type:        provider.Type,
 		Credentials: provider.Credentials,
 		Labels:      provider.Labels,
