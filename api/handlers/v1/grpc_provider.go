@@ -31,6 +31,7 @@ func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv
 
 		item := &sirenv1.Provider{
 			Id:          provider.Id,
+			Urn:         provider.Urn,
 			Host:        provider.Host,
 			Type:        provider.Type,
 			Name:        provider.Name,
@@ -47,6 +48,7 @@ func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv
 func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProviderRequest) (*sirenv1.Provider, error) {
 	provider, err := s.container.ProviderService.CreateProvider(&domain.Provider{
 		Host:        req.GetHost(),
+		Urn:         req.GetUrn(),
 		Name:        req.GetName(),
 		Type:        req.GetType(),
 		Credentials: req.GetCredentials().AsMap(),
@@ -64,6 +66,7 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1.CreateProvid
 	return &sirenv1.Provider{
 		Id:          provider.Id,
 		Host:        provider.Host,
+		Urn:         provider.Urn,
 		Name:        provider.Name,
 		Type:        provider.Type,
 		Credentials: grpcCredentials,
@@ -90,6 +93,7 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1.GetProviderRequ
 	return &sirenv1.Provider{
 		Id:          provider.Id,
 		Host:        provider.Host,
+		Urn:         provider.Urn,
 		Name:        provider.Name,
 		Type:        provider.Type,
 		Credentials: grpcCredentials,
@@ -120,6 +124,7 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1.UpdateProvid
 	return &sirenv1.Provider{
 		Id:          provider.Id,
 		Host:        provider.Host,
+		Urn:         provider.Urn,
 		Name:        provider.Name,
 		Type:        provider.Type,
 		Credentials: grpcCredentials,

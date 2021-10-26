@@ -4,6 +4,7 @@ import "time"
 
 type Provider struct {
 	Id          uint64                 `json:"id"`
+	Urn         string                 `json:"urn"`
 	Host        string                 `json:"host"`
 	Name        string                 `json:"name"`
 	Type        string                 `json:"type"`
