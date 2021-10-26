@@ -29,8 +29,9 @@ func (a StringStringMap) Value() (driver.Value, error) {
 type Namespace struct {
 	Id          uint64 `gorm:"primarykey"`
 	Provider    *provider.Provider
-	ProviderId  uint64 `gorm:"uniqueIndex:name_provider_id_unique"`
-	Name        string `gorm:"uniqueIndex:name_provider_id_unique"`
+	ProviderId  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
+	Urn         string `gorm:"uniqueIndex:urn_provider_id_unique"`
+	Name        string
 	Credentials string
 	Labels      StringStringMap `gorm:"type:jsonb" sql:"type:jsonb" `
 	CreatedAt   time.Time
@@ -42,6 +43,7 @@ func (namespace *Namespace) fromDomain(n *domain.Namespace) (*Namespace, error) 
 		return nil, nil
 	}
 	namespace.Id = n.Id
+	namespace.Urn = n.Urn
 	namespace.Name = n.Name
 	namespace.ProviderId = n.Provider
 	credentialsBytes, err := json.Marshal(n.Credentials)
@@ -67,6 +69,7 @@ func (namespace *Namespace) toDomain() (*domain.Namespace, error) {
 	}
 	return &domain.Namespace{
 		Id:          namespace.Id,
+		Urn:         namespace.Urn,
 		Name:        namespace.Name,
 		Provider:    namespace.ProviderId,
 		Credentials: decryptedCredentials,

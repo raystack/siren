@@ -32,6 +32,7 @@ func (s *GRPCServer) ListNamespaces(_ context.Context, _ *emptypb.Empty) (*siren
 
 		item := &sirenv1.Namespace{
 			Id:          namespace.Id,
+			Urn:         namespace.Urn,
 			Name:        namespace.Name,
 			Credentials: credentials,
 			Labels:      namespace.Labels,
@@ -47,13 +48,14 @@ func (s *GRPCServer) ListNamespaces(_ context.Context, _ *emptypb.Empty) (*siren
 func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1.CreateNamespaceRequest) (*sirenv1.Namespace, error) {
 	namespace, err := s.container.NamespaceService.CreateNamespace(&domain.Namespace{
 		Provider:    req.GetProvider(),
+		Urn:         req.GetUrn(),
 		Name:        req.GetName(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), `violates unique constraint "name_provider_id_unique"`) {
-			return nil, status.Errorf(codes.InvalidArgument, "name and provider pair already exist")
+		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
+			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -68,6 +70,7 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1.CreateNames
 	return &sirenv1.Namespace{
 		Id:          namespace.Id,
 		Provider:    namespace.Provider,
+		Urn:         namespace.Urn,
 		Name:        namespace.Name,
 		Credentials: grpcCredentials,
 		Labels:      namespace.Labels,
@@ -94,6 +97,7 @@ func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1.GetNamespaceRe
 
 	return &sirenv1.Namespace{
 		Id:          namespace.Id,
+		Urn:         namespace.Urn,
 		Name:        namespace.Name,
 		Credentials: credentials,
 		Labels:      namespace.Labels,
@@ -112,8 +116,8 @@ func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1.UpdateNames
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), `violates unique constraint "name_provider_id_unique"`) {
-			return nil, status.Errorf(codes.InvalidArgument, "name and provider pair already exist")
+		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
+			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
 		s.logger.Error("handler", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -127,6 +131,7 @@ func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1.UpdateNames
 
 	return &sirenv1.Namespace{
 		Id:          namespace.Id,
+		Urn:         namespace.Urn,
 		Name:        namespace.Name,
 		Provider:    namespace.Provider,
 		Credentials: grpcCredentials,

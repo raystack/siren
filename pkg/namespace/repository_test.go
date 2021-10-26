@@ -49,6 +49,7 @@ func (s *RepositoryTestSuite) TestList() {
 		namespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -57,8 +58,8 @@ func (s *RepositoryTestSuite) TestList() {
 		}
 		expectedNamespaces := []*Namespace{namespace}
 
-		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(namespace.Id, namespace.ProviderId, namespace.Name, namespace.Credentials,
+		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
+			AddRow(namespace.Id, namespace.ProviderId, namespace.Urn, namespace.Name, namespace.Credentials,
 				json.RawMessage(`{"foo": "bar"}`), namespace.CreatedAt, namespace.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
@@ -83,12 +84,13 @@ func (s *RepositoryTestSuite) TestCreate() {
 
 	s.Run("should create a namespace", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
-											("provider_id","name","credentials","labels","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
+											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
+											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -96,14 +98,14 @@ func (s *RepositoryTestSuite) TestCreate() {
 			UpdatedAt:   time.Now(),
 		}
 
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Name,
-			expectedNamespace.Credentials, expectedNamespace.Labels,
+		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Urn,
+			expectedNamespace.Name, expectedNamespace.Credentials, expectedNamespace.Labels,
 			expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt, expectedNamespace.Id).
 			WillReturnRows(sqlmock.NewRows(nil))
 
 		expectedRows := sqlmock.
-			NewRows([]string{"name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
 				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
 				expectedNamespace.Id)
 
@@ -115,11 +117,12 @@ func (s *RepositoryTestSuite) TestCreate() {
 
 	s.Run("should return errors in creating a namespace", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
-											("provider_id","name","credentials","labels","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
+											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
+											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -127,8 +130,8 @@ func (s *RepositoryTestSuite) TestCreate() {
 			UpdatedAt:   time.Now(),
 		}
 
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Name,
-			expectedNamespace.Credentials, expectedNamespace.Labels,
+		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Urn,
+			expectedNamespace.Name, expectedNamespace.Credentials, expectedNamespace.Labels,
 			expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt, expectedNamespace.Id).
 			WillReturnError(errors.New("random error"))
 
@@ -139,12 +142,13 @@ func (s *RepositoryTestSuite) TestCreate() {
 
 	s.Run("should return error if finding newly inserted namespace fails", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
-											("provider_id","name","credentials","labels","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
+											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
+											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -152,8 +156,8 @@ func (s *RepositoryTestSuite) TestCreate() {
 			UpdatedAt:   time.Now(),
 		}
 
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Name,
-			expectedNamespace.Credentials, expectedNamespace.Labels,
+		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedNamespace.ProviderId, expectedNamespace.Urn,
+			expectedNamespace.Name, expectedNamespace.Credentials, expectedNamespace.Labels,
 			expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt, expectedNamespace.Id).
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
@@ -173,6 +177,7 @@ func (s *RepositoryTestSuite) TestGet() {
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -181,8 +186,8 @@ func (s *RepositoryTestSuite) TestGet() {
 		}
 
 		expectedRows := sqlmock.
-			NewRows([]string{"name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
 				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
 				expectedNamespace.Id)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
@@ -226,6 +231,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -243,14 +249,15 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		}
 
 		expectedRows1 := sqlmock.
-			NewRows([]string{"name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
 				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
 				expectedNamespace.Id)
 		expectedRows2 := sqlmock.
-			NewRows([]string{"name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(input.Name, input.ProviderId, json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo": "bar"}`),
-				input.CreatedAt, input.UpdatedAt, input.Id)
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Name, input.ProviderId,
+				json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo": "bar"}`),
+				expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt, expectedNamespace.Id)
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.ProviderId, input.Name, input.Credentials, input.Labels,
 			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -266,6 +273,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		input := &Namespace{
 			Id:          1,
 			ProviderId:  2,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -285,6 +293,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		input := &Namespace{
 			Id:          1,
 			ProviderId:  2,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -307,6 +316,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,
@@ -324,10 +334,10 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		}
 
 		expectedRows := sqlmock.
-			NewRows([]string{"name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.Name, expectedNamespace.ProviderId, json.RawMessage(`{"foo":"bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
-				expectedNamespace.Id)
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Name, expectedNamespace.ProviderId,
+				json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt,
+				expectedNamespace.UpdatedAt, expectedNamespace.Id)
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.ProviderId, input.Name, input.Credentials, input.Labels,
 			AnyTime{}, AnyTime{}, input.Id, input.Id).
@@ -347,6 +357,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		expectedNamespace := &Namespace{
 			Id:          1,
 			ProviderId:  1,
+			Urn:         "foo",
 			Name:        "foo",
 			Credentials: `{"foo":"bar"}`,
 			Labels:      labels,

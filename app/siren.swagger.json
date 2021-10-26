@@ -1162,6 +1162,9 @@
         "name": {
           "type": "string"
         },
+        "urn": {
+          "type": "string"
+        },
         "provider": {
           "type": "string",
           "format": "uint64"
@@ -1189,6 +1192,9 @@
       "type": "object",
       "properties": {
         "host": {
+          "type": "string"
+        },
+        "urn": {
           "type": "string"
         },
         "name": {
@@ -1367,6 +1373,9 @@
           "type": "string",
           "format": "uint64"
         },
+        "urn": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },
@@ -1409,6 +1418,9 @@
           "format": "uint64"
         },
         "host": {
+          "type": "string"
+        },
+        "urn": {
           "type": "string"
         },
         "name": {

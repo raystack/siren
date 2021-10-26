@@ -145,7 +145,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
-	t.Run("should return error code 5 if namespace name conflict within a provider", func(t *testing.T) {
+	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
@@ -155,11 +155,11 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		}
 
 		mockedNamespaceService.On("CreateNamespace", payload).Return(nil,
-			errors.New(`violates unique constraint "name_provider_id_unique"`)).Once()
+			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = name and provider pair already exist")
+			"rpc error: code = InvalidArgument desc = urn and provider pair already exist")
 	})
 
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
@@ -309,7 +309,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 		mockedNamespaceService.AssertExpectations(t)
 	})
 
-	t.Run("should return error code 5 if namespace name conflict within a provider", func(t *testing.T) {
+	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
@@ -318,12 +318,12 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).Return(nil,
-			errors.New(`violates unique constraint "name_provider_id_unique"`)).Once()
+			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = name and provider pair already exist")
+			"rpc error: code = InvalidArgument desc = urn and provider pair already exist")
 	})
 
 	t.Run("should return error code 13 if updating namespaces failed", func(t *testing.T) {
