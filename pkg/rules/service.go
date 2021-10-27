@@ -48,8 +48,8 @@ func (service Service) Upsert(rule *domain.Rule) (*domain.Rule, error) {
 	return upsertedRule.toDomain()
 }
 
-func (service Service) Get(namespace, entity, groupName, status, template string) ([]domain.Rule, error) {
-	rules, err := service.repository.Get(namespace, entity, groupName, status, template)
+func (service Service) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
+	rules, err := service.repository.Get(name, namespace, groupName, template, providerNamespace)
 	if err != nil {
 		return nil, err
 	}

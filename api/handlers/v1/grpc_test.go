@@ -3,17 +3,15 @@ package v1
 import (
 	"context"
 	"errors"
-	"github.com/slack-go/slack"
-	"google.golang.org/protobuf/types/known/structpb"
-	"testing"
-	"time"
-
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
+	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
+	"google.golang.org/protobuf/types/known/structpb"
+	"testing"
 )
 
 func TestGRPCServer_ListAlertHistory(t *testing.T) {
@@ -606,158 +604,6 @@ func TestGRPCServer_SendSlackNotification(t *testing.T) {
 		res, err := dummyGRPCServer.SendSlackNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = provider not supported")
 		assert.Nil(t, res)
-	})
-}
-
-func TestGRPCServer_ListRules(t *testing.T) {
-	dummyPayload := &sirenv1.ListRulesRequest{
-		Namespace: "test",
-		Entity:    "odpf",
-		GroupName: "foo",
-		Status:    "enabled",
-		Template:  "foo",
-	}
-
-	t.Run("should return stored rules", func(t *testing.T) {
-		mockedRuleService := &mocks.RuleService{}
-		dummyResult := []domain.Rule{
-			{
-				ID:        1,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-				Name:      "foo",
-				Namespace: "test",
-				Entity:    "odpf",
-				GroupName: "foo",
-				Template:  "foo",
-				Status:    "enabled",
-				Variables: []domain.RuleVariable{
-					{
-						Name:        "foo",
-						Type:        "int",
-						Value:       "bar",
-						Description: "",
-					},
-				},
-			},
-		}
-
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				RulesService: mockedRuleService,
-			},
-			logger: zaptest.NewLogger(t),
-		}
-		mockedRuleService.
-			On("Get", dummyPayload.Namespace, dummyPayload.Entity, dummyPayload.GroupName, dummyPayload.Status, dummyPayload.Template).
-			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
-		assert.Nil(t, err)
-		assert.Equal(t, 1, len(res.GetRules()))
-		assert.Equal(t, uint64(1), res.GetRules()[0].GetId())
-		assert.Equal(t, "foo", res.GetRules()[0].GetName())
-		assert.Equal(t, "odpf", res.GetRules()[0].GetEntity())
-		assert.Equal(t, "test", res.GetRules()[0].GetNamespace())
-		assert.Equal(t, "enabled", res.GetRules()[0].GetStatus())
-		assert.Equal(t, 1, len(res.GetRules()[0].GetVariables()))
-		mockedRuleService.AssertCalled(t, "Get", "test", "odpf", "foo", "enabled", "foo")
-	})
-
-	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
-		mockedRuleService := &mocks.RuleService{}
-
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				RulesService: mockedRuleService,
-			},
-			logger: zaptest.NewLogger(t),
-		}
-		mockedRuleService.
-			On("Get", dummyPayload.Namespace, dummyPayload.Entity, dummyPayload.GroupName, dummyPayload.Status, dummyPayload.Template).
-			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
-		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
-	})
-}
-
-func TestGRPCServer_UpdateRules(t *testing.T) {
-	dummyPayload := domain.Rule{
-		ID:        1,
-		Name:      "foo",
-		Namespace: "test",
-		Entity:    "odpf",
-		GroupName: "foo",
-		Template:  "foo",
-		Status:    "enabled",
-		Variables: []domain.RuleVariable{
-			{
-				Name:        "foo",
-				Type:        "int",
-				Value:       "bar",
-				Description: "",
-			},
-		},
-	}
-	dummyReq := &sirenv1.UpdateRuleRequest{
-		Id:        1,
-		Name:      "foo",
-		Namespace: "test",
-		Entity:    "odpf",
-		GroupName: "foo",
-		Template:  "foo",
-		Status:    "enabled",
-		Variables: []*sirenv1.Variables{
-			{
-				Name:        "foo",
-				Type:        "int",
-				Value:       "bar",
-				Description: "",
-			},
-		},
-	}
-
-	t.Run("should update rule", func(t *testing.T) {
-		mockedRuleService := &mocks.RuleService{}
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				RulesService: mockedRuleService,
-			},
-			logger: zaptest.NewLogger(t),
-		}
-		dummyResult := dummyPayload
-		dummyResult.Status = "disabled"
-
-		mockedRuleService.
-			On("Upsert", &dummyPayload).
-			Return(&dummyResult, nil).Once()
-		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
-		assert.Nil(t, err)
-
-		assert.Equal(t, uint64(1), res.GetRule().GetId())
-		assert.Equal(t, "foo", res.GetRule().GetName())
-		assert.Equal(t, "odpf", res.GetRule().GetEntity())
-		assert.Equal(t, "test", res.GetRule().GetNamespace())
-		assert.Equal(t, "disabled", res.GetRule().GetStatus())
-		assert.Equal(t, 1, len(res.GetRule().GetVariables()))
-		mockedRuleService.AssertCalled(t, "Upsert", &dummyPayload)
-	})
-
-	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
-		mockedRuleService := &mocks.RuleService{}
-
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				RulesService: mockedRuleService,
-			},
-			logger: zaptest.NewLogger(t),
-		}
-		mockedRuleService.
-			On("Upsert", &dummyPayload).
-			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
-		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
