@@ -722,6 +722,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "providerNamespace",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
