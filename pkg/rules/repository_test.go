@@ -1327,7 +1327,7 @@ func (s *RepositoryTestSuite) TestGet() {
 
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnRows(expectedRuleRows)
 
-		actualRules, err := s.repository.Get("test-name", "test-namespace", "test-group", "test-template")
+		actualRules, err := s.repository.Get("test-name", "test-namespace", "test-group", "test-template", 1)
 		s.Equal(expectedRules, actualRules)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1357,7 +1357,7 @@ func (s *RepositoryTestSuite) TestGet() {
 
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnRows(expectedRuleRows)
 
-		actualRules, err := s.repository.Get("", "", "", "")
+		actualRules, err := s.repository.Get("", "", "", "", 0)
 		s.Equal(expectedRules, actualRules)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1367,7 +1367,7 @@ func (s *RepositoryTestSuite) TestGet() {
 	s.Run("should return error if any", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules`)
 		s.dbmock.ExpectQuery(selectRuleQuery).WillReturnError(errors.New("random error"))
-		actualRules, err := s.repository.Get("", "", "", "")
+		actualRules, err := s.repository.Get("", "", "", "", 0)
 		s.EqualError(err, "random error; random error")
 		s.Nil(actualRules)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {

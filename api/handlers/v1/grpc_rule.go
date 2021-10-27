@@ -14,8 +14,9 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest)
 	namespace := req.GetNamespace()
 	groupName := req.GetGroupName()
 	template := req.GetTemplate()
+	providerNamespace := req.GetProviderNamespace()
 
-	rules, err := s.container.RulesService.Get(name, namespace, groupName, template)
+	rules, err := s.container.RulesService.Get(name, namespace, groupName, template, providerNamespace)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}

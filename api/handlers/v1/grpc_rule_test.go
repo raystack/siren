@@ -16,10 +16,11 @@ import (
 
 func TestGRPCServer_ListRules(t *testing.T) {
 	dummyPayload := &sirenv1.ListRulesRequest{
-		Name:      "foo",
-		Namespace: "test",
-		GroupName: "foo",
-		Template:  "foo",
+		Name:              "foo",
+		Namespace:         "test",
+		GroupName:         "foo",
+		Template:          "foo",
+		ProviderNamespace: 1,
 	}
 
 	t.Run("should return stored rules", func(t *testing.T) {
@@ -52,7 +53,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 		mockedRuleService.
-			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName, dummyPayload.Template).
+			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+				dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
 		assert.Nil(t, err)
@@ -61,7 +63,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		assert.Equal(t, "test", res.GetRules()[0].GetNamespace())
 		assert.Equal(t, true, res.GetRules()[0].GetEnabled())
 		assert.Equal(t, 1, len(res.GetRules()[0].GetVariables()))
-		mockedRuleService.AssertCalled(t, "Get", "foo", "test", "foo", "foo")
+		mockedRuleService.AssertCalled(t, "Get", "foo", "test", "foo", "foo", uint64(1))
 	})
 
 	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
@@ -74,7 +76,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 		mockedRuleService.
-			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName, dummyPayload.Template).
+			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+				dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
 		assert.Nil(t, res)

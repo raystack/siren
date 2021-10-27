@@ -5776,6 +5776,8 @@ func (m *ListRulesRequest) validate(all bool) error {
 
 	// no validation rules for Template
 
+	// no validation rules for ProviderNamespace
+
 	if len(errors) > 0 {
 		return ListRulesRequestMultiError(errors)
 	}

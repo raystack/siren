@@ -112,27 +112,28 @@ func TestService_Get(t *testing.T) {
 		modelRules := []Rule{{
 			Id: 1, Name: "bar", Enabled: &truebool, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
 			Variables:         `[{"name":"test-name","type":"test-type","value":"test-value","description":"test-description"}]`,
-			ProviderNamespace: 1,
+			ProviderNamespace: uint64(1),
 		}}
-		repositoryMock.On("Get", "foo", "gojek", "test-group", "test-tmpl").
+		repositoryMock.On("Get", "foo", "gojek", "test-group", "test-tmpl", uint64(1)).
 			Return(modelRules, nil).Once()
 
-		result, err := dummyService.Get("foo", "gojek", "test-group", "test-tmpl")
+		result, err := dummyService.
+			Get("foo", "gojek", "test-group", "test-tmpl", 1)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyRules, result)
-		repositoryMock.AssertCalled(t, "Get", "foo", "gojek", "test-group", "test-tmpl")
+		repositoryMock.AssertCalled(t, "Get", "foo", "gojek", "test-group", "test-tmpl", uint64(1))
 	})
 
 	t.Run("should call repository Get method and return error if any", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
 		dummyService := Service{repository: repositoryMock}
-		repositoryMock.On("Get", "foo", "", "", "").
+		repositoryMock.On("Get", "foo", "", "", "", uint64(0)).
 			Return(nil, errors.New("random error")).Once()
 
-		result, err := dummyService.Get("foo", "", "", "")
+		result, err := dummyService.Get("foo", "", "", "", 0)
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "random error")
-		repositoryMock.AssertCalled(t, "Get", "foo", "", "", "")
+		repositoryMock.AssertCalled(t, "Get", "foo", "", "", "", uint64(0))
 	})
 }
 

@@ -205,7 +205,7 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 	return &existingRule, err
 }
 
-func (r Repository) Get(name, namespace, groupName, template string) ([]Rule, error) {
+func (r Repository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]Rule, error) {
 	var rules []Rule
 	selectQuery := `SELECT * from rules`
 	selectQueryWithWhereClause := `SELECT * from rules WHERE `
@@ -221,6 +221,9 @@ func (r Repository) Get(name, namespace, groupName, template string) ([]Rule, er
 	}
 	if template != "" {
 		filterConditions = append(filterConditions, fmt.Sprintf("template = '%s' ", template))
+	}
+	if providerNamespace != 0 {
+		filterConditions = append(filterConditions, fmt.Sprintf("provider_namespace = '%d' ", providerNamespace))
 	}
 	var finalSelectQuery string
 	if len(filterConditions) == 0 {

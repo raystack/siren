@@ -65,6 +65,6 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 //Repository interface
 type RuleRepository interface {
 	Upsert(*Rule, cortexCaller, domain.TemplatesService) (*Rule, error)
-	Get(string, string, string, string) ([]Rule, error)
+	Get(string, string, string, string, uint64) ([]Rule, error)
 	Migrate() error
 }
