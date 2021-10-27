@@ -700,13 +700,13 @@
         },
         "parameters": [
           {
-            "name": "namespace",
+            "name": "name",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "entity",
+            "name": "namespace",
             "in": "query",
             "required": false,
             "type": "string"
@@ -718,16 +718,17 @@
             "type": "string"
           },
           {
-            "name": "status",
+            "name": "template",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "template",
+            "name": "providerNamespace",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
@@ -1501,20 +1502,23 @@
         "name": {
           "type": "string"
         },
-        "entity": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "groupName": {
           "type": "string"
         },
         "namespace": {
           "type": "string"
         },
-        "groupName": {
-          "type": "string"
-        },
         "template": {
           "type": "string"
         },
-        "status": {
-          "type": "string"
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Variables"
+          }
         },
         "createdAt": {
           "type": "string",
@@ -1524,11 +1528,9 @@
           "type": "string",
           "format": "date-time"
         },
-        "variables": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Variables"
-          }
+        "providerNamespace": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
@@ -1654,26 +1656,16 @@
     "v1UpdateRuleRequest": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
+        "enabled": {
+          "type": "boolean"
         },
-        "name": {
-          "type": "string"
-        },
-        "entity": {
+        "groupName": {
           "type": "string"
         },
         "namespace": {
           "type": "string"
         },
-        "groupName": {
-          "type": "string"
-        },
         "template": {
-          "type": "string"
-        },
-        "status": {
           "type": "string"
         },
         "variables": {
@@ -1681,6 +1673,10 @@
           "items": {
             "$ref": "#/definitions/v1Variables"
           }
+        },
+        "providerNamespace": {
+          "type": "string",
+          "format": "uint64"
         }
       }
     },
@@ -1725,10 +1721,10 @@
         "name": {
           "type": "string"
         },
-        "type": {
+        "value": {
           "type": "string"
         },
-        "value": {
+        "type": {
           "type": "string"
         },
         "description": {

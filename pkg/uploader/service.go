@@ -121,12 +121,11 @@ func (s Service) UploadTemplates(yamlFile []byte) (*client.Template, error) {
 			}
 			updatedVariables = append(updatedVariables, ruleVar)
 		}
+		// FIXME: support enabled & provider namespace
 		updateRulePayload := domain.Rule{
 			Namespace: associatedRule.Namespace,
-			Entity:    associatedRule.Entity,
 			GroupName: associatedRule.GroupName,
 			Template:  associatedRule.Template,
-			Status:    associatedRule.Status,
 			Variables: updatedVariables,
 		}
 		updateOptions := &client.RulesApiCreateRuleRequestOpts{
@@ -160,12 +159,13 @@ func (s Service) UploadRules(yamlFile []byte) ([]*client.Rule, error) {
 			}
 			vars = append(vars, v)
 		}
+
+		// FIXME: support enabled & provider namespace
 		payload := domain.Rule{
 			Namespace: yamlBody.Namespace,
-			Entity:    yamlBody.Entity,
 			GroupName: k,
 			Template:  v.Template,
-			Status:    v.Status,
+			Enabled:   true,
 			Variables: vars,
 		}
 		options := &client.RulesApiCreateRuleRequestOpts{
@@ -173,13 +173,13 @@ func (s Service) UploadRules(yamlFile []byte) ([]*client.Rule, error) {
 		}
 		result, _, err := s.SirenClient.RulesAPI.CreateRuleRequest(context.Background(), options)
 		if err != nil {
-			fmt.Println(fmt.Sprintf("rule %s/%s/%s/%s upload error",
-				payload.Namespace, payload.Entity, payload.GroupName, payload.Template), err)
+			fmt.Println(fmt.Sprintf("rule %s/%s/%s upload error",
+				payload.Namespace, payload.GroupName, payload.Template), err)
 			return successfullyUpsertedRules, err
 		} else {
 			successfullyUpsertedRules = append(successfullyUpsertedRules, &result)
-			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s/%s",
-				payload.Namespace, payload.Entity, payload.GroupName, payload.Template))
+			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s",
+				payload.Namespace, payload.GroupName, payload.Template))
 		}
 	}
 	return successfullyUpsertedRules, nil
