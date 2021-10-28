@@ -3,7 +3,6 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
@@ -14,7 +13,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"strings"
 )
 
 type GRPCServer struct {
@@ -34,82 +32,6 @@ func NewGRPCServer(container *service.Container, nr *newrelic.Application, logge
 
 func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv1.PingResponse, error) {
 	return &sirenv1.PingResponse{Message: "Pong"}, nil
-}
-
-
-func (s *GRPCServer) ListAlertHistory(_ context.Context, req *sirenv1.ListAlertHistoryRequest) (*sirenv1.ListAlertHistoryResponse, error) {
-	name := req.GetResource()
-	startTime := req.GetStartTime()
-	endTime := req.GetEndTime()
-	if name == "" {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("resource name cannot be empty"))
-	}
-	alerts, err := s.container.AlertHistoryService.Get(name, startTime, endTime)
-	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
-	}
-	res := &sirenv1.ListAlertHistoryResponse{
-		Alerts: make([]*sirenv1.AlertHistory, 0),
-	}
-	for _, alert := range alerts {
-		item := &sirenv1.AlertHistory{
-			Name:        alert.Name,
-			Id:          alert.ID,
-			MetricName:  alert.MetricName,
-			MetricValue: alert.MetricValue,
-			TemplateId:  alert.TemplateID,
-			Level:       alert.Level,
-			CreatedAt:   alert.CreatedAt.String(),
-			UpdatedAt:   alert.UpdatedAt.String(),
-		}
-		res.Alerts = append(res.Alerts, item)
-	}
-	return res, nil
-}
-
-func (s *GRPCServer) CreateAlertHistory(_ context.Context, req *sirenv1.CreateAlertHistoryRequest) (*sirenv1.CreateAlertHistoryResponse, error) {
-	alerts := domain.Alerts{Alerts: make([]domain.Alert, 0)}
-	for _, item := range req.GetAlerts() {
-		labels := domain.Labels{
-			Severity: item.Labels.Severity,
-		}
-		annotations := domain.Annotations{
-			Resource:    item.GetAnnotations().GetResource(),
-			Template:    item.GetAnnotations().GetTemplate(),
-			MetricName:  item.GetAnnotations().GetMetricName(),
-			MetricValue: item.GetAnnotations().GetMetricValue(),
-		}
-		alert := domain.Alert{
-			Labels:      labels,
-			Annotations: annotations,
-			Status:      item.Status,
-		}
-		alerts.Alerts = append(alerts.Alerts, alert)
-	}
-	createdAlerts, err := s.container.AlertHistoryService.Create(&alerts)
-	result := &sirenv1.CreateAlertHistoryResponse{Alerts: make([]*sirenv1.AlertHistory, 0)}
-	for _, item := range createdAlerts {
-		alertHistoryItem := &sirenv1.AlertHistory{
-			Name:        item.Name,
-			Id:          item.ID,
-			MetricName:  item.MetricName,
-			MetricValue: item.MetricValue,
-			TemplateId:  item.TemplateID,
-			Level:       item.Level,
-			CreatedAt:   item.CreatedAt.String(),
-			UpdatedAt:   item.UpdatedAt.String(),
-		}
-		result.Alerts = append(result.Alerts, alertHistoryItem)
-	}
-	if err != nil {
-		if strings.Contains(err.Error(), "alert history parameters missing") {
-			s.logger.Error(err.Error())
-			return result, nil
-		}
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
-	return result, nil
 }
 
 func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListWorkspaceChannelsRequest) (*sirenv1.ListWorkspaceChannelsResponse, error) {
