@@ -2988,7 +2988,16 @@ func (m *ListAlertsRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ProviderName
+	if _, ok := _ListAlertsRequest_ProviderName_InLookup[m.GetProviderName()]; !ok {
+		err := ListAlertsRequestValidationError{
+			field:  "ProviderName",
+			reason: "value must be in list [cortex]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for ProviderId
 
@@ -3076,6 +3085,10 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAlertsRequestValidationError{}
+
+var _ListAlertsRequest_ProviderName_InLookup = map[string]struct{}{
+	"cortex": {},
+}
 
 // Validate checks the field values on Alerts with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
