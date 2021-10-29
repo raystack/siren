@@ -17,10 +17,6 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1.ListAlertsReques
 	startTime := req.GetStartTime()
 	endTime := req.GetEndTime()
 
-	if resourceName == "" {
-		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("resource name cannot be empty"))
-	}
-
 	alerts, err := s.container.AlertService.Get(resourceName, providerId, startTime, endTime)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)

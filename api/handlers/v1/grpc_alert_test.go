@@ -45,22 +45,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		assert.Nil(t, err)
 		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
 	})
-
-	t.Run("should return error code 3 if resource query param is missing", func(t *testing.T) {
-		mockedAlertService := &mocks.AlertService{}
-		dummyGRPCServer := GRPCServer{container: &service.Container{
-			AlertService: mockedAlertService,
-		}}
-
-		dummyReq := &sirenv1.ListAlertsRequest{
-			StartTime: 100,
-			EndTime:   200,
-		}
-		res, err := dummyGRPCServer.ListAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = resource name cannot be empty")
-		assert.Nil(t, res)
-	})
-
+	
 	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{

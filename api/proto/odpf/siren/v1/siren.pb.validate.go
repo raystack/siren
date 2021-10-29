@@ -3001,7 +3001,16 @@ func (m *ListAlertsRequest) validate(all bool) error {
 
 	// no validation rules for ProviderId
 
-	// no validation rules for ResourceName
+	if !_ListAlertsRequest_ResourceName_Pattern.MatchString(m.GetResourceName()) {
+		err := ListAlertsRequestValidationError{
+			field:  "ResourceName",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for StartTime
 
@@ -3089,6 +3098,8 @@ var _ interface {
 var _ListAlertsRequest_ProviderName_InLookup = map[string]struct{}{
 	"cortex": {},
 }
+
+var _ListAlertsRequest_ResourceName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on Alerts with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
