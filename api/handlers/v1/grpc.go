@@ -2,13 +2,11 @@ package v1
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"github.com/odpf/siren/service"
-	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -120,45 +118,6 @@ func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1.Upda
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1.UpdateAlertCredentialsResponse{}, nil
-}
-
-func (s *GRPCServer) SendSlackNotification(_ context.Context, req *sirenv1.SendSlackNotificationRequest) (*sirenv1.SendSlackNotificationResponse, error) {
-	var payload *domain.SlackMessage
-	provider := req.GetProvider()
-
-	b, err := json.Marshal(req.GetBlocks())
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
-	}
-
-	blocks := slack.Blocks{}
-	err = json.Unmarshal(b, &blocks)
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
-	}
-
-	if provider == "slack" {
-		payload = &domain.SlackMessage{
-			ReceiverName: req.GetReceiverName(),
-			ReceiverType: req.GetReceiverType(),
-			Entity:       req.GetEntity(),
-			Message:      req.GetMessage(),
-			Blocks:       blocks,
-		}
-	} else {
-		return nil, status.Errorf(codes.InvalidArgument, "provider not supported")
-	}
-
-	result, err := s.container.NotifierServices.Slack.Notify(payload)
-	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
-	}
-	res := &sirenv1.SendSlackNotificationResponse{
-		Ok: result.OK,
-	}
-	return res, nil
 }
 
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1.ListTemplatesRequest) (*sirenv1.ListTemplatesResponse, error) {

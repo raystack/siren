@@ -21,7 +21,7 @@ type SlackNotifierService interface {
 type SlackMessage struct {
 	ReceiverName string       `json:"receiver_name" validate:"required"`
 	ReceiverType string       `json:"receiver_type" validate:"required,oneof=user channel"`
-	Entity       string       `json:"entity" validate:"required"`
+	Token        string       `json:"token" validate:"required"`
 	Message      string       `json:"message"`
 	Blocks       slack.Blocks `json:"blocks"`
 }

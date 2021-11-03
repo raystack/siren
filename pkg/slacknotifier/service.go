@@ -8,20 +8,15 @@ import (
 
 type Service struct {
 	client              SlackNotifier
-	codeExchangeService domain.CodeExchangeService
 }
 
 func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendResponse, error) {
-	m := &SlackMessage{}
-	m = m.fromDomain(message)
-	token, err := s.codeExchangeService.GetToken(message.Entity)
+	payload := &SlackMessage{}
+	payload = payload.fromDomain(message)
 	res := &domain.SlackMessageSendResponse{
 		OK: false,
 	}
-	if err != nil {
-		return res, errors.Wrap(err, fmt.Sprintf("could not get token for entity: %s", message.Entity))
-	}
-	err = s.client.Notify(m, token)
+	err := s.client.Notify(payload, message.Token)
 	if err != nil {
 		return res, errors.Wrap(err, fmt.Sprintf("could not send notification"))
 	}
@@ -29,9 +24,8 @@ func (s Service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendR
 	return res, nil
 }
 
-func NewService(codeExchangeService domain.CodeExchangeService) domain.SlackNotifierService {
+func NewService() domain.SlackNotifierService {
 	return &Service{
-		client:              NewSlackNotifierClient(),
-		codeExchangeService: codeExchangeService,
+		client: NewSlackNotifierClient(),
 	}
 }

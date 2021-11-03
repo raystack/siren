@@ -5407,91 +5407,57 @@ var _ interface {
 	ErrorName() string
 } = UpdateAlertCredentialsResponseValidationError{}
 
-// Validate checks the field values on SendSlackNotificationRequest with the
+// Validate checks the field values on SendReceiverNotificationRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *SendSlackNotificationRequest) Validate() error {
+func (m *SendReceiverNotificationRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on SendSlackNotificationRequest with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// SendSlackNotificationRequestMultiError, or nil if none found.
-func (m *SendSlackNotificationRequest) ValidateAll() error {
+// ValidateAll checks the field values on SendReceiverNotificationRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// SendReceiverNotificationRequestMultiError, or nil if none found.
+func (m *SendReceiverNotificationRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *SendSlackNotificationRequest) validate(all bool) error {
+func (m *SendReceiverNotificationRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for Provider
+	// no validation rules for Id
 
-	if !_SendSlackNotificationRequest_Entity_Pattern.MatchString(m.GetEntity()) {
-		err := SendSlackNotificationRequestValidationError{
-			field:  "Entity",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	switch m.Data.(type) {
 
-	// no validation rules for Message
-
-	if !_SendSlackNotificationRequest_ReceiverName_Pattern.MatchString(m.GetReceiverName()) {
-		err := SendSlackNotificationRequestValidationError{
-			field:  "ReceiverName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if _, ok := _SendSlackNotificationRequest_ReceiverType_InLookup[m.GetReceiverType()]; !ok {
-		err := SendSlackNotificationRequestValidationError{
-			field:  "ReceiverType",
-			reason: "value must be in list [channel user]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	for idx, item := range m.GetBlocks() {
-		_, _ = idx, item
+	case *SendReceiverNotificationRequest_SlackPayload_:
 
 		if all {
-			switch v := interface{}(item).(type) {
+			switch v := interface{}(m.GetSlackPayload()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, SendSlackNotificationRequestValidationError{
-						field:  fmt.Sprintf("Blocks[%v]", idx),
+					errors = append(errors, SendReceiverNotificationRequestValidationError{
+						field:  "SlackPayload",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, SendSlackNotificationRequestValidationError{
-						field:  fmt.Sprintf("Blocks[%v]", idx),
+					errors = append(errors, SendReceiverNotificationRequestValidationError{
+						field:  "SlackPayload",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetSlackPayload()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return SendSlackNotificationRequestValidationError{
-					field:  fmt.Sprintf("Blocks[%v]", idx),
+				return SendReceiverNotificationRequestValidationError{
+					field:  "SlackPayload",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -5501,18 +5467,18 @@ func (m *SendSlackNotificationRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return SendSlackNotificationRequestMultiError(errors)
+		return SendReceiverNotificationRequestMultiError(errors)
 	}
 	return nil
 }
 
-// SendSlackNotificationRequestMultiError is an error wrapping multiple
-// validation errors returned by SendSlackNotificationRequest.ValidateAll() if
-// the designated constraints aren't met.
-type SendSlackNotificationRequestMultiError []error
+// SendReceiverNotificationRequestMultiError is an error wrapping multiple
+// validation errors returned by SendReceiverNotificationRequest.ValidateAll()
+// if the designated constraints aren't met.
+type SendReceiverNotificationRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m SendSlackNotificationRequestMultiError) Error() string {
+func (m SendReceiverNotificationRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5521,12 +5487,12 @@ func (m SendSlackNotificationRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m SendSlackNotificationRequestMultiError) AllErrors() []error { return m }
+func (m SendReceiverNotificationRequestMultiError) AllErrors() []error { return m }
 
-// SendSlackNotificationRequestValidationError is the validation error returned
-// by SendSlackNotificationRequest.Validate if the designated constraints
-// aren't met.
-type SendSlackNotificationRequestValidationError struct {
+// SendReceiverNotificationRequestValidationError is the validation error
+// returned by SendReceiverNotificationRequest.Validate if the designated
+// constraints aren't met.
+type SendReceiverNotificationRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5534,24 +5500,24 @@ type SendSlackNotificationRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e SendSlackNotificationRequestValidationError) Field() string { return e.field }
+func (e SendReceiverNotificationRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e SendSlackNotificationRequestValidationError) Reason() string { return e.reason }
+func (e SendReceiverNotificationRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e SendSlackNotificationRequestValidationError) Cause() error { return e.cause }
+func (e SendReceiverNotificationRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e SendSlackNotificationRequestValidationError) Key() bool { return e.key }
+func (e SendReceiverNotificationRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e SendSlackNotificationRequestValidationError) ErrorName() string {
-	return "SendSlackNotificationRequestValidationError"
+func (e SendReceiverNotificationRequestValidationError) ErrorName() string {
+	return "SendReceiverNotificationRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e SendSlackNotificationRequestValidationError) Error() string {
+func (e SendReceiverNotificationRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5563,14 +5529,14 @@ func (e SendSlackNotificationRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sSendSlackNotificationRequest.%s: %s%s",
+		"invalid %sSendReceiverNotificationRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = SendSlackNotificationRequestValidationError{}
+var _ error = SendReceiverNotificationRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -5578,33 +5544,25 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = SendSlackNotificationRequestValidationError{}
+} = SendReceiverNotificationRequestValidationError{}
 
-var _SendSlackNotificationRequest_Entity_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _SendSlackNotificationRequest_ReceiverName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _SendSlackNotificationRequest_ReceiverType_InLookup = map[string]struct{}{
-	"channel": {},
-	"user":    {},
-}
-
-// Validate checks the field values on SendSlackNotificationResponse with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *SendSlackNotificationResponse) Validate() error {
+// Validate checks the field values on SendReceiverNotificationResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *SendReceiverNotificationResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on SendSlackNotificationResponse with
+// ValidateAll checks the field values on SendReceiverNotificationResponse with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, the result is a list of violation errors wrapped in
-// SendSlackNotificationResponseMultiError, or nil if none found.
-func (m *SendSlackNotificationResponse) ValidateAll() error {
+// SendReceiverNotificationResponseMultiError, or nil if none found.
+func (m *SendReceiverNotificationResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *SendSlackNotificationResponse) validate(all bool) error {
+func (m *SendReceiverNotificationResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -5614,18 +5572,19 @@ func (m *SendSlackNotificationResponse) validate(all bool) error {
 	// no validation rules for Ok
 
 	if len(errors) > 0 {
-		return SendSlackNotificationResponseMultiError(errors)
+		return SendReceiverNotificationResponseMultiError(errors)
 	}
 	return nil
 }
 
-// SendSlackNotificationResponseMultiError is an error wrapping multiple
-// validation errors returned by SendSlackNotificationResponse.ValidateAll()
-// if the designated constraints aren't met.
-type SendSlackNotificationResponseMultiError []error
+// SendReceiverNotificationResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// SendReceiverNotificationResponse.ValidateAll() if the designated
+// constraints aren't met.
+type SendReceiverNotificationResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m SendSlackNotificationResponseMultiError) Error() string {
+func (m SendReceiverNotificationResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -5634,12 +5593,12 @@ func (m SendSlackNotificationResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m SendSlackNotificationResponseMultiError) AllErrors() []error { return m }
+func (m SendReceiverNotificationResponseMultiError) AllErrors() []error { return m }
 
-// SendSlackNotificationResponseValidationError is the validation error
-// returned by SendSlackNotificationResponse.Validate if the designated
+// SendReceiverNotificationResponseValidationError is the validation error
+// returned by SendReceiverNotificationResponse.Validate if the designated
 // constraints aren't met.
-type SendSlackNotificationResponseValidationError struct {
+type SendReceiverNotificationResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -5647,24 +5606,24 @@ type SendSlackNotificationResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e SendSlackNotificationResponseValidationError) Field() string { return e.field }
+func (e SendReceiverNotificationResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e SendSlackNotificationResponseValidationError) Reason() string { return e.reason }
+func (e SendReceiverNotificationResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e SendSlackNotificationResponseValidationError) Cause() error { return e.cause }
+func (e SendReceiverNotificationResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e SendSlackNotificationResponseValidationError) Key() bool { return e.key }
+func (e SendReceiverNotificationResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e SendSlackNotificationResponseValidationError) ErrorName() string {
-	return "SendSlackNotificationResponseValidationError"
+func (e SendReceiverNotificationResponseValidationError) ErrorName() string {
+	return "SendReceiverNotificationResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e SendSlackNotificationResponseValidationError) Error() string {
+func (e SendReceiverNotificationResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -5676,14 +5635,14 @@ func (e SendSlackNotificationResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sSendSlackNotificationResponse.%s: %s%s",
+		"invalid %sSendReceiverNotificationResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = SendSlackNotificationResponseValidationError{}
+var _ error = SendReceiverNotificationResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -5691,7 +5650,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = SendSlackNotificationResponseValidationError{}
+} = SendReceiverNotificationResponseValidationError{}
 
 // Validate checks the field values on ListRulesRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -8032,3 +7991,174 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RenderTemplateResponseValidationError{}
+
+// Validate checks the field values on
+// SendReceiverNotificationRequest_SlackPayload with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SendReceiverNotificationRequest_SlackPayload) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// SendReceiverNotificationRequest_SlackPayload with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in
+// SendReceiverNotificationRequest_SlackPayloadMultiError, or nil if none found.
+func (m *SendReceiverNotificationRequest_SlackPayload) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SendReceiverNotificationRequest_SlackPayload) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Message
+
+	if !_SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern.MatchString(m.GetReceiverName()) {
+		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
+			field:  "ReceiverName",
+			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup[m.GetReceiverType()]; !ok {
+		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
+			field:  "ReceiverType",
+			reason: "value must be in list [channel user]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetBlocks() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SendReceiverNotificationRequest_SlackPayloadValidationError{
+						field:  fmt.Sprintf("Blocks[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SendReceiverNotificationRequest_SlackPayloadValidationError{
+						field:  fmt.Sprintf("Blocks[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SendReceiverNotificationRequest_SlackPayloadValidationError{
+					field:  fmt.Sprintf("Blocks[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SendReceiverNotificationRequest_SlackPayloadMultiError(errors)
+	}
+	return nil
+}
+
+// SendReceiverNotificationRequest_SlackPayloadMultiError is an error wrapping
+// multiple validation errors returned by
+// SendReceiverNotificationRequest_SlackPayload.ValidateAll() if the
+// designated constraints aren't met.
+type SendReceiverNotificationRequest_SlackPayloadMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SendReceiverNotificationRequest_SlackPayloadMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SendReceiverNotificationRequest_SlackPayloadMultiError) AllErrors() []error { return m }
+
+// SendReceiverNotificationRequest_SlackPayloadValidationError is the
+// validation error returned by
+// SendReceiverNotificationRequest_SlackPayload.Validate if the designated
+// constraints aren't met.
+type SendReceiverNotificationRequest_SlackPayloadValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) ErrorName() string {
+	return "SendReceiverNotificationRequest_SlackPayloadValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SendReceiverNotificationRequest_SlackPayloadValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSendReceiverNotificationRequest_SlackPayload.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SendReceiverNotificationRequest_SlackPayloadValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SendReceiverNotificationRequest_SlackPayloadValidationError{}
+
+var _SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
+
+var _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup = map[string]struct{}{
+	"channel": {},
+	"user":    {},
+}
