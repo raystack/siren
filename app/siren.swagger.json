@@ -1,8 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "odpf/siren/v1/siren.proto",
-    "version": "0.1.0"
+    "title": "Siren APIs",
+    "description": "Documentation of our Siren API with gRPC and\ngRPC-Gateway.",
+    "version": "0.3.0"
   },
   "tags": [
     {
@@ -19,14 +20,15 @@
     "application/json"
   ],
   "paths": {
-    "/history": {
-      "get": {
-        "operationId": "SirenService_ListAlertHistory",
+    "/alerts/cortex/{providerId}": {
+      "post": {
+        "summary": "create cortex alerts",
+        "operationId": "SirenService_CreateCortexAlerts",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListAlertHistoryResponse"
+              "$ref": "#/definitions/v1Alerts"
             }
           },
           "default": {
@@ -38,7 +40,68 @@
         },
         "parameters": [
           {
-            "name": "resource",
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "alerts": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/v1CortexAlert"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Alert"
+        ]
+      }
+    },
+    "/alerts/{providerName}/{providerId}": {
+      "get": {
+        "summary": "list alerts",
+        "operationId": "SirenService_ListAlerts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Alerts"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "providerName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "resourceName",
             "in": "query",
             "required": false,
             "type": "string"
@@ -47,54 +110,25 @@
             "name": "startTime",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           },
           {
             "name": "endTime",
             "in": "query",
             "required": false,
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "format": "uint64"
           }
         ],
         "tags": [
-          "SirenService"
-        ]
-      },
-      "post": {
-        "operationId": "SirenService_CreateAlertHistory",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateAlertHistoryResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateAlertHistoryRequest"
-            }
-          }
-        ],
-        "tags": [
-          "SirenService"
+          "Alert"
         ]
       }
     },
     "/namespaces": {
       "get": {
+        "summary": "list namespaces",
         "operationId": "SirenService_ListNamespaces",
         "responses": {
           "200": {
@@ -111,10 +145,11 @@
           }
         },
         "tags": [
-          "SirenService"
+          "Namespace"
         ]
       },
       "post": {
+        "summary": "create a namespace",
         "operationId": "SirenService_CreateNamespace",
         "responses": {
           "200": {
@@ -141,12 +176,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Namespace"
         ]
       }
     },
     "/namespaces/{id}": {
       "get": {
+        "summary": "get a namespace",
         "operationId": "SirenService_GetNamespace",
         "responses": {
           "200": {
@@ -172,10 +208,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Namespace"
         ]
       },
       "delete": {
+        "summary": "delete a namespace",
         "operationId": "SirenService_DeleteNamespace",
         "responses": {
           "200": {
@@ -201,10 +238,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Namespace"
         ]
       },
       "put": {
+        "summary": "update a namespace",
         "operationId": "SirenService_UpdateNamespace",
         "responses": {
           "200": {
@@ -256,7 +294,7 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Namespace"
         ]
       }
     },
@@ -326,6 +364,7 @@
     },
     "/ping": {
       "get": {
+        "summary": "ping",
         "operationId": "SirenService_Ping",
         "responses": {
           "200": {
@@ -342,12 +381,13 @@
           }
         },
         "tags": [
-          "SirenService"
+          "Ping"
         ]
       }
     },
     "/providers": {
       "get": {
+        "summary": "list providers",
         "operationId": "SirenService_ListProviders",
         "responses": {
           "200": {
@@ -364,10 +404,11 @@
           }
         },
         "tags": [
-          "SirenService"
+          "Provider"
         ]
       },
       "post": {
+        "summary": "create a provider",
         "operationId": "SirenService_CreateProvider",
         "responses": {
           "200": {
@@ -394,12 +435,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Provider"
         ]
       }
     },
     "/providers/{id}": {
       "get": {
+        "summary": "get a provider",
         "operationId": "SirenService_GetProvider",
         "responses": {
           "200": {
@@ -425,10 +467,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Provider"
         ]
       },
       "delete": {
+        "summary": "delete a provider",
         "operationId": "SirenService_DeleteProvider",
         "responses": {
           "200": {
@@ -454,10 +497,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Provider"
         ]
       },
       "put": {
+        "summary": "update a provider",
         "operationId": "SirenService_UpdateProvider",
         "responses": {
           "200": {
@@ -511,12 +555,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Provider"
         ]
       }
     },
     "/receivers": {
       "get": {
+        "summary": "list receivers",
         "operationId": "SirenService_ListReceivers",
         "responses": {
           "200": {
@@ -533,10 +578,11 @@
           }
         },
         "tags": [
-          "SirenService"
+          "Receiver"
         ]
       },
       "post": {
+        "summary": "create a receiver",
         "operationId": "SirenService_CreateReceiver",
         "responses": {
           "200": {
@@ -563,12 +609,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Receiver"
         ]
       }
     },
     "/receivers/{id}": {
       "get": {
+        "summary": "get a receiver",
         "operationId": "SirenService_GetReceiver",
         "responses": {
           "200": {
@@ -594,10 +641,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Receiver"
         ]
       },
       "delete": {
+        "summary": "delete a receiver",
         "operationId": "SirenService_DeleteReceiver",
         "responses": {
           "200": {
@@ -623,10 +671,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Receiver"
         ]
       },
       "put": {
+        "summary": "update a receiver",
         "operationId": "SirenService_UpdateReceiver",
         "responses": {
           "200": {
@@ -677,12 +726,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Receiver"
         ]
       }
     },
     "/rules": {
       "get": {
+        "summary": "list rules",
         "operationId": "SirenService_ListRules",
         "responses": {
           "200": {
@@ -732,10 +782,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Rule"
         ]
       },
       "put": {
+        "summary": "add/update a rule",
         "operationId": "SirenService_UpdateRule",
         "responses": {
           "200": {
@@ -762,7 +813,7 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Rule"
         ]
       }
     },
@@ -875,6 +926,7 @@
     },
     "/templates": {
       "get": {
+        "summary": "list templates",
         "operationId": "SirenService_ListTemplates",
         "responses": {
           "200": {
@@ -899,10 +951,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Template"
         ]
       },
       "put": {
+        "summary": "add/update a template",
         "operationId": "SirenService_UpsertTemplate",
         "responses": {
           "200": {
@@ -929,12 +982,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Template"
         ]
       }
     },
     "/templates/{name}": {
       "get": {
+        "summary": "get a template",
         "operationId": "SirenService_GetTemplateByName",
         "responses": {
           "200": {
@@ -959,10 +1013,11 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Template"
         ]
       },
       "delete": {
+        "summary": "delete a template",
         "operationId": "SirenService_DeleteTemplate",
         "responses": {
           "200": {
@@ -987,12 +1042,13 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Template"
         ]
       }
     },
     "/templates/{name}/render": {
       "post": {
+        "summary": "render a template",
         "operationId": "SirenService_RenderTemplate",
         "responses": {
           "200": {
@@ -1033,7 +1089,7 @@
           }
         ],
         "tags": [
-          "SirenService"
+          "Template"
         ]
       }
     }
@@ -1077,28 +1133,15 @@
     "v1Alert": {
       "type": "object",
       "properties": {
-        "annotations": {
-          "$ref": "#/definitions/v1Annotations"
-        },
-        "labels": {
-          "$ref": "#/definitions/v1Labels"
-        },
-        "status": {
-          "type": "string"
-        }
-      }
-    },
-    "v1AlertHistory": {
-      "type": "object",
-      "properties": {
         "id": {
           "type": "string",
           "format": "uint64"
         },
-        "name": {
-          "type": "string"
+        "providerId": {
+          "type": "string",
+          "format": "uint64"
         },
-        "templateId": {
+        "resourceName": {
           "type": "string"
         },
         "metricName": {
@@ -1107,14 +1150,26 @@
         "metricValue": {
           "type": "string"
         },
-        "level": {
+        "severity": {
           "type": "string"
         },
-        "createdAt": {
+        "rule": {
           "type": "string"
         },
-        "updatedAt": {
-          "type": "string"
+        "triggeredAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1Alerts": {
+      "type": "object",
+      "properties": {
+        "alerts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Alert"
+          }
         }
       }
     },
@@ -1135,25 +1190,21 @@
         }
       }
     },
-    "v1CreateAlertHistoryRequest": {
+    "v1CortexAlert": {
       "type": "object",
       "properties": {
-        "alerts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Alert"
-          }
-        }
-      }
-    },
-    "v1CreateAlertHistoryResponse": {
-      "type": "object",
-      "properties": {
-        "alerts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1AlertHistory"
-          }
+        "annotations": {
+          "$ref": "#/definitions/v1Annotations"
+        },
+        "labels": {
+          "$ref": "#/definitions/v1Labels"
+        },
+        "status": {
+          "type": "string"
+        },
+        "startsAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -1287,17 +1338,6 @@
       "properties": {
         "severity": {
           "type": "string"
-        }
-      }
-    },
-    "v1ListAlertHistoryResponse": {
-      "type": "object",
-      "properties": {
-        "alerts": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1AlertHistory"
-          }
         }
       }
     },
@@ -1740,8 +1780,5 @@
         }
       }
     }
-  },
-  "externalDocs": {
-    "description": "Siren server"
   }
 }

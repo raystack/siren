@@ -21,7 +21,7 @@ type getAlertHistoryRequest struct {
 // swagger:response getResponse
 type getResponse struct {
 	// in:body
-	Body []domain.AlertHistoryObject
+	Body []domain.Alerts
 }
 
 //-------------------------
