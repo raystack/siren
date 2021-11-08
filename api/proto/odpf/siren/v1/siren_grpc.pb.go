@@ -35,8 +35,8 @@ type SirenServiceClient interface {
 	GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
 	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
 	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error)
-	CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error)
+	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
+	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
 	ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error)
 	ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
@@ -203,18 +203,18 @@ func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteRecei
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListAlertHistory(ctx context.Context, in *ListAlertHistoryRequest, opts ...grpc.CallOption) (*ListAlertHistoryResponse, error) {
-	out := new(ListAlertHistoryResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListAlertHistory", in, out, opts...)
+func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error) {
+	out := new(Alerts)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateAlertHistory(ctx context.Context, in *CreateAlertHistoryRequest, opts ...grpc.CallOption) (*CreateAlertHistoryResponse, error) {
-	out := new(CreateAlertHistoryResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/CreateAlertHistory", in, out, opts...)
+func (c *sirenServiceClient) CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error) {
+	out := new(Alerts)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/CreateCortexAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -349,8 +349,8 @@ type SirenServiceServer interface {
 	GetReceiver(context.Context, *GetReceiverRequest) (*Receiver, error)
 	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error)
 	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error)
-	ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error)
-	CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error)
+	ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error)
+	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error)
 	ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error)
 	ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error)
 	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
@@ -418,11 +418,11 @@ func (UnimplementedSirenServiceServer) UpdateReceiver(context.Context, *UpdateRe
 func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) ListAlertHistory(context.Context, *ListAlertHistoryRequest) (*ListAlertHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAlertHistory not implemented")
+func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAlerts not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateAlertHistory(context.Context, *CreateAlertHistoryRequest) (*CreateAlertHistoryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertHistory not implemented")
+func (UnimplementedSirenServiceServer) CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCortexAlerts not implemented")
 }
 func (UnimplementedSirenServiceServer) ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListWorkspaceChannels not implemented")
@@ -761,38 +761,38 @@ func _SirenService_DeleteReceiver_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_ListAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAlertHistoryRequest)
+func _SirenService_ListAlerts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAlertsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).ListAlertHistory(ctx, in)
+		return srv.(SirenServiceServer).ListAlerts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/ListAlertHistory",
+		FullMethod: "/odpf.siren.v1.SirenService/ListAlerts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListAlertHistory(ctx, req.(*ListAlertHistoryRequest))
+		return srv.(SirenServiceServer).ListAlerts(ctx, req.(*ListAlertsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_CreateAlertHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAlertHistoryRequest)
+func _SirenService_CreateCortexAlerts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCortexAlertsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).CreateAlertHistory(ctx, in)
+		return srv.(SirenServiceServer).CreateCortexAlerts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1.SirenService/CreateAlertHistory",
+		FullMethod: "/odpf.siren.v1.SirenService/CreateCortexAlerts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).CreateAlertHistory(ctx, req.(*CreateAlertHistoryRequest))
+		return srv.(SirenServiceServer).CreateCortexAlerts(ctx, req.(*CreateCortexAlertsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1085,12 +1085,12 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_DeleteReceiver_Handler,
 		},
 		{
-			MethodName: "ListAlertHistory",
-			Handler:    _SirenService_ListAlertHistory_Handler,
+			MethodName: "ListAlerts",
+			Handler:    _SirenService_ListAlerts_Handler,
 		},
 		{
-			MethodName: "CreateAlertHistory",
-			Handler:    _SirenService_CreateAlertHistory_Handler,
+			MethodName: "CreateCortexAlerts",
+			Handler:    _SirenService_CreateCortexAlerts_Handler,
 		},
 		{
 			MethodName: "ListWorkspaceChannels",

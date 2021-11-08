@@ -723,43 +723,97 @@ func local_request_SirenService_DeleteReceiver_0(ctx context.Context, marshaler 
 }
 
 var (
-	filter_SirenService_ListAlertHistory_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_SirenService_ListAlerts_0 = &utilities.DoubleArray{Encoding: map[string]int{"provider_name": 0, "provider_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
 )
 
-func request_SirenService_ListAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAlertHistoryRequest
+func request_SirenService_ListAlerts_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAlertsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["provider_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_name")
+	}
+
+	protoReq.ProviderName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_name", err)
+	}
+
+	val, ok = pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+
+	protoReq.ProviderId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlertHistory_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlerts_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListAlertHistory(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListAlerts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_ListAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAlertHistoryRequest
+func local_request_SirenService_ListAlerts_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAlertsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["provider_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_name")
+	}
+
+	protoReq.ProviderName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_name", err)
+	}
+
+	val, ok = pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+
+	protoReq.ProviderId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlertHistory_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_ListAlerts_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListAlertHistory(ctx, &protoReq)
+	msg, err := server.ListAlerts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_SirenService_CreateAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateAlertHistoryRequest
+func request_SirenService_CreateCortexAlerts_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateCortexAlertsRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -770,13 +824,30 @@ func request_SirenService_CreateAlertHistory_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateAlertHistory(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+
+	protoReq.ProviderId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+
+	msg, err := client.CreateCortexAlerts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_CreateAlertHistory_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateAlertHistoryRequest
+func local_request_SirenService_CreateCortexAlerts_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreateCortexAlertsRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -787,7 +858,24 @@ func local_request_SirenService_CreateAlertHistory_0(ctx context.Context, marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.CreateAlertHistory(ctx, &protoReq)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["provider_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "provider_id")
+	}
+
+	protoReq.ProviderId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
+	}
+
+	msg, err := server.CreateCortexAlerts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1718,18 +1806,18 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_ListAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListAlerts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1.SirenService/ListAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1.SirenService/ListAlerts", runtime.WithHTTPPathPattern("/alerts/{provider_name}/{provider_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_ListAlertHistory_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_ListAlerts_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1737,22 +1825,22 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_ListAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListAlerts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_SirenService_CreateAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SirenService_CreateCortexAlerts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1.SirenService/CreateAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1.SirenService/CreateCortexAlerts", runtime.WithHTTPPathPattern("/alerts/cortex/{provider_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_CreateAlertHistory_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_CreateCortexAlerts_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1760,7 +1848,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_CreateAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_CreateCortexAlerts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2401,43 +2489,43 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_ListAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_ListAlerts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1.SirenService/ListAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1.SirenService/ListAlerts", runtime.WithHTTPPathPattern("/alerts/{provider_name}/{provider_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_ListAlertHistory_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_ListAlerts_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_ListAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_ListAlerts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_SirenService_CreateAlertHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_SirenService_CreateCortexAlerts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1.SirenService/CreateAlertHistory", runtime.WithHTTPPathPattern("/history"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1.SirenService/CreateCortexAlerts", runtime.WithHTTPPathPattern("/alerts/cortex/{provider_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_CreateAlertHistory_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_CreateCortexAlerts_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_CreateAlertHistory_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_CreateCortexAlerts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2717,9 +2805,9 @@ var (
 
 	pattern_SirenService_DeleteReceiver_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"receivers", "id"}, ""))
 
-	pattern_SirenService_ListAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
+	pattern_SirenService_ListAlerts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 1, 0, 4, 1, 5, 2}, []string{"alerts", "provider_name", "provider_id"}, ""))
 
-	pattern_SirenService_CreateAlertHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"history"}, ""))
+	pattern_SirenService_CreateCortexAlerts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"alerts", "cortex", "provider_id"}, ""))
 
 	pattern_SirenService_ListWorkspaceChannels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"slackworkspaces", "workspace_name", "channels"}, ""))
 
@@ -2779,9 +2867,9 @@ var (
 
 	forward_SirenService_DeleteReceiver_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_ListAlertHistory_0 = runtime.ForwardResponseMessage
+	forward_SirenService_ListAlerts_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_CreateAlertHistory_0 = runtime.ForwardResponseMessage
+	forward_SirenService_CreateCortexAlerts_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_ListWorkspaceChannels_0 = runtime.ForwardResponseMessage
 

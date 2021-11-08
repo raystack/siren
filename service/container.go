@@ -11,7 +11,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alert"
 	"github.com/odpf/siren/pkg/alert/alertmanager"
-	"github.com/odpf/siren/pkg/alert_history"
+	"github.com/odpf/siren/pkg/alerts"
 	"github.com/odpf/siren/pkg/codeexchange"
 	"github.com/odpf/siren/pkg/rules"
 	"github.com/odpf/siren/pkg/slacknotifier"
@@ -24,7 +24,7 @@ type Container struct {
 	TemplatesService      domain.TemplatesService
 	RulesService          domain.RuleService
 	AlertmanagerService   domain.AlertmanagerService
-	AlertHistoryService   domain.AlertHistoryService
+	AlertService          domain.AlertService
 	CodeExchangeService   domain.CodeExchangeService
 	NotifierServices      domain.NotifierServices
 	SlackWorkspaceService domain.SlackWorkspaceService
@@ -41,7 +41,7 @@ func Init(db *gorm.DB, c *domain.Config,
 	if err != nil {
 		return nil, err
 	}
-	alertHistoryService := alert_history.NewService(db)
+	alertHistoryService := alerts.NewService(db)
 	codeExchangeService, err := codeexchange.NewService(db, httpClient, c.SlackApp, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
@@ -63,7 +63,7 @@ func Init(db *gorm.DB, c *domain.Config,
 		TemplatesService:    templatesService,
 		RulesService:        rulesService,
 		AlertmanagerService: alertmanagerService,
-		AlertHistoryService: alertHistoryService,
+		AlertService:        alertHistoryService,
 		CodeExchangeService: codeExchangeService,
 		NotifierServices: domain.NotifierServices{
 			Slack: slackNotifierService,
@@ -89,7 +89,7 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	err = container.AlertHistoryService.Migrate()
+	err = container.AlertService.Migrate()
 	if err != nil {
 		return err
 	}

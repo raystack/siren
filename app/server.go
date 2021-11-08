@@ -99,6 +99,9 @@ func RunServer(c *domain.Config) error {
 				MarshalOptions: protojson.MarshalOptions{
 					UseProtoNames: true,
 				},
+				UnmarshalOptions: protojson.UnmarshalOptions{
+					DiscardUnknown: true,
+				},
 			},
 		}),
 	)
