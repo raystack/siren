@@ -198,7 +198,7 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1.Se
 
 	switch receiver.Type {
 	case Slack:
-		slackPayload := req.GetSlackPayload()
+		slackPayload := req.GetSlack()
 
 		b, err := json.Marshal(slackPayload.GetBlocks())
 		if err != nil {

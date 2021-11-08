@@ -866,8 +866,8 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 
 		dummyReq := &sirenv1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_SlackPayload_{
-				SlackPayload: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",
@@ -939,8 +939,8 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 
 		dummyReq := &sirenv1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_SlackPayload_{
-				SlackPayload: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",
@@ -973,8 +973,8 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 
 		dummyReq := &sirenv1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_SlackPayload_{
-				SlackPayload: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",

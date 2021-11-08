@@ -5433,14 +5433,14 @@ func (m *SendReceiverNotificationRequest) validate(all bool) error {
 
 	switch m.Data.(type) {
 
-	case *SendReceiverNotificationRequest_SlackPayload_:
+	case *SendReceiverNotificationRequest_Slack:
 
 		if all {
-			switch v := interface{}(m.GetSlackPayload()).(type) {
+			switch v := interface{}(m.GetSlack()).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
 					errors = append(errors, SendReceiverNotificationRequestValidationError{
-						field:  "SlackPayload",
+						field:  "Slack",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
@@ -5448,16 +5448,16 @@ func (m *SendReceiverNotificationRequest) validate(all bool) error {
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
 					errors = append(errors, SendReceiverNotificationRequestValidationError{
-						field:  "SlackPayload",
+						field:  "Slack",
 						reason: "embedded message failed validation",
 						cause:  err,
 					})
 				}
 			}
-		} else if v, ok := interface{}(m.GetSlackPayload()).(interface{ Validate() error }); ok {
+		} else if v, ok := interface{}(m.GetSlack()).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return SendReceiverNotificationRequestValidationError{
-					field:  "SlackPayload",
+					field:  "Slack",
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
