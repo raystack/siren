@@ -47,7 +47,7 @@ func Init(db *gorm.DB, c *domain.Config,
 		return nil, errors.Wrap(err, "failed to create codeexchange service")
 	}
 	alertmanagerService := alert.NewService(db, newClient, c.SirenService, codeExchangeService)
-	slackNotifierService := slacknotifier.NewService(codeExchangeService)
+	slackNotifierService := slacknotifier.NewService()
 	slackworkspaceService := slackworkspace.NewService(codeExchangeService)
 	providerService := provider.NewService(db)
 	namespaceService, err := namespace.NewService(db, c.EncryptionKey)

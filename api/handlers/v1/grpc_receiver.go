@@ -2,9 +2,12 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
+	"github.com/slack-go/slack"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -105,12 +108,12 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	configuration, err := structpb.NewStruct(receiver.Configurations)
+	data, err := structpb.NewStruct(receiver.Data)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	data, err := structpb.NewStruct(receiver.Data)
+	configuration, err := structpb.NewStruct(receiver.Configurations)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -184,6 +187,50 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1.DeleteReceiv
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1.SendReceiverNotificationRequest) (*sirenv1.SendReceiverNotificationResponse, error) {
+	var res *sirenv1.SendReceiverNotificationResponse
+	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+
+	switch receiver.Type {
+	case Slack:
+		slackPayload := req.GetSlack()
+
+		b, err := json.Marshal(slackPayload.GetBlocks())
+		if err != nil {
+			s.logger.Error("handler", zap.Error(err))
+			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
+		}
+
+		blocks := slack.Blocks{}
+		err = json.Unmarshal(b, &blocks)
+		if err != nil {
+			s.logger.Error("handler", zap.Error(err))
+			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
+		}
+
+		payload := &domain.SlackMessage{
+			ReceiverName: slackPayload.GetReceiverName(),
+			ReceiverType: slackPayload.GetReceiverType(),
+			Token:        receiver.Configurations["token"].(string),
+			Message:      slackPayload.GetMessage(),
+			Blocks:       blocks,
+		}
+		result, err := s.container.NotifierServices.Slack.Notify(payload)
+		if err != nil {
+			return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		}
+		res = &sirenv1.SendReceiverNotificationResponse{
+			Ok: result.OK,
+		}
+	default:
+		return nil, status.Errorf(codes.NotFound, "Send notification not registered for this receiver")
+	}
+	return res, nil
 }
 
 func validateSlackConfigurations(configurations map[string]interface{}) error {

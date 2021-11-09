@@ -8,7 +8,6 @@ import (
 type SlackMessage struct {
 	ReceiverName string       `json:"receiver_name"`
 	ReceiverType string       `json:"receiver_type"`
-	Entity       string       `json:"entity"`
 	Message      string       `json:"message"`
 	Blocks       slack.Blocks `json:"block"`
 }
@@ -16,7 +15,6 @@ type SlackMessage struct {
 func (message *SlackMessage) fromDomain(m *domain.SlackMessage) *SlackMessage {
 	message.ReceiverType = m.ReceiverType
 	message.ReceiverName = m.ReceiverName
-	message.Entity = m.Entity
 	message.Message = m.Message
 	message.Blocks = m.Blocks
 	return message

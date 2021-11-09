@@ -298,38 +298,6 @@
         ]
       }
     },
-    "/notifications": {
-      "post": {
-        "operationId": "SirenService_SendSlackNotification",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1SendSlackNotificationResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1SendSlackNotificationRequest"
-            }
-          }
-        ],
-        "tags": [
-          "SirenService"
-        ]
-      }
-    },
     "/oauth/slack/token": {
       "post": {
         "operationId": "SirenService_ExchangeCode",
@@ -730,6 +698,51 @@
         ]
       }
     },
+    "/receivers/{id}/send": {
+      "post": {
+        "summary": "send notification to receiver",
+        "operationId": "SirenService_SendReceiverNotification",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SendReceiverNotificationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "slack": {
+                  "$ref": "#/definitions/SendReceiverNotificationRequestSlackPayload"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Receiver"
+        ]
+      }
+    },
     "/rules": {
       "get": {
         "summary": "list rules",
@@ -1095,6 +1108,26 @@
     }
   },
   "definitions": {
+    "SendReceiverNotificationRequestSlackPayload": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "receiverName": {
+          "type": "string"
+        },
+        "receiverType": {
+          "type": "string"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -1574,33 +1607,7 @@
         }
       }
     },
-    "v1SendSlackNotificationRequest": {
-      "type": "object",
-      "properties": {
-        "provider": {
-          "type": "string"
-        },
-        "entity": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        },
-        "receiverName": {
-          "type": "string"
-        },
-        "receiverType": {
-          "type": "string"
-        },
-        "blocks": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        }
-      }
-    },
-    "v1SendSlackNotificationResponse": {
+    "v1SendReceiverNotificationResponse": {
       "type": "object",
       "properties": {
         "ok": {

@@ -39,7 +39,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "foo@odpf.io",
 			ReceiverType: "user",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.Nil(err)
@@ -57,7 +56,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "foo@odpf.io",
 			ReceiverType: "user",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.EqualError(err, "failed to send message to foo@odpf.io: random error")
@@ -71,7 +69,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "foo@odpf.io",
 			ReceiverType: "user",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.EqualError(err, "failed to get id for foo@odpf.io: users_not_found")
@@ -85,7 +82,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "foo@odpf.io",
 			ReceiverType: "user",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.EqualError(err, "random error")
@@ -110,7 +106,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.Nil(err)
@@ -134,7 +129,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "baz",
 			ReceiverType: "channel",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.EqualError(err, "app is not part of the channel baz")
@@ -150,7 +144,6 @@ func (s *SlackHTTPClientTestSuite) TestSlackHTTPClient_Notify() {
 			ReceiverName: "baz",
 			ReceiverType: "channel",
 			Message:      "random text",
-			Entity:       "odpf",
 		}
 		err := testNotifierClient.Notify(dummyMessage, "foo_bar")
 		s.EqualError(err, "failed to fetch joined channel list: random error")

@@ -7,6 +7,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
+	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap/zaptest"
@@ -144,6 +145,80 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		assert.Equal(t, "slack", res.GetType())
 		assert.Equal(t, "bar", res.GetLabels()["foo"])
 		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["client_id"])
+	})
+
+	t.Run("Should create a pagerduty receiver object", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		configurations := make(map[string]interface{})
+		configurations["service_key"] = "foo"
+		payload := &domain.Receiver{
+			Name:           "foo",
+			Type:           "pagerduty",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		configurationsData, _ := structpb.NewStruct(configurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Name:           "foo",
+			Type:           "pagerduty",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		mockedReceiverService.
+			On("CreateReceiver", payload).
+			Return(payload, nil).Once()
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, err)
+		assert.Equal(t, "foo", res.GetName())
+		assert.Equal(t, "pagerduty", res.GetType())
+		assert.Equal(t, "bar", res.GetLabels()["foo"])
+		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["service_key"])
+	})
+
+	t.Run("Should create a http receiver object", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+			},
+			logger: zaptest.NewLogger(t),
+		}
+		configurations := make(map[string]interface{})
+		configurations["url"] = "foo"
+		payload := &domain.Receiver{
+			Name:           "foo",
+			Type:           "http",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		configurationsData, _ := structpb.NewStruct(configurations)
+		dummyReq := &sirenv1.CreateReceiverRequest{
+			Name:           "foo",
+			Type:           "http",
+			Labels:         labels,
+			Configurations: configurationsData,
+		}
+
+		mockedReceiverService.
+			On("CreateReceiver", payload).
+			Return(payload, nil).Once()
+
+		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
+		assert.Nil(t, err)
+		assert.Equal(t, "foo", res.GetName())
+		assert.Equal(t, "http", res.GetType())
+		assert.Equal(t, "bar", res.GetLabels()["foo"])
+		assert.Equal(t, "foo", res.GetConfigurations().AsMap()["url"])
 	})
 
 	t.Run("should return error code 3 if slack client_id configuration is missing", func(t *testing.T) {
@@ -737,5 +812,243 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 		res, err := dummyGRPCServer.DeleteReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+	})
+}
+
+func TestGRPCServer_SendReceiverNotification(t *testing.T) {
+	configurations := make(map[string]interface{})
+	configurations["token"] = "foo"
+	labels := make(map[string]string)
+	labels["foo"] = "bar"
+
+	receiverResult := &domain.Receiver{
+		Id:             1,
+		Name:           "foo",
+		Type:           "slack",
+		Labels:         labels,
+		Configurations: configurations,
+	}
+
+	t.Run("should return OK response for slack notification", func(t *testing.T) {
+		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+		mockedReceiverService := &mocks.ReceiverService{}
+
+		dummyPayload := &domain.SlackMessage{
+			ReceiverName: "foo",
+			ReceiverType: "channel",
+			Token:        "foo",
+			Message:      "bar",
+			Blocks: slack.Blocks{
+				BlockSet: []slack.Block{
+					&slack.SectionBlock{
+						Type: slack.MBTSection,
+						Text: &slack.TextBlockObject{
+							Type: "mrkdwn",
+							Text: "Hello",
+						},
+					},
+				},
+			},
+		}
+		dummyResult := &domain.SlackMessageSendResponse{
+			OK: true,
+		}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+				NotifierServices: domain.NotifierServices{
+					Slack: mockedSlackNotifierService,
+				},
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+			Id: 1,
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+					ReceiverName: "foo",
+					ReceiverType: "channel",
+					Message:      "bar",
+					Blocks: []*structpb.Struct{
+						{
+							Fields: map[string]*structpb.Value{
+								"type": &structpb.Value{
+									Kind: &structpb.Value_StringValue{
+										StringValue: "section",
+									},
+								},
+								"text": &structpb.Value{
+									Kind: &structpb.Value_StructValue{
+										StructValue: &structpb.Struct{
+											Fields: map[string]*structpb.Value{
+												"type": &structpb.Value{
+													Kind: &structpb.Value_StringValue{
+														StringValue: "mrkdwn",
+													},
+												},
+												"text": &structpb.Value{
+													Kind: &structpb.Value_StringValue{
+														StringValue: "Hello",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
+		mockedSlackNotifierService.On("Notify", dummyPayload).Return(dummyResult, nil).Once()
+		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
+		assert.Nil(t, err)
+		assert.Equal(t, true, res.GetOk())
+		mockedSlackNotifierService.AssertCalled(t, "Notify", dummyPayload)
+	})
+
+	t.Run("should return error code 13 if send slack notification failed", func(t *testing.T) {
+		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+		mockedReceiverService := &mocks.ReceiverService{}
+
+		dummyPayload := &domain.SlackMessage{
+			ReceiverName: "foo",
+			ReceiverType: "channel",
+			Token:        "foo",
+			Message:      "bar",
+			Blocks:       slack.Blocks{},
+		}
+		dummyResult := &domain.SlackMessageSendResponse{
+			OK: true,
+		}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+				NotifierServices: domain.NotifierServices{
+					Slack: mockedSlackNotifierService,
+				},
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+			Id: 1,
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+					ReceiverName: "foo",
+					ReceiverType: "channel",
+					Message:      "bar",
+					Blocks:       []*structpb.Struct{},
+				},
+			},
+		}
+
+		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
+		mockedSlackNotifierService.On("Notify", dummyPayload).
+			Return(dummyResult, errors.New("random error")).Once()
+		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if receiver not found", func(t *testing.T) {
+		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+		mockedReceiverService := &mocks.ReceiverService{}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+				NotifierServices: domain.NotifierServices{
+					Slack: mockedSlackNotifierService,
+				},
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+			Id: 1,
+			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+					ReceiverName: "foo",
+					ReceiverType: "channel",
+					Message:      "bar",
+					Blocks: []*structpb.Struct{
+						{
+							Fields: map[string]*structpb.Value{
+								"type": &structpb.Value{
+									Kind: &structpb.Value_StringValue{
+										StringValue: "section",
+									},
+								},
+								"text": &structpb.Value{
+									Kind: &structpb.Value_StructValue{
+										StructValue: &structpb.Struct{
+											Fields: map[string]*structpb.Value{
+												"type": &structpb.Value{
+													Kind: &structpb.Value_StringValue{
+														StringValue: "mrkdwn",
+													},
+												},
+												"text": &structpb.Value{
+													Kind: &structpb.Value_StringValue{
+														StringValue: "Hello",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		mockedReceiverService.On("GetReceiver", uint64(1)).
+			Return(nil, errors.New("random error")).Once()
+		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = random error")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return error code 3 if send notification for receiver not implemented", func(t *testing.T) {
+		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+		mockedReceiverService := &mocks.ReceiverService{}
+
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				ReceiverService: mockedReceiverService,
+				NotifierServices: domain.NotifierServices{
+					Slack: mockedSlackNotifierService,
+				},
+			},
+			logger: zaptest.NewLogger(t),
+		}
+
+		receiverResult := &domain.Receiver{
+			Id:             1,
+			Name:           "foo",
+			Type:           "random",
+			Labels:         labels,
+			Configurations: configurations,
+		}
+
+		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+			Id:   1,
+			Data: nil,
+		}
+
+		mockedReceiverService.On("GetReceiver", uint64(1)).
+			Return(receiverResult, nil).Once()
+		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = Send notification not registered for this receiver")
+		assert.Nil(t, res)
 	})
 }
