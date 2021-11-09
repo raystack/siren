@@ -7,10 +7,8 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
-	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap/zaptest"
-	"google.golang.org/protobuf/types/known/structpb"
 	"testing"
 )
 
@@ -296,143 +294,6 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 		}
 		res, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = pagerduty credential cannot be empty")
-		assert.Nil(t, res)
-	})
-}
-
-func TestGRPCServer_SendSlackNotification(t *testing.T) {
-	t.Run("should return OK response", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
-		dummyPayload := &domain.SlackMessage{
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Entity:       "foo",
-			Message:      "bar",
-			Blocks: slack.Blocks{
-				BlockSet: []slack.Block{
-					&slack.SectionBlock{
-						Type: slack.MBTSection,
-						Text: &slack.TextBlockObject{
-							Type: "mrkdwn",
-							Text: "Hello",
-						},
-					},
-				},
-			},
-		}
-		dummyResult := &domain.SlackMessageSendResponse{
-			OK: true,
-		}
-
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				NotifierServices: domain.NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: zaptest.NewLogger(t),
-		}
-
-		dummyReq := &sirenv1.SendSlackNotificationRequest{
-			Provider:     "slack",
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Entity:       "foo",
-			Message:      "bar",
-			Blocks: []*structpb.Struct{
-				{
-					Fields: map[string]*structpb.Value{
-						"type": &structpb.Value{
-							Kind: &structpb.Value_StringValue{
-								StringValue: "section",
-							},
-						},
-						"text": &structpb.Value{
-							Kind: &structpb.Value_StructValue{
-								StructValue: &structpb.Struct{
-									Fields: map[string]*structpb.Value{
-										"type": &structpb.Value{
-											Kind: &structpb.Value_StringValue{
-												StringValue: "mrkdwn",
-											},
-										},
-										"text": &structpb.Value{
-											Kind: &structpb.Value_StringValue{
-												StringValue: "Hello",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-		mockedSlackNotifierService.On("Notify", dummyPayload).Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.SendSlackNotification(context.Background(), dummyReq)
-		assert.Nil(t, err)
-		assert.Equal(t, true, res.GetOk())
-		mockedSlackNotifierService.AssertCalled(t, "Notify", dummyPayload)
-	})
-
-	t.Run("should return error code 13 if send slack notification failed", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
-		dummyPayload := &domain.SlackMessage{
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Entity:       "foo",
-			Message:      "bar",
-			Blocks:       slack.Blocks{},
-		}
-		dummyResult := &domain.SlackMessageSendResponse{
-			OK: true,
-		}
-
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				NotifierServices: domain.NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: zaptest.NewLogger(t),
-		}
-
-		dummyReq := &sirenv1.SendSlackNotificationRequest{
-			Provider:     "slack",
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Entity:       "foo",
-			Message:      "bar",
-		}
-
-		mockedSlackNotifierService.On("Notify", dummyPayload).
-			Return(dummyResult, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.SendSlackNotification(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
-		assert.Nil(t, res)
-	})
-
-	t.Run("should return error code 3 if provider is missing", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
-		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
-				NotifierServices: domain.NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: zaptest.NewLogger(t),
-		}
-
-		dummyReq := &sirenv1.SendSlackNotificationRequest{
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Entity:       "foo",
-			Message:      "bar",
-		}
-
-		res, err := dummyGRPCServer.SendSlackNotification(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = provider not supported")
 		assert.Nil(t, res)
 	})
 }
