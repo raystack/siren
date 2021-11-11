@@ -23,6 +23,7 @@ func Execute() {
 	rootCmd.AddCommand(migrateCmd())
 	rootCmd.AddCommand(uploadCmd())
 	rootCmd.AddCommand(providersCmd(cliConfig))
+	rootCmd.AddCommand(namespacesCmd(cliConfig))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

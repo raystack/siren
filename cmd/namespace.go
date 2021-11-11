@@ -15,35 +15,35 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func providersCmd(c *configuration) *cobra.Command {
+func namespacesCmd(c *configuration) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "provider",
-		Aliases: []string{"providers"},
-		Short:   "Manage providers",
+		Use:     "namespace",
+		Aliases: []string{"namespaces"},
+		Short:   "Manage namespaces",
 		Long: heredoc.Doc(`
-			Work with providers.
+			Work with namespaces.
 			
-			Providers are the system for which we intend to mange monitoring and alerting.
+			namespaces are used for multi-tenancy for a givin provider.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
 		},
 	}
 
-	cmd.AddCommand(listProvidersCmd(c))
-	cmd.AddCommand(createProviderCmd(c))
-	cmd.AddCommand(getProviderCmd(c))
-	cmd.AddCommand(updateProviderCmd(c))
-	cmd.AddCommand(deleteProviderCmd(c))
+	cmd.AddCommand(listNamespacesCmd(c))
+	cmd.AddCommand(createNamespaceCmd(c))
+	cmd.AddCommand(getNamespaceCmd(c))
+	cmd.AddCommand(updateNamespaceCmd(c))
+	cmd.AddCommand(deleteNamespaceCmd(c))
 	return cmd
 }
 
-func listProvidersCmd(c *configuration) *cobra.Command {
+func listNamespacesCmd(c *configuration) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
-		Short: "List providers",
+		Short: "List namespaces",
 		Long: heredoc.Doc(`
-			List all registered providers.
+			List all registered namespaces.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
@@ -56,51 +56,50 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListProviders(ctx, &emptypb.Empty{})
+			res, err := client.ListNamespaces(ctx, &emptypb.Empty{})
 			if err != nil {
 				return err
 			}
 
-			providers := res.Providers
+			namespaces := res.Namespaces
 			report := [][]string{}
 
-			fmt.Printf(" \nShowing %d of %d providers\n \n", len(providers), len(providers))
-			report = append(report, []string{"ID", "TYPE", "URN", "NAME"})
+			fmt.Printf(" \nShowing %d of %d namespaces\n \n", len(namespaces), len(namespaces))
+			report = append(report, []string{"ID", "URN", "NAME"})
 
-			for _, p := range providers {
+			for _, p := range namespaces {
 				report = append(report, []string{
 					fmt.Sprintf("%v", p.GetId()),
-					p.GetType(),
 					p.GetUrn(),
 					p.GetName(),
 				})
 			}
 			printer.Table(os.Stdout, report)
 
-			fmt.Println("\nFor details on a provider, try: siren provider view <id>")
+			fmt.Println("\nFor details on a namespace, try: siren namespace view <id>")
 			return nil
 		},
 	}
 }
 
-func createProviderCmd(c *configuration) *cobra.Command {
+func createNamespaceCmd(c *configuration) *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a new provider",
+		Short: "Create a new namespace",
 		Long: heredoc.Doc(`
-			Create a new provider.
+			Create a new namespace.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var providerConfig domain.Provider
-			if err := parseFile(filePath, &providerConfig); err != nil {
+			var namespaceConfig domain.Namespace
+			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
 			}
 
-			grpcCredentials, err := structpb.NewStruct(providerConfig.Credentials)
+			grpcCredentials, err := structpb.NewStruct(namespaceConfig.Credentials)
 			if err != nil {
 				return err
 			}
@@ -112,43 +111,42 @@ func createProviderCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.CreateProvider(ctx, &sirenv1.CreateProviderRequest{
-				Host:        providerConfig.Host,
-				Urn:         providerConfig.Urn,
-				Name:        providerConfig.Name,
-				Type:        providerConfig.Type,
+			res, err := client.CreateNamespace(ctx, &sirenv1.CreateNamespaceRequest{
+				Provider:    namespaceConfig.Provider,
+				Urn:         namespaceConfig.Urn,
+				Name:        namespaceConfig.Name,
 				Credentials: grpcCredentials,
-				Labels:      providerConfig.Labels,
+				Labels:      namespaceConfig.Labels,
 			})
 
 			if err != nil {
 				return err
 			}
 
-			fmt.Printf("Provider created with id: %v\n", res.GetId())
+			fmt.Printf("namespace created with id: %v\n", res.GetId())
 
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the provider config")
+	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the namespace config")
 	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
 
-func getProviderCmd(c *configuration) *cobra.Command {
+func getNamespaceCmd(c *configuration) *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
 		Use:   "view",
-		Short: "View a provider details",
+		Short: "View a namespace details",
 		Long: heredoc.Doc(`
-			View a provider.
+			View a namespace.
 
-			Display the Id, name, and other information about a provider.
+			Display the Id, name, and other information about a namespace.
 		`),
 		Example: heredoc.Doc(`
-			$ siren provider view 1
+			$ siren namespace view 1
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
@@ -164,30 +162,28 @@ func getProviderCmd(c *configuration) *cobra.Command {
 
 			id, err := strconv.ParseUint(args[0], 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid provider id: %v", err)
+				return fmt.Errorf("invalid namespace id: %v", err)
 			}
 
-			res, err := client.GetProvider(ctx, &sirenv1.GetProviderRequest{
+			res, err := client.GetNamespace(ctx, &sirenv1.GetNamespaceRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
 				return err
 			}
 
-			provider := &domain.Provider{
+			namespace := &domain.Namespace{
 				Id:          res.GetId(),
-				Host:        res.GetHost(),
 				Urn:         res.GetUrn(),
 				Name:        res.GetName(),
-				Type:        res.GetType(),
 				Credentials: res.GetCredentials().AsMap(),
 				Labels:      res.GetLabels(),
 				CreatedAt:   res.CreatedAt.AsTime(),
 				UpdatedAt:   res.UpdatedAt.AsTime(),
 			}
 
-			if err := printer.Text(provider, format); err != nil {
-				return fmt.Errorf("failed to format provider: %v", err)
+			if err := printer.Text(namespace, format); err != nil {
+				return fmt.Errorf("failed to format namespace: %v", err)
 			}
 			return nil
 		},
@@ -198,25 +194,25 @@ func getProviderCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func updateProviderCmd(c *configuration) *cobra.Command {
+func updateNamespaceCmd(c *configuration) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "edit",
-		Short: "Edit a provider",
+		Short: "Edit a namespace",
 		Long: heredoc.Doc(`
-			Edit an existing provider.
+			Edit an existing namespace.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var providerConfig domain.Provider
-			if err := parseFile(filePath, &providerConfig); err != nil {
+			var namespaceConfig domain.Namespace
+			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
 			}
 
-			grpcCredentials, err := structpb.NewStruct(providerConfig.Credentials)
+			grpcCredentials, err := structpb.NewStruct(namespaceConfig.Credentials)
 			if err != nil {
 				return err
 			}
@@ -228,38 +224,37 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			_, err = client.UpdateProvider(ctx, &sirenv1.UpdateProviderRequest{
+			_, err = client.UpdateNamespace(ctx, &sirenv1.UpdateNamespaceRequest{
 				Id:          id,
-				Host:        providerConfig.Host,
-				Name:        providerConfig.Name,
-				Type:        providerConfig.Type,
+				Provider:    namespaceConfig.Provider,
+				Name:        namespaceConfig.Name,
 				Credentials: grpcCredentials,
-				Labels:      providerConfig.Labels,
+				Labels:      namespaceConfig.Labels,
 			})
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("Successfully updated provider")
+			fmt.Println("Successfully updated namespace")
 
 			return nil
 		},
 	}
 
-	cmd.Flags().Uint64Var(&id, "id", 0, "provider id")
+	cmd.Flags().Uint64Var(&id, "id", 0, "namespace id")
 	cmd.MarkFlagRequired("id")
-	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the provider config")
+	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the namespace config")
 	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
 
-func deleteProviderCmd(c *configuration) *cobra.Command {
+func deleteNamespaceCmd(c *configuration) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a provider details",
+		Short: "Delete a namespace details",
 		Example: heredoc.Doc(`
-			$ siren provider delete 1
+			$ siren namespace delete 1
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
@@ -275,17 +270,17 @@ func deleteProviderCmd(c *configuration) *cobra.Command {
 
 			id, err := strconv.ParseUint(args[0], 10, 32)
 			if err != nil {
-				return fmt.Errorf("invalid provider id: %v", err)
+				return fmt.Errorf("invalid namespace id: %v", err)
 			}
 
-			_, err = client.DeleteProvider(ctx, &sirenv1.DeleteProviderRequest{
+			_, err = client.DeleteNamespace(ctx, &sirenv1.DeleteNamespaceRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("Successfully deleted provider")
+			fmt.Println("Successfully deleted namespace")
 			return nil
 		},
 	}
