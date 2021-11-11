@@ -24,6 +24,7 @@ func Execute() {
 	rootCmd.AddCommand(uploadCmd())
 	rootCmd.AddCommand(providersCmd(cliConfig))
 	rootCmd.AddCommand(namespacesCmd(cliConfig))
+	rootCmd.AddCommand(receiversCmd(cliConfig))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
