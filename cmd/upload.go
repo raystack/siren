@@ -3,18 +3,19 @@ package cmd
 import (
 	"errors"
 	"fmt"
+
 	"github.com/odpf/siren/client"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/pkg/uploader"
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(&cobra.Command{
+func uploadCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Rules or Templates YAML file",
 		RunE:  upload,
-	})
+	}
 }
 
 func upload(cmd *cobra.Command, args []string) error {
