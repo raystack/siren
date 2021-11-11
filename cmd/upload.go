@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func uploadCommand() *cobra.Command {
+func uploadCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Rules or Templates YAML file",

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func serveCommand() *cobra.Command {
+func serveCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "serve",
 		Short: "Run server",

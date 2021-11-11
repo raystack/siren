@@ -18,7 +18,7 @@ type configuration struct {
 	Host string `yaml:"host"`
 }
 
-func configCommand() *cobra.Command {
+func configCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "manage siren CLI configuration",

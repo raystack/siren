@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func migrateCommand() *cobra.Command {
+func migrateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate database schema",

@@ -13,10 +13,16 @@ func Execute() {
 		Use: "siren",
 	}
 
-	rootCmd.AddCommand(configCommand())
-	rootCmd.AddCommand(serveCommand())
-	rootCmd.AddCommand(migrateCommand())
-	rootCmd.AddCommand(uploadCommand())
+	cliConfig, err := readConfig()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	rootCmd.AddCommand(configCmd())
+	rootCmd.AddCommand(serveCmd())
+	rootCmd.AddCommand(migrateCmd())
+	rootCmd.AddCommand(uploadCmd())
+	rootCmd.AddCommand(providersCmd(cliConfig))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
