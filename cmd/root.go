@@ -26,6 +26,7 @@ func Execute() {
 	rootCmd.AddCommand(namespacesCmd(cliConfig))
 	rootCmd.AddCommand(receiversCmd(cliConfig))
 	rootCmd.AddCommand(templatesCmd(cliConfig))
+	rootCmd.AddCommand(rulesCmd(cliConfig))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
