@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SirenServiceClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
-	ListProviders(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProvidersResponse, error)
+	ListProviders(ctx context.Context, in *ListProvidersRequest, opts ...grpc.CallOption) (*ListProvidersResponse, error)
 	CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
@@ -68,7 +68,7 @@ func (c *sirenServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListProviders(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProvidersResponse, error) {
+func (c *sirenServiceClient) ListProviders(ctx context.Context, in *ListProvidersRequest, opts ...grpc.CallOption) (*ListProvidersResponse, error) {
 	out := new(ListProvidersResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1.SirenService/ListProviders", in, out, opts...)
 	if err != nil {
@@ -334,7 +334,7 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 // for forward compatibility
 type SirenServiceServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
-	ListProviders(context.Context, *emptypb.Empty) (*ListProvidersResponse, error)
+	ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error)
 	CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error)
 	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
 	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
@@ -373,7 +373,7 @@ type UnimplementedSirenServiceServer struct {
 func (UnimplementedSirenServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedSirenServiceServer) ListProviders(context.Context, *emptypb.Empty) (*ListProvidersResponse, error) {
+func (UnimplementedSirenServiceServer) ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProviders not implemented")
 }
 func (UnimplementedSirenServiceServer) CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error) {
@@ -492,7 +492,7 @@ func _SirenService_Ping_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _SirenService_ListProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListProvidersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -504,7 +504,7 @@ func _SirenService_ListProviders_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/odpf.siren.v1.SirenService/ListProviders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListProviders(ctx, req.(*emptypb.Empty))
+		return srv.(SirenServiceServer).ListProviders(ctx, req.(*ListProvidersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

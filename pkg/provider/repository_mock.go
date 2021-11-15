@@ -69,13 +69,13 @@ func (_m *MockProviderRepository) Get(_a0 uint64) (*Provider, error) {
 	return r0, r1
 }
 
-// List provides a mock function with given fields:
-func (_m *MockProviderRepository) List() ([]*Provider, error) {
-	ret := _m.Called()
+// List provides a mock function with given fields: _a0
+func (_m *MockProviderRepository) List(_a0 map[string]interface{}) ([]*Provider, error) {
+	ret := _m.Called(_a0)
 
 	var r0 []*Provider
-	if rf, ok := ret.Get(0).(func() []*Provider); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(map[string]interface{}) []*Provider); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*Provider)
@@ -83,8 +83,8 @@ func (_m *MockProviderRepository) List() ([]*Provider, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(map[string]interface{}) error); ok {
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -441,6 +441,111 @@ var _Provider_Type_InLookup = map[string]struct{}{
 	"cortex": {},
 }
 
+// Validate checks the field values on ListProvidersRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProvidersRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProvidersRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProvidersRequestMultiError, or nil if none found.
+func (m *ListProvidersRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProvidersRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Urn
+
+	// no validation rules for Type
+
+	if len(errors) > 0 {
+		return ListProvidersRequestMultiError(errors)
+	}
+	return nil
+}
+
+// ListProvidersRequestMultiError is an error wrapping multiple validation
+// errors returned by ListProvidersRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListProvidersRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProvidersRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProvidersRequestMultiError) AllErrors() []error { return m }
+
+// ListProvidersRequestValidationError is the validation error returned by
+// ListProvidersRequest.Validate if the designated constraints aren't met.
+type ListProvidersRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProvidersRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProvidersRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProvidersRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProvidersRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProvidersRequestValidationError) ErrorName() string {
+	return "ListProvidersRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProvidersRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProvidersRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProvidersRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProvidersRequestValidationError{}
+
 // Validate checks the field values on ListProvidersResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

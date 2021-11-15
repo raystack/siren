@@ -11,7 +11,6 @@ import (
 	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -56,7 +55,7 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListProviders(ctx, &emptypb.Empty{})
+			res, err := client.ListProviders(ctx, &sirenv1.ListProvidersRequest{})
 			if err != nil {
 				return err
 			}

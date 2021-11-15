@@ -13,8 +13,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *GRPCServer) ListProviders(_ context.Context, _ *emptypb.Empty) (*sirenv1.ListProvidersResponse, error) {
-	providers, err := s.container.ProviderService.ListProviders()
+func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1.ListProvidersRequest) (*sirenv1.ListProvidersResponse, error) {
+	providers, err := s.container.ProviderService.ListProviders(map[string]interface{}{
+		"urn":  req.GetUrn(),
+		"type": req.GetType(),
+	})
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}

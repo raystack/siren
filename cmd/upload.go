@@ -24,11 +24,12 @@ type rule struct {
 }
 
 type ruleYaml struct {
-	ApiVersion string          `yaml:"apiVersion"`
-	Entity     string          `yaml:"entity"`
-	Type       string          `yaml:"type"`
-	Namespace  string          `yaml:"namespace"`
-	Rules      map[string]rule `yaml:"rules"`
+	ApiVersion        string          `yaml:"apiVersion"`
+	Entity            string          `yaml:"entity"`
+	Type              string          `yaml:"type"`
+	Namespace         string          `yaml:"namespace"`
+	ProviderNamespace string          `yaml:"providerNamespace"`
+	Rules             map[string]rule `yaml:"rules"`
 }
 
 type templatedRule struct {
@@ -115,15 +116,15 @@ func (s Service) Upload(fileName string) (interface{}, error) {
 		return nil, err
 	}
 	if strings.ToLower(y.Type) == "template" {
-		return s.UploadTemplates(yamlFile)
+		return s.UploadTemplate(yamlFile)
 	} else if strings.ToLower(y.Type) == "rule" {
-		return s.UploadRules(yamlFile)
+		return s.UploadRule(yamlFile)
 	} else {
 		return nil, errors.New("unknown type given")
 	}
 }
 
-func (s Service) UploadTemplates(yamlFile []byte) (*sirenv1.Template, error) {
+func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 	var t template
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
@@ -195,7 +196,7 @@ func (s Service) UploadTemplates(yamlFile []byte) (*sirenv1.Template, error) {
 	return template.Template, nil
 }
 
-func (s Service) UploadRules(yamlFile []byte) ([]*sirenv1.Rule, error) {
+func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 	var yamlBody ruleYaml
 	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
@@ -220,12 +221,28 @@ func (s Service) UploadRules(yamlFile []byte) ([]*sirenv1.Rule, error) {
 			enabled = true
 		}
 
+		if yamlBody.ProviderNamespace == "" {
+			return nil, errors.New("provider namespace is required")
+		}
+
+		data, err := s.SirenClient.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{
+			Urn: yamlBody.ProviderNamespace,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		provideres := data.Providers
+		if len(provideres) == 0 {
+			return nil, errors.New(fmt.Sprintf("no provider found with urn: %s", yamlBody.ProviderNamespace))
+		}
+
 		payload := &sirenv1.UpdateRuleRequest{
 			GroupName:         groupName,
 			Namespace:         yamlBody.Namespace,
 			Template:          v.Template,
 			Variables:         ruleVariables,
-			ProviderNamespace: 1,
+			ProviderNamespace: provideres[0].Id,
 			Enabled:           enabled,
 		}
 

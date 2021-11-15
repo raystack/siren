@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap/zaptest"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"strings"
 	"testing"
@@ -45,9 +44,12 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 
 		mockedProviderService.
-			On("ListProviders").
+			On("ListProviders", map[string]interface{}{
+				"type": "",
+				"urn":  "",
+			}).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetProviders()))
 		assert.Equal(t, "foo", res.GetProviders()[0].GetHost())
@@ -65,9 +67,12 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 
 		mockedProviderService.
-			On("ListProviders").
+			On("ListProviders", map[string]interface{}{
+				"type": "",
+				"urn":  "",
+			}).
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
@@ -96,9 +101,12 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 
 		mockedProviderService.
-			On("ListProviders").
+			On("ListProviders", map[string]interface{}{
+				"type": "",
+				"urn":  "",
+			}).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")

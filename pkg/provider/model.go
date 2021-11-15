@@ -89,7 +89,7 @@ func (provider *Provider) toDomain() *domain.Provider {
 
 type ProviderRepository interface {
 	Migrate() error
-	List() ([]*Provider, error)
+	List(map[string]interface{}) ([]*Provider, error)
 	Create(*Provider) (*Provider, error)
 	Get(uint64) (*Provider, error)
 	Update(*Provider) (*Provider, error)

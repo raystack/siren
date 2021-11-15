@@ -15,7 +15,7 @@ type Provider struct {
 }
 
 type ProviderService interface {
-	ListProviders() ([]*Provider, error)
+	ListProviders(map[string]interface{}) ([]*Provider, error)
 	CreateProvider(*Provider) (*Provider, error)
 	GetProvider(uint64) (*Provider, error)
 	UpdateProvider(*Provider) (*Provider, error)

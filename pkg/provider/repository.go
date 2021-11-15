@@ -3,24 +3,41 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
 )
+
+type Filters struct {
+	Urn  string `mapstructure:"urn" validate:"omitempty"`
+	Type string `mapstructure:"type" validate:"omitempty"`
+}
 
 // Repository talks to the store to read or insert data
 type Repository struct {
 	db *gorm.DB
 }
 
-
 // NewRepository returns repository struct
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
-func (r Repository) List() ([]*Provider, error) {
+func (r Repository) List(filters map[string]interface{}) ([]*Provider, error) {
 	var providers []*Provider
-	selectQuery := fmt.Sprintf("select * from providers")
-	result := r.db.Raw(selectQuery).Find(&providers)
+	var conditions Filters
+	if err := mapstructure.Decode(filters, &conditions); err != nil {
+		return nil, err
+	}
+
+	db := r.db
+	if conditions.Urn != "" {
+		db = db.Where(`"urn" = ?`, conditions.Urn)
+	}
+	if conditions.Type != "" {
+		db = db.Where(`"type" = ?`, conditions.Type)
+	}
+
+	result := db.Find(&providers)
 	if result.Error != nil {
 		return nil, result.Error
 	}
