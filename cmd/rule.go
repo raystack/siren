@@ -91,9 +91,9 @@ func listRulesCmd(c *configuration) *cobra.Command {
 
 	cmd.Flags().StringVar(&name, "name", "", "rule name")
 	cmd.Flags().StringVar(&namespace, "namespace", "", "rule namespace")
-	cmd.Flags().StringVar(&groupName, "groupName", "", "rule group name")
+	cmd.Flags().StringVar(&groupName, "group-name", "", "rule group name")
 	cmd.Flags().StringVar(&template, "template", "", "rule template")
-	cmd.Flags().Uint64Var(&providerNamespace, "providerNamespace", 0, "rule provider namespace id")
+	cmd.Flags().Uint64Var(&providerNamespace, "provider-namespace", 0, "rule provider namespace id")
 
 	return cmd
 }
