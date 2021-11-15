@@ -27,6 +27,8 @@ func Execute() {
 	rootCmd.AddCommand(receiversCmd(cliConfig))
 	rootCmd.AddCommand(templatesCmd(cliConfig))
 	rootCmd.AddCommand(rulesCmd(cliConfig))
+	rootCmd.AddCommand(alertsCmd(cliConfig))
+	rootCmd.CompletionOptions.DisableDescriptions = true
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
