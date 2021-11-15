@@ -19,7 +19,7 @@ type variables struct {
 
 type rule struct {
 	Template  string      `yaml:"template"`
-	Status    string      `yaml:"status"`
+	Enabled   bool        `yaml:"enabled"`
 	Variables []variables `yaml:"variables"`
 }
 
@@ -205,7 +205,6 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 	var successfullyUpsertedRules []*sirenv1.Rule
 
 	for groupName, v := range yamlBody.Rules {
-		var enabled bool
 		var ruleVariables []*sirenv1.Variables
 		for i := 0; i < len(v.Variables); i++ {
 			v := &sirenv1.Variables{
@@ -213,12 +212,6 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 				Value: v.Variables[i].Value,
 			}
 			ruleVariables = append(ruleVariables, v)
-		}
-
-		// Fix for as per current implementation
-		enabled = false
-		if v.Status == "enabled" {
-			enabled = true
 		}
 
 		if yamlBody.ProviderNamespace == "" {
@@ -243,7 +236,7 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 			Template:          v.Template,
 			Variables:         ruleVariables,
 			ProviderNamespace: provideres[0].Id,
-			Enabled:           enabled,
+			Enabled:           v.Enabled,
 		}
 
 		result, err := s.SirenClient.UpdateRule(context.Background(), payload)
@@ -265,7 +258,7 @@ func printRules(rules []*sirenv1.Rule) {
 		fmt.Println("Upserted Rule")
 		fmt.Println("ID:", rules[i].Id)
 		fmt.Println("Name:", rules[i].Name)
-		fmt.Println("Name:", rules[i].Enabled)
+		fmt.Println("Enabled:", rules[i].Enabled)
 		fmt.Println("Group Name:", rules[i].GroupName)
 		fmt.Println("Namespace:", rules[i].Namespace)
 		fmt.Println("Template:", rules[i].Template)
