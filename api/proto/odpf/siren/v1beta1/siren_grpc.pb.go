@@ -25,6 +25,7 @@ type SirenServiceClient interface {
 	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error)
 	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
@@ -36,12 +37,7 @@ type SirenServiceClient interface {
 	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
 	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
-	SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error)
 	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
-	ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error)
-	ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error)
-	GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error)
-	UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error)
 	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*UpdateRuleResponse, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error)
@@ -107,6 +103,15 @@ func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProvi
 func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteProvider", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error) {
+	out := new(SendReceiverNotificationResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/SendReceiverNotification", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -212,54 +217,9 @@ func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsReque
 	return out, nil
 }
 
-func (c *sirenServiceClient) SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error) {
-	out := new(SendReceiverNotificationResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/SendReceiverNotification", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *sirenServiceClient) CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error) {
 	out := new(Alerts)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateCortexAlerts", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sirenServiceClient) ListWorkspaceChannels(ctx context.Context, in *ListWorkspaceChannelsRequest, opts ...grpc.CallOption) (*ListWorkspaceChannelsResponse, error) {
-	out := new(ListWorkspaceChannelsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListWorkspaceChannels", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sirenServiceClient) ExchangeCode(ctx context.Context, in *ExchangeCodeRequest, opts ...grpc.CallOption) (*ExchangeCodeResponse, error) {
-	out := new(ExchangeCodeResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ExchangeCode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sirenServiceClient) GetAlertCredentials(ctx context.Context, in *GetAlertCredentialsRequest, opts ...grpc.CallOption) (*GetAlertCredentialsResponse, error) {
-	out := new(GetAlertCredentialsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetAlertCredentials", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sirenServiceClient) UpdateAlertCredentials(ctx context.Context, in *UpdateAlertCredentialsRequest, opts ...grpc.CallOption) (*UpdateAlertCredentialsResponse, error) {
-	out := new(UpdateAlertCredentialsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateAlertCredentials", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +299,7 @@ type SirenServiceServer interface {
 	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
 	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
 	DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error)
+	SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error)
 	ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*Namespace, error)
 	GetNamespace(context.Context, *GetNamespaceRequest) (*Namespace, error)
@@ -350,12 +311,7 @@ type SirenServiceServer interface {
 	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error)
 	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error)
 	ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error)
-	SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error)
 	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error)
-	ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error)
-	ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error)
-	GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error)
-	UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error)
 	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*UpdateRuleResponse, error)
 	ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error)
@@ -387,6 +343,9 @@ func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdatePr
 }
 func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProvider not implemented")
+}
+func (UnimplementedSirenServiceServer) SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendReceiverNotification not implemented")
 }
 func (UnimplementedSirenServiceServer) ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
@@ -421,23 +380,8 @@ func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteRe
 func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlerts not implemented")
 }
-func (UnimplementedSirenServiceServer) SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendReceiverNotification not implemented")
-}
 func (UnimplementedSirenServiceServer) CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCortexAlerts not implemented")
-}
-func (UnimplementedSirenServiceServer) ListWorkspaceChannels(context.Context, *ListWorkspaceChannelsRequest) (*ListWorkspaceChannelsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListWorkspaceChannels not implemented")
-}
-func (UnimplementedSirenServiceServer) ExchangeCode(context.Context, *ExchangeCodeRequest) (*ExchangeCodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExchangeCode not implemented")
-}
-func (UnimplementedSirenServiceServer) GetAlertCredentials(context.Context, *GetAlertCredentialsRequest) (*GetAlertCredentialsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAlertCredentials not implemented")
-}
-func (UnimplementedSirenServiceServer) UpdateAlertCredentials(context.Context, *UpdateAlertCredentialsRequest) (*UpdateAlertCredentialsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAlertCredentials not implemented")
 }
 func (UnimplementedSirenServiceServer) ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRules not implemented")
@@ -577,6 +521,24 @@ func _SirenService_DeleteProvider_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteProvider(ctx, req.(*DeleteProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_SendReceiverNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendReceiverNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).SendReceiverNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/SendReceiverNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).SendReceiverNotification(ctx, req.(*SendReceiverNotificationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -779,24 +741,6 @@ func _SirenService_ListAlerts_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_SendReceiverNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendReceiverNotificationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SirenServiceServer).SendReceiverNotification(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/SendReceiverNotification",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).SendReceiverNotification(ctx, req.(*SendReceiverNotificationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SirenService_CreateCortexAlerts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCortexAlertsRequest)
 	if err := dec(in); err != nil {
@@ -811,78 +755,6 @@ func _SirenService_CreateCortexAlerts_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateCortexAlerts(ctx, req.(*CreateCortexAlertsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SirenService_ListWorkspaceChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListWorkspaceChannelsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SirenServiceServer).ListWorkspaceChannels(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListWorkspaceChannels",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListWorkspaceChannels(ctx, req.(*ListWorkspaceChannelsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SirenService_ExchangeCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExchangeCodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SirenServiceServer).ExchangeCode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ExchangeCode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ExchangeCode(ctx, req.(*ExchangeCodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SirenService_GetAlertCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAlertCredentialsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SirenServiceServer).GetAlertCredentials(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetAlertCredentials",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetAlertCredentials(ctx, req.(*GetAlertCredentialsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SirenService_UpdateAlertCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAlertCredentialsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SirenServiceServer).UpdateAlertCredentials(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateAlertCredentials",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).UpdateAlertCredentials(ctx, req.(*UpdateAlertCredentialsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1045,6 +917,10 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_DeleteProvider_Handler,
 		},
 		{
+			MethodName: "SendReceiverNotification",
+			Handler:    _SirenService_SendReceiverNotification_Handler,
+		},
+		{
 			MethodName: "ListNamespaces",
 			Handler:    _SirenService_ListNamespaces_Handler,
 		},
@@ -1089,28 +965,8 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_ListAlerts_Handler,
 		},
 		{
-			MethodName: "SendReceiverNotification",
-			Handler:    _SirenService_SendReceiverNotification_Handler,
-		},
-		{
 			MethodName: "CreateCortexAlerts",
 			Handler:    _SirenService_CreateCortexAlerts_Handler,
-		},
-		{
-			MethodName: "ListWorkspaceChannels",
-			Handler:    _SirenService_ListWorkspaceChannels_Handler,
-		},
-		{
-			MethodName: "ExchangeCode",
-			Handler:    _SirenService_ExchangeCode_Handler,
-		},
-		{
-			MethodName: "GetAlertCredentials",
-			Handler:    _SirenService_GetAlertCredentials_Handler,
-		},
-		{
-			MethodName: "UpdateAlertCredentials",
-			Handler:    _SirenService_UpdateAlertCredentials_Handler,
 		},
 		{
 			MethodName: "ListRules",
