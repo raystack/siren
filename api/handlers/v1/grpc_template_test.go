@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -21,7 +21,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.ListTemplatesRequest{}
+		dummyReq := &sirenv1beta1.ListTemplatesRequest{}
 		dummyResult := []domain.Template{
 			{
 				ID:   1,
@@ -59,7 +59,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.ListTemplatesRequest{
+		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
 		}
 
@@ -100,7 +100,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.ListTemplatesRequest{
+		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
 		}
 		mockedTemplatesService.
@@ -121,7 +121,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.GetTemplateByNameRequest{
+		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
 			Name: "foo",
 		}
 		dummyResult := &domain.Template{
@@ -159,7 +159,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.GetTemplateByNameRequest{
+		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
 			Name: "foo",
 		}
 		mockedTemplatesService.
@@ -172,12 +172,12 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 }
 
 func TestGRPCServer_UpsertTemplate(t *testing.T) {
-	dummyReq := &sirenv1.UpsertTemplateRequest{
+	dummyReq := &sirenv1beta1.UpsertTemplateRequest{
 		Id:   1,
 		Name: "foo",
 		Body: "bar",
 		Tags: []string{"foo", "bar"},
-		Variables: []*sirenv1.TemplateVariables{
+		Variables: []*sirenv1beta1.TemplateVariables{
 			{
 				Name:        "foo",
 				Type:        "bar",
@@ -248,7 +248,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.DeleteTemplateRequest{
+		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
 		}
 
@@ -257,7 +257,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, &sirenv1.DeleteTemplateResponse{}, res)
+		assert.Equal(t, &sirenv1beta1.DeleteTemplateResponse{}, res)
 		mockedTemplatesService.AssertCalled(t, "Delete", "foo")
 	})
 
@@ -269,7 +269,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.DeleteTemplateRequest{
+		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
 		}
 		mockedTemplatesService.
@@ -282,7 +282,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 }
 
 func TestGRPCServer_RenderTemplate(t *testing.T) {
-	dummyReq := &sirenv1.RenderTemplateRequest{
+	dummyReq := &sirenv1beta1.RenderTemplateRequest{
 		Name: "foo",
 		Variables: map[string]string{
 			"foo": "bar",

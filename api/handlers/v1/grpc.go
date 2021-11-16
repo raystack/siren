@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"github.com/odpf/siren/service"
@@ -16,7 +16,7 @@ type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
 	logger    *zap.Logger
-	sirenv1.UnimplementedSirenServiceServer
+	sirenv1beta1.UnimplementedSirenServiceServer
 }
 
 func NewGRPCServer(container *service.Container, nr *newrelic.Application, logger *zap.Logger) *GRPCServer {
@@ -27,21 +27,21 @@ func NewGRPCServer(container *service.Container, nr *newrelic.Application, logge
 	}
 }
 
-func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1.PingRequest) (*sirenv1.PingResponse, error) {
-	return &sirenv1.PingResponse{Message: "Pong"}, nil
+func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1beta1.PingRequest) (*sirenv1beta1.PingResponse, error) {
+	return &sirenv1beta1.PingResponse{Message: "Pong"}, nil
 }
 
-func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListWorkspaceChannelsRequest) (*sirenv1.ListWorkspaceChannelsResponse, error) {
+func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1beta1.ListWorkspaceChannelsRequest) (*sirenv1beta1.ListWorkspaceChannelsResponse, error) {
 	workspace := req.GetWorkspaceName()
 	workspaces, err := s.container.SlackWorkspaceService.GetChannels(workspace)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
-	res := &sirenv1.ListWorkspaceChannelsResponse{
-		Data: make([]*sirenv1.SlackWorkspace, 0),
+	res := &sirenv1beta1.ListWorkspaceChannelsResponse{
+		Data: make([]*sirenv1beta1.SlackWorkspace, 0),
 	}
 	for _, workspace := range workspaces {
-		item := &sirenv1.SlackWorkspace{
+		item := &sirenv1beta1.SlackWorkspace{
 			Id:   workspace.ID,
 			Name: workspace.Name,
 		}
@@ -50,7 +50,7 @@ func (s *GRPCServer) ListWorkspaceChannels(_ context.Context, req *sirenv1.ListW
 	return res, nil
 }
 
-func (s *GRPCServer) ExchangeCode(_ context.Context, req *sirenv1.ExchangeCodeRequest) (*sirenv1.ExchangeCodeResponse, error) {
+func (s *GRPCServer) ExchangeCode(_ context.Context, req *sirenv1beta1.ExchangeCodeRequest) (*sirenv1beta1.ExchangeCodeResponse, error) {
 	code := req.GetCode()
 	workspace := req.GetWorkspace()
 	result, err := s.container.CodeExchangeService.Exchange(domain.OAuthPayload{
@@ -60,31 +60,31 @@ func (s *GRPCServer) ExchangeCode(_ context.Context, req *sirenv1.ExchangeCodeRe
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
-	res := &sirenv1.ExchangeCodeResponse{
+	res := &sirenv1beta1.ExchangeCodeResponse{
 		Ok: result.OK,
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *sirenv1.GetAlertCredentialsRequest) (*sirenv1.GetAlertCredentialsResponse, error) {
+func (s *GRPCServer) GetAlertCredentials(_ context.Context, req *sirenv1beta1.GetAlertCredentialsRequest) (*sirenv1beta1.GetAlertCredentialsResponse, error) {
 	teamName := req.GetTeamName()
 	alertCredential, err := s.container.AlertmanagerService.Get(teamName)
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
-	res := &sirenv1.GetAlertCredentialsResponse{
+	res := &sirenv1beta1.GetAlertCredentialsResponse{
 		Entity:               alertCredential.Entity,
 		TeamName:             alertCredential.TeamName,
 		PagerdutyCredentials: alertCredential.PagerdutyCredentials,
-		SlackConfig: &sirenv1.SlackConfig{
-			Critical: &sirenv1.Critical{Channel: alertCredential.SlackConfig.Critical.Channel},
-			Warning:  &sirenv1.Warning{Channel: alertCredential.SlackConfig.Warning.Channel},
+		SlackConfig: &sirenv1beta1.SlackConfig{
+			Critical: &sirenv1beta1.Critical{Channel: alertCredential.SlackConfig.Critical.Channel},
+			Warning:  &sirenv1beta1.Warning{Channel: alertCredential.SlackConfig.Warning.Channel},
 		},
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1.UpdateAlertCredentialsRequest) (*sirenv1.UpdateAlertCredentialsResponse, error) {
+func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1beta1.UpdateAlertCredentialsRequest) (*sirenv1beta1.UpdateAlertCredentialsResponse, error) {
 	entity := req.GetEntity()
 	teamName := req.GetTeamName()
 	pagerdutyCredential := req.GetPagerdutyCredentials()
@@ -116,6 +116,5 @@ func (s *GRPCServer) UpdateAlertCredentials(_ context.Context, req *sirenv1.Upda
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
-	return &sirenv1.UpdateAlertCredentialsResponse{}, nil
+	return &sirenv1beta1.UpdateAlertCredentialsResponse{}, nil
 }
-

@@ -2,14 +2,14 @@ package v1
 
 import (
 	"context"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest) (*sirenv1.ListRulesResponse, error) {
+func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
 	name := req.GetName()
 	namespace := req.GetNamespace()
 	groupName := req.GetGroupName()
@@ -21,18 +21,18 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest)
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	res := &sirenv1.ListRulesResponse{Rules: make([]*sirenv1.Rule, 0)}
+	res := &sirenv1beta1.ListRulesResponse{Rules: make([]*sirenv1beta1.Rule, 0)}
 	for _, rule := range rules {
-		variables := make([]*sirenv1.Variables, 0)
+		variables := make([]*sirenv1beta1.Variables, 0)
 		for _, variable := range rule.Variables {
-			variables = append(variables, &sirenv1.Variables{
+			variables = append(variables, &sirenv1beta1.Variables{
 				Name:        variable.Name,
 				Value:       variable.Value,
 				Type:        variable.Type,
 				Description: variable.Description,
 			})
 		}
-		res.Rules = append(res.Rules, &sirenv1.Rule{
+		res.Rules = append(res.Rules, &sirenv1beta1.Rule{
 			Id:                rule.Id,
 			Name:              rule.Name,
 			Enabled:           rule.Enabled,
@@ -49,7 +49,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1.ListRulesRequest)
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1.UpdateRuleRequest) (*sirenv1.UpdateRuleResponse, error) {
+func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
 	variables := make([]domain.RuleVariable, 0)
 	for _, variable := range req.Variables {
 		variables = append(variables, domain.RuleVariable{
@@ -74,17 +74,17 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1.UpdateRuleReques
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	responseVariables := make([]*sirenv1.Variables, 0)
+	responseVariables := make([]*sirenv1beta1.Variables, 0)
 	for _, variable := range rule.Variables {
-		responseVariables = append(responseVariables, &sirenv1.Variables{
+		responseVariables = append(responseVariables, &sirenv1beta1.Variables{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Value:       variable.Value,
 			Description: variable.Description,
 		})
 	}
-	res := &sirenv1.UpdateRuleResponse{
-		Rule: &sirenv1.Rule{
+	res := &sirenv1beta1.UpdateRuleResponse{
+		Rule: &sirenv1beta1.Rule{
 			Id:                rule.Id,
 			Name:              rule.Name,
 			Enabled:           rule.Enabled,

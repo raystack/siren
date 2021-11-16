@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 )
@@ -57,7 +57,7 @@ func listRulesCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListRules(ctx, &sirenv1.ListRulesRequest{
+			res, err := client.ListRules(ctx, &sirenv1beta1.ListRulesRequest{
 				Name:              name,
 				GroupName:         groupName,
 				Namespace:         namespace,
@@ -123,9 +123,9 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			variables := make([]*sirenv1.Variables, 0)
+			variables := make([]*sirenv1beta1.Variables, 0)
 			for _, variable := range ruleConfig.Variables {
-				variables = append(variables, &sirenv1.Variables{
+				variables = append(variables, &sirenv1beta1.Variables{
 					Name:        variable.Name,
 					Type:        variable.Type,
 					Value:       variable.Value,
@@ -133,7 +133,7 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 				})
 			}
 
-			_, err = client.UpdateRule(ctx, &sirenv1.UpdateRuleRequest{
+			_, err = client.UpdateRule(ctx, &sirenv1beta1.UpdateRuleRequest{
 				Enabled:           ruleConfig.Enabled,
 				GroupName:         ruleConfig.GroupName,
 				Namespace:         ruleConfig.Namespace,

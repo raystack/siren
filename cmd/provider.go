@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -55,7 +55,7 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListProviders(ctx, &sirenv1.ListProvidersRequest{})
+			res, err := client.ListProviders(ctx, &sirenv1beta1.ListProvidersRequest{})
 			if err != nil {
 				return err
 			}
@@ -111,7 +111,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.CreateProvider(ctx, &sirenv1.CreateProviderRequest{
+			res, err := client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
 				Host:        providerConfig.Host,
 				Urn:         providerConfig.Urn,
 				Name:        providerConfig.Name,
@@ -166,7 +166,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid provider id: %v", err)
 			}
 
-			res, err := client.GetProvider(ctx, &sirenv1.GetProviderRequest{
+			res, err := client.GetProvider(ctx, &sirenv1beta1.GetProviderRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
@@ -227,7 +227,7 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			_, err = client.UpdateProvider(ctx, &sirenv1.UpdateProviderRequest{
+			_, err = client.UpdateProvider(ctx, &sirenv1beta1.UpdateProviderRequest{
 				Id:          id,
 				Host:        providerConfig.Host,
 				Name:        providerConfig.Name,
@@ -277,7 +277,7 @@ func deleteProviderCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid provider id: %v", err)
 			}
 
-			_, err = client.DeleteProvider(ctx, &sirenv1.DeleteProviderRequest{
+			_, err = client.DeleteProvider(ctx, &sirenv1beta1.DeleteProviderRequest{
 				Id: uint64(id),
 			})
 			if err != nil {

@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -28,7 +28,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			AlertService: mockedAlertService,
 		}}
 
-		dummyReq := &sirenv1.ListAlertsRequest{
+		dummyReq := &sirenv1beta1.ListAlertsRequest{
 			ResourceName: "foo",
 			ProviderId:   1,
 			StartTime:    100,
@@ -45,7 +45,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		assert.Nil(t, err)
 		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
 	})
-	
+
 	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{
@@ -58,7 +58,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
 			Return(nil, errors.New("random error")).Once()
 
-		dummyReq := &sirenv1.ListAlertsRequest{
+		dummyReq := &sirenv1beta1.ListAlertsRequest{
 			ResourceName: "foo",
 			ProviderId:   1,
 			StartTime:    100,
@@ -86,15 +86,15 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		},
 	}
-	dummyReq := &sirenv1.CreateCortexAlertsRequest{
+	dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
 		ProviderId: 1,
-		Alerts: []*sirenv1.CortexAlert{
+		Alerts: []*sirenv1beta1.CortexAlert{
 			{
 				Status: "foo",
-				Labels: &sirenv1.Labels{
+				Labels: &sirenv1beta1.Labels{
 					Severity: "CRITICAL",
 				},
-				Annotations: &sirenv1.Annotations{
+				Annotations: &sirenv1beta1.Annotations{
 					Resource:    "foo",
 					Template:    "random",
 					MetricName:  "bar",
@@ -137,15 +137,15 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should create alerts for resolved alerts", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyReq := &sirenv1.CreateCortexAlertsRequest{
+		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
 			ProviderId: 1,
-			Alerts: []*sirenv1.CortexAlert{
+			Alerts: []*sirenv1beta1.CortexAlert{
 				{
 					Status: "resolved",
-					Labels: &sirenv1.Labels{
+					Labels: &sirenv1beta1.Labels{
 						Severity: "CRITICAL",
 					},
-					Annotations: &sirenv1.Annotations{
+					Annotations: &sirenv1beta1.Annotations{
 						Resource:    "foo",
 						Template:    "random",
 						MetricName:  "bar",
@@ -216,27 +216,27 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should insert valid alerts and should not return error if parameters are missing", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyReq := &sirenv1.CreateCortexAlertsRequest{
+		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
 			ProviderId: 1,
-			Alerts: []*sirenv1.CortexAlert{
-				&sirenv1.CortexAlert{
+			Alerts: []*sirenv1beta1.CortexAlert{
+				&sirenv1beta1.CortexAlert{
 					Status: "foo",
-					Labels: &sirenv1.Labels{
+					Labels: &sirenv1beta1.Labels{
 						Severity: "CRITICAL",
 					},
-					Annotations: &sirenv1.Annotations{
+					Annotations: &sirenv1beta1.Annotations{
 						Resource:    "foo",
 						MetricName:  "bar",
 						MetricValue: "30",
 					},
 					StartsAt: timenow,
 				},
-				&sirenv1.CortexAlert{
+				&sirenv1beta1.CortexAlert{
 					Status: "foo",
-					Labels: &sirenv1.Labels{
+					Labels: &sirenv1beta1.Labels{
 						Severity: "CRITICAL",
 					},
-					Annotations: &sirenv1.Annotations{
+					Annotations: &sirenv1beta1.Annotations{
 						Resource:    "foo",
 						Template:    "random",
 						MetricName:  "bar",

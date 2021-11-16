@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +59,7 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListAlerts(ctx, &sirenv1.ListAlertsRequest{
+			res, err := client.ListAlerts(ctx, &sirenv1beta1.ListAlertsRequest{
 				ProviderName: providerName,
 				ProviderId:   providerId,
 				ResourceName: resouceName,

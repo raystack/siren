@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -112,7 +112,7 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.CreateReceiver(ctx, &sirenv1.CreateReceiverRequest{
+			res, err := client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
 				Name:           receiverConfig.Name,
 				Type:           receiverConfig.Type,
 				Configurations: grpcConfigurations,
@@ -165,7 +165,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid receiver id: %v", err)
 			}
 
-			res, err := client.GetReceiver(ctx, &sirenv1.GetReceiverRequest{
+			res, err := client.GetReceiver(ctx, &sirenv1beta1.GetReceiverRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
@@ -225,7 +225,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			_, err = client.UpdateReceiver(ctx, &sirenv1.UpdateReceiverRequest{
+			_, err = client.UpdateReceiver(ctx, &sirenv1beta1.UpdateReceiverRequest{
 				Id:             id,
 				Name:           receiverConfig.Name,
 				Type:           receiverConfig.Type,
@@ -274,7 +274,7 @@ func deleteReceiverCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid receiver id: %v", err)
 			}
 
-			_, err = client.DeleteReceiver(ctx, &sirenv1.DeleteReceiverRequest{
+			_, err = client.DeleteReceiver(ctx, &sirenv1beta1.DeleteReceiverRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
@@ -302,7 +302,7 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var notificationConfig sirenv1.SendReceiverNotificationRequest
+			var notificationConfig sirenv1beta1.SendReceiverNotificationRequest
 
 			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
@@ -311,7 +311,7 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			receiver, err := client.GetReceiver(ctx, &sirenv1.GetReceiverRequest{
+			receiver, err := client.GetReceiver(ctx, &sirenv1beta1.GetReceiverRequest{
 				Id: id,
 			})
 			if err != nil {
@@ -321,7 +321,7 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 			notificationConfig.Id = id
 			switch receiver.Type {
 			case "slack":
-				var slackConfig *sirenv1.SendReceiverNotificationRequest_Slack
+				var slackConfig *sirenv1beta1.SendReceiverNotificationRequest_Slack
 				if err := parseFile(filePath, &slackConfig); err != nil {
 					return err
 				}

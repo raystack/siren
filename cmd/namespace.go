@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -111,7 +111,7 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.CreateNamespace(ctx, &sirenv1.CreateNamespaceRequest{
+			res, err := client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
 				Provider:    namespaceConfig.Provider,
 				Urn:         namespaceConfig.Urn,
 				Name:        namespaceConfig.Name,
@@ -165,7 +165,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid namespace id: %v", err)
 			}
 
-			res, err := client.GetNamespace(ctx, &sirenv1.GetNamespaceRequest{
+			res, err := client.GetNamespace(ctx, &sirenv1beta1.GetNamespaceRequest{
 				Id: uint64(id),
 			})
 			if err != nil {
@@ -224,7 +224,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			_, err = client.UpdateNamespace(ctx, &sirenv1.UpdateNamespaceRequest{
+			_, err = client.UpdateNamespace(ctx, &sirenv1beta1.UpdateNamespaceRequest{
 				Id:          id,
 				Provider:    namespaceConfig.Provider,
 				Name:        namespaceConfig.Name,
@@ -273,7 +273,7 @@ func deleteNamespaceCmd(c *configuration) *cobra.Command {
 				return fmt.Errorf("invalid namespace id: %v", err)
 			}
 
-			_, err = client.DeleteNamespace(ctx, &sirenv1.DeleteNamespaceRequest{
+			_, err = client.DeleteNamespace(ctx, &sirenv1beta1.DeleteNamespaceRequest{
 				Id: uint64(id),
 			})
 			if err != nil {

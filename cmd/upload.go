@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -79,9 +79,9 @@ func uploadCmd(c *configuration) *cobra.Command {
 				return err
 			}
 			switch obj := result.(type) {
-			case *sirenv1.Template:
+			case *sirenv1beta1.Template:
 				printTemplate(obj)
-			case []*sirenv1.Rule:
+			case []*sirenv1beta1.Rule:
 				printRules(obj)
 			default:
 				return errors.New("unknown response")
@@ -93,10 +93,10 @@ func uploadCmd(c *configuration) *cobra.Command {
 
 //Service talks to siren's HTTP Client
 type Service struct {
-	SirenClient sirenv1.SirenServiceClient
+	SirenClient sirenv1beta1.SirenServiceClient
 }
 
-func UploaderService(siren sirenv1.SirenServiceClient) *Service {
+func UploaderService(siren sirenv1beta1.SirenServiceClient) *Service {
 	return &Service{
 		SirenClient: siren,
 	}
@@ -124,7 +124,7 @@ func (s Service) Upload(fileName string) (interface{}, error) {
 	}
 }
 
-func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
+func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1beta1.Template, error) {
 	var t template
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
@@ -135,9 +135,9 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 		return nil, err
 	}
 
-	variables := make([]*sirenv1.TemplateVariables, 0)
+	variables := make([]*sirenv1beta1.TemplateVariables, 0)
 	for _, variable := range t.Variables {
-		variables = append(variables, &sirenv1.TemplateVariables{
+		variables = append(variables, &sirenv1beta1.TemplateVariables{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Default:     variable.Default,
@@ -145,7 +145,7 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 		})
 	}
 
-	template, err := s.SirenClient.UpsertTemplate(context.Background(), &sirenv1.UpsertTemplateRequest{
+	template, err := s.SirenClient.UpsertTemplate(context.Background(), &sirenv1beta1.UpsertTemplateRequest{
 		Name:      t.Name,
 		Body:      string(body),
 		Variables: variables,
@@ -156,7 +156,7 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 	}
 
 	//update associated rules for this template
-	data, err := s.SirenClient.ListRules(context.Background(), &sirenv1.ListRulesRequest{
+	data, err := s.SirenClient.ListRules(context.Background(), &sirenv1beta1.ListRulesRequest{
 		Template: t.Name,
 	})
 	if err != nil {
@@ -167,9 +167,9 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 	for i := 0; i < len(associatedRules); i++ {
 		associatedRule := associatedRules[i]
 
-		var updatedVariables []*sirenv1.Variables
+		var updatedVariables []*sirenv1beta1.Variables
 		for j := 0; j < len(associatedRules[i].Variables); j++ {
-			ruleVar := &sirenv1.Variables{
+			ruleVar := &sirenv1beta1.Variables{
 				Name:        associatedRules[i].Variables[j].Name,
 				Value:       associatedRules[i].Variables[j].Value,
 				Type:        associatedRules[i].Variables[j].Type,
@@ -178,7 +178,7 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 			updatedVariables = append(updatedVariables, ruleVar)
 		}
 
-		_, err := s.SirenClient.UpdateRule(context.Background(), &sirenv1.UpdateRuleRequest{
+		_, err := s.SirenClient.UpdateRule(context.Background(), &sirenv1beta1.UpdateRuleRequest{
 			GroupName:         associatedRule.GroupName,
 			Namespace:         associatedRule.Namespace,
 			Template:          associatedRule.Template,
@@ -196,18 +196,18 @@ func (s Service) UploadTemplate(yamlFile []byte) (*sirenv1.Template, error) {
 	return template.Template, nil
 }
 
-func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
+func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1beta1.Rule, error) {
 	var yamlBody ruleYaml
 	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
 		return nil, err
 	}
-	var successfullyUpsertedRules []*sirenv1.Rule
+	var successfullyUpsertedRules []*sirenv1beta1.Rule
 
 	for groupName, v := range yamlBody.Rules {
-		var ruleVariables []*sirenv1.Variables
+		var ruleVariables []*sirenv1beta1.Variables
 		for i := 0; i < len(v.Variables); i++ {
-			v := &sirenv1.Variables{
+			v := &sirenv1beta1.Variables{
 				Name:  v.Variables[i].Name,
 				Value: v.Variables[i].Value,
 			}
@@ -218,7 +218,7 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 			return nil, errors.New("provider namespace is required")
 		}
 
-		data, err := s.SirenClient.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{
+		data, err := s.SirenClient.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{
 			Urn: yamlBody.ProviderNamespace,
 		})
 		if err != nil {
@@ -230,7 +230,7 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 			return nil, errors.New(fmt.Sprintf("no provider found with urn: %s", yamlBody.ProviderNamespace))
 		}
 
-		payload := &sirenv1.UpdateRuleRequest{
+		payload := &sirenv1beta1.UpdateRuleRequest{
 			GroupName:         groupName,
 			Namespace:         yamlBody.Namespace,
 			Template:          v.Template,
@@ -253,7 +253,7 @@ func (s Service) UploadRule(yamlFile []byte) ([]*sirenv1.Rule, error) {
 	return successfullyUpsertedRules, nil
 }
 
-func printRules(rules []*sirenv1.Rule) {
+func printRules(rules []*sirenv1beta1.Rule) {
 	for i := 0; i < len(rules); i++ {
 		fmt.Println("Upserted Rule")
 		fmt.Println("ID:", rules[i].Id)
@@ -268,7 +268,7 @@ func printRules(rules []*sirenv1.Rule) {
 	}
 }
 
-func printTemplate(template *sirenv1.Template) {
+func printTemplate(template *sirenv1beta1.Template) {
 	if template == nil {
 		return
 	}

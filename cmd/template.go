@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 )
@@ -56,7 +56,7 @@ func listTemplatesCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListTemplates(ctx, &sirenv1.ListTemplatesRequest{
+			res, err := client.ListTemplates(ctx, &sirenv1beta1.ListTemplatesRequest{
 				Tag: tag,
 			})
 			if err != nil {
@@ -112,9 +112,9 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			variables := make([]*sirenv1.TemplateVariables, 0)
+			variables := make([]*sirenv1beta1.TemplateVariables, 0)
 			for _, variable := range templateConfig.Variables {
-				variables = append(variables, &sirenv1.TemplateVariables{
+				variables = append(variables, &sirenv1beta1.TemplateVariables{
 					Name:        variable.Name,
 					Type:        variable.Type,
 					Default:     variable.Default,
@@ -122,7 +122,7 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 				})
 			}
 
-			res, err := client.UpsertTemplate(ctx, &sirenv1.UpsertTemplateRequest{
+			res, err := client.UpsertTemplate(ctx, &sirenv1beta1.UpsertTemplateRequest{
 				Name:      templateConfig.Name,
 				Body:      templateConfig.Body,
 				Tags:      templateConfig.Tags,
@@ -171,7 +171,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 			defer cancel()
 
 			name := args[0]
-			res, err := client.GetTemplateByName(ctx, &sirenv1.GetTemplateByNameRequest{
+			res, err := client.GetTemplateByName(ctx, &sirenv1beta1.GetTemplateByNameRequest{
 				Name: name,
 			})
 			if err != nil {
@@ -232,7 +232,7 @@ func deleteTemplateCmd(c *configuration) *cobra.Command {
 			defer cancel()
 
 			name := args[0]
-			_, err = client.DeleteTemplate(ctx, &sirenv1.DeleteTemplateRequest{
+			_, err = client.DeleteTemplate(ctx, &sirenv1beta1.DeleteTemplateRequest{
 				Name: name,
 			})
 			if err != nil {
@@ -273,7 +273,7 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			template, err := client.RenderTemplate(ctx, &sirenv1.RenderTemplateRequest{
+			template, err := client.RenderTemplate(ctx, &sirenv1beta1.RenderTemplateRequest{
 				Name:      name,
 				Variables: variableConfig.Variables,
 			})

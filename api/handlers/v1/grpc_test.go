@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap/zaptest"
 	"testing"
 )
-
 
 func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 	t.Run("should return workspace data object", func(t *testing.T) {
@@ -24,7 +23,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 			SlackWorkspaceService: mockedWorkspaceService,
 		}}
 
-		dummyReq := &sirenv1.ListWorkspaceChannelsRequest{
+		dummyReq := &sirenv1beta1.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").Return(dummyResult, nil).Once()
@@ -46,7 +45,7 @@ func TestGRPCServer_ListWorkspaceChannels(t *testing.T) {
 			}, logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.ListWorkspaceChannelsRequest{
+		dummyReq := &sirenv1beta1.ListWorkspaceChannelsRequest{
 			WorkspaceName: "random",
 		}
 		mockedWorkspaceService.On("GetChannels", "random").
@@ -71,7 +70,7 @@ func TestGRPCServer_ExchangeCode(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.ExchangeCodeRequest{
+		dummyReq := &sirenv1beta1.ExchangeCodeRequest{
 			Code:      "foo",
 			Workspace: "bar",
 		}
@@ -92,7 +91,7 @@ func TestGRPCServer_ExchangeCode(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.ExchangeCodeRequest{
+		dummyReq := &sirenv1beta1.ExchangeCodeRequest{
 			Code:      "foo",
 			Workspace: "bar",
 		}
@@ -129,7 +128,7 @@ func TestGRPCServer_GetAlertCredentials(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.GetAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.GetAlertCredentialsRequest{
 			TeamName: "foo",
 		}
 		mockedAlertmanagerService.On("Get", "foo").Return(dummyResult, nil).Once()
@@ -152,7 +151,7 @@ func TestGRPCServer_GetAlertCredentials(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.GetAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.GetAlertCredentialsRequest{
 			TeamName: "foo",
 		}
 		mockedAlertmanagerService.On("Get", "foo").
@@ -186,22 +185,22 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 				},
 			},
 		}
-		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.UpdateAlertCredentialsRequest{
 			Entity:               "foo",
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &sirenv1.SlackConfig{
-				Critical: &sirenv1.Critical{
+			SlackConfig: &sirenv1beta1.SlackConfig{
+				Critical: &sirenv1beta1.Critical{
 					Channel: "foo",
 				},
-				Warning: &sirenv1.Warning{
+				Warning: &sirenv1beta1.Warning{
 					Channel: "bar",
 				},
 			},
 		}
 		mockedAlertmanagerService.On("Upsert", dummyPayload).Return(nil).Once()
 		result, err := dummyGRPCServer.UpdateAlertCredentials(context.Background(), dummyReq)
-		assert.Equal(t, result, &sirenv1.UpdateAlertCredentialsResponse{})
+		assert.Equal(t, result, &sirenv1beta1.UpdateAlertCredentialsResponse{})
 		assert.Nil(t, err)
 		mockedAlertmanagerService.AssertCalled(t, "Upsert", dummyPayload)
 	})
@@ -227,15 +226,15 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 				},
 			},
 		}
-		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.UpdateAlertCredentialsRequest{
 			Entity:               "foo",
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &sirenv1.SlackConfig{
-				Critical: &sirenv1.Critical{
+			SlackConfig: &sirenv1beta1.SlackConfig{
+				Critical: &sirenv1beta1.Critical{
 					Channel: "foo",
 				},
-				Warning: &sirenv1.Warning{
+				Warning: &sirenv1beta1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -255,14 +254,14 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.UpdateAlertCredentialsRequest{
 			TeamName:             "bar",
 			PagerdutyCredentials: "pager",
-			SlackConfig: &sirenv1.SlackConfig{
-				Critical: &sirenv1.Critical{
+			SlackConfig: &sirenv1beta1.SlackConfig{
+				Critical: &sirenv1beta1.Critical{
 					Channel: "foo",
 				},
-				Warning: &sirenv1.Warning{
+				Warning: &sirenv1beta1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -280,14 +279,14 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 			},
 			logger: zaptest.NewLogger(t),
 		}
-		dummyReq := &sirenv1.UpdateAlertCredentialsRequest{
+		dummyReq := &sirenv1beta1.UpdateAlertCredentialsRequest{
 			Entity:   "foo",
 			TeamName: "bar",
-			SlackConfig: &sirenv1.SlackConfig{
-				Critical: &sirenv1.Critical{
+			SlackConfig: &sirenv1beta1.SlackConfig{
+				Critical: &sirenv1beta1.Critical{
 					Channel: "foo",
 				},
-				Warning: &sirenv1.Warning{
+				Warning: &sirenv1beta1.Warning{
 					Channel: "bar",
 				},
 			},
@@ -297,8 +296,3 @@ func TestGRPCServer_UpdateAlertCredentials(t *testing.T) {
 		assert.Nil(t, res)
 	})
 }
-
-
-
-
-

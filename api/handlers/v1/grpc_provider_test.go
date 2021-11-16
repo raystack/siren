@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -49,7 +49,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 				"urn":  "",
 			}).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetProviders()))
 		assert.Equal(t, "foo", res.GetProviders()[0].GetHost())
@@ -72,7 +72,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 				"urn":  "",
 			}).
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
@@ -106,7 +106,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 				"urn":  "",
 			}).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1.ListProvidersRequest{})
+		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -128,7 +128,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 		Credentials: credentials,
 		Labels:      labels,
 	}
-	dummyReq := &sirenv1.CreateProviderRequest{
+	dummyReq := &sirenv1beta1.CreateProviderRequest{
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -205,7 +205,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 	labels["foo"] = "bar"
 
 	providerId := uint64(1)
-	dummyReq := &sirenv1.GetProviderRequest{
+	dummyReq := &sirenv1beta1.GetProviderRequest{
 		Id: 1,
 	}
 
@@ -332,7 +332,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 		Credentials: credentials,
 		Labels:      labels,
 	}
-	dummyReq := &sirenv1.UpdateProviderRequest{
+	dummyReq := &sirenv1beta1.UpdateProviderRequest{
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -407,7 +407,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 func TestGRPCServer_DeleteProvider(t *testing.T) {
 	providerId := uint64(10)
-	dummyReq := &sirenv1.DeleteProviderRequest{
+	dummyReq := &sirenv1beta1.DeleteProviderRequest{
 		Id: uint64(10),
 	}
 
