@@ -23,7 +23,7 @@ func namespacesCmd(c *configuration) *cobra.Command {
 		Long: heredoc.Doc(`
 			Work with namespaces.
 			
-			namespaces are used for multi-tenancy for a givin provider.
+			namespaces are used for multi-tenancy for a given provider.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
