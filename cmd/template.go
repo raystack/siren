@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -12,6 +15,44 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 )
+
+type variables struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
+}
+
+type rule struct {
+	Template  string      `yaml:"template"`
+	Enabled   bool        `yaml:"enabled"`
+	Variables []variables `yaml:"variables"`
+}
+
+type ruleYaml struct {
+	ApiVersion        string          `yaml:"apiVersion"`
+	Entity            string          `yaml:"entity"`
+	Type              string          `yaml:"type"`
+	Namespace         string          `yaml:"namespace"`
+	ProviderNamespace string          `yaml:"providerNamespace"`
+	Rules             map[string]rule `yaml:"rules"`
+}
+
+type templatedRule struct {
+	Record      string            `yaml:"record,omitempty"`
+	Alert       string            `yaml:"alert,omitempty"`
+	Expr        string            `yaml:"expr"`
+	For         string            `yaml:"for,omitempty"`
+	Labels      map[string]string `yaml:"labels,omitempty"`
+	Annotations map[string]string `yaml:"annotations,omitempty"`
+}
+
+type template struct {
+	Name       string            `yaml:"name"`
+	ApiVersion string            `yaml:"apiVersion"`
+	Type       string            `yaml:"type"`
+	Body       []templatedRule   `yaml:"body"`
+	Tags       []string          `yaml:"tags"`
+	Variables  []domain.Variable `yaml:"variables"`
+}
 
 func templatesCmd(c *configuration) *cobra.Command {
 	cmd := &cobra.Command{
@@ -33,6 +74,7 @@ func templatesCmd(c *configuration) *cobra.Command {
 	cmd.AddCommand(getTemplateCmd(c))
 	cmd.AddCommand(deleteTemplateCmd(c))
 	cmd.AddCommand(renderTemplateCmd(c))
+	cmd.AddCommand(uploadTemplateCmd(c))
 
 	return cmd
 }
@@ -296,4 +338,135 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 	cmd.Flags().StringVar(&format, "format", "yaml", "Print output with the selected format")
 
 	return cmd
+}
+
+func uploadTemplateCmd(c *configuration) *cobra.Command {
+	var fileReader = ioutil.ReadFile
+	return &cobra.Command{
+		Use:   "upload",
+		Short: "Upload Templates YAML file",
+		Annotations: map[string]string{
+			"group:core": "true",
+		},
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.Background()
+			client, cancel, err := createClient(ctx, c.Host)
+			if err != nil {
+				return err
+			}
+			defer cancel()
+
+			yamlFile, err := fileReader(args[0])
+			if err != nil {
+				fmt.Printf("Error reading YAML file: %s\n", err)
+				return err
+			}
+
+			var yamlObject struct {
+				Type string `yaml:"type"`
+			}
+			err = yaml.Unmarshal(yamlFile, &yamlObject)
+			if err != nil {
+				return err
+			}
+
+			if strings.ToLower(yamlObject.Type) == "template" {
+				result, err := uploadTemplate(client, yamlFile)
+				if err != nil {
+					return err
+				}
+				printTemplate(result)
+			} else {
+				return errors.New("yaml is not rule type")
+			}
+			return nil
+		},
+	}
+}
+
+func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*sirenv1beta1.Template, error) {
+	var t template
+	err := yaml.Unmarshal(yamlFile, &t)
+	if err != nil {
+		return nil, err
+	}
+	body, err := yaml.Marshal(t.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	variables := make([]*sirenv1beta1.TemplateVariables, 0)
+	for _, variable := range t.Variables {
+		variables = append(variables, &sirenv1beta1.TemplateVariables{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Default:     variable.Default,
+			Description: variable.Description,
+		})
+	}
+
+	template, err := client.UpsertTemplate(context.Background(), &sirenv1beta1.UpsertTemplateRequest{
+		Name:      t.Name,
+		Body:      string(body),
+		Variables: variables,
+		Tags:      t.Tags,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	//update associated rules for this template
+	data, err := client.ListRules(context.Background(), &sirenv1beta1.ListRulesRequest{
+		Template: t.Name,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	associatedRules := data.Rules
+	for i := 0; i < len(associatedRules); i++ {
+		associatedRule := associatedRules[i]
+
+		var updatedVariables []*sirenv1beta1.Variables
+		for j := 0; j < len(associatedRules[i].Variables); j++ {
+			ruleVar := &sirenv1beta1.Variables{
+				Name:        associatedRules[i].Variables[j].Name,
+				Value:       associatedRules[i].Variables[j].Value,
+				Type:        associatedRules[i].Variables[j].Type,
+				Description: associatedRules[i].Variables[j].Description,
+			}
+			updatedVariables = append(updatedVariables, ruleVar)
+		}
+
+		_, err := client.UpdateRule(context.Background(), &sirenv1beta1.UpdateRuleRequest{
+			GroupName:         associatedRule.GroupName,
+			Namespace:         associatedRule.Namespace,
+			Template:          associatedRule.Template,
+			Variables:         updatedVariables,
+			ProviderNamespace: associatedRule.ProviderNamespace,
+			Enabled:           associatedRule.Enabled,
+		})
+
+		if err != nil {
+			fmt.Println("failed to update rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
+			return nil, err
+		}
+		fmt.Println("successfully updated rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
+	}
+	return template.Template, nil
+}
+
+func printTemplate(template *sirenv1beta1.Template) {
+	if template == nil {
+		return
+	}
+	fmt.Println("Upserted Template")
+	fmt.Println("ID:", template.Id)
+	fmt.Println("Name:", template.Name)
+	fmt.Println("Tags:", template.Tags)
+	fmt.Println("Variables:", template.Variables)
+	fmt.Println("CreatedAt At:", template.CreatedAt)
+	fmt.Println("UpdatedAt At:", template.UpdatedAt)
+
 }

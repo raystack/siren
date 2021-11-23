@@ -41,7 +41,6 @@ func Execute() {
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(serveCmd())
 	rootCmd.AddCommand(migrateCmd())
-	rootCmd.AddCommand(uploadCmd(cliConfig))
 	rootCmd.AddCommand(providersCmd(cliConfig))
 	rootCmd.AddCommand(namespacesCmd(cliConfig))
 	rootCmd.AddCommand(receiversCmd(cliConfig))

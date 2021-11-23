@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
@@ -30,6 +34,7 @@ func rulesCmd(c *configuration) *cobra.Command {
 
 	cmd.AddCommand(listRulesCmd(c))
 	cmd.AddCommand(updateRuleCmd(c))
+	cmd.AddCommand(uploadRuleCmd(c))
 
 	return cmd
 }
@@ -157,4 +162,121 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 	cmd.MarkFlagRequired("file")
 
 	return cmd
+}
+
+func uploadRuleCmd(c *configuration) *cobra.Command {
+	var fileReader = ioutil.ReadFile
+	return &cobra.Command{
+		Use:   "upload",
+		Short: "Upload Rules YAML file",
+		Annotations: map[string]string{
+			"group:core": "true",
+		},
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.Background()
+			client, cancel, err := createClient(ctx, c.Host)
+			if err != nil {
+				return err
+			}
+			defer cancel()
+
+			yamlFile, err := fileReader(args[0])
+			if err != nil {
+				fmt.Printf("Error reading YAML file: %s\n", err)
+				return err
+			}
+
+			var yamlObject struct {
+				Type string `yaml:"type"`
+			}
+			err = yaml.Unmarshal(yamlFile, &yamlObject)
+			if err != nil {
+				return err
+			}
+
+			if strings.ToLower(yamlObject.Type) == "rule" {
+				result, err := uploadRule(client, yamlFile)
+				if err != nil {
+					return err
+				}
+				printRules(result)
+			} else {
+				return errors.New("yaml is not rule type")
+			}
+			return nil
+		},
+	}
+}
+
+func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sirenv1beta1.Rule, error) {
+	var yamlBody ruleYaml
+	err := yaml.Unmarshal(yamlFile, &yamlBody)
+	if err != nil {
+		return nil, err
+	}
+	var successfullyUpsertedRules []*sirenv1beta1.Rule
+
+	for groupName, v := range yamlBody.Rules {
+		var ruleVariables []*sirenv1beta1.Variables
+		for i := 0; i < len(v.Variables); i++ {
+			v := &sirenv1beta1.Variables{
+				Name:  v.Variables[i].Name,
+				Value: v.Variables[i].Value,
+			}
+			ruleVariables = append(ruleVariables, v)
+		}
+
+		if yamlBody.ProviderNamespace == "" {
+			return nil, errors.New("provider namespace is required")
+		}
+
+		data, err := client.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{
+			Urn: yamlBody.ProviderNamespace,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		provideres := data.Providers
+		if len(provideres) == 0 {
+			return nil, errors.New(fmt.Sprintf("no provider found with urn: %s", yamlBody.ProviderNamespace))
+		}
+
+		payload := &sirenv1beta1.UpdateRuleRequest{
+			GroupName:         groupName,
+			Namespace:         yamlBody.Namespace,
+			Template:          v.Template,
+			Variables:         ruleVariables,
+			ProviderNamespace: provideres[0].Id,
+			Enabled:           v.Enabled,
+		}
+
+		result, err := client.UpdateRule(context.Background(), payload)
+		if err != nil {
+			fmt.Println(fmt.Sprintf("rule %s/%s/%s upload error",
+				payload.Namespace, payload.GroupName, payload.Template), err)
+			return successfullyUpsertedRules, err
+		} else {
+			successfullyUpsertedRules = append(successfullyUpsertedRules, result.Rule)
+			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s",
+				payload.Namespace, payload.GroupName, payload.Template))
+		}
+	}
+	return successfullyUpsertedRules, nil
+}
+
+func printRules(rules []*sirenv1beta1.Rule) {
+	for i := 0; i < len(rules); i++ {
+		fmt.Println("Upserted Rule")
+		fmt.Println("ID:", rules[i].Id)
+		fmt.Println("Name:", rules[i].Name)
+		fmt.Println("Enabled:", rules[i].Enabled)
+		fmt.Println("Group Name:", rules[i].GroupName)
+		fmt.Println("Namespace:", rules[i].Namespace)
+		fmt.Println("Template:", rules[i].Template)
+		fmt.Println("CreatedAt At:", rules[i].CreatedAt)
+		fmt.Println("UpdatedAt At:", rules[i].UpdatedAt)
+		fmt.Println()
+	}
 }
