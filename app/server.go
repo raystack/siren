@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -52,16 +51,9 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	cortexConfig := cortexClient.Config{
-		Address:         c.Cortex.Address,
-		UseLegacyRoutes: false,
-	}
-	client, err := cortexClient.New(cortexConfig)
-	if err != nil {
-		return nil
-	}
+
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, client, httpClient)
+	services, err := service.Init(store, c, httpClient)
 	if err != nil {
 		return err
 	}
@@ -153,16 +145,11 @@ func RunMigrations(c *domain.Config) error {
 		return err
 	}
 
-	cortexConfig := cortexClient.Config{
-		Address:         c.Cortex.Address,
-		UseLegacyRoutes: false,
-	}
-	client, err := cortexClient.New(cortexConfig)
 	if err != nil {
 		return nil
 	}
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, client, httpClient)
+	services, err := service.Init(store, c, httpClient)
 	if err != nil {
 		return err
 	}

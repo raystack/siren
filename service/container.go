@@ -6,7 +6,6 @@ import (
 	"github.com/odpf/siren/pkg/receiver"
 	"net/http"
 
-	"github.com/grafana/cortex-tools/pkg/client"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alerts"
 	"github.com/odpf/siren/pkg/codeexchange"
@@ -28,10 +27,9 @@ type Container struct {
 	ReceiverService     domain.ReceiverService
 }
 
-func Init(db *gorm.DB, c *domain.Config,
-	client *client.CortexClient, httpClient *http.Client) (*Container, error) {
+func Init(db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(db)
-	rulesService := rules.NewService(db, client)
+	rulesService := rules.NewService(db)
 	alertHistoryService := alerts.NewService(db)
 	codeExchangeService, err := codeexchange.NewService(db, httpClient, c.SlackApp, c.EncryptionKey)
 	if err != nil {

@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
@@ -231,16 +233,22 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			return nil, errors.New("provider namespace is required")
 		}
 
-		data, err := client.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{
-			Urn: yamlBody.ProviderNamespace,
-		})
+		data, err := client.ListNamespaces(context.Background(), &emptypb.Empty{})
 		if err != nil {
 			return nil, err
 		}
 
-		provideres := data.Providers
-		if len(provideres) == 0 {
-			return nil, errors.New(fmt.Sprintf("no provider found with urn: %s", yamlBody.ProviderNamespace))
+		var providerNamespace *sirenv1beta1.Namespace
+		for _, namespace := range data.Namespaces {
+			if namespace.Urn == yamlBody.ProviderNamespace {
+				fmt.Println(namespace)
+				providerNamespace = namespace
+				break
+			}
+		}
+
+		if providerNamespace == nil {
+			return nil, fmt.Errorf("no provider found with urn: %s", yamlBody.ProviderNamespace)
 		}
 
 		payload := &sirenv1beta1.UpdateRuleRequest{
@@ -248,7 +256,7 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			Namespace:         yamlBody.Namespace,
 			Template:          v.Template,
 			Variables:         ruleVariables,
-			ProviderNamespace: provideres[0].Id,
+			ProviderNamespace: providerNamespace.Id,
 			Enabled:           v.Enabled,
 		}
 
@@ -259,8 +267,8 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			return successfullyUpsertedRules, err
 		} else {
 			successfullyUpsertedRules = append(successfullyUpsertedRules, result.Rule)
-			fmt.Println(fmt.Sprintf("successfully uploaded %s/%s/%s",
-				payload.Namespace, payload.GroupName, payload.Template))
+			fmt.Printf("successfully uploaded %s/%s/%s",
+				payload.Namespace, payload.GroupName, payload.Template)
 		}
 	}
 	return successfullyUpsertedRules, nil
