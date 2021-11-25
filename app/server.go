@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -19,7 +18,7 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	v1 "github.com/odpf/siren/api/handlers/v1"
-	pb "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/logger"
 	"github.com/odpf/siren/metric"
 	"golang.org/x/net/http2"
@@ -52,16 +51,9 @@ func RunServer(c *domain.Config) error {
 	if err != nil {
 		return err
 	}
-	cortexConfig := cortexClient.Config{
-		Address:         c.Cortex.Address,
-		UseLegacyRoutes: false,
-	}
-	client, err := cortexClient.New(cortexConfig)
-	if err != nil {
-		return nil
-	}
+
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, client, httpClient)
+	services, err := service.Init(store, c, httpClient)
 	if err != nil {
 		return err
 	}
@@ -86,7 +78,7 @@ func RunServer(c *domain.Config) error {
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
+	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -114,7 +106,7 @@ func RunServer(c *domain.Config) error {
 	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
 	defer runtimeCancel()
 
-	if err := pb.RegisterSirenServiceHandler(runtimeCtx, gwmux, grpcConn); err != nil {
+	if err := sirenv1beta1.RegisterSirenServiceHandler(runtimeCtx, gwmux, grpcConn); err != nil {
 		return err
 	}
 
@@ -153,16 +145,11 @@ func RunMigrations(c *domain.Config) error {
 		return err
 	}
 
-	cortexConfig := cortexClient.Config{
-		Address:         c.Cortex.Address,
-		UseLegacyRoutes: false,
-	}
-	client, err := cortexClient.New(cortexConfig)
 	if err != nil {
 		return nil
 	}
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, client, httpClient)
+	services, err := service.Init(store, c, httpClient)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestGRPCServer_ListRules(t *testing.T) {
-	dummyPayload := &sirenv1.ListRulesRequest{
+	dummyPayload := &sirenv1beta1.ListRulesRequest{
 		Name:              "foo",
 		Namespace:         "test",
 		GroupName:         "foo",
@@ -101,12 +101,12 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		},
 		ProviderNamespace: 1,
 	}
-	dummyReq := &sirenv1.UpdateRuleRequest{
+	dummyReq := &sirenv1beta1.UpdateRuleRequest{
 		Enabled:   true,
 		GroupName: "foo",
 		Namespace: "test",
 		Template:  "foo",
-		Variables: []*sirenv1.Variables{
+		Variables: []*sirenv1beta1.Variables{
 			{
 				Name:        "foo",
 				Type:        "int",
@@ -134,7 +134,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			Return(&dummyResult, nil).Once()
 		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		
+
 		assert.Equal(t, "foo", res.GetRule().GetName())
 		assert.Equal(t, false, res.GetRule().GetEnabled())
 		assert.Equal(t, "test", res.GetRule().GetNamespace())

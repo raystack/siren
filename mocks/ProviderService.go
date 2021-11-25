@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	"github.com/odpf/siren/domain"
+	domain "github.com/odpf/siren/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -72,13 +72,13 @@ func (_m *ProviderService) GetProvider(_a0 uint64) (*domain.Provider, error) {
 	return r0, r1
 }
 
-// ListProviders provides a mock function with given fields:
-func (_m *ProviderService) ListProviders() ([]*domain.Provider, error) {
-	ret := _m.Called()
+// ListProviders provides a mock function with given fields: _a0
+func (_m *ProviderService) ListProviders(_a0 map[string]interface{}) ([]*domain.Provider, error) {
+	ret := _m.Called(_a0)
 
 	var r0 []*domain.Provider
-	if rf, ok := ret.Get(0).(func() []*domain.Provider); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(map[string]interface{}) []*domain.Provider); ok {
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*domain.Provider)
@@ -86,8 +86,8 @@ func (_m *ProviderService) ListProviders() ([]*domain.Provider, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(map[string]interface{}) error); ok {
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}

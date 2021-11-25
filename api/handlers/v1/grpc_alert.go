@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"google.golang.org/grpc/codes"
@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1.ListAlertsRequest) (*sirenv1.Alerts, error) {
+func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.Alerts, error) {
 	resourceName := req.GetResourceName()
 	providerId := req.GetProviderId()
 	startTime := req.GetStartTime()
@@ -21,11 +21,11 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1.ListAlertsReques
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
-	res := &sirenv1.Alerts{
-		Alerts: make([]*sirenv1.Alert, 0),
+	res := &sirenv1beta1.Alerts{
+		Alerts: make([]*sirenv1beta1.Alert, 0),
 	}
 	for _, alert := range alerts {
-		item := &sirenv1.Alert{
+		item := &sirenv1beta1.Alert{
 			Id:           alert.Id,
 			ProviderId:   alert.ProviderId,
 			ResourceName: alert.ResourceName,
@@ -40,7 +40,7 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1.ListAlertsReques
 	return res, nil
 }
 
-func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1.CreateCortexAlertsRequest) (*sirenv1.Alerts, error) {
+func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.Alerts, error) {
 	alerts := domain.Alerts{Alerts: make([]domain.Alert, 0)}
 
 	badAlertCount := 0
@@ -70,9 +70,9 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1.CreateCo
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	result := &sirenv1.Alerts{Alerts: make([]*sirenv1.Alert, 0)}
+	result := &sirenv1beta1.Alerts{Alerts: make([]*sirenv1beta1.Alert, 0)}
 	for _, item := range createdAlerts {
-		alertHistoryItem := &sirenv1.Alert{
+		alertHistoryItem := &sirenv1beta1.Alert{
 			Id:           item.Id,
 			ProviderId:   item.ProviderId,
 			ResourceName: item.ResourceName,

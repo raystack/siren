@@ -49,13 +49,13 @@ func (_m *RuleRepositoryMock) Migrate() error {
 	return r0
 }
 
-// Upsert provides a mock function with given fields: _a0, _a1, _a2
-func (_m *RuleRepositoryMock) Upsert(_a0 *Rule, _a1 cortexCaller, _a2 domain.TemplatesService) (*Rule, error) {
-	ret := _m.Called(_a0, _a1, _a2)
+// Upsert provides a mock function with given fields: _a0, _a1
+func (_m *RuleRepositoryMock) Upsert(_a0 *Rule, _a1 domain.TemplatesService) (*Rule, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *Rule
-	if rf, ok := ret.Get(0).(func(*Rule, cortexCaller, domain.TemplatesService) *Rule); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(*Rule, domain.TemplatesService) *Rule); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*Rule)
@@ -63,8 +63,8 @@ func (_m *RuleRepositoryMock) Upsert(_a0 *Rule, _a1 cortexCaller, _a2 domain.Tem
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*Rule, cortexCaller, domain.TemplatesService) error); ok {
-		r1 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(1).(func(*Rule, domain.TemplatesService) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}

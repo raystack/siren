@@ -16,8 +16,8 @@ func NewService(db *gorm.DB) domain.ProviderService {
 	return &Service{NewRepository(db)}
 }
 
-func (service Service) ListProviders() ([]*domain.Provider, error) {
-	providers, err := service.repository.List()
+func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.Provider, error) {
+	providers, err := service.repository.List(filters)
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.List")
 	}
@@ -57,7 +57,7 @@ func (service Service) UpdateProvider(provider *domain.Provider) (*domain.Provid
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return newProvider.toDomain(), nil
 }
 

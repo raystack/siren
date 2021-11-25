@@ -6,15 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	rootCmd.AddCommand(&cobra.Command{
+func serveCmd() *cobra.Command {
+	return &cobra.Command{
 		Use:   "serve",
 		Short: "Run server",
-		RunE:  serve,
-	})
-}
-
-func serve(cmd *cobra.Command, args []string) error {
-	c := config.LoadConfig()
-	return app.RunServer(c)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c := config.LoadConfig()
+			return app.RunServer(c)
+		},
+	}
 }

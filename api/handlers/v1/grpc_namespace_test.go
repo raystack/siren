@@ -2,7 +2,7 @@ package v1
 
 import (
 	"context"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -109,7 +109,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		Credentials: credentials,
 		Labels:      labels,
 	}
-	request := &sirenv1.CreateNamespaceRequest{
+	request := &sirenv1beta1.CreateNamespaceRequest{
 		Provider:    2,
 		Name:        "foo",
 		Credentials: credentialsData,
@@ -206,7 +206,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 
 		mockedNamespaceService.On("GetNamespace", uint64(1)).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
-			&sirenv1.GetNamespaceRequest{Id: uint64(1)})
+			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, err)
 		assert.Equal(t, "foo", res.GetName())
 		assert.Equal(t, uint64(1), res.GetId())
@@ -224,7 +224,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
-			&sirenv1.GetNamespaceRequest{Id: uint64(1)})
+			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = namespace not found")
 	})
@@ -240,7 +240,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		mockedNamespaceService.On("GetNamespace", uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
-			&sirenv1.GetNamespaceRequest{Id: uint64(1)})
+			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, `rpc error: code = Internal desc = random error`)
 	})
@@ -265,7 +265,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
-			&sirenv1.GetNamespaceRequest{Id: uint64(1)})
+			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -286,7 +286,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 		Credentials: credentials,
 		Labels:      labels,
 	}
-	request := &sirenv1.UpdateNamespaceRequest{
+	request := &sirenv1beta1.UpdateNamespaceRequest{
 		Id:          1,
 		Provider:    2,
 		Name:        "foo",
@@ -363,7 +363,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 func TestGRPCServer_DeleteNamespace(t *testing.T) {
 	namespaceId := uint64(10)
-	dummyReq := &sirenv1.DeleteNamespaceRequest{
+	dummyReq := &sirenv1beta1.DeleteNamespaceRequest{
 		Id: uint64(10),
 	}
 

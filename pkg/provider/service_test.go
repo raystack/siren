@@ -41,23 +41,23 @@ func TestListProviders(t *testing.T) {
 				UpdatedAt:   time.Now(),
 			},
 		}
-		repositoryMock.On("List").Return(providers, nil).Once()
-		result, err := dummyService.ListProviders()
+		repositoryMock.On("List", map[string]interface{}{}).Return(providers, nil).Once()
+		result, err := dummyService.ListProviders(map[string]interface{}{})
 		assert.Nil(t, err)
 		assert.Equal(t, len(dummyProviders), len(result))
 		assert.Equal(t, dummyProviders[0].Name, result[0].Name)
-		repositoryMock.AssertCalled(t, "List")
+		repositoryMock.AssertCalled(t, "List", map[string]interface{}{})
 	})
 
 	t.Run("should call repository List method and return error if any", func(t *testing.T) {
 		repositoryMock := &MockProviderRepository{}
 		dummyService := Service{repository: repositoryMock}
-		repositoryMock.On("List").
+		repositoryMock.On("List", map[string]interface{}{}).
 			Return(nil, errors.New("random error")).Once()
-		result, err := dummyService.ListProviders()
+		result, err := dummyService.ListProviders(map[string]interface{}{})
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "service.repository.List: random error")
-		repositoryMock.AssertCalled(t, "List")
+		repositoryMock.AssertCalled(t, "List", map[string]interface{}{})
 	})
 }
 

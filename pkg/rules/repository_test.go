@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
+	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/stretchr/testify/mock"
@@ -13,6 +14,11 @@ import (
 	"testing"
 	"time"
 )
+
+var cortextConfig = cortexClient.Config{
+	Address:         "localhost:port",
+	UseLegacyRoutes: false,
+}
 
 // AnyTime is used to expect arbitrary time value
 type AnyTime struct{}
@@ -71,10 +77,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should insert rule merged with defaults and call cortex APIs", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -135,7 +146,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 	})
@@ -143,10 +154,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should update rule merged with defaults and call cortex APIs", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -213,7 +229,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 	})
@@ -221,10 +237,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should rollback update if cortex API call fails", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -286,7 +307,81 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
+		s.EqualError(err, "random error")
+		s.Nil(actualRule)
+		if err := s.dbmock.ExpectationsWereMet(); err != nil {
+			s.T().Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
+
+	s.Run("should rollback update if cortex client creation fails", func() {
+		mockClient := &cortexCallerMock{}
+		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return nil, errors.New("random error")
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
+		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
+		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
+		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
+		updateRuleQuery := regexp.QuoteMeta(`UPDATE "rules" SET "updated_at"=$1,"name"=$2,"namespace"=$3,"group_name"=$4,"template"=$5,"enabled"=$6,"variables"=$7,"provider_namespace"=$8 WHERE id = $9 AND "id" = $10`)
+		input := &Rule{
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Template:          "tmpl",
+			Enabled:           &truebool,
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
+		}
+		expectedRule := &Rule{
+			Id:                10,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
+			Name:              "siren_api_bar_foo_foo_bar_tmpl",
+			Namespace:         "foo",
+			GroupName:         "bar",
+			Enabled:           &truebool,
+			Template:          "tmpl",
+			ProviderNamespace: 1,
+			Variables:         `[{"name":"for","type":"string","value":"20m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`,
+		}
+		expectedNamespace := struct {
+			Urn  string
+			Purn string
+			Type string
+		}{
+			Urn:  "foo",
+			Purn: "bar",
+			Type: "cortex",
+		}
+
+		expectedNamespaceRow := sqlmock.NewRows([]string{"namespace_urn", "provider_urn", "provider_type"}).
+			AddRow(expectedNamespace.Urn, expectedNamespace.Purn, expectedNamespace.Type)
+		expectedRuleRowsInFirstQuery := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
+			AddRow(expectedRule.Id, expectedRule.CreatedAt,
+				expectedRule.UpdatedAt, expectedRule.Name, expectedRule.Namespace,
+				expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled,
+				expectedRule.Variables, expectedRule.ProviderNamespace)
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
+		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnRows(expectedRuleRowsInFirstQuery)
+		s.dbmock.ExpectExec(updateRuleQuery).WithArgs(AnyTime{}, expectedRule.Name, expectedRule.Namespace,
+			expectedRule.GroupName, expectedRule.Template, expectedRule.Enabled, expectedRule.Variables,
+			expectedRule.ProviderNamespace, expectedRule.Id, expectedRule.Id).WillReturnResult(sqlmock.NewResult(10, 1))
+		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
+		s.dbmock.ExpectRollback()
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -297,10 +392,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should rollback insert if cortex API call fails", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -361,7 +461,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -375,7 +475,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 
 		input := &Rule{
 			Namespace:         "foo",
@@ -389,7 +489,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(namespaceQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -404,7 +504,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 
 		input := &Rule{
 			Namespace:         "foo",
@@ -418,7 +518,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "provider not found")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -432,7 +532,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
@@ -485,7 +585,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "provider not supported")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -500,7 +600,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 
@@ -546,7 +646,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			expectedRule.ProviderNamespace).
 			WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -561,7 +661,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 
 		input := &Rule{
@@ -589,7 +689,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(namespaceQuery).WillReturnRows(expectedNamespaceRow)
 		s.dbmock.ExpectQuery(firstSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -603,7 +703,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		insertRuleQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
@@ -650,7 +750,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -664,7 +764,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -719,7 +819,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		mockClient.AssertNotCalled(s.T(), "CreateRuleGroup")
@@ -730,11 +830,16 @@ func (s *RepositoryTestSuite) TestUpsert() {
 
 	s.Run("should disable alerts if no error from cortex", func() {
 		mockClient := &cortexCallerMock{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(nil)
 		mockTemplateService := &mocks.TemplatesService{}
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -789,7 +894,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		mockClient.AssertCalled(s.T(), "DeleteRuleGroup", mock.Anything, "foo", "bar")
@@ -801,10 +906,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should rollback if delete rule group call fails", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("random error"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -859,7 +969,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -870,10 +980,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should handle deletion of non-existent rule group", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("requested resource not found"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -928,7 +1043,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -950,7 +1065,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
 
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -964,7 +1079,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return("", errors.New("random error"))
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -1024,7 +1139,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "random error")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1046,7 +1161,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			Variables:         `{}`,
 		}
 
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "json: cannot unmarshal object into Go value of type []domain.RuleVariable")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1069,7 +1184,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(badTemplate.Body, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(badTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -1129,7 +1244,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectRollback()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `abcd` into []rulefmt.RuleNode")
 		s.Nil(actualRule)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1140,10 +1255,15 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should store disabled alerts", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(nil)
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -1202,7 +1322,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 		if err := s.dbmock.ExpectationsWereMet(); err != nil {
@@ -1224,7 +1344,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 			ProviderNamespace: 1,
 			Variables:         `[{"name":"for", "type":"string", "value":"20m", "description":"test"}]`,
 		}
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.EqualError(err, "template not found")
 		s.Nil(actualRule)
 	})
@@ -1232,11 +1352,16 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	s.Run("should insert disabled rule and not call cortex APIs", func() {
 		mockClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
+		oldCortexClientCreator := cortexClientInstance
+		cortexClientInstance = func(string) (cortexCaller, error) {
+			return mockClient, nil
+		}
+		defer func() { cortexClientInstance = oldCortexClientCreator }()
 		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(dummyTemplateBody, nil)
 		mockTemplateService.On("GetByName", "tmpl").Return(expectedTemplate, nil)
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", "bar").Return(errors.New("requested resource not found"))
-		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
+		namespaceQuery := regexp.QuoteMeta(`SELECT namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host FROM "namespaces" RIGHT JOIN providers on providers.id = namespaces.provider_id WHERE namespaces.id = $1`)
 		firstSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		secondSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = 'siren_api_bar_foo_foo_bar_tmpl'`)
 		thirdSelectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE namespace = 'foo' AND group_name = 'bar' AND provider_namespace = '1'`)
@@ -1297,7 +1422,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(secondSelectRuleQuery).WillReturnRows(expectedRuleRows)
 		s.dbmock.ExpectQuery(thirdSelectRuleQuery).WillReturnRows(expectedRuleRowsInGroup)
 		s.dbmock.ExpectCommit()
-		actualRule, err := s.repository.Upsert(input, mockClient, mockTemplateService)
+		actualRule, err := s.repository.Upsert(input, mockTemplateService)
 		s.Equal(expectedRule, actualRule)
 		s.Nil(err)
 	})
