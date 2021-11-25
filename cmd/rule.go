@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"gopkg.in/yaml.v3"
 
@@ -18,6 +19,26 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 )
+
+type variables struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
+}
+type rule struct {
+	Template  string      `yaml:"template"`
+	Enabled   bool        `yaml:"enabled"`
+	Variables []variables `yaml:"variables"`
+}
+
+type ruleYaml struct {
+	ApiVersion        string          `yaml:"apiVersion"`
+	Entity            string          `yaml:"entity"`
+	Type              string          `yaml:"type"`
+	Namespace         string          `yaml:"namespace"`
+	Provider          string          `yaml:"provider"`
+	ProviderNamespace string          `yaml:"providerNamespace"`
+	Rules             map[string]rule `yaml:"rules"`
+}
 
 func rulesCmd(c *configuration) *cobra.Command {
 	cmd := &cobra.Command{
@@ -229,8 +250,27 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			ruleVariables = append(ruleVariables, v)
 		}
 
+		if yamlBody.Provider == "" {
+			return nil, errors.New("provider is required")
+		}
+
 		if yamlBody.ProviderNamespace == "" {
 			return nil, errors.New("provider namespace is required")
+		}
+
+		providersData, err := client.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{
+			Urn: yamlBody.Provider,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var provider *sirenv1beta1.Provider
+		providers := providersData.Providers
+		if len(providers) != 0 {
+			provider = providers[0]
+		} else {
+			return nil, errors.New("provider not found")
 		}
 
 		data, err := client.ListNamespaces(context.Background(), &emptypb.Empty{})
@@ -240,15 +280,14 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 
 		var providerNamespace *sirenv1beta1.Namespace
 		for _, namespace := range data.Namespaces {
-			if namespace.Urn == yamlBody.ProviderNamespace {
-				fmt.Println(namespace)
+			if namespace.Urn == yamlBody.ProviderNamespace && namespace.Provider == provider.Id {
 				providerNamespace = namespace
 				break
 			}
 		}
 
 		if providerNamespace == nil {
-			return nil, fmt.Errorf("no provider found with urn: %s", yamlBody.ProviderNamespace)
+			return nil, fmt.Errorf("no namespace found with urn: %s under provider %s", yamlBody.ProviderNamespace, provider.Name)
 		}
 
 		payload := &sirenv1beta1.UpdateRuleRequest{
