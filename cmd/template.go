@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
@@ -15,26 +16,6 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/spf13/cobra"
 )
-
-type variables struct {
-	Name  string `yaml:"name"`
-	Value string `yaml:"value"`
-}
-
-type rule struct {
-	Template  string      `yaml:"template"`
-	Enabled   bool        `yaml:"enabled"`
-	Variables []variables `yaml:"variables"`
-}
-
-type ruleYaml struct {
-	ApiVersion        string          `yaml:"apiVersion"`
-	Entity            string          `yaml:"entity"`
-	Type              string          `yaml:"type"`
-	Namespace         string          `yaml:"namespace"`
-	ProviderNamespace string          `yaml:"providerNamespace"`
-	Rules             map[string]rule `yaml:"rules"`
-}
 
 type templatedRule struct {
 	Record      string            `yaml:"record,omitempty"`
