@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"github.com/slack-go/slack"
@@ -21,14 +21,14 @@ const (
 	Http      string = "http"
 )
 
-func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1.ListReceiversResponse, error) {
+func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.container.ReceiverService.ListReceivers()
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	res := &sirenv1.ListReceiversResponse{
-		Receivers: make([]*sirenv1.Receiver, 0),
+	res := &sirenv1beta1.ListReceiversResponse{
+		Receivers: make([]*sirenv1beta1.Receiver, 0),
 	}
 	for _, receiver := range receivers {
 		configurations, err := structpb.NewStruct(receiver.Configurations)
@@ -36,7 +36,7 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 			return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 		}
 
-		item := &sirenv1.Receiver{
+		item := &sirenv1beta1.Receiver{
 			Id:             receiver.Id,
 			Name:           receiver.Name,
 			Type:           receiver.Type,
@@ -50,7 +50,7 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 	return res, nil
 }
 
-func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiverRequest) (*sirenv1.Receiver, error) {
+func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.Receiver, error) {
 	configurations := req.GetConfigurations().AsMap()
 
 	switch receiverType := req.GetType(); receiverType {
@@ -88,7 +88,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	return &sirenv1.Receiver{
+	return &sirenv1beta1.Receiver{
 		Id:             receiver.Id,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
@@ -99,7 +99,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1.CreateReceiv
 	}, nil
 }
 
-func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequest) (*sirenv1.Receiver, error) {
+func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.Receiver, error) {
 	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
 	if receiver == nil {
 		return nil, status.Errorf(codes.NotFound, "receiver not found")
@@ -118,7 +118,7 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	return &sirenv1.Receiver{
+	return &sirenv1beta1.Receiver{
 		Id:             receiver.Id,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
@@ -130,7 +130,7 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1.GetReceiverRequ
 	}, nil
 }
 
-func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiverRequest) (*sirenv1.Receiver, error) {
+func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateReceiverRequest) (*sirenv1beta1.Receiver, error) {
 	configurations := req.GetConfigurations().AsMap()
 
 	switch receiverType := req.GetType(); receiverType {
@@ -169,7 +169,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiv
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	return &sirenv1.Receiver{
+	return &sirenv1beta1.Receiver{
 		Id:             receiver.Id,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
@@ -180,7 +180,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1.UpdateReceiv
 	}, nil
 }
 
-func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1.DeleteReceiverRequest) (*emptypb.Empty, error) {
+func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*emptypb.Empty, error) {
 	err := s.container.ReceiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
 		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
@@ -189,8 +189,8 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1.DeleteReceiv
 	return &emptypb.Empty{}, nil
 }
 
-func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1.SendReceiverNotificationRequest) (*sirenv1.SendReceiverNotificationResponse, error) {
-	var res *sirenv1.SendReceiverNotificationResponse
+func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1beta1.SendReceiverNotificationRequest) (*sirenv1beta1.SendReceiverNotificationResponse, error) {
+	var res *sirenv1beta1.SendReceiverNotificationResponse
 	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
@@ -224,7 +224,7 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1.Se
 		if err != nil {
 			return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 		}
-		res = &sirenv1.SendReceiverNotificationResponse{
+		res = &sirenv1beta1.SendReceiverNotificationResponse{
 			Ok: result.OK,
 		}
 	default:

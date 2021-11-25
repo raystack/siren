@@ -42,7 +42,7 @@ func (s *RepositoryTestSuite) TearDownTest() {
 
 func (s *RepositoryTestSuite) TestList() {
 	s.Run("should get all providers", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from providers`)
+		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
 		credentials := make(StringInterfaceMap)
 		credentials["foo"] = "bar"
 		labels := make(StringStringMap)
@@ -67,16 +67,50 @@ func (s *RepositoryTestSuite) TestList() {
 				json.RawMessage(`{"foo": "bar"}`), provider.CreatedAt, provider.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
-		actualProviders, err := s.repository.List()
+		actualProviders, err := s.repository.List(map[string]interface{}{})
+		s.Equal(expectedProviders, actualProviders)
+		s.Nil(err)
+	})
+
+	s.Run("should get all providers by filters", func() {
+		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
+		credentials := make(StringInterfaceMap)
+		credentials["foo"] = "bar"
+		labels := make(StringStringMap)
+		labels["foo"] = "bar"
+
+		provider := &Provider{
+			Id:          1,
+			Host:        "foo",
+			Type:        "bar",
+			Urn:         "foo",
+			Name:        "foo",
+			Credentials: credentials,
+			Labels:      labels,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+		}
+		expectedProviders := []*Provider{provider}
+
+		expectedRows := sqlmock.
+			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
+			AddRow(provider.Id, provider.Host, provider.Type, provider.Urn, provider.Name, json.RawMessage(`{"foo": "bar"}`),
+				json.RawMessage(`{"foo": "bar"}`), provider.CreatedAt, provider.UpdatedAt)
+		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+
+		actualProviders, err := s.repository.List(map[string]interface{}{
+			"urn":  "foo",
+			"type": "bar",
+		})
 		s.Equal(expectedProviders, actualProviders)
 		s.Nil(err)
 	})
 
 	s.Run("should return error if any", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from providers`)
+		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
 
-		actualProviders, err := s.repository.List()
+		actualProviders, err := s.repository.List(map[string]interface{}{})
 		s.Nil(actualProviders)
 		s.EqualError(err, "random error")
 	})
@@ -415,7 +449,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			AnyTime{}, AnyTime{}, expectedProvider.Id, expectedProvider.Id).
 			WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New("random error"))
-		
+
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
 		s.EqualError(err, "random error")

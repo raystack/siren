@@ -13,9 +13,8 @@ var truebool = true
 func TestService_Upsert(t *testing.T) {
 	t.Run("should call repository Upsert method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
-		mockCortexClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
-		dummyService := Service{repository: repositoryMock, client: mockCortexClient, templateService: mockTemplateService}
+		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService}
 		dummyRule := &domain.Rule{
 			Id: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
 			Variables: []domain.RuleVariable{{
@@ -31,18 +30,17 @@ func TestService_Upsert(t *testing.T) {
 			Variables:         `[{"name":"test-name","type":"test-type","value":"test-value","description":"test-description"}]`,
 			ProviderNamespace: 1,
 		}
-		repositoryMock.On("Upsert", modelRule, mockCortexClient, mockTemplateService).Return(modelRule, nil).Once()
+		repositoryMock.On("Upsert", modelRule, mockTemplateService).Return(modelRule, nil).Once()
 		result, err := dummyService.Upsert(dummyRule)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyRule, result)
-		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockCortexClient, mockTemplateService)
+		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockTemplateService)
 	})
 
 	t.Run("should call repository Upsert method and return error if any", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
-		mockCortexClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
-		dummyService := Service{repository: repositoryMock, client: mockCortexClient, templateService: mockTemplateService}
+		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService}
 		dummyRule := &domain.Rule{
 			Id: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
 			Variables: []domain.RuleVariable{{
@@ -58,19 +56,18 @@ func TestService_Upsert(t *testing.T) {
 			Variables:         `[{"name":"test-name","type":"test-type","value":"test-value","description":"test-description"}]`,
 			ProviderNamespace: 1,
 		}
-		repositoryMock.On("Upsert", modelRule, mockCortexClient, mockTemplateService).
+		repositoryMock.On("Upsert", modelRule, mockTemplateService).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.Upsert(dummyRule)
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "random error")
-		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockCortexClient, mockTemplateService)
+		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockTemplateService)
 	})
 
 	t.Run("should call repository Upsert method and return error if any", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
-		mockCortexClient := &cortexCallerMock{}
 		mockTemplateService := &mocks.TemplatesService{}
-		dummyService := Service{repository: repositoryMock, client: mockCortexClient, templateService: mockTemplateService}
+		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService}
 		dummyRule := &domain.Rule{
 			Id: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
 			Variables: []domain.RuleVariable{{
@@ -86,12 +83,12 @@ func TestService_Upsert(t *testing.T) {
 			Variables:         `[{"name":"test-name","type":"test-type","value":"test-value","description":"test-description"}]`,
 			ProviderNamespace: 1,
 		}
-		repositoryMock.On("Upsert", modelRule, mockCortexClient, mockTemplateService).
+		repositoryMock.On("Upsert", modelRule, mockTemplateService).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.Upsert(dummyRule)
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "random error")
-		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockCortexClient, mockTemplateService)
+		repositoryMock.AssertCalled(t, "Upsert", modelRule, mockTemplateService)
 	})
 }
 

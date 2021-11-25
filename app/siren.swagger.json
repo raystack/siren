@@ -20,7 +20,30 @@
     "application/json"
   ],
   "paths": {
-    "/alerts/cortex/{providerId}": {
+    "/ping": {
+      "get": {
+        "summary": "ping",
+        "operationId": "SirenService_Ping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1PingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Ping"
+        ]
+      }
+    },
+    "/v1beta1/alerts/cortex/{providerId}": {
       "post": {
         "summary": "create cortex alerts",
         "operationId": "SirenService_CreateCortexAlerts",
@@ -28,7 +51,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Alerts"
+              "$ref": "#/definitions/v1beta1Alerts"
             }
           },
           "default": {
@@ -56,7 +79,7 @@
                 "alerts": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/definitions/v1CortexAlert"
+                    "$ref": "#/definitions/v1beta1CortexAlert"
                   }
                 }
               }
@@ -68,7 +91,7 @@
         ]
       }
     },
-    "/alerts/{providerName}/{providerId}": {
+    "/v1beta1/alerts/{providerName}/{providerId}": {
       "get": {
         "summary": "list alerts",
         "operationId": "SirenService_ListAlerts",
@@ -76,7 +99,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Alerts"
+              "$ref": "#/definitions/v1beta1Alerts"
             }
           },
           "default": {
@@ -126,7 +149,7 @@
         ]
       }
     },
-    "/namespaces": {
+    "/v1beta1/namespaces": {
       "get": {
         "summary": "list namespaces",
         "operationId": "SirenService_ListNamespaces",
@@ -134,7 +157,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListNamespacesResponse"
+              "$ref": "#/definitions/v1beta1ListNamespacesResponse"
             }
           },
           "default": {
@@ -155,7 +178,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Namespace"
+              "$ref": "#/definitions/v1beta1Namespace"
             }
           },
           "default": {
@@ -171,7 +194,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateNamespaceRequest"
+              "$ref": "#/definitions/v1beta1CreateNamespaceRequest"
             }
           }
         ],
@@ -180,7 +203,7 @@
         ]
       }
     },
-    "/namespaces/{id}": {
+    "/v1beta1/namespaces/{id}": {
       "get": {
         "summary": "get a namespace",
         "operationId": "SirenService_GetNamespace",
@@ -188,7 +211,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Namespace"
+              "$ref": "#/definitions/v1beta1Namespace"
             }
           },
           "default": {
@@ -248,7 +271,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Namespace"
+              "$ref": "#/definitions/v1beta1Namespace"
             }
           },
           "default": {
@@ -298,14 +321,15 @@
         ]
       }
     },
-    "/oauth/slack/token": {
-      "post": {
-        "operationId": "SirenService_ExchangeCode",
+    "/v1beta1/providers": {
+      "get": {
+        "summary": "list providers",
+        "operationId": "SirenService_ListProviders",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ExchangeCodeResponse"
+              "$ref": "#/definitions/v1beta1ListProvidersResponse"
             }
           },
           "default": {
@@ -317,60 +341,18 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1ExchangeCodeRequest"
-            }
+            "name": "urn",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
-        "tags": [
-          "SirenService"
-        ]
-      }
-    },
-    "/ping": {
-      "get": {
-        "summary": "ping",
-        "operationId": "SirenService_Ping",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1PingResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Ping"
-        ]
-      }
-    },
-    "/providers": {
-      "get": {
-        "summary": "list providers",
-        "operationId": "SirenService_ListProviders",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListProvidersResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
         "tags": [
           "Provider"
         ]
@@ -382,7 +364,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Provider"
+              "$ref": "#/definitions/v1beta1Provider"
             }
           },
           "default": {
@@ -398,7 +380,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateProviderRequest"
+              "$ref": "#/definitions/v1beta1CreateProviderRequest"
             }
           }
         ],
@@ -407,7 +389,7 @@
         ]
       }
     },
-    "/providers/{id}": {
+    "/v1beta1/providers/{id}": {
       "get": {
         "summary": "get a provider",
         "operationId": "SirenService_GetProvider",
@@ -415,7 +397,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Provider"
+              "$ref": "#/definitions/v1beta1Provider"
             }
           },
           "default": {
@@ -475,7 +457,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Provider"
+              "$ref": "#/definitions/v1beta1Provider"
             }
           },
           "default": {
@@ -527,7 +509,7 @@
         ]
       }
     },
-    "/receivers": {
+    "/v1beta1/receivers": {
       "get": {
         "summary": "list receivers",
         "operationId": "SirenService_ListReceivers",
@@ -535,7 +517,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListReceiversResponse"
+              "$ref": "#/definitions/v1beta1ListReceiversResponse"
             }
           },
           "default": {
@@ -556,7 +538,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Receiver"
+              "$ref": "#/definitions/v1beta1Receiver"
             }
           },
           "default": {
@@ -572,7 +554,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1CreateReceiverRequest"
+              "$ref": "#/definitions/v1beta1CreateReceiverRequest"
             }
           }
         ],
@@ -581,7 +563,7 @@
         ]
       }
     },
-    "/receivers/{id}": {
+    "/v1beta1/receivers/{id}": {
       "get": {
         "summary": "get a receiver",
         "operationId": "SirenService_GetReceiver",
@@ -589,7 +571,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Receiver"
+              "$ref": "#/definitions/v1beta1Receiver"
             }
           },
           "default": {
@@ -649,7 +631,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1Receiver"
+              "$ref": "#/definitions/v1beta1Receiver"
             }
           },
           "default": {
@@ -698,7 +680,7 @@
         ]
       }
     },
-    "/receivers/{id}/send": {
+    "/v1beta1/receivers/{id}/send": {
       "post": {
         "summary": "send notification to receiver",
         "operationId": "SirenService_SendReceiverNotification",
@@ -706,7 +688,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1SendReceiverNotificationResponse"
+              "$ref": "#/definitions/v1beta1SendReceiverNotificationResponse"
             }
           },
           "default": {
@@ -743,7 +725,7 @@
         ]
       }
     },
-    "/rules": {
+    "/v1beta1/rules": {
       "get": {
         "summary": "list rules",
         "operationId": "SirenService_ListRules",
@@ -751,7 +733,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListRulesResponse"
+              "$ref": "#/definitions/v1beta1ListRulesResponse"
             }
           },
           "default": {
@@ -805,7 +787,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UpdateRuleResponse"
+              "$ref": "#/definitions/v1beta1UpdateRuleResponse"
             }
           },
           "default": {
@@ -821,7 +803,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpdateRuleRequest"
+              "$ref": "#/definitions/v1beta1UpdateRuleRequest"
             }
           }
         ],
@@ -830,114 +812,7 @@
         ]
       }
     },
-    "/slackworkspaces/{workspaceName}/channels": {
-      "get": {
-        "operationId": "SirenService_ListWorkspaceChannels",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListWorkspaceChannelsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "workspaceName",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SirenService"
-        ]
-      }
-    },
-    "/teams/{teamName}/credentials": {
-      "get": {
-        "operationId": "SirenService_GetAlertCredentials",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetAlertCredentialsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "teamName",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "SirenService"
-        ]
-      },
-      "put": {
-        "operationId": "SirenService_UpdateAlertCredentials",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateAlertCredentialsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "teamName",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "entity": {
-                  "type": "string"
-                },
-                "pagerdutyCredentials": {
-                  "type": "string"
-                },
-                "slackConfig": {
-                  "$ref": "#/definitions/v1SlackConfig"
-                }
-              }
-            }
-          }
-        ],
-        "tags": [
-          "SirenService"
-        ]
-      }
-    },
-    "/templates": {
+    "/v1beta1/templates": {
       "get": {
         "summary": "list templates",
         "operationId": "SirenService_ListTemplates",
@@ -945,7 +820,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListTemplatesResponse"
+              "$ref": "#/definitions/v1beta1ListTemplatesResponse"
             }
           },
           "default": {
@@ -974,7 +849,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1TemplateResponse"
+              "$ref": "#/definitions/v1beta1TemplateResponse"
             }
           },
           "default": {
@@ -990,7 +865,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpsertTemplateRequest"
+              "$ref": "#/definitions/v1beta1UpsertTemplateRequest"
             }
           }
         ],
@@ -999,7 +874,7 @@
         ]
       }
     },
-    "/templates/{name}": {
+    "/v1beta1/templates/{name}": {
       "get": {
         "summary": "get a template",
         "operationId": "SirenService_GetTemplateByName",
@@ -1007,7 +882,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1TemplateResponse"
+              "$ref": "#/definitions/v1beta1TemplateResponse"
             }
           },
           "default": {
@@ -1036,7 +911,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1DeleteTemplateResponse"
+              "$ref": "#/definitions/v1beta1DeleteTemplateResponse"
             }
           },
           "default": {
@@ -1059,7 +934,7 @@
         ]
       }
     },
-    "/templates/{name}/render": {
+    "/v1beta1/templates/{name}/render": {
       "post": {
         "summary": "render a template",
         "operationId": "SirenService_RenderTemplate",
@@ -1067,7 +942,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1RenderTemplateResponse"
+              "$ref": "#/definitions/v1beta1RenderTemplateResponse"
             }
           },
           "default": {
@@ -1163,7 +1038,7 @@
         }
       }
     },
-    "v1Alert": {
+    "v1beta1Alert": {
       "type": "object",
       "properties": {
         "id": {
@@ -1195,18 +1070,18 @@
         }
       }
     },
-    "v1Alerts": {
+    "v1beta1Alerts": {
       "type": "object",
       "properties": {
         "alerts": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Alert"
+            "$ref": "#/definitions/v1beta1Alert"
           }
         }
       }
     },
-    "v1Annotations": {
+    "v1beta1Annotations": {
       "type": "object",
       "properties": {
         "metricName": {
@@ -1223,14 +1098,14 @@
         }
       }
     },
-    "v1CortexAlert": {
+    "v1beta1CortexAlert": {
       "type": "object",
       "properties": {
         "annotations": {
-          "$ref": "#/definitions/v1Annotations"
+          "$ref": "#/definitions/v1beta1Annotations"
         },
         "labels": {
-          "$ref": "#/definitions/v1Labels"
+          "$ref": "#/definitions/v1beta1Labels"
         },
         "status": {
           "type": "string"
@@ -1241,7 +1116,7 @@
         }
       }
     },
-    "v1CreateNamespaceRequest": {
+    "v1beta1CreateNamespaceRequest": {
       "type": "object",
       "properties": {
         "name": {
@@ -1273,7 +1148,7 @@
         }
       }
     },
-    "v1CreateProviderRequest": {
+    "v1beta1CreateProviderRequest": {
       "type": "object",
       "properties": {
         "host": {
@@ -1299,7 +1174,7 @@
         }
       }
     },
-    "v1CreateReceiverRequest": {
+    "v1beta1CreateReceiverRequest": {
       "type": "object",
       "properties": {
         "name": {
@@ -1319,54 +1194,10 @@
         }
       }
     },
-    "v1Critical": {
-      "type": "object",
-      "properties": {
-        "channel": {
-          "type": "string"
-        }
-      }
-    },
-    "v1DeleteTemplateResponse": {
+    "v1beta1DeleteTemplateResponse": {
       "type": "object"
     },
-    "v1ExchangeCodeRequest": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "workspace": {
-          "type": "string"
-        }
-      }
-    },
-    "v1ExchangeCodeResponse": {
-      "type": "object",
-      "properties": {
-        "ok": {
-          "type": "boolean"
-        }
-      }
-    },
-    "v1GetAlertCredentialsResponse": {
-      "type": "object",
-      "properties": {
-        "entity": {
-          "type": "string"
-        },
-        "teamName": {
-          "type": "string"
-        },
-        "pagerdutyCredentials": {
-          "type": "string"
-        },
-        "slackConfig": {
-          "$ref": "#/definitions/v1SlackConfig"
-        }
-      }
-    },
-    "v1Labels": {
+    "v1beta1Labels": {
       "type": "object",
       "properties": {
         "severity": {
@@ -1374,73 +1205,62 @@
         }
       }
     },
-    "v1ListNamespacesResponse": {
+    "v1beta1ListNamespacesResponse": {
       "type": "object",
       "properties": {
         "namespaces": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Namespace"
+            "$ref": "#/definitions/v1beta1Namespace"
           }
         }
       }
     },
-    "v1ListProvidersResponse": {
+    "v1beta1ListProvidersResponse": {
       "type": "object",
       "properties": {
         "providers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Provider"
+            "$ref": "#/definitions/v1beta1Provider"
           }
         }
       }
     },
-    "v1ListReceiversResponse": {
+    "v1beta1ListReceiversResponse": {
       "type": "object",
       "properties": {
         "receivers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Receiver"
+            "$ref": "#/definitions/v1beta1Receiver"
           }
         }
       }
     },
-    "v1ListRulesResponse": {
+    "v1beta1ListRulesResponse": {
       "type": "object",
       "properties": {
         "rules": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Rule"
+            "$ref": "#/definitions/v1beta1Rule"
           }
         }
       }
     },
-    "v1ListTemplatesResponse": {
+    "v1beta1ListTemplatesResponse": {
       "type": "object",
       "properties": {
         "templates": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Template"
+            "$ref": "#/definitions/v1beta1Template"
           }
         }
       }
     },
-    "v1ListWorkspaceChannelsResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1SlackWorkspace"
-          }
-        }
-      }
-    },
-    "v1Namespace": {
+    "v1beta1Namespace": {
       "type": "object",
       "properties": {
         "id": {
@@ -1476,7 +1296,7 @@
         }
       }
     },
-    "v1PingResponse": {
+    "v1beta1PingResponse": {
       "type": "object",
       "properties": {
         "message": {
@@ -1484,7 +1304,7 @@
         }
       }
     },
-    "v1Provider": {
+    "v1beta1Provider": {
       "type": "object",
       "properties": {
         "id": {
@@ -1522,7 +1342,7 @@
         }
       }
     },
-    "v1Receiver": {
+    "v1beta1Receiver": {
       "type": "object",
       "properties": {
         "id": {
@@ -1557,7 +1377,7 @@
         }
       }
     },
-    "v1RenderTemplateResponse": {
+    "v1beta1RenderTemplateResponse": {
       "type": "object",
       "properties": {
         "body": {
@@ -1565,7 +1385,7 @@
         }
       }
     },
-    "v1Rule": {
+    "v1beta1Rule": {
       "type": "object",
       "properties": {
         "id": {
@@ -1590,7 +1410,7 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Variables"
+            "$ref": "#/definitions/v1beta1Variables"
           }
         },
         "createdAt": {
@@ -1607,7 +1427,7 @@
         }
       }
     },
-    "v1SendReceiverNotificationResponse": {
+    "v1beta1SendReceiverNotificationResponse": {
       "type": "object",
       "properties": {
         "ok": {
@@ -1615,29 +1435,7 @@
         }
       }
     },
-    "v1SlackConfig": {
-      "type": "object",
-      "properties": {
-        "critical": {
-          "$ref": "#/definitions/v1Critical"
-        },
-        "warning": {
-          "$ref": "#/definitions/v1Warning"
-        }
-      }
-    },
-    "v1SlackWorkspace": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "v1Template": {
+    "v1beta1Template": {
       "type": "object",
       "properties": {
         "id": {
@@ -1667,20 +1465,20 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1TemplateVariables"
+            "$ref": "#/definitions/v1beta1TemplateVariables"
           }
         }
       }
     },
-    "v1TemplateResponse": {
+    "v1beta1TemplateResponse": {
       "type": "object",
       "properties": {
         "template": {
-          "$ref": "#/definitions/v1Template"
+          "$ref": "#/definitions/v1beta1Template"
         }
       }
     },
-    "v1TemplateVariables": {
+    "v1beta1TemplateVariables": {
       "type": "object",
       "properties": {
         "name": {
@@ -1697,10 +1495,7 @@
         }
       }
     },
-    "v1UpdateAlertCredentialsResponse": {
-      "type": "object"
-    },
-    "v1UpdateRuleRequest": {
+    "v1beta1UpdateRuleRequest": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -1718,7 +1513,7 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Variables"
+            "$ref": "#/definitions/v1beta1Variables"
           }
         },
         "providerNamespace": {
@@ -1727,15 +1522,15 @@
         }
       }
     },
-    "v1UpdateRuleResponse": {
+    "v1beta1UpdateRuleResponse": {
       "type": "object",
       "properties": {
         "rule": {
-          "$ref": "#/definitions/v1Rule"
+          "$ref": "#/definitions/v1beta1Rule"
         }
       }
     },
-    "v1UpsertTemplateRequest": {
+    "v1beta1UpsertTemplateRequest": {
       "type": "object",
       "properties": {
         "id": {
@@ -1757,12 +1552,12 @@
         "variables": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1TemplateVariables"
+            "$ref": "#/definitions/v1beta1TemplateVariables"
           }
         }
       }
     },
-    "v1Variables": {
+    "v1beta1Variables": {
       "type": "object",
       "properties": {
         "name": {
@@ -1775,14 +1570,6 @@
           "type": "string"
         },
         "description": {
-          "type": "string"
-        }
-      }
-    },
-    "v1Warning": {
-      "type": "object",
-      "properties": {
-        "channel": {
           "type": "string"
         }
       }

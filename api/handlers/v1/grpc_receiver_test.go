@@ -3,7 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
-	sirenv1 "github.com/odpf/siren/api/proto/odpf/siren/v1"
+	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
@@ -114,7 +114,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	labels["foo"] = "bar"
 
 	configurationsData, _ := structpb.NewStruct(configurations)
-	dummyReq := &sirenv1.CreateReceiverRequest{
+	dummyReq := &sirenv1beta1.CreateReceiverRequest{
 		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
@@ -165,7 +165,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "pagerduty",
 			Labels:         labels,
@@ -202,7 +202,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "http",
 			Labels:         labels,
@@ -234,7 +234,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		slackConfigurations["auth_code"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -260,7 +260,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		slackConfigurations["auth_code"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -286,7 +286,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		slackConfigurations["client_secret"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -309,7 +309,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "pagerduty",
 			Labels:         labels,
@@ -332,7 +332,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "http",
 			Labels:         labels,
@@ -372,7 +372,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
-		dummyReq := &sirenv1.CreateReceiverRequest{
+		dummyReq := &sirenv1beta1.CreateReceiverRequest{
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -418,7 +418,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	labels["foo"] = "bar"
 
 	receiverId := uint64(1)
-	dummyReq := &sirenv1.GetReceiverRequest{
+	dummyReq := &sirenv1beta1.GetReceiverRequest{
 		Id: 1,
 	}
 	payload := &domain.Receiver{
@@ -546,7 +546,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	labels["foo"] = "bar"
 
 	configurationsData, _ := structpb.NewStruct(configurations)
-	dummyReq := &sirenv1.UpdateReceiverRequest{
+	dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
@@ -592,7 +592,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		slackConfigurations["auth_code"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -618,7 +618,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		slackConfigurations["auth_code"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -644,7 +644,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		slackConfigurations["client_secret"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -670,7 +670,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		slackConfigurations["client_secret"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "pagerduty",
 			Labels:         labels,
@@ -696,7 +696,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		slackConfigurations["client_secret"] = "foo"
 
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "http",
 			Labels:         labels,
@@ -719,7 +719,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
-		dummyReq := &sirenv1.UpdateReceiverRequest{
+		dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -776,7 +776,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 func TestGRPCServer_DeleteReceiver(t *testing.T) {
 	providerId := uint64(10)
-	dummyReq := &sirenv1.DeleteReceiverRequest{
+	dummyReq := &sirenv1beta1.DeleteReceiverRequest{
 		Id: uint64(10),
 	}
 
@@ -864,10 +864,10 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
-				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1beta1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1beta1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",
@@ -937,10 +937,10 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
-				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1beta1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1beta1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",
@@ -971,10 +971,10 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			logger: zaptest.NewLogger(t),
 		}
 
-		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
 			Id: 1,
-			Data: &sirenv1.SendReceiverNotificationRequest_Slack{
-				Slack: &sirenv1.SendReceiverNotificationRequest_SlackPayload{
+			Data: &sirenv1beta1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1beta1.SendReceiverNotificationRequest_SlackPayload{
 					ReceiverName: "foo",
 					ReceiverType: "channel",
 					Message:      "bar",
@@ -1040,7 +1040,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			Configurations: configurations,
 		}
 
-		dummyReq := &sirenv1.SendReceiverNotificationRequest{
+		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
 			Id:   1,
 			Data: nil,
 		}

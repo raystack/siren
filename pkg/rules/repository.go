@@ -27,6 +27,33 @@ type variable struct {
 type Variables struct {
 	Variables []variable `json:"variables"`
 }
+type RuleResponse struct {
+	NamespaceUrn string
+	ProviderUrn  string
+	ProviderType string
+	ProviderHost string
+}
+
+type cortexCaller interface {
+	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
+	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
+	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
+	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
+}
+
+func newCortexClient(host string) (cortexCaller, error) {
+	cortexConfig := cortexClient.Config{
+		Address:         host,
+		UseLegacyRoutes: false,
+	}
+
+	client, err := cortexClient.New(cortexConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
 
 // Repository talks to the store to read or insert data
 type Repository struct {
@@ -117,7 +144,10 @@ func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVar
 	return finalRuleVariables
 }
 
-func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService domain.TemplatesService) (*Rule, error) {
+var cortexClientInstance = newCortexClient
+
+func (r Repository) Upsert(rule *Rule, templatesService domain.TemplatesService) (*Rule, error) {
+
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix,
 		rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
@@ -142,16 +172,12 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 	if err != nil {
 		return nil, err
 	}
-	
+
 	rule.Variables = string(jsonBytes)
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		var data struct {
-			NamespaceUrn string
-			ProviderUrn  string
-			ProviderType string
-		}
+		var data RuleResponse
 		result := r.db.Table("namespaces").
-			Select("namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type").
+			Select("namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host").
 			Joins("RIGHT JOIN providers on providers.id = namespaces.provider_id").
 			Where("namespaces.id = ?", rule.ProviderNamespace).
 			Find(&data)
@@ -164,7 +190,6 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 
 		rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, data.ProviderUrn, data.NamespaceUrn,
 			rule.Namespace, rule.GroupName, rule.Template)
-
 		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
 		if result.Error != nil {
 			return result.Error
@@ -184,6 +209,11 @@ func (r Repository) Upsert(rule *Rule, client cortexCaller, templatesService dom
 		}
 
 		if data.ProviderType == "cortex" {
+			client, err := cortexClientInstance(data.ProviderHost)
+			if err != nil {
+				return err
+			}
+
 			result = tx.Where(fmt.Sprintf("namespace = '%s' AND group_name = '%s' AND provider_namespace = '%d'",
 				rule.Namespace, rule.GroupName, rule.ProviderNamespace)).Find(&rulesWithinGroup)
 			if result.Error != nil {
