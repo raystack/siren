@@ -4,6 +4,7 @@ import (
 	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
+	"github.com/odpf/siren/pkg/subscription"
 	"net/http"
 
 	"github.com/odpf/siren/domain"
@@ -25,6 +26,7 @@ type Container struct {
 	ProviderService     domain.ProviderService
 	NamespaceService    domain.NamespaceService
 	ReceiverService     domain.ReceiverService
+	SubscriptionService domain.SubscriptionService
 }
 
 func Init(db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
@@ -46,6 +48,10 @@ func Init(db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, e
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
+	subscriptionService, err := subscription.NewService(db, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create subscriptions service")
+	}
 
 	return &Container{
 		TemplatesService:    templatesService,
@@ -55,9 +61,10 @@ func Init(db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, e
 		NotifierServices: domain.NotifierServices{
 			Slack: slackNotifierService,
 		},
-		ProviderService:  providerService,
-		NamespaceService: namespaceService,
-		ReceiverService:  receiverService,
+		ProviderService:     providerService,
+		NamespaceService:    namespaceService,
+		ReceiverService:     receiverService,
+		SubscriptionService: subscriptionService,
 	}, nil
 }
 
@@ -87,6 +94,10 @@ func (container *Container) MigrateAll(db *gorm.DB) error {
 		return err
 	}
 	err = container.ReceiverService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = container.SubscriptionService.Migrate()
 	if err != nil {
 		return err
 	}

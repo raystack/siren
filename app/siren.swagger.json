@@ -812,6 +812,181 @@
         ]
       }
     },
+    "/v1beta1/subscriptions": {
+      "get": {
+        "summary": "List subscriptions",
+        "operationId": "SirenService_ListSubscriptions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1ListSubscriptionsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Subscription"
+        ]
+      },
+      "post": {
+        "summary": "Create a subscription",
+        "operationId": "SirenService_CreateSubscription",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1Subscription"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1beta1CreateSubscriptionRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Subscription"
+        ]
+      }
+    },
+    "/v1beta1/subscriptions/{id}": {
+      "get": {
+        "summary": "Get a subscription",
+        "operationId": "SirenService_GetSubscription",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1Subscription"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Subscription"
+        ]
+      },
+      "delete": {
+        "summary": "Delete a subscription",
+        "operationId": "SirenService_DeleteSubscription",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "Subscription"
+        ]
+      },
+      "put": {
+        "summary": "Update a subscription",
+        "operationId": "SirenService_UpdateSubscription",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1beta1Subscription"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "urn": {
+                  "type": "string"
+                },
+                "namespace": {
+                  "type": "string",
+                  "format": "uint64"
+                },
+                "receivers": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/v1beta1ReceiverMetadata"
+                  }
+                },
+                "match": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Subscription"
+        ]
+      }
+    },
     "/v1beta1/templates": {
       "get": {
         "summary": "list templates",
@@ -1194,6 +1369,30 @@
         }
       }
     },
+    "v1beta1CreateSubscriptionRequest": {
+      "type": "object",
+      "properties": {
+        "urn": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "receivers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1ReceiverMetadata"
+          }
+        },
+        "match": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1beta1DeleteTemplateResponse": {
       "type": "object"
     },
@@ -1245,6 +1444,17 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1beta1Rule"
+          }
+        }
+      }
+    },
+    "v1beta1ListSubscriptionsResponse": {
+      "type": "object",
+      "properties": {
+        "subscriptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1Subscription"
           }
         }
       }
@@ -1377,6 +1587,21 @@
         }
       }
     },
+    "v1beta1ReceiverMetadata": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "configuration": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1beta1RenderTemplateResponse": {
       "type": "object",
       "properties": {
@@ -1432,6 +1657,42 @@
       "properties": {
         "ok": {
           "type": "boolean"
+        }
+      }
+    },
+    "v1beta1Subscription": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "urn": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "receivers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1ReceiverMetadata"
+          }
+        },
+        "match": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
