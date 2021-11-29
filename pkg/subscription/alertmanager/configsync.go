@@ -39,7 +39,7 @@ type AlertmanagerClient struct {
 	helperTemplate string
 }
 
-func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
+func NewClient(c domain.CortexConfig) (Client, error) {
 	config := client.Config{
 		Address: c.Address,
 	}

@@ -80,11 +80,7 @@ func (s *GRPCServer) GetSubscription(_ context.Context, req *sirenv1beta1.GetSub
 		item := getReceiverMetadataFromDomainObject(&receiverMetadataItem)
 		receivers = append(receivers, &item)
 	}
-	if err != nil {
-		s.logger.Error("handler", zap.Error(err))
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-
+	
 	return &sirenv1beta1.Subscription{
 		Id:        subscription.Id,
 		Urn:       subscription.Urn,

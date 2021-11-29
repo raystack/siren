@@ -50,8 +50,7 @@ func (r Repository) addReceiversConfiguration(subscriptions []Subscription, rece
 					receiverItem.Configuration["url"] = val.(string)
 				}
 			} else {
-				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not 
-					supported via Siren inside Cortex`, receiverInfo.Type))
+				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not supported via Siren inside Cortex`, receiverInfo.Type))
 			}
 			enrichedReceiver := EnrichedReceiverMetadata{
 				Id:            receiverItem.Id,

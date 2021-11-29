@@ -43,7 +43,10 @@ func (r Repository) Create(sub *Subscription, namespaceService domain.NamespaceS
 		return r.syncInUpstreamCurrentSubscriptionsOfNamespace(tx, newSubscription.NamespaceId,
 			namespaceService, providerService, receiverService)
 	})
-	return newSubscription, createError
+	if createError != nil {
+		return nil, createError
+	}
+	return newSubscription, nil
 }
 
 func (r Repository) Get(id uint64) (*Subscription, error) {
@@ -83,6 +86,9 @@ func (r Repository) Update(sub *Subscription, namespaceService domain.NamespaceS
 		return r.syncInUpstreamCurrentSubscriptionsOfNamespace(tx, sub.NamespaceId, namespaceService,
 			providerService, receiverService)
 	})
+	if updateError != nil {
+		return nil, updateError
+	}
 	return &newSubscription, updateError
 }
 
@@ -115,6 +121,8 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
+var alertmanagerClientCreator = alertmanager.NewClient
+
 func (r Repository) syncInUpstreamCurrentSubscriptionsOfNamespace(tx *gorm.DB, namespaceId uint64, namespaceService domain.NamespaceService,
 	providerService domain.ProviderService, receiverService domain.ReceiverService) error {
 	// fetch all subscriptions in this namespace.
@@ -125,24 +133,24 @@ func (r Repository) syncInUpstreamCurrentSubscriptionsOfNamespace(tx *gorm.DB, n
 	// check provider type of the namespace
 	providerInfo, namespaceInfo, err := r.getProviderAndNamespaceInfoFromNamespaceId(namespaceId, namespaceService, providerService)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "r.getProviderAndNamespaceInfoFromNamespaceId")
 	}
 	subscriptionsInNamespaceEnrichedWithReceivers, err := r.addReceiversConfiguration(subscriptionsInNamespace, receiverService)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "r.addReceiversConfiguration")
 	}
 	// do upstream call to create subscriptions as per provider type
 	switch providerInfo.Type {
 	case "cortex":
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
-		newAMClient, err := alertmanager.NewClient(domain.CortexConfig{Address: providerInfo.Host})
+		newAMClient, err := alertmanagerClientCreator(domain.CortexConfig{Address: providerInfo.Host})
 		if err != nil {
-			return errors.Wrap(err, "failed to initialize alertmanager client")
+			return errors.Wrap(err, "alertmanagerClientCreator: ")
 		}
 		r.amClient = newAMClient
 		err = r.amClient.SyncConfig(amConfig, namespaceInfo.Urn)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "r.amClient.SyncConfig")
 		}
 	default:
 		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", providerInfo.Type))
