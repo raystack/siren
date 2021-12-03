@@ -17,15 +17,13 @@ func (r Repository) addReceiversConfiguration(subscriptions []Subscription, rece
 		enrichedReceivers := make([]EnrichedReceiverMetadata, 0)
 		for _, receiverItem := range item.Receiver {
 			var receiverInfo *domain.Receiver
-			found := false
 			for idx := range allReceivers {
 				if allReceivers[idx].Id == receiverItem.Id {
-					found = true
 					receiverInfo = allReceivers[idx]
 					break
 				}
 			}
-			if found != true {
+			if receiverInfo == nil {
 				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.Id))
 			}
 			//initialize the nil map using the make function
@@ -33,7 +31,8 @@ func (r Repository) addReceiversConfiguration(subscriptions []Subscription, rece
 			if receiverItem.Configuration == nil {
 				receiverItem.Configuration = make(map[string]string)
 			}
-			if receiverInfo.Type == "slack" {
+			switch receiverInfo.Type {
+			case "slack":
 				if _, ok := receiverItem.Configuration["channel_name"]; !ok {
 					return nil, errors.New(fmt.Sprintf(
 						"configuration.channel_name missing from receiver with id %d", receiverItem.Id))
@@ -41,15 +40,15 @@ func (r Repository) addReceiversConfiguration(subscriptions []Subscription, rece
 				if val, ok := receiverInfo.Configurations["token"]; ok {
 					receiverItem.Configuration["token"] = val.(string)
 				}
-			} else if receiverInfo.Type == "pagerduty" {
+			case "pagerduty":
 				if val, ok := receiverInfo.Configurations["service_key"]; ok {
 					receiverItem.Configuration["service_key"] = val.(string)
 				}
-			} else if receiverInfo.Type == "http" {
+			case "http":
 				if val, ok := receiverInfo.Configurations["url"]; ok {
 					receiverItem.Configuration["url"] = val.(string)
 				}
-			} else {
+			default:
 				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not supported via Siren inside Cortex`, receiverInfo.Type))
 			}
 			enrichedReceiver := EnrichedReceiverMetadata{
