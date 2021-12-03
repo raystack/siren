@@ -87,6 +87,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
       - owner
       - service_name
       - time_stamp
+	  - identifier
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 4h
