@@ -19,42 +19,27 @@ var (
 	configYamlString string
 )
 
-type SlackCredential struct {
-	Channel  string
+type AMReceiverConfig struct {
+	Receiver      string
+	Type          string
+	Match         map[string]string
+	Configuration map[string]string
 }
 
-type SlackConfig struct {
-	Critical SlackCredential
-	Warning  SlackCredential
-}
-
-type TeamCredentials struct {
-	PagerdutyCredential string
-	Slackcredentials    SlackConfig
-	Name                string
-}
-
-type EntityCredentials struct {
-	Entity string
-	Token  string
-	Teams  map[string]TeamCredentials
-}
-
-type AlertManagerConfig struct {
-	EntityCredentials EntityCredentials
-	AlertHistoryHost  string
+type AMConfig struct {
+	Receivers []AMReceiverConfig
 }
 
 type Client interface {
-	SyncConfig(credentials AlertManagerConfig) error
+	SyncConfig(AMConfig, string) error
 }
 
 type AlertmanagerClient struct {
-	CortextClient  client.CortexClient
+	CortexClient   client.CortexClient
 	helperTemplate string
 }
 
-func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
+func NewClient(c domain.CortexConfig) (Client, error) {
 	config := client.Config{
 		Address: c.Address,
 	}
@@ -67,12 +52,12 @@ func NewClient(c domain.CortexConfig) (AlertmanagerClient, error) {
 		return AlertmanagerClient{}, err
 	}
 	return AlertmanagerClient{
-		CortextClient:  *amClient,
+		CortexClient:   *amClient,
 		helperTemplate: helperTemplateString,
 	}, nil
 }
 
-func (am AlertmanagerClient) SyncConfig(config AlertManagerConfig) error {
+func (am AlertmanagerClient) SyncConfig(config AMConfig, tenant string) error {
 	cfg, err := generateAlertmanagerConfig(config)
 	if err != nil {
 		return err
@@ -81,15 +66,15 @@ func (am AlertmanagerClient) SyncConfig(config AlertManagerConfig) error {
 		"helper.tmpl": am.helperTemplate,
 	}
 
-	ctx := client.NewContextWithTenantId(context.Background(), config.EntityCredentials.Entity)
-	err = am.CortextClient.CreateAlertmanagerConfig(ctx, cfg, templates)
+	ctx := client.NewContextWithTenantId(context.Background(), tenant)
+	err = am.CortexClient.CreateAlertmanagerConfig(ctx, cfg, templates)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func generateAlertmanagerConfig(alertManagerConfig AlertManagerConfig) (string, error) {
+func generateAlertmanagerConfig(alertManagerConfig AMConfig) (string, error) {
 	delims := template.New("alertmanagerConfigTemplate").Delims("[[", "]]")
 	parse, err := delims.Parse(configYamlString)
 	if err != nil {

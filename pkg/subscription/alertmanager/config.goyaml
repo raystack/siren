@@ -1,0 +1,64 @@
+  templates:
+    - 'helper.tmpl'
+  global:
+    pagerduty_url: https://events.pagerduty.com/v2/enqueue
+    resolve_timeout: 5m
+    slack_api_url: https://slack.com/api/chat.postMessage
+  receivers:
+    - name: default
+  [[- range $key, $receiver := .Receivers -]]
+  [[if eq $receiver.Type "slack"]]
+    - name: [[$receiver.Type]]_[[$receiver.Receiver]]
+      slack_configs:
+        - channel: '[[index $receiver.Configuration "channel_name"]]'
+          http_config:
+            bearer_token: '[[index $receiver.Configuration "token"]]'
+          icon_emoji: ':eagle:'
+          link_names: false
+          send_resolved: true
+          color: '{{ template "slack.color" . }}'
+          title: ''
+          pretext: '{{template "slack.pretext" . }}'
+          text: '{{ template "slack.body" . }}'
+          actions:
+            - type: button
+              text: 'Runbook :books:'
+              url: '{{template "slack.runbook" . }}'
+            - type: button
+              text: 'Dashboard :bar_chart:'
+              url: '{{template "slack.dashboard" . }}'
+  [[- end -]]
+  [[- if eq $receiver.Type "pagerduty"]]
+    - name: [[$receiver.Type]]_[[$receiver.Receiver]]
+      pagerduty_configs:
+        - service_key: '[[index $receiver.Configuration "service_key"]]'
+  [[- end -]]
+  [[- if eq $receiver.Type "http"]]
+    - name: [[$receiver.Type]]_[[$receiver.Receiver]]
+      webhook_configs:
+        - url: '[[index $receiver.Configuration "url"]]'
+  [[- end -]]
+[[- end]]
+  route:
+    group_by:
+      - alertname
+      - severity
+      - owner
+      - service_name
+      - time_stamp
+      - identifier
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+    receiver: default
+    routes:
+    [[- range $key, $receiver := .Receivers]]
+      - receiver: [[$receiver.Type]]_[[$receiver.Receiver]]
+      [[- if gt (len $receiver.Match) 0 ]]
+        match:
+        [[- range $key, $value := $receiver.Match ]]
+          [[ $key ]]: [[ $value ]]
+        [[- end]]
+      [[- end ]]
+        continue: true
+    [[- end -]]
