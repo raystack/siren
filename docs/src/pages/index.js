@@ -104,7 +104,7 @@ export default function Home() {
         <Container className="textSection wrapper" background="light">
           <h1>Trusted by</h1>
           <p>
-            Optimus was originally created for the Gojek data processing platform,
+            Siren was originally created for the Gojek data processing platform,
             and it has been used, adapted and improved by other teams internally and externally.
           </p>
           <GridBlock className="logos"
