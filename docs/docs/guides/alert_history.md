@@ -15,13 +15,13 @@ Alertmanager config would look like:
 receivers:
   - name: alert_history
     webhook_configs:
-      - url: 'http://my.siren.io/history'
+      - url: "http://my.siren.io/history"
 ```
 
 After this, as soon as any alert is sent by Alertmanager to slack or pagerduty, it will be sent to Siren for storage
 purpose.
 
-![Siren Alert History](../assets/alerthistory.jpg)
+![Siren Alert History](/img/alerthistory.jpg)
 
 To use this feature, you can configure your templates with proper annotations to identify:
 
@@ -85,7 +85,6 @@ annotations:
   template: CPU
   metricName: cpu_usage_user
   metricValue: { { $labels.cpu_usage_user } }
-
 ```
 
 The keys are pretty obvious to match with what was described in bullets points in the introduction above.
