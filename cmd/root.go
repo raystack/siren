@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/MakeNowJust/heredoc"
 	"os"
+
+	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 
 	"github.com/spf13/cobra"
 )
@@ -11,14 +13,9 @@ import (
 // Execute runs the command line interface
 func Execute() {
 	rootCmd := &cobra.Command{
-		Use:   "siren <command> <subcommand> [flags]",
-		Short: "siren",
-		Long: heredoc.Doc(`
-			Siren.
-
-			Siren provides alerting on metrics of your applications using Cortex metrics
-			in a simple DIY configuration. With Siren, you can define templates(using go templates), and 
-			create/edit/enable/disable prometheus rules on demand.`),
+		Use:           "siren <command> <subcommand> [flags]",
+		Short:         "siren",
+		Long:          "Work seemlessly with your observability stack.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Annotations: map[string]string{
@@ -37,6 +34,8 @@ func Execute() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	cmdx.SetHelp(rootCmd)
 
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(serveCmd())
