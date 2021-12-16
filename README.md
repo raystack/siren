@@ -9,7 +9,7 @@ DIY configuration. With Siren, you can define templates(using go templates stand
 prometheus rules on demand. It also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated
 with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
-<p align="center"><img src="./docs/assets/overview.svg" /></p>
+<p align="center"><img src="./docs/static/img/assets/overview.svg" /></p>
 
 ## Key Features
 
@@ -33,22 +33,22 @@ To know more, follow the detailed [documentation](docs)
 
 Explore the following resources to get started with Siren:
 
-* [Guides](docs/guides/overview.md) provides guidance on usage.
-* [Concepts](docs/concepts/overview.md) describes all important Siren concepts including system architecture.
-* [Reference](docs/reference) contains the details about configurations and other aspects of Siren.
-* [Contribute](docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
+- [Guides](docs/guides/overview.md) provides guidance on usage.
+- [Concepts](docs/concepts/overview.md) describes all important Siren concepts including system architecture.
+- [Reference](docs/reference) contains the details about configurations and other aspects of Siren.
+- [Contribute](docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
 
 ## Run with Kubernetes
 
-* Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
+- Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
 
 ## Running locally
 
 Siren requires the following dependencies:
 
-* Docker
-* Golang (version 1.16 or above)
-* Git
+- Docker
+- Golang (version 1.16 or above)
+- Git
 
 Run the application dependencies using Docker:
 
