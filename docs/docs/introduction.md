@@ -27,7 +27,7 @@ with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
 Explore the following resources to get started with Siren:
 
-- [Guides](docs/guides/overview.md) provides guidance on usage.
-- [Concepts](docs/concepts/overview.md) describes all important Siren concepts including system architecture.
-- [Reference](docs/reference) contains the details about configurations and other aspects of Siren.
-- [Contribute](docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
+- [Guides](./guides/overview.md) provides guidance on usage.
+- [Concepts](./concepts/overview.md) describes all important Siren concepts including system architecture.
+- [Reference](./reference/configuration.md) contains the details about configurations and other aspects of Siren.
+- [Contribute](./contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.

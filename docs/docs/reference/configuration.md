@@ -37,7 +37,7 @@ This will run the service on port 9999 instead of the default 8080
 
 ### Using a yaml file
 
-For default values and the structure of the yaml file please check file - [config.yaml.example](config.yaml.example)
+For default values and the structure of the yaml file please check file - `config.yaml.example`
 
 Usage example:
 

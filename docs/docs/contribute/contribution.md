@@ -3,7 +3,7 @@
 The following is a set of guidelines for contributing to Siren. These are mostly guidelines, not rules. Use your best
 judgment, and feel free to propose changes to this document in a pull request. Here are some important resources:
 
-- [Concepts](/concepts/overview) section will explain you about Siren architecture,
+- [Concepts](../concepts/overview) section will explain you about Siren architecture,
 - Our [roadmap](https://github.com/odpf/siren#readme) is the 10k foot view of where we're going, and
 - Github [issues](https://github.com/odpf/siren/issues) track the ongoing and reported issues.
 

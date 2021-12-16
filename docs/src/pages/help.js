@@ -23,8 +23,8 @@ export default function Home() {
                 title: 'Slack',
                 content: (
                   <div>
-                    The Optimus team has an open source slack workspace to discuss development and support.
-                    Most of the Optimus discussions happen in #siren channel.
+                    The Siren team has an open source slack workspace to discuss development and support.
+                    Most of the Siren discussions happen in #siren channel.
                     <br /><a href="https://odpf-community.slack.com/"> Join us on Slack </a>
                   </div>)
               },

@@ -9,7 +9,7 @@ DIY configuration. With Siren, you can define templates(using go templates stand
 prometheus rules on demand. It also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated
 with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
-<p align="center"><img src="./docs/static/img/assets/overview.svg" /></p>
+<p align="center"><img src="./docs/static/img/overview.svg" /></p>
 
 ## Key Features
 

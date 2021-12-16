@@ -5,14 +5,16 @@ The following topics will describe how to use Siren.
 ## CLI Interface
 
 1. Serve
-    - Runs the Server  `$ go run main.go serve`
+
+   - Runs the Server `$ go run main.go serve`
 
 2. Migrate
-    - Runs the DB Migrations `$ go run main.go migrate`
+
+   - Runs the DB Migrations `$ go run main.go migrate`
 
 3. Upload
-    - Parses a YAML File in specified format to upsert templates and rules(
-      alerts) `$ go run main.go upload fileName.yaml`. Read more about the Rules and Templates [here](../concepts).
+   - Parses a YAML File in specified format to upsert templates and rules(
+     alerts) `$ go run main.go upload fileName.yaml`. Read more about the Rules and Templates [here](./concepts/overview.md).
 
 ## Managing Templates
 
@@ -54,4 +56,4 @@ Refer [here](./monitoring.md) to for more details on monitoring siren.
 
 ## Troubleshooting
 
-Troubleshooting [guide](./troubleshooting.md). 
+Troubleshooting [guide](./troubleshooting.md).
