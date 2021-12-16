@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunksiren=self.webpackChunksiren||[]).push([[535],{5641:function(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Introducing Siren","permalink":"/siren/blog/introducing-siren"}]}')}}]);

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunksiren=self.webpackChunksiren||[]).push([[714],{1015:function(e){e.exports=JSON.parse('{"permalink":"/siren/blog","page":1,"postsPerPage":10,"totalPages":1,"totalCount":1,"previousPage":null,"nextPage":null,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

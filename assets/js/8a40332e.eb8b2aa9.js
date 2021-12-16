@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunksiren=self.webpackChunksiren||[]).push([[680],{4393:function(s){s.exports=JSON.parse('{"allTagsPath":"/siren/blog/tags","slug":"/siren/blog/tags/siren","name":"siren","count":1,"permalink":"/siren/blog/tags/siren"}')}}]);
