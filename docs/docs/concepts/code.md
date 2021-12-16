@@ -10,7 +10,7 @@ base, you are just in the right place!
 
 ## Bird's Eye View
 
-![Siren Architecture](../assets/siren.jpg)
+![Siren Architecture](/img/siren.jpg)
 
 **Input:** Siren takes user input either from HTTP APIs in request body or YAML files from CLI Commands.
 

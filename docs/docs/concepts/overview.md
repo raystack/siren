@@ -11,7 +11,7 @@ history in PostgresDB.
 
 The overall system architecture looks like:
 
-![Siren Architecture](../assets/siren.jpg)
+![Siren Architecture](/img/siren.jpg)
 
 Let's have a look at the major components:
 
