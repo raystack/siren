@@ -27,8 +27,7 @@ Let's have a look at the major components:
 
 - **Cortex Alertmanager:** The stored slack and pagerduty credentials per team are stored as alertmanager configs.
   Whenever there is an update in any team's slack or pagerduty credentials, a fresh copy of alertmanager config is
-  generated from the stored credentials and synced with Cortex Alertmanager. A predefined template of alertmanager
-  configuration can be found [here](../../pkg/alert/alertmanager/config.goyaml). This also involves setting up alert
+  generated from the stored credentials and synced with Cortex Alertmanager. This also involves setting up alert
   history webhook receiver which is used to capture triggered alert history.
 
 ### Schema Design

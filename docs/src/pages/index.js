@@ -33,18 +33,13 @@ export default function Home() {
   return (
     <Layout
       title={siteConfig.tagline}
-      description="Optimus is an easy-to-use, reliable, and performant workflow orchestrator
-        for data transformation, data modeling, pipelines, and data quality management.">
+      description="Siren provides an easy-to-use universal alert, notification, channels management framework for the entire observability infrastructure.">
       <Hero />
       <main>
         <Container className="textSection wrapper" background="light">
           <h1>Built for scale</h1>
           <p>
-            Optimus is an easy-to-use, reliable, and performant workflow orchestrator
-            for data transformation, data modeling, pipelines, and data quality management.
-            It enables data analysts and engineers to transform their data by writing simple SQL
-            queries and YAML configuration while Optimus handles dependency management, scheduling
-            and all other aspects of running transformation jobs at scale.
+            Siren provides an easy-to-use universal alert, notification, channels management framework for the entire observability infrastructure..
           </p>
           <GridBlock
             layout="threeColumn"

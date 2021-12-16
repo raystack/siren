@@ -19,34 +19,34 @@ There are the tables as of now as described below:
 
 **Templates table:**
 
-| Column     | Type                     | Description                                                                                            | Example                                                                                       |
-|------------|--------------------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| id         | bigint                   | Primary key                                                                                            | 1                                                                                             |
-| created_at | timestamp with time zone | Creation timestamp                                                                                     | `2021-03-05 12:37:56.905618+05:30`                                                            |
-| updated_at | timestamp with time zone | Last update timestamp                                                                                  | `2021-03-05 12:37:56.905618+05:30`                                                            |
-| name       | text                     | name of the template, should be unique                                                                 | `cpuHigh`                                                                                     |
-| tags       | text[]                   | Tags array represented which resource types can use this template                                      | `{kafka, airflow}`                                                                            |
-| body       | text                     | Alert or recording rule body                                                                           | See examples body in [here](./templates.md)                                                   |
-| variables  | jsonb                    | JSON variable listing all variables in the body with their  data type, description and default value.  | ``` [{"name": "for", "type": "string",  "default": "bar", "description": "group period"}] ``` |
+| Column     | Type                     | Description                                                                                          | Example                                                                                |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| id         | bigint                   | Primary key                                                                                          | 1                                                                                      |
+| created_at | timestamp with time zone | Creation timestamp                                                                                   | `2021-03-05 12:37:56.905618+05:30`                                                     |
+| updated_at | timestamp with time zone | Last update timestamp                                                                                | `2021-03-05 12:37:56.905618+05:30`                                                     |
+| name       | text                     | name of the template, should be unique                                                               | `cpuHigh`                                                                              |
+| tags       | text[]                   | Tags array represented which resource types can use this template                                    | `{kafka, airflow}`                                                                     |
+| body       | text                     | Alert or recording rule body                                                                         | See examples body in [here](../guides/templates.md)                                    |
+| variables  | jsonb                    | JSON variable listing all variables in the body with their data type, description and default value. | `[{"name": "for", "type": "string", "default": "bar", "description": "group period"}]` |
 
 **Rules Table:**
 
-| Column     | Type                     | Description                                                                                           | Example                                  |
-|------------|--------------------------|-------------------------------------------------------------------------------------------------------|------------------------------------------|
-| id         | bigint                   | Primary key                                                                                           | 1                                        |
-| created_at | timestamp with time zone | Creation timestamp                                                                                    | `2021-03-05 12:37:56.905618+05:30`       |
-| updated_at | timestamp with time zone | Last update timestamp                                                                                 | `2021-03-05 12:37:56.905618+05:30`       |
-| namespace  | text[]                   | the ruler namespace in which this rule should be created                                              | `kafka`                                  |
-| entity     | text                     | tenant name in which rule should be created                                                           | `odpf`                                   |
-| group_name | text                     | the ruler namespace in which this rule should be created                                              | `testGroup`                              |
-| status     | text                     | running status of alert (enabled or disabled)                                                         | `enabled`                                |
-| template   | text                     | the template which should be used for rule body                                                       | `CPUHigh`                                |
+| Column     | Type                     | Description                                                                                          | Example                                  |
+| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| id         | bigint                   | Primary key                                                                                          | 1                                        |
+| created_at | timestamp with time zone | Creation timestamp                                                                                   | `2021-03-05 12:37:56.905618+05:30`       |
+| updated_at | timestamp with time zone | Last update timestamp                                                                                | `2021-03-05 12:37:56.905618+05:30`       |
+| namespace  | text[]                   | the ruler namespace in which this rule should be created                                             | `kafka`                                  |
+| entity     | text                     | tenant name in which rule should be created                                                          | `odpf`                                   |
+| group_name | text                     | the ruler namespace in which this rule should be created                                             | `testGroup`                              |
+| status     | text                     | running status of alert (enabled or disabled)                                                        | `enabled`                                |
+| template   | text                     | the template which should be used for rule body                                                      | `CPUHigh`                                |
 | name       | text                     | name of the rule, must be unique, constructed as per `siren_api_entity_namespace_groupName_template` | `siren_api_odpf_kafka_testGroup_cpuHigh` |
 
 **Alerts table:**
 
 | Column       | Type                     | Description                                            | Example                            |
-|--------------|--------------------------|--------------------------------------------------------|------------------------------------|
+| ------------ | ------------------------ | ------------------------------------------------------ | ---------------------------------- |
 | id           | bigint                   | Primary key                                            | 1                                  |
 | created_at   | timestamp with time zone | Creation timestamp                                     | `2021-03-05 12:37:56.905618+05:30` |
 | updated_at   | timestamp with time zone | Last update timestamp                                  | `2021-03-05 12:37:56.905618+05:30` |
@@ -59,7 +59,7 @@ There are the tables as of now as described below:
 **Slack Credentials:**
 
 | Column       | Type                     | Description                                                                    | Example                                 |
-|--------------|--------------------------|--------------------------------------------------------------------------------|-----------------------------------------|
+| ------------ | ------------------------ | ------------------------------------------------------------------------------ | --------------------------------------- |
 | id           | bigint                   | Primary key                                                                    | 1                                       |
 | created_at   | timestamp with time zone | Creation timestamp                                                             | `2021-03-05 12:37:56.905618+05:30`      |
 | updated_at   | timestamp with time zone | Last update timestamp                                                          | `2021-03-05 12:37:56.905618+05:30`      |
@@ -74,7 +74,7 @@ There are the tables as of now as described below:
 **Pagerduty Credentials**
 
 | Column      | Type                     | Description                                     | Example                            |
-|-------------|--------------------------|-------------------------------------------------|------------------------------------|
+| ----------- | ------------------------ | ----------------------------------------------- | ---------------------------------- |
 | id          | bigint                   | Primary key                                     | 1                                  |
 | created_at  | timestamp with time zone | Creation timestamp                              | `2021-03-05 12:37:56.905618+05:30` |
 | updated_at  | timestamp with time zone | Last update timestamp                           | `2021-03-05 12:37:56.905618+05:30` |

@@ -123,4 +123,4 @@ The request body of Alertmanager POST call to configured webhook looks something
 labels and annotations c in the templates) above snippet.
 
 Siren POST `/history` API will parse the above payload and store in the database, which you can fetch via the GET APIs
-with proper filters of startTime, endTime. See the [swagger](../../api/handlers/swagger.yaml) file for more details.
+with proper filters of startTime, endTime.
