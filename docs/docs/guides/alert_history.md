@@ -1,29 +1,51 @@
 # Alert History Subscription
 
 Siren can store the alerts triggered via Cortex Alertmanager. Cortex alertmanager is configured to call Siren API, using
-a webhook receiver. This is done by adding a config in `config.yaml`
+a webhook receiver. This is done by adding a subscription using an HTTP Receiver on empty match condition, which will
+result in calling thus HTTP Receiver on all alerts
 
-```yaml
-siren_service:
-  host: http://my.siren.io
+Example Receiver
+
+```json
+{
+  "id": "1",
+  "name": "alert-history-receiver",
+  "type": "http",
+  "labels": {
+    "team": "siren-devs-alert-history"
+  },
+  "configurations": {
+    "url": "http://localhost:3000/v1beta1/alerts/cortex/3"
+  }
+}
 ```
 
-Alert credentials create/update call makes sure alert history webhook is added in Cortex Alertmanager config. The
-Alertmanager config would look like:
+Note that the url has `cortex/3` at the end, which means this will be able to parse alert history payloads from cortex
+type and store in DB by making it belong to provider id `3`.
 
-```yaml
-receivers:
-  - name: alert_history
-    webhook_configs:
-      - url: "http://my.siren.io/history"
+We will need the subscription as well, example:
+
+```json
+{
+  "id": "384",
+  "urn": "alert-history-subscription",
+  "namespace": "10",
+  "receivers": [
+    {
+      "id": "1"
+    }
+  ],
+  "match": {}
+}
 ```
 
 After this, as soon as any alert is sent by Alertmanager to slack or pagerduty, it will be sent to Siren for storage
 purpose.
 
-![Siren Alert History](/img/alerthistory.jpg)
+![Siren Alert History](../assets/alerthistory.jpg)
 
-To use this feature, you can configure your templates with proper annotations to identify:
+The parsing of payload from alert manager depends on a particular syntax. you can configure your templates to follow
+this syntax, with proper annotations to identify:
 
 - Which alert was triggered
 - Which resource this alert refers to
@@ -85,6 +107,7 @@ annotations:
   template: CPU
   metricName: cpu_usage_user
   metricValue: { { $labels.cpu_usage_user } }
+
 ```
 
 The keys are pretty obvious to match with what was described in bullets points in the introduction above.
@@ -96,7 +119,7 @@ parsed by Siren APIs, to be stored in the database.
 **Alert History Creation via API**
 
 ```text
-POST /history HTTP/1.1
+POST /v1beta1/alerts/cortex/1 HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
 Content-Length: 357
@@ -122,5 +145,5 @@ Content-Length: 357
 The request body of Alertmanager POST call to configured webhook looks something like (after you have followed the
 labels and annotations c in the templates) above snippet.
 
-Siren POST `/history` API will parse the above payload and store in the database, which you can fetch via the GET APIs
-with proper filters of startTime, endTime.
+The alerts API will parse the above payload and store in the database, which you can fetch via the GET APIs with proper
+filters of startTime, endTime. See the [swagger](../../api/handlers/swagger.yaml) file for more details.

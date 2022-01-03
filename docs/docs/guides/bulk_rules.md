@@ -1,10 +1,10 @@
 # Bulk Rule management
 
-For org wide use cases, a team who manages the alerting setup ends up managing a lot of rules often manually.
+For org wide use cases, teams end up managing a lot of rules, often manually.
 
-Siren CLI can be used to automate the rule creation, rule update, template update. By putting all the rules and
-templates YAML files in a version controlled repository, and uploading them using CI Jobs, you get predictable alerting
-state.
+Siren CLI can be used with some Gitops setup to automate the rule creation, rule update, template update. By putting all
+the rules and templates YAML files in a version controlled repository, and uploading them using CI Jobs, you get speed
+in managing hundreds and thousands of rules in a reliable and predictable manner.
 
 The benefits that one gets via this is:
 
@@ -62,7 +62,7 @@ The benefits that one gets via this is:
    echo "------------------------------------------------------------"
    
    for FILE in templates/*; do
-     eval ./siren upload $FILE
+     eval ./siren template upload $FILE
      echo $'\n'
    done
    
@@ -81,7 +81,8 @@ The benefits that one gets via this is:
     apiVersion: v2
     type: rule
     namespace: demo
-    entity: odpf
+    provider: production-cortex
+    providerNamespace: odpf
     rules:
       TestGroup:
         template: CPU
@@ -106,7 +107,7 @@ The benefits that one gets via this is:
    echo "------------------------------------------------------------"
    
    for FILE in rules/*; do
-     eval ./siren upload $FILE
+     eval ./siren rule upload $FILE
      echo $'\n'
    done
    ```

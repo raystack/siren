@@ -14,7 +14,6 @@
 | Config.NewRelicConfig.Enabled | newrelic.enabled | NEWRELIC_ENABLED | false                 | bool                                                                                                             |
 | Config.NewRelicConfig.License | newrelic.license | NEWRELIC_LICENSE |                       | 40 char NewRelic license key                                                                                     |
 | Config.NewRelicConfig.AppName | newrelic.appname | NEWRELIC_APPNAME | siren                 | string                                                                                                           |
-| Config.CortexConfig           | cortex.address   | CORTEX_ADDRESS   | http://localhost:8080 | valid HTTP(S) URL                                                                                                |
 
 ## How to configure
 

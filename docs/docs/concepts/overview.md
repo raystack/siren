@@ -11,7 +11,7 @@ history in PostgresDB.
 
 The overall system architecture looks like:
 
-![Siren Architecture](/img/siren.jpg)
+![Siren Architecture](../../static/img/siren_architecture.svg)
 
 Let's have a look at the major components:
 
@@ -27,14 +27,11 @@ Let's have a look at the major components:
 
 - **Cortex Alertmanager:** The stored slack and pagerduty credentials per team are stored as alertmanager configs.
   Whenever there is an update in any team's slack or pagerduty credentials, a fresh copy of alertmanager config is
-  generated from the stored credentials and synced with Cortex Alertmanager. This also involves setting up alert
+  generated from the stored credentials and synced with Cortex Alertmanager. A predefined template of alertmanager
+  configuration can be found [here](../../pkg/alert/alertmanager/config.goyaml). This also involves setting up alert
   history webhook receiver which is used to capture triggered alert history.
 
 ### Schema Design
 
 Siren uses PostgresDB to store rules, templates, triggered alerts history and alertmanager configuration. Read in
 further detail [here](./schema.md)
-
-### Code Structure
-
-Reference [this](./code.md) document to understand code structure in detail.
