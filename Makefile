@@ -1,36 +1,44 @@
 NAME="github.com/odpf/siren"
-VERSION=$(shell git describe --always --tags 2>/dev/null)
-COVERFILE="/tmp/siren.coverprofile"
+LAST_COMMIT := $(shell git rev-parse --short HEAD)
+LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
+APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
+PROTON_COMMIT := "f144868470c14d5a3f41f7af59a00c1c1e6a3eaa"
 
-.PHONY: all build clean
+.PHONY: all build test clean dist vet proto install
 
 all: build
 
-build:
-	go build -ldflags "-X main.Version=${VERSION}" ${NAME}
+build: ## Build the guardian binary
+	@echo " > building guardian version ${APP_VERSION}"
+	go build -ldflags "-X main.Version=${APP_VERSION}" ${NAME}
+	@echo " - build complete"
 
-clean:
-	rm -rf siren dist/
-
-test:
+test: ## Run the tests
 	go test ./... -coverprofile=coverage.out
 
-test-coverage: test
-	go tool cover -html=coverage.out
+coverage: ## Print code coverage
+	go test -race -coverprofile coverage.txt -covermode=atomic ./... & go tool cover -html=coverage.out
 
-dist:
-	@bash ./scripts/build.sh
-
-check-swagger:
-	which swagger || (GO111MODULE=off go get -u github.com/go-swagger/go-swagger/cmd/swagger)
-
-swagger: check-swagger
-	GO111MODULE=on go mod vendor  && swagger generate spec -o ./api/handlers/swagger.yaml --scan-models
-
-swagger-serve: check-swagger
-	swagger serve -F=swagger api/handlers/swagger.yaml
-
-generate-proto: ## regenerate protos
+proto: ## Generate the protobuf files
 	@echo " > generating protobuf from odpf/proton"
-	@buf generate --template buf.gen.yaml https://github.com/odpf/proton.git --path odpf/siren
+	@echo " > [info] make sure correct version of dependencies are installed using 'make install'"
+	@buf generate https://github.com/odpf/proton/archive/${PROTON_COMMIT}.zip#strip_components=1 --template buf.gen.yaml --path odpf/siren
 	@echo " > protobuf compilation finished"
+
+clean: ## Clean the build artifacts
+	rm -rf siren dist/
+
+install: ## install required dependencies
+	@echo "> installing dependencies"
+	go mod tidy
+	go get google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+	go get github.com/golang/protobuf/proto@v1.5.2
+	go get github.com/golang/protobuf/protoc-gen-go@v1.5.2
+	go get google.golang.org/grpc@v1.40.0
+	go get google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1.0
+	go get github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.5.0
+	go get github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.5.0
+	go get github.com/bufbuild/buf/cmd/buf@v0.54.1
+
+help: ## Display this help message
+	@cat $(MAKEFILE_LIST) | grep -e "^[a-zA-Z_\-]*: *.*## *" | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
