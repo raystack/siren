@@ -4,17 +4,35 @@ The following topics will describe how to use Siren.
 
 ## CLI Interface
 
-1. Serve
+```text
+Siren provides alerting on metrics of your applications using Cortex metrics
+in a simple DIY configuration. With Siren, you can define templates(using go templates), and
+create/edit/enable/disable prometheus rules on demand.
 
-   - Runs the Server `$ go run main.go serve`
+Available Commands:
+  alert       Manage alerts
+  completion  generate the autocompletion script for the specified shell
+  config      manage siren CLI configuration
+  help        Help about any command
+  migrate     Migrate database schema
+  namespace   Manage namespaces
+  provider    Manage providers
+  receiver    Manage receivers
+  rule        Manage rules
+  serve       Run server
+  template    Manage templates
+```
 
-2. Migrate
+## Managing providers and multi-tenancy
 
-   - Runs the DB Migrations `$ go run main.go migrate`
+Siren can be used define alerts and their routing configurations inside monitoring "providers". List of supported
+providers:
 
-3. Upload
-   - Parses a YAML File in specified format to upsert templates and rules(
-     alerts) `$ go run main.go upload fileName.yaml`. Read more about the Rules and Templates [here](./concepts/overview.md).
+- CortexMetrics.
+
+Support for other providers is also planned, feel free to contribute. Siren also respects the multi-tenancy provided by
+various monitoring providers using "namespaces". Namespace simply represents a tenant inside your provider. Learn in
+more detail [here](./providers.md).
 
 ## Managing Templates
 
@@ -31,20 +49,26 @@ more details [here](./rules.md)
 For org wide use cases, where teams need to manage multiple templates and rules Siren CLI can be highly useful. Think
 GitOps but for alerting. Learn in More detail [here](./bulk_rules.md)
 
-## Alerting Credentials Management
+## Receivers
 
-Siren stores slack and pagerduty credentials which can be used to configure Cortex Alertmanager to route alerts to Slack
-and Pagerduty. Learn in more detail [here](./alert_credentials.md).
+Receivers represent a notification medium, which can be used to define routing configuration in the monitoring
+providers, to control the behaviour of how your alerts are notified. Few examples: Slack receiver, HTTP receiver,
+Pagerduty receivers. You can use receivers to send notifications on demand as well as on certain matching conditions.
+Learn in more detail [here](./receivers.md).
+
+## Subscriptions
+
+Siren can be used to configure various monitoring providers to route your alerts to proper channels based on your match
+conditions. You define your own set of selectors and subscribe to alerts matching these selectors in the notification
+mediums of your choice. Learn in more detail [here](./subscriptions.md).
 
 ## Alert History Subscription
 
-Siren can configure Cortex Alertmanager to call Siren back allowing storage of triggered alerts. This can be used for
-auditing and analytics purposes. Learn in more detail [here](./alert_history.md).
+Siren can configure Cortex Alertmanager to call Siren back, allowing storage of triggered alerts. This can be used for
+auditing and analytics purposes. Alert History is simply a "subscription" defined using an "HTTP receiver" on all
+alerts.
 
-## Slack Notification
-
-Siren can send out notification to Slack channels and user DMs using a preconfigured Slack app. Learn in more
-detail [here](./slack_notifications.md).
+Learn in more detail [here](./alert_history.md).
 
 ## Deployment
 

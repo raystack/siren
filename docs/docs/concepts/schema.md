@@ -1,11 +1,18 @@
 # Schema Design
 
-Siren stores templates, rules and triggered alerts history in PostgresDB.
+Siren stores providers, namespaces, templates, rules and triggered alerts history, receivers and subscriptions in
+PostgresDB.
 
 We use GORM to handle database interactions and running migrations. GORM make it easier to create tables from Golang
 Struct declaration.
 
+![Siren Architecture](../../static/img/siren_schema.svg)
+
 There are the tables as of now as described below:
+
+- **providers:** Stores the info of monitoring providers.
+
+- **namespaces:** Stores the info of tenancy inside a monitoring provider
 
 - **alerts:** Stores the triggered alert history.
 
@@ -13,9 +20,35 @@ There are the tables as of now as described below:
 
 - **rules:** Stores the rules configured and their state and thresholds defined.
 
-- **slack_credentials:** Stores the slack webhook credentials which is put in alertmanager configs of a tenant
+- **receivers:** Stores the info of notification mediums e.g. Slack, HTTP Webhook, Pagerduty etc.
 
-- **pagerduty_credentials:** Stores the pagerduty credentials which is put in alertmanager configs of a tenant
+- **subscriptions:** Stores alert routing logic based on matching conditions
+
+**Providers table:**
+
+| Column      | Type                     | Description                                                        | Example                            |
+|-------------|--------------------------|--------------------------------------------------------------------|------------------------------------|
+| id          | bigint                   | Primary key                                                        | 1                                  |
+| created_at  | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30` |
+| updated_at  | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30` |
+| name        | text                     | name of the provider                                               | `localhost-cortex`                 |
+| urn         | text                     | urn of the provider, should be unique                              | `localhost-cortex`                 |
+| type        | text                     | Type of monitoring provider (cortex/influx etc)                    | `cortex`                           |
+| labels      | jsonb                    | generic kv pair that can be used for searching for appropriate row | `{"org":"odpf"}`                   |
+| credentials | jsonb                    | any configuration data for that provider e.g. auth                 | `{"bearer_token": "abcd"}`         |
+
+**Namespace table:**
+
+| Column      | Type                     | Description                                                        | Example                            |
+|-------------|--------------------------|--------------------------------------------------------------------|------------------------------------|
+| id          | bigint                   | Primary key                                                        | 1                                  |
+| created_at  | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30` |
+| updated_at  | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30` |
+| name        | text                     | name of the namespace                                              | `odpf`                             |
+| urn         | text                     | urn of the namespace, should be unique within the provider         | `odpf`                             |
+| labels      | jsonb                    | generic kv pair that can be used for searching for appropriate row | `{"org":"odpf"}`                   |
+| credentials | jsonb                    | any configuration data for that namespace e.g. auth                | `{"bearer_token": "abcd"}`         |
+| provider_id | int                      | foreign key of provider to which this namespace belongs            | 4                                  |
 
 **Templates table:**
 
@@ -31,54 +64,55 @@ There are the tables as of now as described below:
 
 **Rules Table:**
 
-| Column     | Type                     | Description                                                                                          | Example                                  |
-| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| id         | bigint                   | Primary key                                                                                          | 1                                        |
-| created_at | timestamp with time zone | Creation timestamp                                                                                   | `2021-03-05 12:37:56.905618+05:30`       |
-| updated_at | timestamp with time zone | Last update timestamp                                                                                | `2021-03-05 12:37:56.905618+05:30`       |
-| namespace  | text[]                   | the ruler namespace in which this rule should be created                                             | `kafka`                                  |
-| entity     | text                     | tenant name in which rule should be created                                                          | `odpf`                                   |
-| group_name | text                     | the ruler namespace in which this rule should be created                                             | `testGroup`                              |
-| status     | text                     | running status of alert (enabled or disabled)                                                        | `enabled`                                |
-| template   | text                     | the template which should be used for rule body                                                      | `CPUHigh`                                |
-| name       | text                     | name of the rule, must be unique, constructed as per `siren_api_entity_namespace_groupName_template` | `siren_api_odpf_kafka_testGroup_cpuHigh` |
+Rules belong to a provider namespace, identified using an optional namespace, optional group_name and mandatory template
+and variables and status.
+
+| Column            | Type                     | Description                                                                                                                                                                                     | Example                                                   |
+|-------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+| id                | bigint                   | Primary key                                                                                                                                                                                     | 1                                                         |
+| created_at        | timestamp with time zone | Creation timestamp                                                                                                                                                                              | `2021-03-05 12:37:56.905618+05:30`                        |
+| updated_at        | timestamp with time zone | Last update timestamp                                                                                                                                                                           | `2021-03-05 12:37:56.905618+05:30`                        |
+| namespace         | text                     | the [ruler namespace](https://cortexmetrics.io/docs/api/#get-rule-groups-by-namespace) in which this rule should be created(optional key for providers which doesn't have a need for namespace) | `kafka`                                                   |
+| group_name        | text                     | the ruler group in which this rule should be created, optional key for provider where doesn't apply                                                                                             | `testGroup`                                               |
+| providerNamespace | int                      | foreign key of namespace in which rule should be created                                                                                                                                        | 4                                                         |
+| enabled           | bool                     | running status of alert (true or false)                                                                                                                                                         | `true`                                                    |
+| template          | text                     | the template which should be used for rule body                                                                                                                                                 | `CPUHigh`                                                 |
+| name              | text                     | name of the rule, must be unique, constructed as per `siren_api_providerURN_namespaceURN_namespace_groupName_template`                                                                          | `siren_api_localhost-cortex_odpf_kafka_testGroup_cpuHigh` |
 
 **Alerts table:**
 
-| Column       | Type                     | Description                                            | Example                            |
-| ------------ | ------------------------ | ------------------------------------------------------ | ---------------------------------- |
-| id           | bigint                   | Primary key                                            | 1                                  |
-| created_at   | timestamp with time zone | Creation timestamp                                     | `2021-03-05 12:37:56.905618+05:30` |
-| updated_at   | timestamp with time zone | Last update timestamp                                  | `2021-03-05 12:37:56.905618+05:30` |
-| resource     | text                     | resource on which the alert was triggered              | `kafkaMachine1`                    |
-| template     | text                     | name of template which used for this rule              | `cpuHigh`                          |
-| metric_name  | text                     | the metric on which alert was triggered                | `cpu usgae %`                      |
-| metric_value | text                     | value of above metric on which the alert was triggered | `95%`                              |
-| level        | text                     | severity level of alert (CRITICAL, WARNING, RESOLVED)  | `CRITICAL`                         |
+| Column        | Type                     | Description                                            | Example                            |
+|---------------|--------------------------|--------------------------------------------------------|------------------------------------|
+| id            | bigint                   | Primary key                                            | 1                                  |
+| triggerd_at   | timestamp with time zone | Triggered timestamp                                    | `2021-03-05 12:37:56.905618+05:30` |
+| updated_at    | timestamp with time zone | Last update timestamp                                  | `2021-03-05 12:37:56.905618+05:30` |
+| created_at    | timestamp with time zone | Creation timestamp                                     | `2021-03-05 12:37:56.905618+05:30` |
+| resource_name | text                     | resource on which the alert was triggered              | `kafkaMachine1`                    |
+| rule          | text                     | name of template which used for this rule              | `cpuHigh`                          |
+| metric_name   | text                     | the metric on which alert was triggered                | `cpu usgae %`                      |
+| metric_value  | text                     | value of above metric on which the alert was triggered | `95%`                              |
+| severity      | text                     | severity level of alert (CRITICAL, WARNING, RESOLVED)  | `CRITICAL`                         |
 
-**Slack Credentials:**
+**Receivers:**
 
-| Column       | Type                     | Description                                                                    | Example                                 |
-| ------------ | ------------------------ | ------------------------------------------------------------------------------ | --------------------------------------- |
-| id           | bigint                   | Primary key                                                                    | 1                                       |
-| created_at   | timestamp with time zone | Creation timestamp                                                             | `2021-03-05 12:37:56.905618+05:30`      |
-| updated_at   | timestamp with time zone | Last update timestamp                                                          | `2021-03-05 12:37:56.905618+05:30`      |
-| deleted_at   | timestamp with time zone | Deletion time stamp                                                            | `2021-03-05 12:37:56.905618+05:30`      |
-| channel_name | text                     | name of slack channel                                                          | `siren-devs`                            |
-| username     | text                     | username which will send the alert message in the channel                      | `siren-bot`                             |
-| webhook      | text                     | preconfigured slack webhook                                                    | `https://hooks.slack.com/services/abcd` |
-| level        | text                     | which severity levels alerts should be sent to this channel(WARNING, CRITICAL) | `WARNING`                               |
-| team_name    | text                     | name of the team who owns this alert credential                                | `siren-devs`                            |
-| entity       | text                     | cortex tenant name                                                             | `odpf`                                  |
+| Column        | Type                     | Description                                                        | Example                                  |
+|---------------|--------------------------|--------------------------------------------------------------------|------------------------------------------|
+| id            | bigint                   | Primary key                                                        | 1                                        |
+| created_at    | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30`       |
+| updated_at    | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30`       |
+| name          | text                     | Name of receiver                                                   | `siren-devs-slack-receivers`             |
+| type          | text                     | Type of receivers (Slack/HTTP/Pagerduty)                           | `slack`                                  |
+| labels        | jsonb                    | generic kv pair that can be used for searching for appropriate row | `{"team":"siren-devs"}`                  |
+| configuration | jsonb                    | configuration data for that receiver(depends on the type)          | `{"token": "abcd", "workspace": "Odpf"}` |
 
-**Pagerduty Credentials**
+**Subscriptions**
 
-| Column      | Type                     | Description                                     | Example                            |
-| ----------- | ------------------------ | ----------------------------------------------- | ---------------------------------- |
-| id          | bigint                   | Primary key                                     | 1                                  |
-| created_at  | timestamp with time zone | Creation timestamp                              | `2021-03-05 12:37:56.905618+05:30` |
-| updated_at  | timestamp with time zone | Last update timestamp                           | `2021-03-05 12:37:56.905618+05:30` |
-| deleted_at  | timestamp with time zone | Deletion time stamp                             | `2021-03-05 12:37:56.905618+05:30` |
-| service_key | text                     | pagerduty service key                           | `a7se12b1iasd7da`                  |
-| team_name   | text                     | name of the team who owns this alert credential | `siren-devs`                       |
-| entity      | text                     | cortex tenant name                              | `odpf`                             |
+| Column       | Type                     | Description                                                                                             | Example                                                              |
+|--------------|--------------------------|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| id           | bigint                   | Primary key                                                                                             | 1                                                                    |
+| created_at   | timestamp with time zone | Creation timestamp                                                                                      | `2021-03-05 12:37:56.905618+05:30`                                   |
+| updated_at   | timestamp with time zone | Last update timestamp                                                                                   | `2021-03-05 12:37:56.905618+05:30`                                   |
+| urn          | text                     | URN of subscription                                                                                     | `siren-devs-slack-subscription`                                      |
+| receiver     | jsonb                    | list of receivers which will be picked for notification                                                 | `[{"id":1, "configuration":{"channel_name":"siren-devs-critical"}}]` |
+| match        | jsonb                    | generic kv pair that must hold true in the alert for notification to be sent via the receives described | `{"token": "abcd", "workspace": "Odpf"}`                             |
+| namespace_id | int                      | foreign key of namespace to which this belongs to                                                       | 10                                                                   |

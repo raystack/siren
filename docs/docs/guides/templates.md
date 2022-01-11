@@ -14,7 +14,7 @@ One can create templates using either HTTP APIs or CLI.
 Templates can be created using Siren APIs. The below snippet describes an example.
 
 ```text
-PUT /templates HTTP/1.1
+PUT /v1beta1/templates HTTP/1.1
 Host: localhost:3000
 Content-Type: application/json
 Content-Length: 1383
@@ -114,7 +114,7 @@ The response body will look like this:
 Here is an example to fetch a template using name.
 
 ```text
-GET /templates/cpu HTTP/1.1
+GET /v1beta1/templates/cpu HTTP/1.1
 Host: localhost:3000
 ```
 
@@ -123,14 +123,14 @@ Host: localhost:3000
 Here is an example to fetch a templates matching the tag.
 
 ```text
-GET /templates?tag=firehose HTTP/1.1
+GET /v1beta1/templates?tag=firehose HTTP/1.1
 Host: localhost:3000
 ```
 
 ### Deleting a template
 
 ```text
-DELETE /templates/cpu HTTP/1.1
+DELETE /v1beta1/templates/cpu HTTP/1.1
 Host: localhost:3000
 ```
 
