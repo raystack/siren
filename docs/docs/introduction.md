@@ -5,7 +5,7 @@ DIY configuration. With Siren, you can define templates(using go templates stand
 prometheus rules on demand. It also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated
 with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
-<p align="center"><img src="../static/img/overview.svg" /></p>
+![Siren Alert History](/img/overview.svg)
 
 ## Key Features
 
@@ -25,7 +25,7 @@ with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
 Explore the following resources to get started with Siren:
 
-* [Guides](guides/overview.md) provides guidance on usage.
-* [Concepts](concepts/overview.md) describes all important Siren concepts including system architecture.
-* [Reference](reference) contains the details about configurations and other aspects of Siren.
-* [Contribute](contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
+- [Guides](guides/overview.md) provides guidance on usage.
+- [Concepts](concepts/overview.md) describes all important Siren concepts including system architecture.
+- [Reference](reference/configuration.md) contains the details about configurations and other aspects of Siren.
+- [Contribute](contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.

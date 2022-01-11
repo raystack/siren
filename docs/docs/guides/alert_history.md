@@ -42,7 +42,7 @@ We will need the subscription as well, example:
 After this, as soon as any alert is sent by Alertmanager to slack or pagerduty, it will be sent to Siren for storage
 purpose.
 
-![Siren Alert History](../assets/alerthistory.jpg)
+![Siren Alert History](/img/alerthistory.jpg)
 
 The parsing of payload from alert manager depends on a particular syntax. you can configure your templates to follow
 this syntax, with proper annotations to identify:
@@ -107,7 +107,6 @@ annotations:
   template: CPU
   metricName: cpu_usage_user
   metricValue: { { $labels.cpu_usage_user } }
-
 ```
 
 The keys are pretty obvious to match with what was described in bullets points in the introduction above.
@@ -146,4 +145,4 @@ The request body of Alertmanager POST call to configured webhook looks something
 labels and annotations c in the templates) above snippet.
 
 The alerts API will parse the above payload and store in the database, which you can fetch via the GET APIs with proper
-filters of startTime, endTime. See the [swagger](../../api/handlers/swagger.yaml) file for more details.
+filters of startTime, endTime. See the swagger file for more details.
