@@ -29,3 +29,5 @@ tmp
 dist/
 siren
 !siren/
+
+third_party/
