@@ -20,6 +20,9 @@ module.exports = {
       label: "Guides",
       items: [
         "guides/overview",
+        "guides/providers",
+        "guides/receivers",
+        "guides/subscriptions",
         "guides/rules",
         "guides/templates",
         "guides/alert_history",
