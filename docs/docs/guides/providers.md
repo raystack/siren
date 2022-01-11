@@ -58,14 +58,14 @@ Content-Length: 154
 
 **Terminology of the request body**
 
-| Term        | Description                                                 | Example                    |
-|-------------|-------------------------------------------------------------|----------------------------|
-| host        | Fully qualified path for the provider                       | http://localhost:9009      |
-| urn         | Unique name for this provider (uneditable)                  | localhost_cortex           |
-| name        | Name of the proider (editable)                              | localhost_cortex           |
-| type        | type of the provider(cortex/influx etc.)                    | cortex                     |
-| credentials | key value pair to be used for authentication with the host  | {"bearer_token":"x2y4rd5"} |
-| labels      | key value pair that can be used as label selector           | {"environment":"dev"}      |
+| Term        | Description                                                | Example                    |
+| ----------- | ---------------------------------------------------------- | -------------------------- |
+| host        | Fully qualified path for the provider                      | http://localhost:9009      |
+| urn         | Unique name for this provider (uneditable)                 | localhost_cortex           |
+| name        | Name of the proider (editable)                             | localhost_cortex           |
+| type        | type of the provider(cortex/influx etc.)                   | cortex                     |
+| credentials | key value pair to be used for authentication with the host | {"bearer_token":"x2y4rd5"} |
+| labels      | key value pair that can be used as label selector          | {"environment":"dev"}      |
 
 The response body will look like this:
 
@@ -150,7 +150,7 @@ Content-Length: 103
 **Terminology of the request body**
 
 | Term        | Description                                                | Example                    |
-|-------------|------------------------------------------------------------|----------------------------|
+| ----------- | ---------------------------------------------------------- | -------------------------- |
 | urn         | Unique name for this namespace (uneditable)                | test-tenant                |
 | name        | Name of the tenant (editable)                              | test-tenant                |
 | provider    | id of the provider to which this tenant belongs            | 1                          |
@@ -208,8 +208,6 @@ Host: localhost:3000
 GET /v1beta1/namespaces/13 HTTP/1.1
 Host: localhost:3000
 ```
-
-<hr>
 
 # CLI Interface
 
