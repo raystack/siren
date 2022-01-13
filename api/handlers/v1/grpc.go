@@ -3,23 +3,23 @@ package v1
 import (
 	"context"
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/service"
-	"go.uber.org/zap"
 )
 
 type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
-	logger    *zap.Logger
+	log       log.Logger
 	sirenv1beta1.UnimplementedSirenServiceServer
 }
 
-func NewGRPCServer(container *service.Container, nr *newrelic.Application, logger *zap.Logger) *GRPCServer {
+func NewGRPCServer(container *service.Container, nr *newrelic.Application, logger log.Logger) *GRPCServer {
 	return &GRPCServer{
 		container: container,
 		newrelic:  nr,
-		logger:    logger,
+		log:       logger,
 	}
 }
 

@@ -3,13 +3,13 @@ package v1
 import (
 	"context"
 	"errors"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap/zaptest"
 	"google.golang.org/protobuf/types/known/structpb"
 	"strings"
 	"testing"
@@ -28,7 +28,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 		dummyResult := []*domain.Provider{
 			{
@@ -63,7 +63,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -83,7 +83,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		credentials["bar"] = string([]byte{0xff})
@@ -142,7 +142,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.On("CreateProvider", payload).Return(payload, nil).Once()
@@ -160,7 +160,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -177,7 +177,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		credentials["bar"] = string([]byte{0xff})
@@ -215,7 +215,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 		dummyResult := &domain.Provider{
 			Id:          1,
@@ -246,7 +246,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -264,7 +264,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 		dummyResult := &domain.Provider{
 			Id:          1,
@@ -292,7 +292,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		credentials["bar"] = string([]byte{0xff})
@@ -346,7 +346,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -366,7 +366,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -383,7 +383,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		credentials["bar"] = string([]byte{0xff})
@@ -417,7 +417,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.
@@ -434,7 +434,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 			container: &service.Container{
 				ProviderService: mockedProviderService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedProviderService.

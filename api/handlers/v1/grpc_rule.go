@@ -18,7 +18,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1beta1.ListRulesReq
 
 	rules, err := s.container.RulesService.Get(name, namespace, groupName, template, providerNamespace)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListRulesResponse{Rules: make([]*sirenv1beta1.Rule, 0)}
@@ -71,7 +71,7 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleR
 
 	rule, err := s.container.RulesService.Upsert(payload)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
 	}
 
 	responseVariables := make([]*sirenv1beta1.Variables, 0)

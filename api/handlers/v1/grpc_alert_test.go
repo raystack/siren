@@ -3,12 +3,12 @@ package v1
 import (
 	"context"
 	"errors"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
@@ -52,7 +52,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
@@ -202,7 +202,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Create", payload).
@@ -259,7 +259,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			logger: zaptest.NewLogger(t),
+			log: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Create", payload).
