@@ -8,8 +8,8 @@ PROTON_COMMIT := "ef83b9e9248e064a1c366da4fe07b3068266fe59"
 
 all: build
 
-build: ## Build the guardian binary
-	@echo " > building guardian version ${APP_VERSION}"
+build: ## Build the siren binary
+	@echo " > building siren version ${APP_VERSION}"
 	go build -ldflags "-X main.Version=${APP_VERSION}" ${NAME}
 	@echo " - build complete"
 
