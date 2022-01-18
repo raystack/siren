@@ -21,7 +21,7 @@ vendor/
 
 # Project specific ignore
 .env
-config.yaml
+/config.yaml
 .air.toml
 .siren.yaml
 bin/air
