@@ -8,6 +8,7 @@ import (
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/odpf/salt/log"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"net/http"
@@ -35,6 +36,28 @@ import (
 //go:embed siren.swagger.json
 var swaggerFile embed.FS
 
+// getZapLogLevelFromString helps to set logLevel from string
+func getZapLogLevelFromString(level string) zapcore.Level {
+	switch level {
+	case "debug":
+		return zap.DebugLevel
+	case "info":
+		return zap.InfoLevel
+	case "warn":
+		return zap.WarnLevel
+	case "error":
+		return zap.ErrorLevel
+	case "dpanic":
+		return zap.DPanicLevel
+	case "panic":
+		return zap.PanicLevel
+	case "fatal":
+		return zap.FatalLevel
+	default:
+		return zap.InfoLevel
+	}
+}
+
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
 	nr, err := metric.New(&c.NewRelic)
@@ -42,11 +65,10 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	// zap implementation
 	defaultConfig := zap.NewProductionConfig()
-	defaultConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-	logger, err := zap.NewProductionConfig().Build()
-
+	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(c.Log.Level))
+	logger := log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
+	zapper, err := zap.NewProduction()
 	if err != nil {
 		return err
 	}
@@ -63,7 +85,6 @@ func RunServer(c *domain.Config) error {
 	}
 
 	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
-	//loggerOpts := []grpc_logrus.Option{grpc_logrus.WithLevels(grpc_logrus.DefaultCodeToLevel)}
 
 	// init grpc server
 	opts := []grpc.ServerOption{
@@ -72,20 +93,18 @@ func RunServer(c *domain.Config) error {
 			grpc_ctxtags.UnaryServerInterceptor(),
 			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
-			grpc_zap.UnaryServerInterceptor(logger, loggerOpts...),
-			//grpc_logrus.UnaryServerInterceptor(grpcLogrusEntry, loggerOpts...),
+			grpc_zap.UnaryServerInterceptor(zapper, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
 			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
-			grpc_zap.StreamServerInterceptor(logger),
-			//grpc_logrus.StreamServerInterceptor(grpcLogrusEntry),
+			grpc_zap.StreamServerInterceptor(zapper),
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, log.NewZap()))
+	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -136,8 +155,7 @@ func RunServer(c *domain.Config) error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.NewZap().Info("server running", "port", c.Port)
-	//log.Println("server running", "port", c.Port)
+	logger.Info("server is running", "port", c.Port)
 	if err := server.ListenAndServe(); err != nil {
 		if err != http.ErrServerClosed {
 			return err
