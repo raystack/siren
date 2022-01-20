@@ -12,7 +12,7 @@ import (
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
 	templates, err := s.container.TemplatesService.Index(req.GetTag())
 	if err != nil {
-		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListTemplatesResponse{Templates: make([]*sirenv1beta1.Template, 0)}
@@ -43,7 +43,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetTemplateByNameRequest) (*sirenv1beta1.TemplateResponse, error) {
 	template, err := s.container.TemplatesService.GetByName(req.GetName())
 	if err != nil {
-		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	variables := make([]*sirenv1beta1.TemplateVariables, 0)
@@ -88,7 +88,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 	}
 	template, err := s.container.TemplatesService.Upsert(payload)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	templateVariables := make([]*sirenv1beta1.TemplateVariables, 0)
@@ -117,7 +117,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
 	err := s.container.TemplatesService.Delete(req.GetName())
 	if err != nil {
-		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1beta1.DeleteTemplateResponse{}, nil
 }
@@ -125,7 +125,7 @@ func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteT
 func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
 	body, err := s.container.TemplatesService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
-		return nil, helper.GRPCLogError(s.log, codes.Internal, err)
+		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1beta1.RenderTemplateResponse{
 		Body: body,

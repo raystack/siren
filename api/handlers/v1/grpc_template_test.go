@@ -19,7 +19,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{}
 		dummyResult := []domain.Template{
@@ -57,7 +57,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
@@ -98,7 +98,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
@@ -119,7 +119,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
 			Name: "foo",
@@ -157,7 +157,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
 			Name: "foo",
@@ -207,7 +207,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 
 		mockedTemplatesService.
@@ -228,7 +228,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		mockedTemplatesService.
 			On("Upsert", template).
@@ -246,7 +246,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
@@ -267,7 +267,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
@@ -295,7 +295,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 
 		mockedTemplatesService.
@@ -313,7 +313,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 			container: &service.Container{
 				TemplatesService: mockedTemplatesService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 		mockedTemplatesService.
 			On("Render", "foo", dummyReq.GetVariables()).

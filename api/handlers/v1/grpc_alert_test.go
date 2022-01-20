@@ -52,7 +52,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
@@ -202,7 +202,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Create", payload).
@@ -259,7 +259,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			container: &service.Container{
 				AlertService: mockedAlertService,
 			},
-			log: log.NewNoop(),
+			logger: log.NewNoop(),
 		}
 
 		mockedAlertService.On("Create", payload).

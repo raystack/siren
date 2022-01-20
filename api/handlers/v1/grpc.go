@@ -11,7 +11,7 @@ import (
 type GRPCServer struct {
 	container *service.Container
 	newrelic  *newrelic.Application
-	log       log.Logger
+	logger    log.Logger
 	sirenv1beta1.UnimplementedSirenServiceServer
 }
 
@@ -19,7 +19,7 @@ func NewGRPCServer(container *service.Container, nr *newrelic.Application, logge
 	return &GRPCServer{
 		container: container,
 		newrelic:  nr,
-		log:       logger,
+		logger:    logger,
 	}
 }
 
