@@ -5,7 +5,6 @@ import (
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -28,7 +27,7 @@ func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProv
 	for _, provider := range providers {
 		credentials, err := structpb.NewStruct(provider.Credentials)
 		if err != nil {
-			s.logger.Error("handler", zap.Error(err))
+			s.logger.Error("failed to fetch provider credentials", "error", err)
 			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 

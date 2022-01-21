@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"fmt"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
@@ -86,7 +85,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 	}
 
 	if badAlertCount > 0 {
-		s.logger.Error(fmt.Sprintf("parameters are missing for %d alerts", badAlertCount))
+		s.logger.Error("parameters are missing for alert", "alert count", badAlertCount)
 		return result, nil
 	}
 	return result, nil

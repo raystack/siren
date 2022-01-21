@@ -7,7 +7,6 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/helper"
 	"github.com/slack-go/slack"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -202,14 +201,14 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 
 		b, err := json.Marshal(slackPayload.GetBlocks())
 		if err != nil {
-			s.logger.Error("handler", zap.Error(err))
+			s.logger.Error("failed to encode the payload JSON", "error", err)
 			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
 		}
 
 		blocks := slack.Blocks{}
 		err = json.Unmarshal(b, &blocks)
 		if err != nil {
-			s.logger.Error("handler", zap.Error(err))
+			s.logger.Error("failed to parse blocks", "error", err)
 			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
 		}
 
