@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
@@ -10,7 +11,6 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap/zaptest"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"strings"
@@ -41,7 +41,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("ListReceivers").
@@ -63,7 +63,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("ListReceivers").
@@ -80,7 +80,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
 		dummyResult := []*domain.Receiver{
@@ -133,7 +133,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
@@ -153,7 +153,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		configurations := make(map[string]interface{})
 		configurations["service_key"] = "foo"
@@ -190,7 +190,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		configurations := make(map[string]interface{})
 		configurations["url"] = "foo"
@@ -227,7 +227,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_secret"] = "foo"
@@ -253,7 +253,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -279,7 +279,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -305,7 +305,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
@@ -328,7 +328,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
@@ -351,7 +351,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
@@ -368,7 +368,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
@@ -390,7 +390,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		configurations["workspace"] = string([]byte{0xff})
@@ -434,7 +434,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -454,7 +454,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -471,7 +471,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -488,7 +488,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		configurations["foo"] = string([]byte{0xff})
@@ -514,7 +514,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		data := make(map[string]interface{})
 		data["channels"] = string([]byte{0xff})
@@ -565,7 +565,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
@@ -585,7 +585,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_secret"] = "foo"
@@ -611,7 +611,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -637,7 +637,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -663,7 +663,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -689,7 +689,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -715,7 +715,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
@@ -737,7 +737,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
@@ -754,7 +754,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
 		newPayload := &domain.Receiver{
@@ -786,7 +786,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("DeleteReceiver", providerId).
@@ -803,7 +803,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 			container: &service.Container{
 				ReceiverService: mockedReceiverService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("DeleteReceiver", providerId).
@@ -861,7 +861,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Slack: mockedSlackNotifierService,
 				},
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -934,7 +934,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Slack: mockedSlackNotifierService,
 				},
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -968,7 +968,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Slack: mockedSlackNotifierService,
 				},
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -1029,7 +1029,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Slack: mockedSlackNotifierService,
 				},
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		receiverResult := &domain.Receiver{

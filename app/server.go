@@ -5,27 +5,28 @@ import (
 	"embed"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/odpf/salt/log"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
 	"google.golang.org/protobuf/encoding/protojson"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	v1 "github.com/odpf/siren/api/handlers/v1"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/logger"
 	"github.com/odpf/siren/metric"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
-
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
@@ -35,6 +36,28 @@ import (
 //go:embed siren.swagger.json
 var swaggerFile embed.FS
 
+// getZapLogLevelFromString helps to set logLevel from string
+func getZapLogLevelFromString(level string) zapcore.Level {
+	switch level {
+	case "debug":
+		return zap.DebugLevel
+	case "info":
+		return zap.InfoLevel
+	case "warn":
+		return zap.WarnLevel
+	case "error":
+		return zap.ErrorLevel
+	case "dpanic":
+		return zap.DPanicLevel
+	case "panic":
+		return zap.PanicLevel
+	case "fatal":
+		return zap.FatalLevel
+	default:
+		return zap.InfoLevel
+	}
+}
+
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
 	nr, err := metric.New(&c.NewRelic)
@@ -42,7 +65,10 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	logger, err := logger.New(&c.Log)
+	defaultConfig := zap.NewProductionConfig()
+	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(c.Log.Level))
+	logger := log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
+	zapper, err := zap.NewProduction()
 	if err != nil {
 		return err
 	}
@@ -67,14 +93,14 @@ func RunServer(c *domain.Config) error {
 			grpc_ctxtags.UnaryServerInterceptor(),
 			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
-			grpc_zap.UnaryServerInterceptor(logger, loggerOpts...),
+			grpc_zap.UnaryServerInterceptor(zapper, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
 			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
-			grpc_zap.StreamServerInterceptor(logger),
+			grpc_zap.StreamServerInterceptor(zapper),
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
@@ -129,7 +155,7 @@ func RunServer(c *domain.Config) error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	log.Println("server running on port:", c.Port)
+	logger.Info("server is running", "port", c.Port)
 	if err := server.ListenAndServe(); err != nil {
 		if err != http.ErrServerClosed {
 			return err

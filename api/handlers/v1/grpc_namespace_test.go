@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
@@ -9,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"go.uber.org/zap/zaptest"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"strings"
@@ -29,7 +29,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := []*domain.Namespace{
 			{
@@ -59,7 +59,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("ListNamespaces").
 			Return(nil, errors.New("random error")).Once()
@@ -74,7 +74,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []*domain.Namespace{
@@ -122,7 +122,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("CreateNamespace", payload).Return(payload, nil).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
@@ -136,7 +136,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("CreateNamespace", payload).
 			Return(nil, errors.New("random error")).Once()
@@ -151,7 +151,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		mockedNamespaceService.On("CreateNamespace", payload).Return(nil,
@@ -168,7 +168,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
 		payload.Credentials = credentials
@@ -192,7 +192,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := &domain.Namespace{
 			Id:          1,
@@ -220,7 +220,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
@@ -235,7 +235,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).
 			Return(nil, errors.New("random error")).Once()
@@ -251,7 +251,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &domain.Namespace{
@@ -300,7 +300,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).Return(payload, nil).Once()
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
@@ -315,7 +315,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).Return(nil,
 			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
@@ -332,7 +332,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).
 			Return(nil, errors.New("random error")).Once()
@@ -348,7 +348,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		credentials["foo"] = string([]byte{0xff})
 		payload.Credentials = credentials
@@ -373,7 +373,7 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("DeleteNamespace", namespaceId).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
@@ -388,7 +388,7 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 			container: &service.Container{
 				NamespaceService: mockedNamespaceService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedNamespaceService.On("DeleteNamespace", namespaceId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)

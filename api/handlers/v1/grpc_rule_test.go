@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"github.com/odpf/salt/log"
 	"testing"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 )
 
 func TestGRPCServer_ListRules(t *testing.T) {
@@ -50,7 +50,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			container: &service.Container{
 				RulesService: mockedRuleService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
@@ -73,7 +73,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			container: &service.Container{
 				RulesService: mockedRuleService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
@@ -123,7 +123,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			container: &service.Container{
 				RulesService: mockedRuleService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := dummyPayload
 		dummyResult.Enabled = false
@@ -149,7 +149,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			container: &service.Container{
 				RulesService: mockedRuleService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Upsert", &dummyPayload).

@@ -3,12 +3,12 @@ package v1
 import (
 	"context"
 	"errors"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap/zaptest"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
@@ -26,7 +26,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := []*domain.Subscription{
 			{
@@ -54,7 +54,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedSubscriptionService.On("ListSubscriptions").
 			Return(nil, errors.New("random error")).Once()
@@ -76,7 +76,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := &domain.Subscription{
 			Id:        1,
@@ -101,7 +101,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedSubscriptionService.On("GetSubscription", uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
@@ -115,7 +115,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedSubscriptionService.On("GetSubscription", uint64(1)).
 			Return(nil, errors.New("random error")).Once()
@@ -144,7 +144,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := &domain.Subscription{
 			Id:        1,
@@ -177,7 +177,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("CreateSubscription", payload).
@@ -212,7 +212,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		dummyResult := &domain.Subscription{
 			Id:        1,
@@ -246,7 +246,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedSubscriptionService.On("UpdateSubscription", payload).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
@@ -266,7 +266,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 		mockedSubscriptionService.On("UpdateSubscription", payload).Return(nil,
 			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
@@ -289,7 +289,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("DeleteSubscription", uint64(1)).Return(nil).Once()
@@ -304,7 +304,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			container: &service.Container{
 				SubscriptionService: mockedSubscriptionService,
 			},
-			logger: zaptest.NewLogger(t),
+			logger: log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("DeleteSubscription", uint64(1)).Return(errors.New("random error")).Once()
