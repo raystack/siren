@@ -34,12 +34,15 @@ func (c *SlackClient) Exchange(code, clientID, clientSecret string) (CodeExchang
 	data.Set("client_id", clientID)
 	data.Set("client_secret", clientSecret)
 
+	response := CodeExchangeHTTPResponse{}
 	req, err := http.NewRequest(http.MethodPost, OAuthServerEndpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		return response, errors.Wrap(err, "failed to create request body")
+	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := c.httpClient.Do(req)
 
-	response := CodeExchangeHTTPResponse{}
 	if err != nil {
 		return response, errors.Wrap(err, "failure in http call")
 	}
@@ -52,7 +55,7 @@ func (c *SlackClient) Exchange(code, clientID, clientSecret string) (CodeExchang
 	if err != nil {
 		return response, errors.Wrap(err, "failed to unmarshal response body")
 	}
-	if response.Ok != true {
+	if !response.Ok {
 		return response, errors.New("slack oauth call failed")
 	}
 	return response, nil

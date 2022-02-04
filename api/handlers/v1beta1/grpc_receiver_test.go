@@ -243,7 +243,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"client_id\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"client_id\"")
 		assert.Nil(t, res)
 	})
 
@@ -269,7 +269,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"client_secret\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"client_secret\"")
 		assert.Nil(t, res)
 	})
 
@@ -295,7 +295,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"auth_code\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"auth_code\"")
 		assert.Nil(t, res)
 	})
 
@@ -318,7 +318,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"service_key\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"service_key\"")
 		assert.Nil(t, res)
 	})
 
@@ -341,7 +341,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"url\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"url\"")
 		assert.Nil(t, res)
 	})
 
@@ -601,7 +601,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"client_id\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"client_id\"")
 		assert.Nil(t, res)
 	})
 
@@ -627,7 +627,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"client_secret\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"client_secret\"")
 		assert.Nil(t, res)
 	})
 
@@ -653,7 +653,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"auth_code\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"auth_code\"")
 		assert.Nil(t, res)
 	})
 
@@ -679,7 +679,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"service_key\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"service_key\"")
 		assert.Nil(t, res)
 	})
 
@@ -705,7 +705,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = No value supplied for required configurations map key \"url\"")
+			"rpc error: code = InvalidArgument desc = no value supplied for required configurations map key \"url\"")
 		assert.Nil(t, res)
 	})
 

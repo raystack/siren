@@ -19,7 +19,7 @@ func NewRepository(db *gorm.DB) *Repository {
 
 func (r Repository) List() ([]*Receiver, error) {
 	var receivers []*Receiver
-	selectQuery := fmt.Sprintf("select * from receivers")
+	selectQuery := "select * from receivers"
 	result := r.db.Raw(selectQuery).Find(&receivers)
 	if result.Error != nil {
 		return nil, result.Error
@@ -50,7 +50,7 @@ func (r Repository) Get(id uint64) (*Receiver, error) {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, errors.New(fmt.Sprintf("receiver not found: %d", id))
+		return nil, fmt.Errorf("receiver not found: %d", id)
 	}
 
 	return &receiver, nil

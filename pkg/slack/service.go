@@ -26,9 +26,7 @@ func (c *ClientService) GetJoinedChannelsList() ([]slack.Channel, error) {
 		if err != nil {
 			return channelList, err
 		}
-		for _, c := range channels {
-			channelList = append(channelList, c)
-		}
+		channelList = append(channelList, channels...)
 		curr = nextCursor
 		if curr == "" {
 			break

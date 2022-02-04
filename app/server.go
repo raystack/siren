@@ -20,7 +20,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	v1beta1 "github.com/odpf/siren/api/handlers/v1beta1"
+	"github.com/odpf/siren/api/handlers/v1beta1"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/telemetry"
 	"golang.org/x/net/http2"
@@ -139,7 +139,6 @@ func RunServer(c *domain.Config) error {
 	baseMux := http.NewServeMux()
 	baseMux.HandleFunc("/siren.swagger.json", func(w http.ResponseWriter, r *http.Request) {
 		http.FileServer(http.FS(swaggerFile)).ServeHTTP(w, r)
-		return
 	})
 	baseMux.Handle("/documentation", middleware.SwaggerUI(middleware.SwaggerUIOpts{
 		SpecURL: "/siren.swagger.json",
@@ -180,7 +179,10 @@ func RunMigrations(c *domain.Config) error {
 		return err
 	}
 
-	services.MigrateAll(store)
+	err = services.MigrateAll(store)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

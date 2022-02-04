@@ -2,7 +2,6 @@ package receiver
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/odpf/siren/domain"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -112,12 +111,12 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 		token := receiver.Configurations["token"].(string)
 		channels, err := service.slackRepository.GetWorkspaceChannels(token)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("could not get channels"))
+			return nil, errors.Wrap(err, "could not get channels")
 		}
 
 		data, err := jsonMarshal(channels)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid channels"))
+			return nil, errors.Wrap(err, "invalid channels")
 		}
 
 		receiver.Data = make(map[string]interface{})

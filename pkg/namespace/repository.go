@@ -18,7 +18,7 @@ func NewRepository(db *gorm.DB) *Repository {
 
 func (r Repository) List() ([]*Namespace, error) {
 	var namespaces []*Namespace
-	selectQuery := fmt.Sprintf("select * from namespaces")
+	selectQuery := "select * from namespaces"
 	result := r.db.Raw(selectQuery).Find(&namespaces)
 	if result.Error != nil {
 		return nil, result.Error

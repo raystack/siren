@@ -97,13 +97,6 @@ type Channel struct {
 	Name string `json:"name"`
 }
 
-func (c *Channel) toDomain() domain.Channel {
-	return domain.Channel{
-		ID:   c.ID,
-		Name: c.Name,
-	}
-}
-
 type SlackRepository interface {
 	GetWorkspaceChannels(string) ([]Channel, error)
 }

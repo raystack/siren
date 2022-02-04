@@ -111,6 +111,9 @@ func (r Repository) Render(name string, requestVariables map[string]string) (str
 		return "", errors.New("template not found")
 	}
 	convertedTemplate, err := templateFromDB.toDomain()
+	if err != nil {
+		return "", err
+	}
 	enrichedVariables := enrichWithDefaults(convertedTemplate.Variables, requestVariables)
 	var tpl bytes.Buffer
 	tmpl, err := templateParser(convertedTemplate.Body)
