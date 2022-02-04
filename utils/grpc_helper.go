@@ -1,4 +1,4 @@
-package helper
+package utils
 
 import (
 	"github.com/odpf/salt/log"

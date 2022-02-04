@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/helper"
+	"github.com/odpf/siren/utils"
 	"github.com/slack-go/slack"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ const (
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.container.ReceiverService.ListReceivers()
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListReceiversResponse{
@@ -32,7 +32,7 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 	for _, receiver := range receivers {
 		configurations, err := structpb.NewStruct(receiver.Configurations)
 		if err != nil {
-			return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 
 		item := &sirenv1beta1.Receiver{
@@ -79,12 +79,12 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 		Configurations: configurations,
 	})
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	c, err := structpb.NewStruct(receiver.Configurations)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Receiver{
@@ -104,17 +104,17 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceive
 		return nil, status.Errorf(codes.NotFound, "receiver not found")
 	}
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	data, err := structpb.NewStruct(receiver.Data)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	configuration, err := structpb.NewStruct(receiver.Configurations)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Receiver{
@@ -160,12 +160,12 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		Configurations: configurations,
 	})
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	configuration, err := structpb.NewStruct(receiver.Configurations)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Receiver{
@@ -182,7 +182,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*emptypb.Empty, error) {
 	err := s.container.ReceiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -221,7 +221,7 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 		}
 		result, err := s.container.NotifierServices.Slack.Notify(payload)
 		if err != nil {
-			return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 		res = &sirenv1beta1.SendReceiverNotificationResponse{
 			Ok: result.OK,
@@ -233,17 +233,17 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 }
 
 func validateSlackConfigurations(configurations map[string]interface{}) error {
-	_, err := helper.GetMapString(configurations, "configurations", "client_id")
+	_, err := utils.GetMapString(configurations, "configurations", "client_id")
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	_, err = helper.GetMapString(configurations, "configurations", "client_secret")
+	_, err = utils.GetMapString(configurations, "configurations", "client_secret")
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	_, err = helper.GetMapString(configurations, "configurations", "auth_code")
+	_, err = utils.GetMapString(configurations, "configurations", "auth_code")
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
@@ -251,7 +251,7 @@ func validateSlackConfigurations(configurations map[string]interface{}) error {
 }
 
 func validatePagerdutyConfigurations(configurations map[string]interface{}) error {
-	_, err := helper.GetMapString(configurations, "configurations", "service_key")
+	_, err := utils.GetMapString(configurations, "configurations", "service_key")
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}
@@ -259,7 +259,7 @@ func validatePagerdutyConfigurations(configurations map[string]interface{}) erro
 }
 
 func validateHttpConfigurations(configurations map[string]interface{}) error {
-	_, err := helper.GetMapString(configurations, "configurations", "url")
+	_, err := utils.GetMapString(configurations, "configurations", "url")
 	if err != nil {
 		return status.Errorf(codes.InvalidArgument, err.Error())
 	}

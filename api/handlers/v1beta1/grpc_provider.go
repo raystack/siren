@@ -4,7 +4,7 @@ import (
 	"context"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/helper"
+	"github.com/odpf/siren/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -18,7 +18,7 @@ func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProv
 		"type": req.GetType(),
 	})
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListProvidersResponse{
@@ -57,12 +57,12 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1beta1.CreateP
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Provider{
@@ -84,12 +84,12 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1beta1.GetProvide
 		return nil, status.Errorf(codes.NotFound, "provider not found")
 	}
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Provider{
@@ -115,12 +115,12 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateP
 		Labels:      req.GetLabels(),
 	})
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &sirenv1beta1.Provider{
@@ -139,7 +139,7 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateP
 func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1beta1.DeleteProviderRequest) (*emptypb.Empty, error) {
 	err := s.container.ProviderService.DeleteProvider(uint64(req.GetId()))
 	if err != nil {
-		return nil, helper.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	return &emptypb.Empty{}, nil
