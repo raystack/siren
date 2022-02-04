@@ -22,7 +22,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	v1 "github.com/odpf/siren/api/handlers/v1"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/metric"
+	"github.com/odpf/siren/telemetry"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
@@ -60,7 +60,7 @@ func getZapLogLevelFromString(level string) zapcore.Level {
 
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
-	nr, err := metric.New(&c.NewRelic)
+	nr, err := telemetry.New(&c.NewRelic)
 	if err != nil {
 		return err
 	}
