@@ -20,7 +20,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	v1 "github.com/odpf/siren/api/handlers/v1"
+	v1beta1 "github.com/odpf/siren/api/handlers/v1beta1"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/telemetry"
 	"golang.org/x/net/http2"
@@ -104,7 +104,7 @@ func RunServer(c *domain.Config) error {
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
+	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1beta1.NewGRPCServer(services, nr, logger))
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
