@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"github.com/gtank/cryptopasta"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
@@ -58,7 +59,7 @@ func (t *Transformer) Decrypt(s string) (string, error) {
 
 // Service handles business logic
 type Service struct {
-	repository  model.NamespaceRepository
+	repository  store.NamespaceRepository
 	transformer EncryptorDecryptor
 }
 

@@ -17,15 +17,6 @@ type Template struct {
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
 }
 
-type TemplatesRepository interface {
-	Upsert(*Template) (*Template, error)
-	Index(string) ([]Template, error)
-	GetByName(string) (*Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
-	Migrate() error
-}
-
 func (template *Template) FromDomain(t *domain.Template) (*Template, error) {
 	template.ID = t.ID
 	template.CreatedAt = t.CreatedAt

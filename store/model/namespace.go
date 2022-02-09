@@ -60,11 +60,3 @@ func (namespace *Namespace) ToDomain() (*domain.Namespace, error) {
 	}, nil
 }
 
-type NamespaceRepository interface {
-	Migrate() error
-	List() ([]*Namespace, error)
-	Create(*Namespace) (*Namespace, error)
-	Get(uint64) (*Namespace, error)
-	Update(*Namespace) (*Namespace, error)
-	Delete(uint64) error
-}

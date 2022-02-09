@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
 	"regexp"
@@ -17,7 +18,7 @@ type TemplateRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository model.TemplatesRepository
+	repository store.TemplatesRepository
 }
 
 func (s *TemplateRepositoryTestSuite) SetupTest() {

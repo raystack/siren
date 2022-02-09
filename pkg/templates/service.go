@@ -2,6 +2,7 @@ package templates
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"gorm.io/gorm"
@@ -9,7 +10,7 @@ import (
 
 // Service handles business logic
 type Service struct {
-	repository model.TemplatesRepository
+	repository store.TemplatesRepository
 }
 
 // NewService returns repository struct

@@ -47,15 +47,6 @@ func (receiver *Receiver) ToDomain() *domain.Receiver {
 	}
 }
 
-type ReceiverRepository interface {
-	Migrate() error
-	List() ([]*Receiver, error)
-	Create(*Receiver) (*Receiver, error)
-	Get(uint64) (*Receiver, error)
-	Update(*Receiver) (*Receiver, error)
-	Delete(uint64) error
-}
-
 type Channel struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
@@ -10,7 +11,7 @@ import (
 
 // Service handles business logic
 type Service struct {
-	repository model.ProviderRepository
+	repository store.ProviderRepository
 }
 
 // NewService returns repository struct

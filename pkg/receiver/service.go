@@ -3,6 +3,7 @@ package receiver
 import (
 	"encoding/json"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ type CodeExchangeHTTPResponse struct {
 
 // Service handles business logic
 type Service struct {
-	repository      model.ReceiverRepository
+	repository      store.ReceiverRepository
 	slackRepository model.SlackRepository
 	slackHelper     SlackHelper
 }

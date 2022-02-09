@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
@@ -17,7 +18,7 @@ type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository model.NamespaceRepository
+	repository store.NamespaceRepository
 }
 
 func (s *NamespaceRepositoryTestSuite) SetupTest() {
