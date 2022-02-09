@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/namespace"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -51,23 +51,23 @@ type EnrichedReceiverMetadataList []EnrichedReceiverMetadata
 
 type Subscription struct {
 	Id          uint64 `gorm:"primarykey"`
-	Namespace   *namespace.Namespace
+	Namespace   *model.Namespace
 	NamespaceId uint64
-	Urn       string               `gorm:"unique"`
-	Receiver  ReceiverMetadataList `gorm:"type:jsonb" sql:"type:jsonb" `
-	Match     StringStringMap      `gorm:"type:jsonb" sql:"type:jsonb" `
-	CreatedAt time.Time
+	Urn         string               `gorm:"unique"`
+	Receiver    ReceiverMetadataList `gorm:"type:jsonb" sql:"type:jsonb" `
+	Match       StringStringMap      `gorm:"type:jsonb" sql:"type:jsonb" `
+	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
 type SubscriptionEnrichedWithReceivers struct {
 	Id          uint64
-	Namespace   *namespace.Namespace
+	Namespace   *model.Namespace
 	NamespaceId uint64
-	Urn       string
-	Receiver  EnrichedReceiverMetadataList
-	Match     StringStringMap
-	CreatedAt time.Time
+	Urn         string
+	Receiver    EnrichedReceiverMetadataList
+	Match       StringStringMap
+	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 

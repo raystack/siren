@@ -1,34 +1,15 @@
-package namespace
+package model
 
 import (
-	"database/sql/driver"
 	"encoding/json"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"time"
 )
 
-type StringStringMap map[string]string
-
-func (m *StringStringMap) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed type assertion to []byte")
-	}
-	return json.Unmarshal(b, &m)
-}
-
-func (a StringStringMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(a)
-}
-
 type Namespace struct {
 	Id          uint64 `gorm:"primarykey"`
-	Provider    *model.Provider
+	Provider    *Provider
 	ProviderId  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
 	Urn         string `gorm:"uniqueIndex:urn_provider_id_unique"`
 	Name        string
@@ -38,7 +19,7 @@ type Namespace struct {
 	UpdatedAt   time.Time
 }
 
-func (namespace *Namespace) fromDomain(n *domain.Namespace) (*Namespace, error) {
+func (namespace *Namespace) FromDomain(n *domain.Namespace) (*Namespace, error) {
 	if n == nil {
 		return nil, nil
 	}
@@ -57,7 +38,7 @@ func (namespace *Namespace) fromDomain(n *domain.Namespace) (*Namespace, error) 
 	return namespace, nil
 }
 
-func (namespace *Namespace) toDomain() (*domain.Namespace, error) {
+func (namespace *Namespace) ToDomain() (*domain.Namespace, error) {
 	if namespace == nil {
 		return nil, nil
 	}

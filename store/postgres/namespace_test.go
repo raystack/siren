@@ -1,11 +1,11 @@
-package namespace
+package postgres
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 	"regexp"
@@ -13,40 +13,31 @@ import (
 	"time"
 )
 
-// AnyTime is used to expect arbitrary time value
-type AnyTime struct{}
-
-// Match satisfies sqlmock.Argument interface
-func (a AnyTime) Match(v driver.Value) bool {
-	_, ok := v.(time.Time)
-	return ok
-}
-
-type RepositoryTestSuite struct {
+type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository NamespaceRepository
+	repository model.NamespaceRepository
 }
 
-func (s *RepositoryTestSuite) SetupTest() {
+func (s *NamespaceRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
 	s.repository = NewRepository(db)
 }
 
-func (s *RepositoryTestSuite) TearDownTest() {
+func (s *NamespaceRepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func (s *RepositoryTestSuite) TestList() {
+func (s *NamespaceRepositoryTestSuite) TestList() {
 	s.Run("should get all namespaces", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from namespaces`)
-		labels := make(StringStringMap)
+		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		namespace := &Namespace{
+		namespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -56,7 +47,7 @@ func (s *RepositoryTestSuite) TestList() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedNamespaces := []*Namespace{namespace}
+		expectedNamespaces := []*model.Namespace{namespace}
 
 		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
 			AddRow(namespace.Id, namespace.ProviderId, namespace.Urn, namespace.Name, namespace.Credentials,
@@ -78,8 +69,8 @@ func (s *RepositoryTestSuite) TestList() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestCreate() {
-	labels := make(StringStringMap)
+func (s *NamespaceRepositoryTestSuite) TestCreate() {
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should create a namespace", func() {
@@ -87,7 +78,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -119,7 +110,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
 											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -145,7 +136,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("provider_id","urn","name","credentials","labels","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -168,13 +159,13 @@ func (s *RepositoryTestSuite) TestCreate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestGet() {
-	labels := make(StringStringMap)
+func (s *NamespaceRepositoryTestSuite) TestGet() {
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should get namespace by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -218,8 +209,8 @@ func (s *RepositoryTestSuite) TestGet() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestUpdate() {
-	labels := make(StringStringMap)
+func (s *NamespaceRepositoryTestSuite) TestUpdate() {
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should update a namespace", func() {
@@ -228,7 +219,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
 			WHERE id = $7 AND "id" = $8`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -238,7 +229,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		input := &Namespace{
+		input := &model.Namespace{
 			Id:          1,
 			ProviderId:  2,
 			Name:        "foo",
@@ -270,7 +261,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error if namespace does not exist", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		input := &Namespace{
+		input := &model.Namespace{
 			Id:          1,
 			ProviderId:  2,
 			Urn:         "foo",
@@ -290,7 +281,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error in finding the namespace", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		input := &Namespace{
+		input := &model.Namespace{
 			Id:          1,
 			ProviderId:  2,
 			Urn:         "foo",
@@ -313,7 +304,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
 			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
 			WHERE id = $7 AND "id" = $8`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -323,7 +314,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		input := &Namespace{
+		input := &model.Namespace{
 			Id:          1,
 			ProviderId:  2,
 			Name:        "foo",
@@ -354,7 +345,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
 			WHERE id = $7 AND "id" = $8`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &Namespace{
+		expectedNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Urn:         "foo",
@@ -364,7 +355,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		input := &Namespace{
+		input := &model.Namespace{
 			Id:          1,
 			ProviderId:  2,
 			Name:        "foo",
@@ -390,7 +381,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestDelete() {
+func (s *NamespaceRepositoryTestSuite) TestDelete() {
 	s.Run("should delete namespace of given id", func() {
 		expectedQuery := regexp.QuoteMeta(`DELETE FROM "namespaces" WHERE id = $1`)
 		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -409,5 +400,5 @@ func (s *RepositoryTestSuite) TestDelete() {
 }
 
 func TestRepository(t *testing.T) {
-	suite.Run(t, new(RepositoryTestSuite))
+	suite.Run(t, new(NamespaceRepositoryTestSuite))
 }

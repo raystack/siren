@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"github.com/gtank/cryptopasta"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"io"
@@ -56,7 +58,7 @@ func (t *Transformer) Decrypt(s string) (string, error) {
 
 // Service handles business logic
 type Service struct {
-	repository  NamespaceRepository
+	repository  model.NamespaceRepository
 	transformer EncryptorDecryptor
 }
 
@@ -67,7 +69,7 @@ func NewService(db *gorm.DB, encryptionKey string) (domain.NamespaceService, err
 		return nil, errors.Wrap(err, "failed to create transformer")
 	}
 
-	return &Service{NewRepository(db), transformer}, nil
+	return &Service{postgres.NewRepository(db), transformer}, nil
 }
 
 func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
@@ -83,7 +85,7 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 			return nil, errors.Wrap(err, "s.transformer.Decrypt")
 		}
 		namespaces[i].Credentials = decryptedCredentials
-		namespace, err := namespaces[i].toDomain()
+		namespace, err := namespaces[i].ToDomain()
 		if err != nil {
 			return nil, errors.Wrap(err, "namespaces[i].toDomain()")
 		}
@@ -94,8 +96,8 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 }
 
 func (s Service) CreateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
-	n := &Namespace{}
-	_, err := n.fromDomain(namespace)
+	n := &model.Namespace{}
+	_, err := n.FromDomain(namespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "n.fromDomain()")
 	}
@@ -110,7 +112,7 @@ func (s Service) CreateNamespace(namespace *domain.Namespace) (*domain.Namespace
 		return nil, errors.Wrap(err, "s.repository.Create")
 	}
 	newNamespace.Credentials = plainTextCredentials
-	return newNamespace.toDomain()
+	return newNamespace.ToDomain()
 }
 
 func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
@@ -126,12 +128,12 @@ func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
 		return nil, errors.Wrap(err, "s.transformer.Decrypt")
 	}
 	namespace.Credentials = decryptedCredentials
-	return namespace.toDomain()
+	return namespace.ToDomain()
 }
 
 func (s Service) UpdateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
-	w := &Namespace{}
-	_, err := w.fromDomain(namespace)
+	w := &model.Namespace{}
+	_, err := w.FromDomain(namespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "n.fromDomain()")
 	}
@@ -146,7 +148,7 @@ func (s Service) UpdateNamespace(namespace *domain.Namespace) (*domain.Namespace
 		return nil, errors.Wrap(err, "s.repository.Update")
 	}
 	updatedNamespace.Credentials = plainTextCredentials
-	return updatedNamespace.toDomain()
+	return updatedNamespace.ToDomain()
 }
 
 func (s Service) DeleteNamespace(id uint64) error {

@@ -1,8 +1,9 @@
-package namespace
+package postgres
 
 import (
 	"errors"
 	"fmt"
+	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
 
@@ -16,8 +17,8 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
-func (r Repository) List() ([]*Namespace, error) {
-	var namespaces []*Namespace
+func (r Repository) List() ([]*model.Namespace, error) {
+	var namespaces []*model.Namespace
 	selectQuery := "select * from namespaces"
 	result := r.db.Raw(selectQuery).Find(&namespaces)
 	if result.Error != nil {
@@ -27,8 +28,8 @@ func (r Repository) List() ([]*Namespace, error) {
 	return namespaces, nil
 }
 
-func (r Repository) Create(namespace *Namespace) (*Namespace, error) {
-	var newNamespace Namespace
+func (r Repository) Create(namespace *model.Namespace) (*model.Namespace, error) {
+	var newNamespace model.Namespace
 	result := r.db.Create(namespace)
 	if result.Error != nil {
 		return nil, result.Error
@@ -42,8 +43,8 @@ func (r Repository) Create(namespace *Namespace) (*Namespace, error) {
 	return &newNamespace, nil
 }
 
-func (r Repository) Get(id uint64) (*Namespace, error) {
-	var namespace Namespace
+func (r Repository) Get(id uint64) (*model.Namespace, error) {
+	var namespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&namespace)
 	if result.Error != nil {
 		return nil, result.Error
@@ -55,8 +56,8 @@ func (r Repository) Get(id uint64) (*Namespace, error) {
 	return &namespace, nil
 }
 
-func (r Repository) Update(namespace *Namespace) (*Namespace, error) {
-	var newNamespace, existingNamespace Namespace
+func (r Repository) Update(namespace *model.Namespace) (*model.Namespace, error) {
+	var newNamespace, existingNamespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&existingNamespace)
 	if result.Error != nil {
 		return nil, result.Error
@@ -78,13 +79,13 @@ func (r Repository) Update(namespace *Namespace) (*Namespace, error) {
 }
 
 func (r Repository) Delete(id uint64) error {
-	var namespace Namespace
+	var namespace model.Namespace
 	result := r.db.Where("id = ?", id).Delete(&namespace)
 	return result.Error
 }
 
 func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Namespace{})
+	err := r.db.AutoMigrate(&model.Namespace{})
 	if err != nil {
 		return err
 	}

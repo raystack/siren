@@ -23,25 +23,25 @@ func (a AnyTime) Match(v driver.Value) bool {
 	return ok
 }
 
-type RepositoryTestSuite struct {
+type ProviderRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
 	repository model.ProviderRepository
 }
 
-func (s *RepositoryTestSuite) SetupTest() {
+func (s *ProviderRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
 	s.repository = NewProviderRepository(db)
 }
 
-func (s *RepositoryTestSuite) TearDownTest() {
+func (s *ProviderRepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func (s *RepositoryTestSuite) TestList() {
+func (s *ProviderRepositoryTestSuite) TestList() {
 	s.Run("should get all providers", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
 		credentials := make(model.StringInterfaceMap)
@@ -117,7 +117,7 @@ func (s *RepositoryTestSuite) TestList() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestCreate() {
+func (s *ProviderRepositoryTestSuite) TestCreate() {
 	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
 	labels := make(model.StringStringMap)
@@ -212,7 +212,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestGet() {
+func (s *ProviderRepositoryTestSuite) TestGet() {
 	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
 	labels := make(model.StringStringMap)
@@ -265,7 +265,7 @@ func (s *RepositoryTestSuite) TestGet() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestUpdate() {
+func (s *ProviderRepositoryTestSuite) TestUpdate() {
 	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
 	labels := make(model.StringStringMap)
@@ -457,7 +457,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestDelete() {
+func (s *ProviderRepositoryTestSuite) TestDelete() {
 	s.Run("should delete provider of given id", func() {
 		expectedQuery := regexp.QuoteMeta(`DELETE FROM "providers" WHERE id = $1`)
 		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -475,6 +475,6 @@ func (s *RepositoryTestSuite) TestDelete() {
 	})
 }
 
-func TestRepository(t *testing.T) {
-	suite.Run(t, new(RepositoryTestSuite))
+func TestProviderRepository(t *testing.T) {
+	suite.Run(t, new(ProviderRepositoryTestSuite))
 }
