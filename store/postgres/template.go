@@ -1,10 +1,11 @@
-package templates
+package postgres
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 	"text/template"
 )
@@ -14,26 +15,26 @@ const (
 	rightDelim = "]]"
 )
 
-// Repository talks to the store to read or insert data
-type Repository struct {
+// TemplateRepository talks to the store to read or insert data
+type TemplateRepository struct {
 	db *gorm.DB
 }
 
-// NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+// NewTemplateRepository returns repository struct
+func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
+	return &TemplateRepository{db}
 }
 
-func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Template{})
+func (r TemplateRepository) Migrate() error {
+	err := r.db.AutoMigrate(&model.Template{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r Repository) Upsert(template *Template) (*Template, error) {
-	var newTemplate, existingTemplate Template
+func (r TemplateRepository) Upsert(template *model.Template) (*model.Template, error) {
+	var newTemplate, existingTemplate model.Template
 	result := r.db.Where(fmt.Sprintf("name = '%s'", template.Name)).Find(&existingTemplate)
 	if result.Error != nil {
 		return nil, result.Error
@@ -53,8 +54,8 @@ func (r Repository) Upsert(template *Template) (*Template, error) {
 	return &newTemplate, nil
 }
 
-func (r Repository) Index(tag string) ([]Template, error) {
-	var templates []Template
+func (r TemplateRepository) Index(tag string) ([]model.Template, error) {
+	var templates []model.Template
 	var result *gorm.DB
 	if tag == "" {
 		result = r.db.Find(&templates)
@@ -67,8 +68,8 @@ func (r Repository) Index(tag string) ([]Template, error) {
 	return templates, nil
 }
 
-func (r Repository) GetByName(name string) (*Template, error) {
-	var template Template
+func (r TemplateRepository) GetByName(name string) (*model.Template, error) {
+	var template model.Template
 	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
 	if result.Error != nil {
 		return nil, result.Error
@@ -79,8 +80,8 @@ func (r Repository) GetByName(name string) (*Template, error) {
 	return &template, nil
 }
 
-func (r Repository) Delete(name string) error {
-	var template Template
+func (r TemplateRepository) Delete(name string) error {
+	var template model.Template
 	result := r.db.Where("name = ?", name).Delete(&template)
 	return result.Error
 }
@@ -102,7 +103,7 @@ func enrichWithDefaults(variables []domain.Variable, requestVariables map[string
 
 var templateParser = template.New("parser").Delims(leftDelim, rightDelim).Parse
 
-func (r Repository) Render(name string, requestVariables map[string]string) (string, error) {
+func (r TemplateRepository) Render(name string, requestVariables map[string]string) (string, error) {
 	templateFromDB, err := r.GetByName(name)
 	if err != nil {
 		return "", err
@@ -110,7 +111,7 @@ func (r Repository) Render(name string, requestVariables map[string]string) (str
 	if templateFromDB == nil {
 		return "", errors.New("template not found")
 	}
-	convertedTemplate, err := templateFromDB.toDomain()
+	convertedTemplate, err := templateFromDB.ToDomain()
 	if err != nil {
 		return "", err
 	}

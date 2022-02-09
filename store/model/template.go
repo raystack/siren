@@ -1,4 +1,4 @@
-package templates
+package model
 
 import (
 	"encoding/json"
@@ -17,7 +17,6 @@ type Template struct {
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
 }
 
-// TemplatesRepositoryMock interface
 type TemplatesRepository interface {
 	Upsert(*Template) (*Template, error)
 	Index(string) ([]Template, error)
@@ -27,7 +26,7 @@ type TemplatesRepository interface {
 	Migrate() error
 }
 
-func (template *Template) fromDomain(t *domain.Template) (*Template, error) {
+func (template *Template) FromDomain(t *domain.Template) (*Template, error) {
 	template.ID = t.ID
 	template.CreatedAt = t.CreatedAt
 	template.UpdatedAt = t.UpdatedAt
@@ -42,7 +41,7 @@ func (template *Template) fromDomain(t *domain.Template) (*Template, error) {
 	return template, nil
 }
 
-func (template *Template) toDomain() (*domain.Template, error) {
+func (template *Template) ToDomain() (*domain.Template, error) {
 	var variables []domain.Variable
 	jsonBlob := []byte(template.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)

@@ -2,17 +2,19 @@ package templates
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"gorm.io/gorm"
 )
 
 // Service handles business logic
 type Service struct {
-	repository TemplatesRepository
+	repository model.TemplatesRepository
 }
 
 // NewService returns repository struct
 func NewService(db *gorm.DB) domain.TemplatesService {
-	return &Service{NewRepository(db)}
+	return &Service{postgres.NewTemplateRepository(db)}
 }
 
 func (service Service) Migrate() error {
@@ -20,8 +22,8 @@ func (service Service) Migrate() error {
 }
 
 func (service Service) Upsert(template *domain.Template) (*domain.Template, error) {
-	t := &Template{}
-	t, err := t.fromDomain(template)
+	t := &model.Template{}
+	t, err := t.FromDomain(template)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +31,7 @@ func (service Service) Upsert(template *domain.Template) (*domain.Template, erro
 	if err != nil {
 		return nil, err
 	}
-	return upsertedTemplate.toDomain()
+	return upsertedTemplate.ToDomain()
 }
 
 func (service Service) Index(tag string) ([]domain.Template, error) {
@@ -39,7 +41,7 @@ func (service Service) Index(tag string) ([]domain.Template, error) {
 	}
 	domainTemplates := make([]domain.Template, 0, len(templates))
 	for i := 0; i < len(templates); i++ {
-		t, _ := templates[i].toDomain()
+		t, _ := templates[i].ToDomain()
 		domainTemplates = append(domainTemplates, *t)
 	}
 	return domainTemplates, nil
@@ -50,7 +52,7 @@ func (service Service) GetByName(name string) (*domain.Template, error) {
 	if err != nil || template == nil {
 		return nil, err
 	}
-	return template.toDomain()
+	return template.ToDomain()
 }
 
 func (service Service) Delete(name string) error {

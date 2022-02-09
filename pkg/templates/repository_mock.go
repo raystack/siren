@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -24,15 +25,15 @@ func (_m *TemplatesRepositoryMock) Delete(_a0 string) error {
 }
 
 // GetByName provides a mock function with given fields: _a0
-func (_m *TemplatesRepositoryMock) GetByName(_a0 string) (*Template, error) {
+func (_m *TemplatesRepositoryMock) GetByName(_a0 string) (*model.Template, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Template
-	if rf, ok := ret.Get(0).(func(string) *Template); ok {
+	var r0 *model.Template
+	if rf, ok := ret.Get(0).(func(string) *model.Template); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Template)
+			r0 = ret.Get(0).(*model.Template)
 		}
 	}
 
@@ -47,15 +48,15 @@ func (_m *TemplatesRepositoryMock) GetByName(_a0 string) (*Template, error) {
 }
 
 // Index provides a mock function with given fields: _a0
-func (_m *TemplatesRepositoryMock) Index(_a0 string) ([]Template, error) {
+func (_m *TemplatesRepositoryMock) Index(_a0 string) ([]model.Template, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []Template
-	if rf, ok := ret.Get(0).(func(string) []Template); ok {
+	var r0 []model.Template
+	if rf, ok := ret.Get(0).(func(string) []model.Template); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]Template)
+			r0 = ret.Get(0).([]model.Template)
 		}
 	}
 
@@ -105,20 +106,20 @@ func (_m *TemplatesRepositoryMock) Render(_a0 string, _a1 map[string]string) (st
 }
 
 // Upsert provides a mock function with given fields: _a0
-func (_m *TemplatesRepositoryMock) Upsert(_a0 *Template) (*Template, error) {
+func (_m *TemplatesRepositoryMock) Upsert(_a0 *model.Template) (*model.Template, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Template
-	if rf, ok := ret.Get(0).(func(*Template) *Template); ok {
+	var r0 *model.Template
+	if rf, ok := ret.Get(0).(func(*model.Template) *model.Template); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Template)
+			r0 = ret.Get(0).(*model.Template)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*Template) error); ok {
+	if rf, ok := ret.Get(1).(func(*model.Template) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)

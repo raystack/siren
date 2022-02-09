@@ -7,12 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// Repository talks to the store to read or insert data
+// TemplateRepository talks to the store to read or insert data
 type Repository struct {
 	db *gorm.DB
 }
 
-// NewRepository returns repository struct
+// NewTemplateRepository returns repository struct
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
