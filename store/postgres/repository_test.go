@@ -1,56 +1,46 @@
-package receiver
+package postgres
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
 	"time"
 )
 
-// AnyTime is used to expect arbitrary time value
-type AnyTime struct{}
-
-// Match satisfies sqlmock.Argument interface
-func (a AnyTime) Match(v driver.Value) bool {
-	_, ok := v.(time.Time)
-	return ok
-}
-
-type RepositoryTestSuite struct {
+type ReceiverRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository ReceiverRepository
+	repository model.ReceiverRepository
 }
 
-
-func (s *RepositoryTestSuite) SetupTest() {
+func (s *ReceiverRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
-	repo := NewRepository(db)
+	repo := NewReceiverRepository(db)
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
 	s.repository = repo
 }
 
-func (s *RepositoryTestSuite) TearDownTest() {
+func (s *ReceiverRepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func (s *RepositoryTestSuite) TestList() {
+func (s *ReceiverRepositoryTestSuite) TestList() {
 	s.Run("should get all receivers", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from receivers`)
-		configurations := make(StringInterfaceMap)
+		configurations := make(model.StringInterfaceMap)
 		configurations["foo"] = "bar"
-		labels := make(StringStringMap)
+		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		receiver := &Receiver{
+		receiver := &model.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -59,7 +49,7 @@ func (s *RepositoryTestSuite) TestList() {
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		expectedReceivers := []*Receiver{receiver}
+		expectedReceivers := []*model.Receiver{receiver}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "name", "type", "labels", "configurations", "created_at", "updated_at"}).
@@ -82,10 +72,10 @@ func (s *RepositoryTestSuite) TestList() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestCreate() {
-	configurations := make(StringInterfaceMap)
+func (s *ReceiverRepositoryTestSuite) TestCreate() {
+	configurations := make(model.StringInterfaceMap)
 	configurations["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should create a receiver", func() {
@@ -93,7 +83,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -124,7 +114,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -149,7 +139,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -171,15 +161,15 @@ func (s *RepositoryTestSuite) TestCreate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestGet() {
-	configurations := make(StringInterfaceMap)
+func (s *ReceiverRepositoryTestSuite) TestGet() {
+	configurations := make(model.StringInterfaceMap)
 	configurations["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should get receiver by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -222,10 +212,10 @@ func (s *RepositoryTestSuite) TestGet() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestUpdate() {
-	configurations := make(StringInterfaceMap)
+func (s *ReceiverRepositoryTestSuite) TestUpdate() {
+	configurations := make(model.StringInterfaceMap)
 	configurations["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should update a receiver", func() {
@@ -235,7 +225,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						WHERE id = $7 AND "id" = $8`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             10,
 			Name:           "foo",
 			Type:           "slack",
@@ -244,7 +234,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &Receiver{
+		input := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -279,7 +269,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	s.Run("should return error if receiver does not exist", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &Receiver{
+		input := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -299,7 +289,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	s.Run("should return error in finding the receiver", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &Receiver{
+		input := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -322,7 +312,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						SET "name"=$1,"type"=$2,"labels"=$3,"configurations"=$4,"created_at"=$5,"updated_at"=$6
 						WHERE id = $7 AND "id" = $8`)
 		timeNow := time.Now()
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -332,7 +322,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
-		input := &Receiver{
+		input := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -364,7 +354,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						WHERE id = $7 AND "id" = $8`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedReceiver := &Receiver{
+		expectedReceiver := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -373,7 +363,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &Receiver{
+		input := &model.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -401,7 +391,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestDelete() {
+func (s *ReceiverRepositoryTestSuite) TestDelete() {
 	s.Run("should delete receiver of given id", func() {
 		expectedQuery := regexp.QuoteMeta(`DELETE FROM "receivers" WHERE id = $1`)
 		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
@@ -419,6 +409,6 @@ func (s *RepositoryTestSuite) TestDelete() {
 	})
 }
 
-func TestRepository(t *testing.T) {
-	suite.Run(t, new(RepositoryTestSuite))
+func TestReceiverRepository(t *testing.T) {
+	suite.Run(t, new(ReceiverRepositoryTestSuite))
 }

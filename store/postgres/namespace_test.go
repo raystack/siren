@@ -24,7 +24,7 @@ func (s *NamespaceRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewRepository(db)
+	s.repository = NewNamespaceRepository(db)
 }
 
 func (s *NamespaceRepositoryTestSuite) TearDownTest() {

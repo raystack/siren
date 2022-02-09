@@ -1,45 +1,9 @@
-package receiver
+package model
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
 	"github.com/odpf/siren/domain"
 	"time"
 )
-
-type StringInterfaceMap map[string]interface{}
-type StringStringMap map[string]string
-
-func (m *StringInterfaceMap) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed type assertion to []byte")
-	}
-	return json.Unmarshal(b, &m)
-}
-
-func (a StringInterfaceMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(a)
-}
-
-func (m *StringStringMap) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed type assertion to []byte")
-	}
-	return json.Unmarshal(b, &m)
-}
-
-func (a StringStringMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(a)
-}
 
 type Receiver struct {
 	Id             uint64 `gorm:"primarykey"`
@@ -52,7 +16,7 @@ type Receiver struct {
 	UpdatedAt      time.Time
 }
 
-func (receiver *Receiver) fromDomain(t *domain.Receiver) *Receiver {
+func (receiver *Receiver) FromDomain(t *domain.Receiver) *Receiver {
 	if t == nil {
 		return nil
 	}
@@ -67,7 +31,7 @@ func (receiver *Receiver) fromDomain(t *domain.Receiver) *Receiver {
 	return receiver
 }
 
-func (receiver *Receiver) toDomain() *domain.Receiver {
+func (receiver *Receiver) ToDomain() *domain.Receiver {
 	if receiver == nil {
 		return nil
 	}

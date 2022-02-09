@@ -1,24 +1,24 @@
-package receiver
+package postgres
 
 import (
 	"errors"
 	"fmt"
+	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
 
-// Repository talks to the store to read or insert data
-type Repository struct {
-	db            *gorm.DB
+// ReceiverRepository talks to the store to read or insert data
+type ReceiverRepository struct {
+	db *gorm.DB
 }
 
-
-// NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+// NewReceiverRepository returns repository struct
+func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
+	return &ReceiverRepository{db}
 }
 
-func (r Repository) List() ([]*Receiver, error) {
-	var receivers []*Receiver
+func (r ReceiverRepository) List() ([]*model.Receiver, error) {
+	var receivers []*model.Receiver
 	selectQuery := "select * from receivers"
 	result := r.db.Raw(selectQuery).Find(&receivers)
 	if result.Error != nil {
@@ -28,8 +28,8 @@ func (r Repository) List() ([]*Receiver, error) {
 	return receivers, nil
 }
 
-func (r Repository) Create(receiver *Receiver) (*Receiver, error) {
-	var newReceiver Receiver
+func (r ReceiverRepository) Create(receiver *model.Receiver) (*model.Receiver, error) {
+	var newReceiver model.Receiver
 	result := r.db.Create(receiver)
 	if result.Error != nil {
 		return nil, result.Error
@@ -43,8 +43,8 @@ func (r Repository) Create(receiver *Receiver) (*Receiver, error) {
 	return &newReceiver, nil
 }
 
-func (r Repository) Get(id uint64) (*Receiver, error) {
-	var receiver Receiver
+func (r ReceiverRepository) Get(id uint64) (*model.Receiver, error) {
+	var receiver model.Receiver
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&receiver)
 	if result.Error != nil {
 		return nil, result.Error
@@ -56,8 +56,8 @@ func (r Repository) Get(id uint64) (*Receiver, error) {
 	return &receiver, nil
 }
 
-func (r Repository) Update(receiver *Receiver) (*Receiver, error) {
-	var newReceiver, existingReceiver Receiver
+func (r ReceiverRepository) Update(receiver *model.Receiver) (*model.Receiver, error) {
+	var newReceiver, existingReceiver model.Receiver
 	result := r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&existingReceiver)
 	if result.Error != nil {
 		return nil, result.Error
@@ -78,14 +78,14 @@ func (r Repository) Update(receiver *Receiver) (*Receiver, error) {
 	return &newReceiver, nil
 }
 
-func (r Repository) Delete(id uint64) error {
-	var receiver Receiver
+func (r ReceiverRepository) Delete(id uint64) error {
+	var receiver model.Receiver
 	result := r.db.Where("id = ?", id).Delete(&receiver)
 	return result.Error
 }
 
-func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Receiver{})
+func (r ReceiverRepository) Migrate() error {
+	err := r.db.AutoMigrate(&model.Receiver{})
 	if err != nil {
 		return err
 	}

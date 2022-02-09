@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store/model"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -11,7 +12,7 @@ import (
 
 type SlackRepositoryTestSuite struct {
 	suite.Suite
-	repository SlackRepository
+	repository model.SlackRepository
 	slacker    *mocks.SlackService
 }
 

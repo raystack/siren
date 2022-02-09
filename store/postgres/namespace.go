@@ -7,17 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// TemplateRepository talks to the store to read or insert data
-type Repository struct {
+// NamespaceRepository talks to the store to read or insert data
+type NamespaceRepository struct {
 	db *gorm.DB
 }
 
-// NewTemplateRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+// NewNamespaceRepository returns repository struct
+func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
+	return &NamespaceRepository{db}
 }
 
-func (r Repository) List() ([]*model.Namespace, error) {
+func (r NamespaceRepository) List() ([]*model.Namespace, error) {
 	var namespaces []*model.Namespace
 	selectQuery := "select * from namespaces"
 	result := r.db.Raw(selectQuery).Find(&namespaces)
@@ -28,7 +28,7 @@ func (r Repository) List() ([]*model.Namespace, error) {
 	return namespaces, nil
 }
 
-func (r Repository) Create(namespace *model.Namespace) (*model.Namespace, error) {
+func (r NamespaceRepository) Create(namespace *model.Namespace) (*model.Namespace, error) {
 	var newNamespace model.Namespace
 	result := r.db.Create(namespace)
 	if result.Error != nil {
@@ -43,7 +43,7 @@ func (r Repository) Create(namespace *model.Namespace) (*model.Namespace, error)
 	return &newNamespace, nil
 }
 
-func (r Repository) Get(id uint64) (*model.Namespace, error) {
+func (r NamespaceRepository) Get(id uint64) (*model.Namespace, error) {
 	var namespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&namespace)
 	if result.Error != nil {
@@ -56,7 +56,7 @@ func (r Repository) Get(id uint64) (*model.Namespace, error) {
 	return &namespace, nil
 }
 
-func (r Repository) Update(namespace *model.Namespace) (*model.Namespace, error) {
+func (r NamespaceRepository) Update(namespace *model.Namespace) (*model.Namespace, error) {
 	var newNamespace, existingNamespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&existingNamespace)
 	if result.Error != nil {
@@ -78,13 +78,13 @@ func (r Repository) Update(namespace *model.Namespace) (*model.Namespace, error)
 	return &newNamespace, nil
 }
 
-func (r Repository) Delete(id uint64) error {
+func (r NamespaceRepository) Delete(id uint64) error {
 	var namespace model.Namespace
 	result := r.db.Where("id = ?", id).Delete(&namespace)
 	return result.Error
 }
 
-func (r Repository) Migrate() error {
+func (r NamespaceRepository) Migrate() error {
 	err := r.db.AutoMigrate(&model.Namespace{})
 	if err != nil {
 		return err

@@ -69,7 +69,7 @@ func NewService(db *gorm.DB, encryptionKey string) (domain.NamespaceService, err
 		return nil, errors.Wrap(err, "failed to create transformer")
 	}
 
-	return &Service{postgres.NewRepository(db), transformer}, nil
+	return &Service{postgres.NewNamespaceRepository(db), transformer}, nil
 }
 
 func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
