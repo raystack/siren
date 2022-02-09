@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/provider"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -28,7 +28,7 @@ func (a StringStringMap) Value() (driver.Value, error) {
 
 type Namespace struct {
 	Id          uint64 `gorm:"primarykey"`
-	Provider    *provider.Provider
+	Provider    *model.Provider
 	ProviderId  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
 	Urn         string `gorm:"uniqueIndex:urn_provider_id_unique"`
 	Name        string

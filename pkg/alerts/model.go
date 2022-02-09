@@ -2,13 +2,13 @@ package alerts
 
 import (
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/provider"
+	"github.com/odpf/siren/store/model"
 	"time"
 )
 
 type Alert struct {
 	Id           uint64 `gorm:"primarykey"`
-	Provider     *provider.Provider
+	Provider     *model.Provider
 	ProviderId   uint64
 	ResourceName string
 	MetricName   string

@@ -1,4 +1,4 @@
-package provider
+package postgres
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
@@ -26,14 +27,14 @@ type RepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository ProviderRepository
+	repository model.ProviderRepository
 }
 
 func (s *RepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewRepository(db)
+	s.repository = NewProviderRepository(db)
 }
 
 func (s *RepositoryTestSuite) TearDownTest() {
@@ -43,12 +44,12 @@ func (s *RepositoryTestSuite) TearDownTest() {
 func (s *RepositoryTestSuite) TestList() {
 	s.Run("should get all providers", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
-		credentials := make(StringInterfaceMap)
+		credentials := make(model.StringInterfaceMap)
 		credentials["foo"] = "bar"
-		labels := make(StringStringMap)
+		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		provider := &Provider{
+		provider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -59,7 +60,7 @@ func (s *RepositoryTestSuite) TestList() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProviders := []*Provider{provider}
+		expectedProviders := []*model.Provider{provider}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
@@ -74,12 +75,12 @@ func (s *RepositoryTestSuite) TestList() {
 
 	s.Run("should get all providers by filters", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
-		credentials := make(StringInterfaceMap)
+		credentials := make(model.StringInterfaceMap)
 		credentials["foo"] = "bar"
-		labels := make(StringStringMap)
+		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		provider := &Provider{
+		provider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -90,7 +91,7 @@ func (s *RepositoryTestSuite) TestList() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProviders := []*Provider{provider}
+		expectedProviders := []*model.Provider{provider}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
@@ -117,9 +118,9 @@ func (s *RepositoryTestSuite) TestList() {
 }
 
 func (s *RepositoryTestSuite) TestCreate() {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should create a provider", func() {
@@ -127,7 +128,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -160,7 +161,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "providers" 
 											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -187,7 +188,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
 											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -212,14 +213,14 @@ func (s *RepositoryTestSuite) TestCreate() {
 }
 
 func (s *RepositoryTestSuite) TestGet() {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should get provider by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -265,9 +266,9 @@ func (s *RepositoryTestSuite) TestGet() {
 }
 
 func (s *RepositoryTestSuite) TestUpdate() {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should update a provider", func() {
@@ -277,7 +278,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						WHERE id = $8 AND "id" = $9`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -288,7 +289,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &Provider{
+		input := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -324,7 +325,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	s.Run("should return error if provider does not exist", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &Provider{
+		input := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -346,7 +347,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	s.Run("should return error in finding the provider", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &Provider{
+		input := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -371,7 +372,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						SET "host"=$1,"name"=$2,"type"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7 
 						WHERE id = $8 AND "id" = $9`)
 		timeNow := time.Now()
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -382,7 +383,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &Provider{
+		input := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -416,7 +417,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 						WHERE id = $8 AND "id" = $9`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedProvider := &Provider{
+		expectedProvider := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -427,7 +428,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &Provider{
+		input := &model.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",

@@ -3,15 +3,16 @@ package provider
 import (
 	"errors"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestListProviders(t *testing.T) {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	t.Run("should call repository List method and return result in domain's type", func(t *testing.T) {
@@ -29,7 +30,7 @@ func TestListProviders(t *testing.T) {
 				UpdatedAt:   time.Now(),
 			},
 		}
-		providers := []*Provider{
+		providers := []*model.Provider{
 			{
 				Id:          10,
 				Host:        "foo",
@@ -62,9 +63,9 @@ func TestListProviders(t *testing.T) {
 }
 
 func TestCreateProvider(t *testing.T) {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProvider := &domain.Provider{
@@ -77,7 +78,7 @@ func TestCreateProvider(t *testing.T) {
 		CreatedAt:   timenow,
 		UpdatedAt:   timenow,
 	}
-	provider := &Provider{
+	provider := &model.Provider{
 		Id:          10,
 		Host:        "foo",
 		Type:        "bar",
@@ -112,9 +113,9 @@ func TestCreateProvider(t *testing.T) {
 
 func TestGetProvider(t *testing.T) {
 	providerID := uint64(10)
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProvider := &domain.Provider{
@@ -127,7 +128,7 @@ func TestGetProvider(t *testing.T) {
 		CreatedAt:   timenow,
 		UpdatedAt:   timenow,
 	}
-	provider := &Provider{
+	provider := &model.Provider{
 		Id:          10,
 		Host:        "foo",
 		Type:        "bar",
@@ -162,9 +163,9 @@ func TestGetProvider(t *testing.T) {
 
 func TestUpdateProvider(t *testing.T) {
 	timenow := time.Now()
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	dummyProvider := &domain.Provider{
 		Id:          10,
@@ -176,7 +177,7 @@ func TestUpdateProvider(t *testing.T) {
 		CreatedAt:   timenow,
 		UpdatedAt:   timenow,
 	}
-	provider := &Provider{
+	provider := &model.Provider{
 		Id:          10,
 		Host:        "foo",
 		Type:        "bar",
@@ -210,9 +211,9 @@ func TestUpdateProvider(t *testing.T) {
 }
 
 func TestDeleteProvider(t *testing.T) {
-	credentials := make(StringInterfaceMap)
+	credentials := make(model.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	providerID := uint64(10)
 

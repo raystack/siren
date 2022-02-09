@@ -2,18 +2,20 @@ package provider
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 // Service handles business logic
 type Service struct {
-	repository ProviderRepository
+	repository model.ProviderRepository
 }
 
 // NewService returns repository struct
 func NewService(db *gorm.DB) domain.ProviderService {
-	return &Service{NewRepository(db)}
+	return &Service{postgres.NewProviderRepository(db)}
 }
 
 func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.Provider, error) {
@@ -24,7 +26,7 @@ func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.
 
 	domainProviders := make([]*domain.Provider, 0, len(providers))
 	for i := 0; i < len(providers); i++ {
-		provider := providers[i].toDomain()
+		provider := providers[i].ToDomain()
 		domainProviders = append(domainProviders, provider)
 	}
 
@@ -33,13 +35,13 @@ func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.
 }
 
 func (service Service) CreateProvider(provider *domain.Provider) (*domain.Provider, error) {
-	p := &Provider{}
-	newProvider, err := service.repository.Create(p.fromDomain(provider))
+	p := &model.Provider{}
+	newProvider, err := service.repository.Create(p.FromDomain(provider))
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.Create")
 	}
 
-	return newProvider.toDomain(), nil
+	return newProvider.ToDomain(), nil
 }
 
 func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
@@ -48,17 +50,17 @@ func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
 		return nil, err
 	}
 
-	return provider.toDomain(), nil
+	return provider.ToDomain(), nil
 }
 
 func (service Service) UpdateProvider(provider *domain.Provider) (*domain.Provider, error) {
-	w := &Provider{}
-	newProvider, err := service.repository.Update(w.fromDomain(provider))
+	w := &model.Provider{}
+	newProvider, err := service.repository.Update(w.FromDomain(provider))
 	if err != nil {
 		return nil, err
 	}
 
-	return newProvider.toDomain(), nil
+	return newProvider.ToDomain(), nil
 }
 
 func (service Service) DeleteProvider(id uint64) error {

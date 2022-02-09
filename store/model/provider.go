@@ -1,4 +1,4 @@
-package provider
+package model
 
 import (
 	"database/sql/driver"
@@ -54,7 +54,7 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (provider *Provider) fromDomain(t *domain.Provider) *Provider {
+func (provider *Provider) FromDomain(t *domain.Provider) *Provider {
 	if t == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (provider *Provider) fromDomain(t *domain.Provider) *Provider {
 	return provider
 }
 
-func (provider *Provider) toDomain() *domain.Provider {
+func (provider *Provider) ToDomain() *domain.Provider {
 	if provider == nil {
 		return nil
 	}

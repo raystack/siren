@@ -1,9 +1,10 @@
-package provider
+package postgres
 
 import (
 	"errors"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
 
@@ -12,18 +13,18 @@ type Filters struct {
 	Type string `mapstructure:"type" validate:"omitempty"`
 }
 
-// Repository talks to the store to read or insert data
-type Repository struct {
+// ProviderRepository talks to the store to read or insert data
+type ProviderRepository struct {
 	db *gorm.DB
 }
 
-// NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db}
+// NewProviderRepository returns repository struct
+func NewProviderRepository(db *gorm.DB) *ProviderRepository {
+	return &ProviderRepository{db}
 }
 
-func (r Repository) List(filters map[string]interface{}) ([]*Provider, error) {
-	var providers []*Provider
+func (r ProviderRepository) List(filters map[string]interface{}) ([]*model.Provider, error) {
+	var providers []*model.Provider
 	var conditions Filters
 	if err := mapstructure.Decode(filters, &conditions); err != nil {
 		return nil, err
@@ -45,8 +46,8 @@ func (r Repository) List(filters map[string]interface{}) ([]*Provider, error) {
 	return providers, nil
 }
 
-func (r Repository) Create(provider *Provider) (*Provider, error) {
-	var newProvider Provider
+func (r ProviderRepository) Create(provider *model.Provider) (*model.Provider, error) {
+	var newProvider model.Provider
 	result := r.db.Create(provider)
 	if result.Error != nil {
 		return nil, result.Error
@@ -60,8 +61,8 @@ func (r Repository) Create(provider *Provider) (*Provider, error) {
 	return &newProvider, nil
 }
 
-func (r Repository) Get(id uint64) (*Provider, error) {
-	var provider Provider
+func (r ProviderRepository) Get(id uint64) (*model.Provider, error) {
+	var provider model.Provider
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&provider)
 	if result.Error != nil {
 		return nil, result.Error
@@ -73,8 +74,8 @@ func (r Repository) Get(id uint64) (*Provider, error) {
 	return &provider, nil
 }
 
-func (r Repository) Update(provider *Provider) (*Provider, error) {
-	var newProvider, existingProvider Provider
+func (r ProviderRepository) Update(provider *model.Provider) (*model.Provider, error) {
+	var newProvider, existingProvider model.Provider
 	result := r.db.Where(fmt.Sprintf("id = %d", provider.Id)).Find(&existingProvider)
 	if result.Error != nil {
 		return nil, result.Error
@@ -95,14 +96,14 @@ func (r Repository) Update(provider *Provider) (*Provider, error) {
 	return &newProvider, nil
 }
 
-func (r Repository) Delete(id uint64) error {
-	var provider Provider
+func (r ProviderRepository) Delete(id uint64) error {
+	var provider model.Provider
 	result := r.db.Where("id = ?", id).Delete(&provider)
 	return result.Error
 }
 
-func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Provider{})
+func (r ProviderRepository) Migrate() error {
+	err := r.db.AutoMigrate(&model.Provider{})
 	if err != nil {
 		return err
 	}
