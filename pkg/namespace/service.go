@@ -7,9 +7,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
-	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 	"io"
 )
 
@@ -64,13 +62,13 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(db *gorm.DB, encryptionKey string) (domain.NamespaceService, error) {
+func NewService(repository store.NamespaceRepository, encryptionKey string) (domain.NamespaceService, error) {
 	transformer, err := NewTransformer(encryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create transformer")
 	}
 
-	return &Service{postgres.NewNamespaceRepository(db), transformer}, nil
+	return &Service{repository, transformer}, nil
 }
 
 func (s Service) ListNamespaces() ([]*domain.Namespace, error) {

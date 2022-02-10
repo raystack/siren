@@ -1,6 +1,10 @@
 package store
 
-import "github.com/odpf/siren/store/model"
+import (
+	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
+	"gorm.io/gorm"
+)
 
 type NamespaceRepository interface {
 	Migrate() error
@@ -36,4 +40,20 @@ type TemplatesRepository interface {
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
 	Migrate() error
+}
+
+type RepositoryContainer struct {
+	ProviderRepository  ProviderRepository
+	NamespaceRepository NamespaceRepository
+	TemplatesRepository TemplatesRepository
+	ReceiverRepository  ReceiverRepository
+}
+
+func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
+	return &RepositoryContainer{
+		NamespaceRepository: postgres.NewNamespaceRepository(db),
+		ProviderRepository:  postgres.NewProviderRepository(db),
+		ReceiverRepository:  postgres.NewReceiverRepository(db),
+		TemplatesRepository: postgres.NewTemplateRepository(db),
+	}
 }

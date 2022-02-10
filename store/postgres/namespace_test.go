@@ -1,4 +1,4 @@
-package postgres
+package postgres_test
 
 import (
 	"database/sql"
@@ -7,6 +7,7 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 	"regexp"
@@ -25,7 +26,7 @@ func (s *NamespaceRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewNamespaceRepository(db)
+	s.repository = postgres.NewNamespaceRepository(db)
 }
 
 func (s *NamespaceRepositoryTestSuite) TearDownTest() {

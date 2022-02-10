@@ -1,4 +1,4 @@
-package postgres
+package postgres_test
 
 import (
 	"database/sql"
@@ -7,10 +7,10 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
-	"text/template"
 	"time"
 )
 
@@ -25,7 +25,7 @@ func (s *TemplateRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewTemplateRepository(db)
+	s.repository = postgres.NewTemplateRepository(db)
 }
 
 func (s *TemplateRepositoryTestSuite) TearDownTest() {
@@ -428,35 +428,6 @@ func (s *TemplateRepositoryTestSuite) TestRender() {
 		inputBody["color"] = "brown"
 		renderedBody, err := s.repository.Render("foo", inputBody)
 		s.Equal(err.Error(), "template not found")
-		s.Equal("", renderedBody)
-	})
-
-	s.Run("should return error if any in template parse", func() {
-		expectedErrorMessage := "random error"
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "The quick [[.color]] fox jumped over the [[.adjective]] dog.",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"color","default":"red","type":"string","description":"test"}, {"name":"adjective","default":"lazy","type":"string","description":"test"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-		inputBody := make(map[string]string)
-		oldTemplateParse := templateParser
-		defer func() { templateParser = oldTemplateParse }()
-		templateParser = func(_ string) (*template.Template, error) {
-			return nil, errors.New(expectedErrorMessage)
-		}
-		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.Equal(err.Error(), expectedErrorMessage)
 		s.Equal("", renderedBody)
 	})
 }

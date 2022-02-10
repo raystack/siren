@@ -4,8 +4,6 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
-	"github.com/odpf/siren/store/postgres"
-	"gorm.io/gorm"
 )
 
 // Service handles business logic
@@ -14,8 +12,8 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB) domain.TemplatesService {
-	return &Service{postgres.NewTemplateRepository(db)}
+func NewService(repository store.TemplatesRepository) domain.TemplatesService {
+	return &Service{repository}
 }
 
 func (service Service) Migrate() error {

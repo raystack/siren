@@ -5,9 +5,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
-	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 const (
@@ -34,8 +32,7 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(db *gorm.DB, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
-	repository := postgres.NewReceiverRepository(db)
+func NewService(repository store.ReceiverRepository, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
 	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create slack helper")

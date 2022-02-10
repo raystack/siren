@@ -4,9 +4,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
-	"github.com/odpf/siren/store/postgres"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 // Service handles business logic
@@ -15,8 +13,8 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB) domain.ProviderService {
-	return &Service{postgres.NewProviderRepository(db)}
+func NewService(repository store.ProviderRepository) domain.ProviderService {
+	return &Service{repository}
 }
 
 func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.Provider, error) {

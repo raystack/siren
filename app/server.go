@@ -7,9 +7,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/service"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"net/http"
 	"strings"
@@ -28,7 +28,6 @@ import (
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
 	"golang.org/x/net/http2/h2c"
 )
@@ -73,13 +72,14 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	store, err := store.New(&c.DB)
+	gormDB, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}
 
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, httpClient)
+	repositories := store.NewRepositoryContainer(gormDB)
+	services, err := service.Init(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func RunServer(c *domain.Config) error {
 }
 
 func RunMigrations(c *domain.Config) error {
-	store, err := store.New(&c.DB)
+	gormDB, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}
@@ -174,12 +174,13 @@ func RunMigrations(c *domain.Config) error {
 		return nil
 	}
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, httpClient)
+	repositories := store.NewRepositoryContainer(gormDB)
+	services, err := service.Init(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
 
-	err = services.MigrateAll(store)
+	err = services.MigrateAll(gormDB)
 	if err != nil {
 		return err
 	}

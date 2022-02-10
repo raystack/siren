@@ -1,4 +1,4 @@
-package postgres
+package postgres_test
 
 import (
 	"database/sql"
@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
@@ -23,7 +24,7 @@ type ReceiverRepositoryTestSuite struct {
 
 func (s *ReceiverRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
-	repo := NewReceiverRepository(db)
+	repo := postgres.NewReceiverRepository(db)
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
 	s.repository = repo

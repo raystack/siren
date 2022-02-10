@@ -1,4 +1,4 @@
-package postgres
+package postgres_test
 
 import (
 	"database/sql"
@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
@@ -35,7 +36,7 @@ func (s *ProviderRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewProviderRepository(db)
+	s.repository = postgres.NewProviderRepository(db)
 }
 
 func (s *ProviderRepositoryTestSuite) TearDownTest() {
