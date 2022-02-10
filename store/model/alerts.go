@@ -1,14 +1,13 @@
-package alerts
+package model
 
 import (
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 	"time"
 )
 
 type Alert struct {
 	Id           uint64 `gorm:"primarykey"`
-	Provider     *model.Provider
+	Provider     *Provider
 	ProviderId   uint64
 	ResourceName string
 	MetricName   string
@@ -26,7 +25,7 @@ type AlertRepository interface {
 	Migrate() error
 }
 
-func (a *Alert) fromDomain(alert *domain.Alert) {
+func (a *Alert) FromDomain(alert *domain.Alert) {
 	a.Id = alert.Id
 	a.ProviderId = alert.ProviderId
 	a.ResourceName = alert.ResourceName
@@ -39,7 +38,7 @@ func (a *Alert) fromDomain(alert *domain.Alert) {
 	a.UpdatedAt = alert.UpdatedAt
 }
 
-func (a *Alert) toDomain() domain.Alert {
+func (a *Alert) ToDomain() domain.Alert {
 	return domain.Alert{
 		Id:           a.Id,
 		ProviderId:   a.ProviderId,
