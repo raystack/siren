@@ -3,7 +3,7 @@ package slacknotifier
 import (
 	"fmt"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/slack"
+	"github.com/odpf/siren/plugins/providers/slack"
 	"github.com/pkg/errors"
 	goslack "github.com/slack-go/slack"
 )

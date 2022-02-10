@@ -2,7 +2,7 @@ package receiver
 
 import (
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/slack"
+	"github.com/odpf/siren/plugins/providers/slack"
 	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 )
