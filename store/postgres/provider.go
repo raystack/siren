@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
@@ -23,7 +24,7 @@ func NewProviderRepository(db *gorm.DB) *ProviderRepository {
 	return &ProviderRepository{db}
 }
 
-func (r ProviderRepository) List(filters map[string]interface{}) ([]*model.Provider, error) {
+func (r ProviderRepository) List(filters map[string]interface{}) ([]*domain.Provider, error) {
 	var providers []*model.Provider
 	var conditions Filters
 	if err := mapstructure.Decode(filters, &conditions); err != nil {
@@ -42,13 +43,17 @@ func (r ProviderRepository) List(filters map[string]interface{}) ([]*model.Provi
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	return providers, nil
+	domainProviders := make([]*domain.Provider, 0, len(providers))
+	for i := 0; i < len(providers); i++ {
+		provider := providers[i].ToDomain()
+		domainProviders = append(domainProviders, provider)
+	}
+	return domainProviders, nil
 }
 
-func (r ProviderRepository) Create(provider *model.Provider) (*model.Provider, error) {
+func (r ProviderRepository) Create(provider *domain.Provider) (*domain.Provider, error) {
 	var newProvider model.Provider
-	result := r.db.Create(provider)
+	result := r.db.Create(newProvider.FromDomain(provider))
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -58,10 +63,10 @@ func (r ProviderRepository) Create(provider *model.Provider) (*model.Provider, e
 		return nil, result.Error
 	}
 
-	return &newProvider, nil
+	return newProvider.ToDomain(), nil
 }
 
-func (r ProviderRepository) Get(id uint64) (*model.Provider, error) {
+func (r ProviderRepository) Get(id uint64) (*domain.Provider, error) {
 	var provider model.Provider
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&provider)
 	if result.Error != nil {
@@ -71,29 +76,31 @@ func (r ProviderRepository) Get(id uint64) (*model.Provider, error) {
 		return nil, nil
 	}
 
-	return &provider, nil
+	return provider.ToDomain(), nil
 }
 
-func (r ProviderRepository) Update(provider *model.Provider) (*model.Provider, error) {
+func (r ProviderRepository) Update(provider *domain.Provider) (*domain.Provider, error) {
+	inputProvider := model.Provider{}
+	inputProvider.FromDomain(provider)
 	var newProvider, existingProvider model.Provider
-	result := r.db.Where(fmt.Sprintf("id = %d", provider.Id)).Find(&existingProvider)
+	result := r.db.Where(fmt.Sprintf("id = %d", inputProvider.Id)).Find(&existingProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
 		return nil, errors.New("provider doesn't exist")
 	} else {
-		result = r.db.Where("id = ?", provider.Id).Updates(provider)
+		result = r.db.Where("id = ?", inputProvider.Id).Updates(inputProvider)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", provider.Id)).Find(&newProvider)
+	result = r.db.Where(fmt.Sprintf("id = %d", inputProvider.Id)).Find(&newProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &newProvider, nil
+	return newProvider.ToDomain(), nil
 }
 
 func (r ProviderRepository) Delete(id uint64) error {

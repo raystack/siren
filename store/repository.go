@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"gorm.io/gorm"
@@ -17,10 +18,10 @@ type NamespaceRepository interface {
 
 type ProviderRepository interface {
 	Migrate() error
-	List(map[string]interface{}) ([]*model.Provider, error)
-	Create(*model.Provider) (*model.Provider, error)
-	Get(uint64) (*model.Provider, error)
-	Update(*model.Provider) (*model.Provider, error)
+	List(map[string]interface{}) ([]*domain.Provider, error)
+	Create(*domain.Provider) (*domain.Provider, error)
+	Get(uint64) (*domain.Provider, error)
+	Update(*domain.Provider) (*domain.Provider, error)
 	Delete(uint64) error
 }
 
