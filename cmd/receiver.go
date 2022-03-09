@@ -130,7 +130,7 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the receiver config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
@@ -243,9 +243,9 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "receiver id")
-	_ = cmd.MarkFlagRequired("id")
+	cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the receiver config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
@@ -341,9 +341,9 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "receiver id")
-	_ = cmd.MarkFlagRequired("id")
+	cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the receiver notification config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }

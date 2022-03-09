@@ -163,7 +163,7 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the template config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
@@ -313,9 +313,9 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&name, "name", "", "template name")
-	_ = cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("name")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the template config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 	cmd.Flags().StringVar(&format, "format", "yaml", "Print output with the selected format")
 
 	return cmd

@@ -131,7 +131,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the provider config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
@@ -246,9 +246,9 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "provider id")
-	_ = cmd.MarkFlagRequired("id")
+	cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the provider config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }

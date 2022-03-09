@@ -180,9 +180,9 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "rule id")
-	_ = cmd.MarkFlagRequired("id")
+	cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the rule config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }

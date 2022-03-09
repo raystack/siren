@@ -94,9 +94,9 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&providerName, "provider-name", "", "provider name")
-	_ = cmd.MarkFlagRequired("provider-name")
+	cmd.MarkFlagRequired("provider-name")
 	cmd.Flags().Uint64Var(&providerId, "provider-id", 0, "provider id")
-	_ = cmd.MarkFlagRequired("provider-id")
+	cmd.MarkFlagRequired("provider-id")
 	cmd.Flags().StringVar(&resouceName, "resource-name", "", "resource name")
 	cmd.Flags().Uint64Var(&startTime, "start-time", 0, "start time")
 	cmd.Flags().Uint64Var(&endTime, "end-time", 0, "end time")

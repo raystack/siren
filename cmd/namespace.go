@@ -130,7 +130,7 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "path to the namespace config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
@@ -242,9 +242,9 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 	}
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "namespace id")
-	_ = cmd.MarkFlagRequired("id")
+	cmd.MarkFlagRequired("id")
 	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the namespace config")
-	_ = cmd.MarkFlagRequired("file")
+	cmd.MarkFlagRequired("file")
 
 	return cmd
 }
