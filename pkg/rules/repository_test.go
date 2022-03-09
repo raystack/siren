@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/stretchr/testify/mock"
@@ -14,11 +13,6 @@ import (
 	"testing"
 	"time"
 )
-
-var cortextConfig = cortexClient.Config{
-	Address:         "localhost:port",
-	UseLegacyRoutes: false,
-}
 
 // AnyTime is used to expect arbitrary time value
 type AnyTime struct{}

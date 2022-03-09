@@ -16,11 +16,9 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
-	github.com/jeremywohl/flatten v1.0.1
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.3.0
-	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
@@ -31,7 +29,6 @@ require (
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/slack-go/slack v0.9.3
 	github.com/spf13/cobra v1.2.1
-	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0

@@ -3,6 +3,7 @@ package receiver
 import (
 	"errors"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -26,8 +27,8 @@ func TestService(t *testing.T) {
 }
 
 func (s *ServiceTestSuite) TestService_ListReceivers() {
-	configurations := make(StringInterfaceMap)
-	labels := make(StringStringMap)
+	configurations := make(model.StringInterfaceMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	s.Run("should call repository List method and return result in domain's type", func() {
@@ -43,7 +44,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 				UpdatedAt:      time.Now(),
 			},
 		}
-		receivers := []*Receiver{
+		receivers := []*model.Receiver{
 			{
 				Id:             10,
 				Name:           "foo",
@@ -81,7 +82,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 
 	s.Run("should call repository List method and return error if post slack transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		receivers := []*Receiver{
+		receivers := []*model.Receiver{
 			{
 				Id:             10,
 				Name:           "foo",
@@ -107,12 +108,12 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 }
 
 func (s *ServiceTestSuite) TestService_CreateReceiver() {
-	configurations := make(StringInterfaceMap)
+	configurations := make(model.StringInterfaceMap)
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"
 
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 
@@ -138,7 +139,7 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
-	receiver := &Receiver{
+	receiver := &model.Receiver{
 		Id:             10,
 		Name:           "foo",
 		Type:           "slack",
@@ -201,13 +202,13 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 
 func (s *ServiceTestSuite) TestService_GetReceiver() {
 	receiverID := uint64(10)
-	configurations := make(StringInterfaceMap)
+	configurations := make(model.StringInterfaceMap)
 	configurations["token"] = "key"
 
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
-	data := make(StringInterfaceMap)
+	data := make(model.StringInterfaceMap)
 	data["channels"] = "[{\"id\":\"1\",\"name\":\"foo\"}]"
 
 	timenow := time.Now()
@@ -221,7 +222,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
-	receiver := &Receiver{
+	receiver := &model.Receiver{
 		Id:             10,
 		Name:           "foo",
 		Type:           "slack",
@@ -237,7 +238,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		s.slackHelperMock.On("PostTransform", receiver).
 			Return(receiver, nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "key").
-			Return([]Channel{
+			Return([]model.Channel{
 				{ID: "1", Name: "foo"},
 			}, nil).Once()
 
@@ -249,7 +250,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 	s.Run("should call repository Get method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock}
-		newConfigurations := make(StringInterfaceMap)
+		newConfigurations := make(model.StringInterfaceMap)
 		newConfigurations["token"] = "key"
 		receiver.Configurations = newConfigurations
 
@@ -297,7 +298,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		}
 		defer func() { jsonMarshal = oldjsonMarshal }()
 
-		newConfigurations := make(StringInterfaceMap)
+		newConfigurations := make(model.StringInterfaceMap)
 		newConfigurations["token"] = "key"
 		receiver.Configurations = newConfigurations
 
@@ -305,7 +306,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		s.slackHelperMock.On("PostTransform", receiver).
 			Return(receiver, nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "key").
-			Return([]Channel{
+			Return([]model.Channel{
 				{ID: "1", Name: string([]byte{0xff})},
 			}, nil).Once()
 
@@ -318,12 +319,12 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 	timenow := time.Now()
-	configurations := make(StringInterfaceMap)
+	configurations := make(model.StringInterfaceMap)
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"
 
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	receiverRequest := &domain.Receiver{
 		Id:             10,
@@ -335,7 +336,7 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 		UpdatedAt:      timenow,
 	}
 
-	receiver := &Receiver{
+	receiver := &model.Receiver{
 		Id:     10,
 		Name:   "foo",
 		Type:   "slack",
@@ -398,10 +399,10 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 }
 
 func (s *ServiceTestSuite) TestService_DeleteReceiver() {
-	configurations := make(StringInterfaceMap)
+	configurations := make(model.StringInterfaceMap)
 	configurations["foo"] = "bar"
 
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	receiverID := uint64(10)
 

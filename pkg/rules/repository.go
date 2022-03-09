@@ -76,7 +76,7 @@ func (r Repository) Migrate() error {
 func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, templateService domain.TemplatesService, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
-		if *rulesWithinGroup[i].Enabled == false {
+		if !*rulesWithinGroup[i].Enabled {
 			continue
 		}
 		inputValue := make(map[string]string)

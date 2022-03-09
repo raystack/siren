@@ -2,63 +2,33 @@ package provider
 
 import (
 	"github.com/odpf/siren/domain"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
+	"github.com/odpf/siren/store"
 )
 
 // Service handles business logic
 type Service struct {
-	repository ProviderRepository
+	repository store.ProviderRepository
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB) domain.ProviderService {
-	return &Service{NewRepository(db)}
+func NewService(repository store.ProviderRepository) domain.ProviderService {
+	return &Service{repository}
 }
 
 func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.Provider, error) {
-	providers, err := service.repository.List(filters)
-	if err != nil {
-		return nil, errors.Wrap(err, "service.repository.List")
-	}
-
-	domainProviders := make([]*domain.Provider, 0, len(providers))
-	for i := 0; i < len(providers); i++ {
-		provider := providers[i].toDomain()
-		domainProviders = append(domainProviders, provider)
-	}
-
-	return domainProviders, nil
-
+	return service.repository.List(filters)
 }
 
 func (service Service) CreateProvider(provider *domain.Provider) (*domain.Provider, error) {
-	p := &Provider{}
-	newProvider, err := service.repository.Create(p.fromDomain(provider))
-	if err != nil {
-		return nil, errors.Wrap(err, "service.repository.Create")
-	}
-
-	return newProvider.toDomain(), nil
+	return service.repository.Create(provider)
 }
 
 func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
-	provider, err := service.repository.Get(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return provider.toDomain(), nil
+	return service.repository.Get(id)
 }
 
 func (service Service) UpdateProvider(provider *domain.Provider) (*domain.Provider, error) {
-	w := &Provider{}
-	newProvider, err := service.repository.Update(w.fromDomain(provider))
-	if err != nil {
-		return nil, err
-	}
-
-	return newProvider.toDomain(), nil
+	return service.repository.Update(provider)
 }
 
 func (service Service) DeleteProvider(id uint64) error {

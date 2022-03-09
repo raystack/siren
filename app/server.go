@@ -7,9 +7,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/service"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
 	"google.golang.org/protobuf/encoding/protojson"
 	"net/http"
 	"strings"
@@ -20,15 +20,14 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	v1 "github.com/odpf/siren/api/handlers/v1"
+	"github.com/odpf/siren/api/handlers/v1beta1"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/metric"
+	"github.com/odpf/siren/telemetry"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/service"
 	"github.com/odpf/siren/store"
 	"golang.org/x/net/http2/h2c"
 )
@@ -60,7 +59,7 @@ func getZapLogLevelFromString(level string) zapcore.Level {
 
 // RunServer runs the application server
 func RunServer(c *domain.Config) error {
-	nr, err := metric.New(&c.NewRelic)
+	nr, err := telemetry.New(&c.NewRelic)
 	if err != nil {
 		return err
 	}
@@ -73,13 +72,14 @@ func RunServer(c *domain.Config) error {
 		return err
 	}
 
-	store, err := store.New(&c.DB)
+	gormDB, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}
 
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, httpClient)
+	repositories := store.NewRepositoryContainer(gormDB)
+	services, err := service.Init(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func RunServer(c *domain.Config) error {
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1.NewGRPCServer(services, nr, logger))
+	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1beta1.NewGRPCServer(services, nr, logger))
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -139,7 +139,6 @@ func RunServer(c *domain.Config) error {
 	baseMux := http.NewServeMux()
 	baseMux.HandleFunc("/siren.swagger.json", func(w http.ResponseWriter, r *http.Request) {
 		http.FileServer(http.FS(swaggerFile)).ServeHTTP(w, r)
-		return
 	})
 	baseMux.Handle("/documentation", middleware.SwaggerUI(middleware.SwaggerUIOpts{
 		SpecURL: "/siren.swagger.json",
@@ -166,7 +165,7 @@ func RunServer(c *domain.Config) error {
 }
 
 func RunMigrations(c *domain.Config) error {
-	store, err := store.New(&c.DB)
+	gormDB, err := store.New(&c.DB)
 	if err != nil {
 		return err
 	}
@@ -175,12 +174,16 @@ func RunMigrations(c *domain.Config) error {
 		return nil
 	}
 	httpClient := &http.Client{}
-	services, err := service.Init(store, c, httpClient)
+	repositories := store.NewRepositoryContainer(gormDB)
+	services, err := service.Init(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
 
-	services.MigrateAll(store)
+	err = services.MigrateAll(gormDB)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -3,6 +3,7 @@
 package receiver
 
 import (
+	"github.com/odpf/siren/store/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -12,15 +13,15 @@ type MockSlackRepository struct {
 }
 
 // GetWorkspaceChannel provides a mock function with given fields: _a0
-func (_m *MockSlackRepository) GetWorkspaceChannels(_a0 string) ([]Channel, error) {
+func (_m *MockSlackRepository) GetWorkspaceChannels(_a0 string) ([]model.Channel, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []Channel
-	if rf, ok := ret.Get(0).(func(string) []Channel); ok {
+	var r0 []model.Channel
+	if rf, ok := ret.Get(0).(func(string) []model.Channel); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]Channel)
+			r0 = ret.Get(0).([]model.Channel)
 		}
 	}
 

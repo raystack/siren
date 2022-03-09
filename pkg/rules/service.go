@@ -3,6 +3,7 @@ package rules
 import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/templates"
+	"github.com/odpf/siren/store"
 	"gorm.io/gorm"
 )
 
@@ -13,10 +14,10 @@ type Service struct {
 }
 
 // NewService returns repository struct
-func NewService(db *gorm.DB) domain.RuleService {
+func NewService(templateRepository store.TemplatesRepository, db *gorm.DB) domain.RuleService {
 	return &Service{
 		repository:      NewRepository(db),
-		templateService: templates.NewService(db),
+		templateService: templates.NewService(templateRepository),
 	}
 }
 

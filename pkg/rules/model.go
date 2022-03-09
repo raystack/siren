@@ -3,7 +3,7 @@ package rules
 import (
 	"encoding/json"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/namespace"
+	"github.com/odpf/siren/store/model"
 	"time"
 )
 
@@ -16,9 +16,9 @@ type Rule struct {
 	GroupName             string `gorm:"uniqueIndex:unique_name"`
 	Template              string `gorm:"uniqueIndex:unique_name"`
 	Enabled               *bool
-	Variables             string               `gorm:"type:jsonb" sql:"type:jsonb"`
-	ProviderNamespace     uint64               `gorm:"uniqueIndex:unique_name"`
-	ProviderNamespaceInfo *namespace.Namespace `gorm:"foreignKey:ProviderNamespace"`
+	Variables             string           `gorm:"type:jsonb" sql:"type:jsonb"`
+	ProviderNamespace     uint64           `gorm:"uniqueIndex:unique_name"`
+	ProviderNamespaceInfo *model.Namespace `gorm:"foreignKey:ProviderNamespace"`
 }
 
 func (rule *Rule) fromDomain(r *domain.Rule) (*Rule, error) {
