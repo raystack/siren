@@ -2,6 +2,7 @@ package namespace
 
 import (
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -11,14 +12,14 @@ import (
 )
 
 func TestService_ListNamespaces(t *testing.T) {
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	t.Run("should call repository List method and return result in decrypted format", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*Namespace{
+		dummyNamespaces := []*model.Namespace{
 			{
 				Id:          1,
 				ProviderId:  1,
@@ -68,7 +69,7 @@ func TestService_ListNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*Namespace{
+		dummyNamespaces := []*model.Namespace{
 			{
 				Id:          1,
 				ProviderId:  1,
@@ -93,7 +94,7 @@ func TestService_ListNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*Namespace{
+		dummyNamespaces := []*model.Namespace{
 			{
 				Id:          1,
 				ProviderId:  1,
@@ -118,7 +119,7 @@ func TestService_ListNamespaces(t *testing.T) {
 func TestService_CreateNamespaces(t *testing.T) {
 	credentials := make(map[string]interface{})
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	timeNow := time.Now()
 	dummyNamespace := &domain.Namespace{
@@ -130,7 +131,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 		CreatedAt:   timeNow,
 		UpdatedAt:   timeNow,
 	}
-	namespace := &Namespace{
+	namespace := &model.Namespace{
 		Id:          2,
 		ProviderId:  1,
 		Name:        "foo",
@@ -144,10 +145,10 @@ func TestService_CreateNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Create", mock.AnythingOfType("*namespace.Namespace")).
+		repositoryMock.On("Create", mock.AnythingOfType("*model.Namespace")).
 			Run(func(args mock.Arguments) {
 				rarg := args.Get(0)
-				r := rarg.(*Namespace)
+				r := rarg.(*model.Namespace)
 				assert.Equal(t, "foo", r.Name)
 				assert.Equal(t, uint64(2), r.Id)
 				assert.Equal(t, uint64(1), r.ProviderId)
@@ -165,7 +166,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Create", mock.AnythingOfType("*namespace.Namespace")).
+		repositoryMock.On("Create", mock.AnythingOfType("*model.Namespace")).
 			Return(nil, errors.New("random error")).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
@@ -209,14 +210,14 @@ func TestService_CreateNamespaces(t *testing.T) {
 }
 
 func TestService_GetNamespace(t *testing.T) {
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	t.Run("should call repository Get method and return result in decrypted format", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespace := &Namespace{
+		dummyNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Name:        "foo",
@@ -261,7 +262,7 @@ func TestService_GetNamespace(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespace := &Namespace{
+		dummyNamespace := &model.Namespace{
 			Id:          1,
 			ProviderId:  1,
 			Name:        "foo",
@@ -345,7 +346,7 @@ func TestService_GetNamespace(t *testing.T) {
 func TestService_UpdateNamespaces(t *testing.T) {
 	credentials := make(map[string]interface{})
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	timeNow := time.Now()
 	dummyNamespace := &domain.Namespace{
@@ -357,7 +358,7 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		CreatedAt:   timeNow,
 		UpdatedAt:   timeNow,
 	}
-	namespace := &Namespace{
+	namespace := &model.Namespace{
 		Id:          2,
 		ProviderId:  1,
 		Name:        "foo",
@@ -371,10 +372,10 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Update", mock.AnythingOfType("*namespace.Namespace")).
+		repositoryMock.On("Update", mock.AnythingOfType("*model.Namespace")).
 			Run(func(args mock.Arguments) {
 				rarg := args.Get(0)
-				r := rarg.(*Namespace)
+				r := rarg.(*model.Namespace)
 				assert.Equal(t, "foo", r.Name)
 				assert.Equal(t, uint64(2), r.Id)
 				assert.Equal(t, uint64(1), r.ProviderId)
@@ -392,7 +393,7 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Update", mock.AnythingOfType("*namespace.Namespace")).
+		repositoryMock.On("Update", mock.AnythingOfType("*model.Namespace")).
 			Return(nil, errors.New("random error")).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
@@ -438,7 +439,7 @@ func TestService_UpdateNamespaces(t *testing.T) {
 func TestService_DeleteNamespace(t *testing.T) {
 	credentials := make(map[string]interface{})
 	credentials["foo"] = "bar"
-	labels := make(StringStringMap)
+	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 
 	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {

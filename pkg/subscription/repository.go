@@ -22,7 +22,7 @@ func NewRepository(db *gorm.DB) *Repository {
 
 func (r Repository) List() ([]*Subscription, error) {
 	var subscriptions []*Subscription
-	selectQuery := fmt.Sprintf("select * from subscriptions")
+	selectQuery := "select * from subscriptions"
 	result := r.db.Raw(selectQuery).Find(&subscriptions)
 	if result.Error != nil {
 		return nil, result.Error

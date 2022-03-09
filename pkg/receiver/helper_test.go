@@ -3,6 +3,7 @@ package receiver
 import (
 	"errors"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -99,7 +100,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
 
 func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 
-	response := &Receiver{
+	response := &model.Receiver{
 		Configurations: map[string]interface{}{
 			"token": "test-token",
 		},
@@ -108,7 +109,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 	s.Run("should transform payload on successful decrypt", func() {
 		configurations := make(map[string]interface{})
 		configurations["token"] = "YmFy"
-		payload := &Receiver{
+		payload := &model.Receiver{
 			Configurations: configurations,
 		}
 
@@ -129,7 +130,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 	s.Run("should return error if slack token decryption failed", func() {
 		configurations := make(map[string]interface{})
 		configurations["token"] = "YmFy"
-		payload := &Receiver{
+		payload := &model.Receiver{
 			Configurations: configurations,
 		}
 

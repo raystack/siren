@@ -152,7 +152,7 @@ func TestSyncConfig(t *testing.T) {
 			assert.Equal(t, "fake", tenant)
 			requestBody := ConfigCompat{}
 			buf := new(bytes.Buffer)
-			buf.ReadFrom(r.Body)
+			_, _ = buf.ReadFrom(r.Body)
 			err := yaml.Unmarshal(buf.Bytes(), &requestBody)
 			if err != nil {
 				t.Fatal(err)

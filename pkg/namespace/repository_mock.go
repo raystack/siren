@@ -3,6 +3,7 @@
 package namespace
 
 import (
+	"github.com/odpf/siren/store/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -12,20 +13,20 @@ type NamespaceRepositoryMock struct {
 }
 
 // Create provides a mock function with given fields: _a0
-func (_m *NamespaceRepositoryMock) Create(_a0 *Namespace) (*Namespace, error) {
+func (_m *NamespaceRepositoryMock) Create(_a0 *model.Namespace) (*model.Namespace, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Namespace
-	if rf, ok := ret.Get(0).(func(*Namespace) *Namespace); ok {
+	var r0 *model.Namespace
+	if rf, ok := ret.Get(0).(func(*model.Namespace) *model.Namespace); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Namespace)
+			r0 = ret.Get(0).(*model.Namespace)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*Namespace) error); ok {
+	if rf, ok := ret.Get(1).(func(*model.Namespace) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -49,15 +50,15 @@ func (_m *NamespaceRepositoryMock) Delete(_a0 uint64) error {
 }
 
 // Get provides a mock function with given fields: _a0
-func (_m *NamespaceRepositoryMock) Get(_a0 uint64) (*Namespace, error) {
+func (_m *NamespaceRepositoryMock) Get(_a0 uint64) (*model.Namespace, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Namespace
-	if rf, ok := ret.Get(0).(func(uint64) *Namespace); ok {
+	var r0 *model.Namespace
+	if rf, ok := ret.Get(0).(func(uint64) *model.Namespace); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Namespace)
+			r0 = ret.Get(0).(*model.Namespace)
 		}
 	}
 
@@ -72,15 +73,15 @@ func (_m *NamespaceRepositoryMock) Get(_a0 uint64) (*Namespace, error) {
 }
 
 // List provides a mock function with given fields:
-func (_m *NamespaceRepositoryMock) List() ([]*Namespace, error) {
+func (_m *NamespaceRepositoryMock) List() ([]*model.Namespace, error) {
 	ret := _m.Called()
 
-	var r0 []*Namespace
-	if rf, ok := ret.Get(0).(func() []*Namespace); ok {
+	var r0 []*model.Namespace
+	if rf, ok := ret.Get(0).(func() []*model.Namespace); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*Namespace)
+			r0 = ret.Get(0).([]*model.Namespace)
 		}
 	}
 
@@ -109,20 +110,20 @@ func (_m *NamespaceRepositoryMock) Migrate() error {
 }
 
 // Update provides a mock function with given fields: _a0
-func (_m *NamespaceRepositoryMock) Update(_a0 *Namespace) (*Namespace, error) {
+func (_m *NamespaceRepositoryMock) Update(_a0 *model.Namespace) (*model.Namespace, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Namespace
-	if rf, ok := ret.Get(0).(func(*Namespace) *Namespace); ok {
+	var r0 *model.Namespace
+	if rf, ok := ret.Get(0).(func(*model.Namespace) *model.Namespace); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Namespace)
+			r0 = ret.Get(0).(*model.Namespace)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*Namespace) error); ok {
+	if rf, ok := ret.Get(1).(func(*model.Namespace) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)

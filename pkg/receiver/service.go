@@ -2,10 +2,10 @@ package receiver
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 const (
@@ -26,14 +26,13 @@ type CodeExchangeHTTPResponse struct {
 
 // Service handles business logic
 type Service struct {
-	repository      ReceiverRepository
-	slackRepository SlackRepository
+	repository      store.ReceiverRepository
+	slackRepository model.SlackRepository
 	slackHelper     SlackHelper
 }
 
 // NewService returns service struct
-func NewService(db *gorm.DB, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
-	repository := NewRepository(db)
+func NewService(repository store.ReceiverRepository, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
 	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create slack helper")
@@ -63,7 +62,7 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 			}
 		}
 
-		domainReceivers = append(domainReceivers, receiver.toDomain())
+		domainReceivers = append(domainReceivers, receiver.ToDomain())
 	}
 
 	return domainReceivers, nil
@@ -72,7 +71,7 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 
 func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
 	var err error
-	p := &Receiver{}
+	p := &model.Receiver{}
 
 	if receiver.Type == Slack {
 		receiver, err = service.slackHelper.PreTransform(receiver)
@@ -81,7 +80,7 @@ func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	payload := p.fromDomain(receiver)
+	payload := p.FromDomain(receiver)
 	newReceiver, err := service.repository.Create(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.Create")
@@ -94,7 +93,7 @@ func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	return newReceiver.toDomain(), nil
+	return newReceiver.ToDomain(), nil
 }
 
 func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
@@ -112,24 +111,24 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 		token := receiver.Configurations["token"].(string)
 		channels, err := service.slackRepository.GetWorkspaceChannels(token)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("could not get channels"))
+			return nil, errors.Wrap(err, "could not get channels")
 		}
 
 		data, err := jsonMarshal(channels)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid channels"))
+			return nil, errors.Wrap(err, "invalid channels")
 		}
 
 		receiver.Data = make(map[string]interface{})
 		receiver.Data["channels"] = string(data)
 	}
 
-	return receiver.toDomain(), nil
+	return receiver.ToDomain(), nil
 }
 
 func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
 	var err error
-	p := &Receiver{}
+	p := &model.Receiver{}
 
 	if receiver.Type == Slack {
 		receiver, err = service.slackHelper.PreTransform(receiver)
@@ -138,13 +137,13 @@ func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	payload := p.fromDomain(receiver)
+	payload := p.FromDomain(receiver)
 	newReceiver, err := service.repository.Update(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	return newReceiver.toDomain(), nil
+	return newReceiver.ToDomain(), nil
 }
 
 func (service Service) DeleteReceiver(id uint64) error {

@@ -4,6 +4,7 @@ package receiver
 
 import (
 	domain "github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -55,20 +56,20 @@ func (_m *MockSlackHelper) Encrypt(_a0 string) (string, error) {
 }
 
 // PostTransform provides a mock function with given fields: _a0
-func (_m *MockSlackHelper) PostTransform(_a0 *Receiver) (*Receiver, error) {
+func (_m *MockSlackHelper) PostTransform(_a0 *model.Receiver) (*model.Receiver, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *Receiver
-	if rf, ok := ret.Get(0).(func(*Receiver) *Receiver); ok {
+	var r0 *model.Receiver
+	if rf, ok := ret.Get(0).(func(*model.Receiver) *model.Receiver); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Receiver)
+			r0 = ret.Get(0).(*model.Receiver)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*Receiver) error); ok {
+	if rf, ok := ret.Get(1).(func(*model.Receiver) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)

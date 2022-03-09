@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"github.com/gtank/cryptopasta"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 	"io"
 )
@@ -14,7 +15,7 @@ var cryptopastaDecryptor = cryptopasta.Decrypt
 
 type Transformer interface {
 	PreTransform(*domain.Receiver) (*domain.Receiver, error)
-	PostTransform(*Receiver) (*Receiver, error)
+	PostTransform(*model.Receiver) (*model.Receiver, error)
 }
 
 type SlackHelper interface {
@@ -68,7 +69,7 @@ func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver,
 	return payload, nil
 }
 
-func (sh *slackHelper) PostTransform(r *Receiver) (*Receiver, error) {
+func (sh *slackHelper) PostTransform(r *model.Receiver) (*model.Receiver, error) {
 	encryptedToken := r.Configurations["token"].(string)
 	token, err := sh.Decrypt(encryptedToken)
 	if err != nil {
