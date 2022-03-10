@@ -13,6 +13,11 @@ type Namespace struct {
 	UpdatedAt   time.Time              `json:"updated_at"`
 }
 
+type EncryptedNamespace struct {
+	*Namespace
+	Credentials string
+}
+
 type NamespaceService interface {
 	ListNamespaces() ([]*Namespace, error)
 	CreateNamespace(*Namespace) (*Namespace, error)

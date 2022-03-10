@@ -9,10 +9,10 @@ import (
 
 type NamespaceRepository interface {
 	Migrate() error
-	List() ([]*model.Namespace, error)
-	Create(*model.Namespace) (*model.Namespace, error)
-	Get(uint64) (*model.Namespace, error)
-	Update(*model.Namespace) (*model.Namespace, error)
+	List() ([]*domain.EncryptedNamespace, error)
+	Create(*domain.EncryptedNamespace) (*domain.EncryptedNamespace, error)
+	Get(uint64) (*domain.EncryptedNamespace, error)
+	Update(*domain.EncryptedNamespace) (*domain.EncryptedNamespace, error)
 	Delete(uint64) error
 }
 

@@ -3,6 +3,8 @@ package postgres
 import (
 	"errors"
 	"fmt"
+
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
@@ -17,33 +19,38 @@ func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
 	return &NamespaceRepository{db}
 }
 
-func (r NamespaceRepository) List() ([]*model.Namespace, error) {
-	var namespaces []*model.Namespace
+func (r NamespaceRepository) List() ([]*domain.EncryptedNamespace, error) {
+	var namespaceModels []*model.Namespace
 	selectQuery := "select * from namespaces"
-	result := r.db.Raw(selectQuery).Find(&namespaces)
-	if result.Error != nil {
-		return nil, result.Error
+	if err := r.db.Raw(selectQuery).Find(&namespaceModels).Error; err != nil {
+		return nil, err
 	}
 
-	return namespaces, nil
+	var result []*domain.EncryptedNamespace
+	for _, m := range namespaceModels {
+		n, err := m.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, n)
+	}
+	return result, nil
 }
 
-func (r NamespaceRepository) Create(namespace *model.Namespace) (*model.Namespace, error) {
+func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
 	var newNamespace model.Namespace
-	result := r.db.Create(namespace)
-	if result.Error != nil {
-		return nil, result.Error
+	if err := newNamespace.FromDomain(namespace); err != nil {
+		return nil, err
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&newNamespace)
-	if result.Error != nil {
-		return nil, result.Error
+	if err := r.db.Create(newNamespace).Error; err != nil {
+		return nil, err
 	}
 
-	return &newNamespace, nil
+	return newNamespace.ToDomain()
 }
 
-func (r NamespaceRepository) Get(id uint64) (*model.Namespace, error) {
+func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) {
 	var namespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&namespace)
 	if result.Error != nil {
@@ -53,11 +60,15 @@ func (r NamespaceRepository) Get(id uint64) (*model.Namespace, error) {
 		return nil, nil
 	}
 
-	return &namespace, nil
+	return namespace.ToDomain()
 }
 
-func (r NamespaceRepository) Update(namespace *model.Namespace) (*model.Namespace, error) {
+func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
 	var newNamespace, existingNamespace model.Namespace
+	if err := newNamespace.FromDomain(namespace); err != nil {
+		return nil, err
+	}
+
 	result := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&existingNamespace)
 	if result.Error != nil {
 		return nil, result.Error
@@ -75,7 +86,7 @@ func (r NamespaceRepository) Update(namespace *model.Namespace) (*model.Namespac
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &newNamespace, nil
+	return newNamespace.ToDomain()
 }
 
 func (r NamespaceRepository) Delete(id uint64) error {
