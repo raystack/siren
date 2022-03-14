@@ -37,21 +37,25 @@ func (r NamespaceRepository) List() ([]*domain.EncryptedNamespace, error) {
 	return result, nil
 }
 
-func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
-	newNamespace := new(model.Namespace)
-	if err := newNamespace.FromDomain(namespace); err != nil {
-		return nil, err
+func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) error {
+	nsModel := new(model.Namespace)
+	if err := nsModel.FromDomain(namespace); err != nil {
+		return err
 	}
 
-	if err := r.db.Create(newNamespace).Error; err != nil {
-		return nil, err
-	}
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := r.db.Create(nsModel).Error; err != nil {
+			return err
+		}
 
-	if err := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&newNamespace).Error; err != nil {
-		return nil, err
-	}
+		newNamespace, err := nsModel.ToDomain()
+		if err != nil {
+			return err
+		}
+		*namespace = *newNamespace
 
-	return newNamespace.ToDomain()
+		return nil
+	})
 }
 
 func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) {
@@ -67,30 +71,29 @@ func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) 
 	return namespace.ToDomain()
 }
 
-func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
+func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) error {
 	m := new(model.Namespace)
 	if err := m.FromDomain(namespace); err != nil {
-		return nil, err
+		return err
 	}
 
-	var newNamespace, existingNamespace model.Namespace
-	result := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&existingNamespace)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return nil, errors.New("namespace doesn't exist")
-	} else {
-		if err := r.db.Where("id = ?", m.Id).Updates(m).Error; err != nil {
-			return nil, err
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		result := r.db.Where("id = ?", m.Id).Updates(m)
+		if result.Error != nil {
+			return result.Error
 		}
-	}
+		if result.RowsAffected == 0 {
+			return errors.New("namespace doesn't exist")
+		}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&newNamespace)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return newNamespace.ToDomain()
+		newNamespace, err := m.ToDomain()
+		if err != nil {
+			return err
+		}
+		*namespace = *newNamespace
+
+		return nil
+	})
 }
 
 func (r NamespaceRepository) Delete(id uint64) error {

@@ -137,17 +137,6 @@ func TestService_CreateNamespaces(t *testing.T) {
 		CreatedAt:   timeNow,
 		UpdatedAt:   timeNow,
 	}
-	namespace := &domain.EncryptedNamespace{
-		Namespace: &domain.Namespace{
-			Id:        2,
-			Provider:  1,
-			Name:      "foo",
-			Labels:    labels,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-		},
-		Credentials: `encrypted-text-1`,
-	}
 
 	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
@@ -160,12 +149,11 @@ func TestService_CreateNamespaces(t *testing.T) {
 				assert.Equal(t, "foo", r.Name)
 				assert.Equal(t, uint64(2), r.Id)
 				assert.Equal(t, uint64(1), r.Provider)
-			}).Return(namespace, nil).Once()
+			}).Return(nil).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		result, err := dummyService.CreateNamespace(dummyNamespace)
+		err := dummyService.CreateNamespace(dummyNamespace)
 		assert.Nil(t, err)
-		assert.Equal(t, dummyNamespace, result)
 		repositoryMock.AssertExpectations(t)
 		transformerMock.AssertExpectations(t)
 	})
@@ -175,11 +163,10 @@ func TestService_CreateNamespaces(t *testing.T) {
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		result, err := dummyService.CreateNamespace(dummyNamespace)
-		assert.Nil(t, result)
+		err := dummyService.CreateNamespace(dummyNamespace)
 		assert.EqualError(t, err, "s.repository.Create: random error")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -190,8 +177,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", errors.New("random error")).Once()
-		result, err := dummyService.CreateNamespace(dummyNamespace)
-		assert.Nil(t, result)
+		err := dummyService.CreateNamespace(dummyNamespace)
 		assert.EqualError(t, err, "s.transformer.Encrypt: random error")
 		transformerMock.AssertExpectations(t)
 	})
@@ -211,8 +197,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
-		result, err := dummyService.CreateNamespace(badNamespace)
-		assert.Nil(t, result)
+		err := dummyService.CreateNamespace(badNamespace)
 		assert.True(t, strings.Contains(err.Error(), `json.Marshal: json: unsupported type: chan int`))
 	})
 }
@@ -368,17 +353,6 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		CreatedAt:   timeNow,
 		UpdatedAt:   timeNow,
 	}
-	namespace := &domain.EncryptedNamespace{
-		Namespace: &domain.Namespace{
-			Id:        2,
-			Provider:  1,
-			Name:      "foo",
-			Labels:    labels,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-		},
-		Credentials: `encrypted-text-1`,
-	}
 
 	t.Run("should call repository Update method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
@@ -391,12 +365,11 @@ func TestService_UpdateNamespaces(t *testing.T) {
 				assert.Equal(t, "foo", r.Name)
 				assert.Equal(t, uint64(2), r.Id)
 				assert.Equal(t, uint64(1), r.Provider)
-			}).Return(namespace, nil).Once()
+			}).Return(nil).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		result, err := dummyService.UpdateNamespace(dummyNamespace)
+		err := dummyService.UpdateNamespace(dummyNamespace)
 		assert.Nil(t, err)
-		assert.Equal(t, dummyNamespace, result)
 		repositoryMock.AssertExpectations(t)
 		transformerMock.AssertExpectations(t)
 	})
@@ -406,11 +379,10 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		transformerMock := &EncryptorDecryptorMock{}
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		repositoryMock.On("Update", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		result, err := dummyService.UpdateNamespace(dummyNamespace)
-		assert.Nil(t, result)
+		err := dummyService.UpdateNamespace(dummyNamespace)
 		assert.EqualError(t, err, "s.repository.Update: random error")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -421,8 +393,7 @@ func TestService_UpdateNamespaces(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", errors.New("random error")).Once()
-		result, err := dummyService.UpdateNamespace(dummyNamespace)
-		assert.Nil(t, result)
+		err := dummyService.UpdateNamespace(dummyNamespace)
 		assert.EqualError(t, err, "s.transformer.Encrypt: random error")
 		transformerMock.AssertExpectations(t)
 	})
@@ -442,8 +413,7 @@ func TestService_UpdateNamespaces(t *testing.T) {
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
-		result, err := dummyService.UpdateNamespace(badNamespace)
-		assert.Nil(t, result)
+		err := dummyService.UpdateNamespace(badNamespace)
 		assert.True(t, strings.Contains(err.Error(), `json.Marshal: json: unsupported type: chan int`))
 	})
 }

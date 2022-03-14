@@ -89,17 +89,17 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 	return namespaces, nil
 }
 
-func (s Service) CreateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
+func (s Service) CreateNamespace(namespace *domain.Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if _, err := s.repository.Create(encryptedNamespace); err != nil {
-		return nil, errors.Wrap(err, "s.repository.Create")
+	if err := s.repository.Create(encryptedNamespace); err != nil {
+		return errors.Wrap(err, "s.repository.Create")
 	}
 
-	return namespace, nil
+	return nil
 }
 
 func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
@@ -114,19 +114,19 @@ func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s Service) UpdateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
+func (s Service) UpdateNamespace(namespace *domain.Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	updatedNamespace, err := s.repository.Update(encryptedNamespace)
-	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.Update")
+	if err := s.repository.Update(encryptedNamespace); err != nil {
+		return errors.Wrap(err, "s.repository.Update")
 	}
 
-	updatedNamespace.Namespace.Credentials = namespace.Credentials
-	return updatedNamespace.Namespace, nil
+	encryptedNamespace.Namespace.Credentials = namespace.Credentials
+	*namespace = *encryptedNamespace.Namespace
+	return nil
 }
 
 func (s Service) DeleteNamespace(id uint64) error {

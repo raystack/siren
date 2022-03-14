@@ -20,9 +20,9 @@ type EncryptedNamespace struct {
 
 type NamespaceService interface {
 	ListNamespaces() ([]*Namespace, error)
-	CreateNamespace(*Namespace) (*Namespace, error)
+	CreateNamespace(*Namespace) error
 	GetNamespace(uint64) (*Namespace, error)
-	UpdateNamespace(*Namespace) (*Namespace, error)
+	UpdateNamespace(*Namespace) error
 	DeleteNamespace(uint64) error
 	Migrate() error
 }
