@@ -38,12 +38,16 @@ func (r NamespaceRepository) List() ([]*domain.EncryptedNamespace, error) {
 }
 
 func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
-	var newNamespace model.Namespace
+	newNamespace := new(model.Namespace)
 	if err := newNamespace.FromDomain(namespace); err != nil {
 		return nil, err
 	}
 
 	if err := r.db.Create(newNamespace).Error; err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&newNamespace).Error; err != nil {
 		return nil, err
 	}
 
@@ -64,11 +68,12 @@ func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) 
 }
 
 func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) (*domain.EncryptedNamespace, error) {
-	var newNamespace, existingNamespace model.Namespace
-	if err := newNamespace.FromDomain(namespace); err != nil {
+	m := new(model.Namespace)
+	if err := m.FromDomain(namespace); err != nil {
 		return nil, err
 	}
 
+	var newNamespace, existingNamespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", namespace.Id)).Find(&existingNamespace)
 	if result.Error != nil {
 		return nil, result.Error
@@ -76,9 +81,8 @@ func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) (*doma
 	if result.RowsAffected == 0 {
 		return nil, errors.New("namespace doesn't exist")
 	} else {
-		result = r.db.Where("id = ?", namespace.Id).Updates(namespace)
-		if result.Error != nil {
-			return nil, result.Error
+		if err := r.db.Where("id = ?", m.Id).Updates(m).Error; err != nil {
+			return nil, err
 		}
 	}
 

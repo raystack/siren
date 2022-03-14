@@ -28,7 +28,7 @@ func (namespace *Namespace) FromDomain(n *domain.EncryptedNamespace) error {
 	namespace.Name = n.Name
 	namespace.ProviderId = n.Provider
 	namespace.Credentials = n.Credentials
-	namespace.Labels = n.Labels
+	namespace.Labels = StringStringMap(n.Labels)
 	namespace.CreatedAt = n.CreatedAt
 	namespace.UpdatedAt = n.UpdatedAt
 	return nil

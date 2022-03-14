@@ -80,7 +80,7 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 
 	namespaces := make([]*domain.Namespace, 0, len(encrytpedNamespaces))
 	for _, en := range encrytpedNamespaces {
-		ns, err := s.fromEncryptedNamespace(en)
+		ns, err := s.decrypt(en)
 		if err != nil {
 			return nil, err
 		}
@@ -90,17 +90,16 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 }
 
 func (s Service) CreateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
-	encryptedNamespace, err := s.toEncryptedNamespace(namespace)
+	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	newNamespace, err := s.repository.Create(encryptedNamespace)
-	if err != nil {
+	if _, err := s.repository.Create(encryptedNamespace); err != nil {
 		return nil, errors.Wrap(err, "s.repository.Create")
 	}
 
-	return newNamespace.Namespace, nil
+	return namespace, nil
 }
 
 func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
@@ -112,11 +111,11 @@ func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
 		return nil, nil
 	}
 
-	return s.fromEncryptedNamespace(encryptedNamespace)
+	return s.decrypt(encryptedNamespace)
 }
 
 func (s Service) UpdateNamespace(namespace *domain.Namespace) (*domain.Namespace, error) {
-	encryptedNamespace, err := s.toEncryptedNamespace(namespace)
+	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -138,14 +137,14 @@ func (s Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-func (s Service) toEncryptedNamespace(ns *domain.Namespace) (*domain.EncryptedNamespace, error) {
+func (s Service) encrypt(ns *domain.Namespace) (*domain.EncryptedNamespace, error) {
 	plainTextCredentials, err := json.Marshal(ns.Credentials)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to stringify credentials")
+		return nil, errors.Wrap(err, "json.Marshal")
 	}
 	encryptedCredentials, err := s.transformer.Encrypt(string(plainTextCredentials))
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to encrypt credentials")
+		return nil, errors.Wrap(err, "s.transformer.Encrypt")
 	}
 
 	return &domain.EncryptedNamespace{
@@ -154,7 +153,7 @@ func (s Service) toEncryptedNamespace(ns *domain.Namespace) (*domain.EncryptedNa
 	}, nil
 }
 
-func (s Service) fromEncryptedNamespace(ens *domain.EncryptedNamespace) (*domain.Namespace, error) {
+func (s Service) decrypt(ens *domain.EncryptedNamespace) (*domain.Namespace, error) {
 	decryptedCredentialsStr, err := s.transformer.Decrypt(ens.Credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.transformer.Decrypt")
@@ -162,7 +161,7 @@ func (s Service) fromEncryptedNamespace(ens *domain.EncryptedNamespace) (*domain
 
 	var decryptedCredentials map[string]interface{}
 	if err := json.Unmarshal([]byte(decryptedCredentialsStr), &decryptedCredentials); err != nil {
-		return nil, errors.Wrap(err, "unable to decrypt credentials")
+		return nil, errors.Wrap(err, "json.Unmarshal")
 	}
 
 	ens.Namespace.Credentials = decryptedCredentials
