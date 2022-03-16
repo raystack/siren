@@ -99,6 +99,9 @@ func (s Service) CreateNamespace(namespace *domain.Namespace) error {
 		return errors.Wrap(err, "s.repository.Create")
 	}
 
+	encryptedNamespace.Namespace.Credentials = namespace.Credentials
+	*namespace = *encryptedNamespace.Namespace
+
 	return nil
 }
 

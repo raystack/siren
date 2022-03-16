@@ -128,8 +128,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 	credentials["foo"] = "bar"
 	labels := map[string]string{"foo": "bar"}
 	timeNow := time.Now()
-	dummyNamespace := &domain.Namespace{
-		Id:          2,
+	input := &domain.Namespace{
 		Provider:    1,
 		Name:        "foo",
 		Credentials: credentials,
@@ -141,19 +140,22 @@ func TestService_CreateNamespaces(t *testing.T) {
 	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
+		expectedID := uint64(2)
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
 			Run(func(args mock.Arguments) {
 				rarg := args.Get(0)
 				r := rarg.(*domain.EncryptedNamespace)
+				assert.Equal(t, uint64(0), r.Namespace.Id)
+				r.Namespace.Id = expectedID // simulate ID creation from repository
 				assert.Equal(t, "foo", r.Name)
-				assert.Equal(t, uint64(2), r.Id)
 				assert.Equal(t, uint64(1), r.Provider)
 			}).Return(nil).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		err := dummyService.CreateNamespace(dummyNamespace)
+		err := dummyService.CreateNamespace(input)
 		assert.Nil(t, err)
+		assert.Equal(t, expectedID, input.Id)
 		repositoryMock.AssertExpectations(t)
 		transformerMock.AssertExpectations(t)
 	})
@@ -166,7 +168,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 			Return(errors.New("random error")).Once()
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", nil).Once()
-		err := dummyService.CreateNamespace(dummyNamespace)
+		err := dummyService.CreateNamespace(input)
 		assert.EqualError(t, err, "s.repository.Create: random error")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -177,7 +179,7 @@ func TestService_CreateNamespaces(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
 		transformerMock.On("Encrypt", `{"foo":"bar"}`).
 			Return("encrypted-text-1", errors.New("random error")).Once()
-		err := dummyService.CreateNamespace(dummyNamespace)
+		err := dummyService.CreateNamespace(input)
 		assert.EqualError(t, err, "s.transformer.Encrypt: random error")
 		transformerMock.AssertExpectations(t)
 	})
