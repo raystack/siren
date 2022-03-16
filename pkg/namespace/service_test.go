@@ -160,6 +160,24 @@ func TestService_CreateNamespaces(t *testing.T) {
 		transformerMock.AssertExpectations(t)
 	})
 
+	t.Run("should encrypt credentials before passing to repository and return decrypted creds", func(t *testing.T) {
+		repositoryMock := &NamespaceRepositoryMock{}
+		dummyTransformer, _ := NewTransformer("abcdefghijklmnopqrstuvwxyzabcdef")
+		dummyService := Service{repository: repositoryMock, transformer: dummyTransformer}
+
+		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
+			Run(func(args mock.Arguments) {
+				param := args.Get(0).(*domain.EncryptedNamespace)
+				assert.NotEmpty(t, param.Credentials)
+				assert.NotEqual(t, input.Credentials, param.Credentials)
+			}).Return(nil).Once()
+
+		err := dummyService.CreateNamespace(input)
+		assert.Nil(t, err)
+		assert.Equal(t, credentials, input.Credentials)
+		repositoryMock.AssertExpectations(t)
+	})
+
 	t.Run("should call repository Create method and return error if any", func(t *testing.T) {
 		repositoryMock := &NamespaceRepositoryMock{}
 		transformerMock := &EncryptorDecryptorMock{}
@@ -230,6 +248,25 @@ func TestService_GetNamespace(t *testing.T) {
 		assert.Equal(t, `bar`, result.Credentials["foo"])
 		repositoryMock.AssertCalled(t, "Get", uint64(1))
 		transformerMock.AssertExpectations(t)
+	})
+
+	t.Run("should return decrypted namespace credentials", func(t *testing.T) {
+		repositoryMock := &NamespaceRepositoryMock{}
+		dummyTransformer, _ := NewTransformer("abcdefghijklmnopqrstuvwxyzabcdef")
+		dummyService := Service{repository: repositoryMock, transformer: dummyTransformer}
+
+		expectedCredentialsStr := `{"foo":"bar"}`
+		expectedCredentials := map[string]interface{}{"foo": "bar"}
+		expectedEncryptedCredentials, _ := dummyTransformer.Encrypt(expectedCredentialsStr)
+		expectedEncruptedNamespace := &domain.EncryptedNamespace{
+			Namespace:   &domain.Namespace{},
+			Credentials: expectedEncryptedCredentials,
+		}
+		repositoryMock.On("Get", mock.AnythingOfType("uint64")).Return(expectedEncruptedNamespace, nil).Once()
+
+		result, err := dummyService.GetNamespace(uint64(1))
+		assert.Nil(t, err)
+		assert.Equal(t, expectedCredentials, result.Credentials)
 	})
 
 	t.Run("should call repository Get method and return nil if namespace does not exist", func(t *testing.T) {
@@ -451,5 +488,11 @@ func TestService_Migrate(t *testing.T) {
 		err := dummyService.Migrate()
 		assert.Nil(t, err)
 		repositoryMock.AssertCalled(t, "Migrate")
+	})
+}
+
+func TestTransformer_Encrypt(t *testing.T) {
+	t.Run("should ", func(t *testing.T) {
+
 	})
 }
