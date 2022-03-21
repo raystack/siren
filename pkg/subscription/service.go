@@ -51,7 +51,7 @@ func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription,
 
 func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
 	ctx = s.repository.WithTransaction(ctx)
-	sortReceivers2(sub)
+	sortReceivers(sub)
 	newSubscription, err := s.repository.Create(ctx, sub)
 	if err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
@@ -86,7 +86,7 @@ func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscr
 
 func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
 	ctx = s.repository.WithTransaction(ctx)
-	sortReceivers2(sub)
+	sortReceivers(sub)
 	updatedSubscription, err := s.repository.Update(ctx, sub)
 	if err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
@@ -109,12 +109,33 @@ func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscriptio
 }
 
 func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
-	return s.repository.Delete(ctx, id, s.namespaceService, s.providerService, s.receiverService)
+	sub, err := s.repository.Get(ctx, id)
+	if err != nil {
+		return errors.Wrap(err, "s.repository.Get")
+	}
+
+	ctx = s.repository.WithTransaction(ctx)
+	if err := s.repository.Delete(ctx, id); err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return errors.Wrap(err, "s.repository.Rollback")
+		}
+		return errors.Wrap(err, "s.repository.Delete")
+	}
+
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return errors.Wrap(err, "s.repository.Rollback")
+		}
+		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+	}
+	return nil
 }
 
 func (s Service) Migrate() error {
 	return s.repository.Migrate()
 }
+
+var alertmanagerClientCreator = alertmanager.NewClient
 
 func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64, namespaceService domain.NamespaceService,
 	providerService domain.ProviderService, receiverService domain.ReceiverService) error {
@@ -241,7 +262,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription,
 	return res, nil
 }
 
-func sortReceivers2(sub *domain.Subscription) {
+func sortReceivers(sub *domain.Subscription) {
 	sort.Slice(sub.Receivers, func(i, j int) bool {
 		return sub.Receivers[i].Id < sub.Receivers[j].Id
 	})
