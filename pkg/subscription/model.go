@@ -130,6 +130,6 @@ type SubscriptionRepository interface {
 	List(context.Context) ([]*domain.Subscription, error)
 	Create(context.Context, *domain.Subscription) (*domain.Subscription, error)
 	Get(context.Context, uint64) (*domain.Subscription, error)
-	Update(context.Context, *domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
+	Update(context.Context, *domain.Subscription) (*domain.Subscription, error)
 	Delete(context.Context, uint64, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) error
 }

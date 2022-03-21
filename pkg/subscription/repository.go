@@ -109,36 +109,22 @@ func (r *Repository) Get(ctx context.Context, id uint64) (*domain.Subscription, 
 	return subscription.toDomain(), nil
 }
 
-func (r *Repository) Update(ctx context.Context, sub *domain.Subscription, namespaceService domain.NamespaceService,
-	providerService domain.ProviderService, receiverService domain.ReceiverService) (*domain.Subscription, error) {
-	var model *Subscription
-	model = model.fromDomain(sub)
-	var newSubscription, existingSubscription Subscription
-	updateError := r.db.Transaction(func(tx *gorm.DB) error {
-		result := r.db.Where(fmt.Sprintf("id = %d", sub.Id)).Find(&existingSubscription)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errors.New("subscription doesn't exist")
-		} else {
-			sortReceivers(model)
-			result = r.db.Where("id = ?", model.Id).Updates(model)
-			if result.Error != nil {
-				return result.Error
-			}
-		}
-		result = r.db.Where(fmt.Sprintf("id = %d", model.Id)).Find(&newSubscription)
-		if result.Error != nil {
-			return result.Error
-		}
-		return r.syncInUpstreamCurrentSubscriptionsOfNamespace(tx, model.NamespaceId, namespaceService,
-			providerService, receiverService)
-	})
-	if updateError != nil {
-		return nil, updateError
+func (r *Repository) Update(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+	db := r.db
+	if tx := getTransaction(ctx); tx != nil {
+		db = tx
 	}
-	return newSubscription.toDomain(), updateError
+
+	model := new(Subscription)
+	model.fromDomain(sub)
+	result := db.Where("id = ?", model.Id).Updates(model)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, errors.New("subscription doesn't exist")
+	}
+	return model.toDomain(), nil
 }
 
 func (r *Repository) Delete(ctx context.Context, id uint64, namespaceService domain.NamespaceService, providerService domain.ProviderService,

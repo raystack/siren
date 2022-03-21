@@ -3,6 +3,7 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/namespace"
@@ -50,6 +51,7 @@ func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription,
 
 func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
 	ctx = s.repository.WithTransaction(ctx)
+	sortReceivers2(sub)
 	newSubscription, err := s.repository.Create(ctx, sub)
 	if err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
@@ -83,9 +85,25 @@ func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscr
 }
 
 func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
-	updatedSubscription, err := s.repository.Update(ctx, sub, s.namespaceService, s.providerService, s.receiverService)
+	ctx = s.repository.WithTransaction(ctx)
+	sortReceivers2(sub)
+	updatedSubscription, err := s.repository.Update(ctx, sub)
 	if err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return nil, errors.Wrap(err, "s.repository.Rollback")
+		}
 		return nil, errors.Wrap(err, "s.repository.Update")
+	}
+
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, updatedSubscription.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return nil, errors.Wrap(err, "s.repository.Rollback")
+		}
+		return nil, errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return nil, errors.Wrap(err, "s.repository.Commit")
 	}
 	return updatedSubscription, nil
 }
@@ -221,4 +239,10 @@ func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription,
 		res = append(res, enrichedSubscription)
 	}
 	return res, nil
+}
+
+func sortReceivers2(sub *domain.Subscription) {
+	sort.Slice(sub.Receivers, func(i, j int) bool {
+		return sub.Receivers[i].Id < sub.Receivers[j].Id
+	})
 }
