@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type ReceiverMetadata struct {
 	Id            uint64            `json:"id"`
@@ -18,10 +21,10 @@ type Subscription struct {
 }
 
 type SubscriptionService interface {
-	ListSubscriptions() ([]*Subscription, error)
-	CreateSubscription(*Subscription) (*Subscription, error)
-	GetSubscription(uint64) (*Subscription, error)
-	UpdateSubscription(*Subscription) (*Subscription, error)
-	DeleteSubscription(uint64) error
+	ListSubscriptions(context.Context) ([]*Subscription, error)
+	CreateSubscription(context.Context, *Subscription) (*Subscription, error)
+	GetSubscription(context.Context, uint64) (*Subscription, error)
+	UpdateSubscription(context.Context, *Subscription) (*Subscription, error)
+	DeleteSubscription(context.Context, uint64) error
 	Migrate() error
 }

@@ -1,12 +1,14 @@
 package subscription
 
 import (
-	"time"
+	"context"
+	"fmt"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
+	"github.com/odpf/siren/pkg/subscription/alertmanager"
 	"github.com/odpf/siren/store"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -18,6 +20,7 @@ type Service struct {
 	providerService  domain.ProviderService
 	namespaceService domain.NamespaceService
 	receiverService  domain.ReceiverService
+	amClient         alertmanager.Client
 }
 
 // NewService returns service struct
@@ -33,11 +36,11 @@ func NewService(providerRepository store.ProviderRepository, namespaceRepository
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
 	return &Service{repository, provider.NewService(providerRepository),
-		namespaceService, receiverService}, nil
+		namespaceService, receiverService, nil}, nil
 }
 
-func (s Service) ListSubscriptions() ([]*domain.Subscription, error) {
-	subscriptions, err := s.repository.List()
+func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription, error) {
+	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
 	}
@@ -45,16 +48,31 @@ func (s Service) ListSubscriptions() ([]*domain.Subscription, error) {
 	return subscriptions, nil
 }
 
-func (s Service) CreateSubscription(sub *domain.Subscription) (*domain.Subscription, error) {
-	newSubscription, err := s.repository.Create(sub, s.namespaceService, s.providerService, s.receiverService)
+func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+	ctx = s.repository.WithTransaction(ctx)
+	newSubscription, err := s.repository.Create(ctx, sub)
 	if err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return nil, errors.Wrap(err, "s.repository.Rollback")
+		}
 		return nil, errors.Wrap(err, "s.repository.Create")
+	}
+
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, newSubscription.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+		if err := s.repository.Rollback(ctx); err != nil {
+			return nil, errors.Wrap(err, "s.repository.Rollback")
+		}
+		return nil, errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return nil, errors.Wrap(err, "s.repository.Commit")
 	}
 	return newSubscription, nil
 }
 
-func (s Service) GetSubscription(id uint64) (*domain.Subscription, error) {
-	subscription, err := s.repository.Get(id)
+func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscription, error) {
+	subscription, err := s.repository.Get(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Get")
 	}
@@ -64,51 +82,143 @@ func (s Service) GetSubscription(id uint64) (*domain.Subscription, error) {
 	return subscription, nil
 }
 
-func (s Service) UpdateSubscription(sub *domain.Subscription) (*domain.Subscription, error) {
-	updatedSubscription, err := s.repository.Update(sub, s.namespaceService, s.providerService, s.receiverService)
+func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+	updatedSubscription, err := s.repository.Update(ctx, sub, s.namespaceService, s.providerService, s.receiverService)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Update")
 	}
 	return updatedSubscription, nil
 }
 
-func (s Service) DeleteSubscription(id uint64) error {
-	return s.repository.Delete(id, s.namespaceService, s.providerService, s.receiverService)
+func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
+	return s.repository.Delete(ctx, id, s.namespaceService, s.providerService, s.receiverService)
 }
 
 func (s Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-type AuditLog struct {
-	Timestamp time.Time
-	Action    string // example: appeal.created, provider.created, provider.updated, etc.
-	Actor     string // example: user@example.com or system
-	Data      interface{}
-	Message   string
+func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64, namespaceService domain.NamespaceService,
+	providerService domain.ProviderService, receiverService domain.ReceiverService) error {
+	// fetch all subscriptions in this namespace.
+	subscriptionsInNamespace, err := s.getAllSubscriptionsWithinNamespace(ctx, namespaceId)
+	if err != nil {
+		return errors.Wrap(err, "s.getAllSubscriptionsWithinNamespace")
+	}
+	// check provider type of the namespace
+	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(namespaceId, namespaceService, providerService)
+	if err != nil {
+		return errors.Wrap(err, "s.getProviderAndNamespaceInfoFromNamespaceId")
+	}
+	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(subscriptionsInNamespace, receiverService)
+	if err != nil {
+		return errors.Wrap(err, "s.addReceiversConfiguration")
+	}
+	// do upstream call to create subscriptions as per provider type
+	switch providerInfo.Type {
+	case "cortex":
+		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
+		newAMClient, err := alertmanagerClientCreator(domain.CortexConfig{Address: providerInfo.Host})
+		if err != nil {
+			return errors.Wrap(err, "alertmanagerClientCreator: ")
+		}
+		s.amClient = newAMClient
+		err = s.amClient.SyncConfig(amConfig, namespaceInfo.Urn)
+		if err != nil {
+			return errors.Wrap(err, "s.amClient.SyncConfig")
+		}
+	default:
+		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", providerInfo.Type))
+	}
+	return nil
 }
 
-type AuditRepository interface {
-	List(filters map[string]interface{}) ([]*AuditLog, error)
-	Create(*AuditLog) error
-	BulkCreate([]*AuditLog) error
+func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*domain.Subscription, error) {
+	subscriptions, err := s.repository.List(ctx) // TODO: pass namespaceID as list filter
+	if err != nil {
+		return nil, errors.Wrap(err, "s.repository.List")
+	}
+	var subscriptionsWithinNamespace []*domain.Subscription
+	for _, sub := range subscriptions {
+		if sub.Namespace == id {
+			subscriptionsWithinNamespace = append(subscriptionsWithinNamespace, sub)
+		}
+	}
+	return subscriptionsWithinNamespace, nil
 }
 
-type AuditAction string
-
-var (
-	ProviderCreated     AuditAction = "provider.created"
-	ResourceBulkCreated AuditAction = "resource.bulkCreated"
-
-	// ...
-)
-
-type ProviderCreatedData domain.Provider
-type ResourceBulkCreatedData struct {
-	CreatedResourceIDs []string
-	RemovedResourceIDs []string
+func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64, namespaceService domain.NamespaceService,
+	providerService domain.ProviderService) (*domain.Provider, *domain.Namespace, error) {
+	namespaceInfo, err := namespaceService.GetNamespace(id)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get namespace details")
+	}
+	providerInfo, err := providerService.GetProvider(namespaceInfo.Provider)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get provider details")
+	}
+	return providerInfo, namespaceInfo, nil
 }
 
-type AuditService interface {
-	Log(...*AuditLog) error
+func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription, receiverService domain.ReceiverService) ([]SubscriptionEnrichedWithReceivers, error) {
+	res := make([]SubscriptionEnrichedWithReceivers, 0)
+	allReceivers, err := receiverService.ListReceivers()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get receivers")
+	}
+	for _, item := range subscriptions {
+		enrichedReceivers := make([]EnrichedReceiverMetadata, 0)
+		for _, receiverItem := range item.Receivers {
+			var receiverInfo *domain.Receiver
+			for idx := range allReceivers {
+				if allReceivers[idx].Id == receiverItem.Id {
+					receiverInfo = allReceivers[idx]
+					break
+				}
+			}
+			if receiverInfo == nil {
+				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.Id))
+			}
+			//initialize the nil map using the make function
+			//to avoid panics while adding elements in future
+			if receiverItem.Configuration == nil {
+				receiverItem.Configuration = make(map[string]string)
+			}
+			switch receiverInfo.Type {
+			case "slack":
+				if _, ok := receiverItem.Configuration["channel_name"]; !ok {
+					return nil, errors.New(fmt.Sprintf(
+						"configuration.channel_name missing from receiver with id %d", receiverItem.Id))
+				}
+				if val, ok := receiverInfo.Configurations["token"]; ok {
+					receiverItem.Configuration["token"] = val.(string)
+				}
+			case "pagerduty":
+				if val, ok := receiverInfo.Configurations["service_key"]; ok {
+					receiverItem.Configuration["service_key"] = val.(string)
+				}
+			case "http":
+				if val, ok := receiverInfo.Configurations["url"]; ok {
+					receiverItem.Configuration["url"] = val.(string)
+				}
+			default:
+				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not supported via Siren inside Cortex`, receiverInfo.Type))
+			}
+			enrichedReceiver := EnrichedReceiverMetadata{
+				Id:            receiverItem.Id,
+				Configuration: receiverItem.Configuration,
+				Type:          receiverInfo.Type,
+			}
+			enrichedReceivers = append(enrichedReceivers, enrichedReceiver)
+		}
+		enrichedSubscription := SubscriptionEnrichedWithReceivers{
+			Id:          item.Id,
+			NamespaceId: item.Namespace,
+			Urn:         item.Urn,
+			Receiver:    enrichedReceivers,
+			Match:       item.Match,
+		}
+		res = append(res, enrichedSubscription)
+	}
+	return res, nil
 }

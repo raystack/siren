@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"time"
@@ -117,11 +118,18 @@ func (s *Subscription) toDomain() *domain.Subscription {
 	return subscription
 }
 
+type Transactor interface {
+	WithTransaction(ctx context.Context) context.Context
+	Rollback(ctx context.Context) error
+	Commit(ctx context.Context) error
+}
+
 type SubscriptionRepository interface {
+	Transactor
 	Migrate() error
-	List() ([]*domain.Subscription, error)
-	Create(*domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
-	Get(uint64) (*domain.Subscription, error)
-	Update(*domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
-	Delete(uint64, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) error
+	List(context.Context) ([]*domain.Subscription, error)
+	Create(context.Context, *domain.Subscription) (*domain.Subscription, error)
+	Get(context.Context, uint64) (*domain.Subscription, error)
+	Update(context.Context, *domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
+	Delete(context.Context, uint64, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) error
 }

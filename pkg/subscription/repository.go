@@ -26,26 +26,23 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db, nil}
 }
 
-func (r *Repository) WithTransaction(ctx context.Context) (context.Context, error) {
-	r.db = r.db.Begin()
-	if r.db.Error != nil {
-		return nil, r.db.Error
-	}
-	return context.WithValue(ctx, transactionContextKey, true), nil
+func (r *Repository) WithTransaction(ctx context.Context) context.Context {
+	tx := r.db.Begin()
+	return context.WithValue(ctx, transactionContextKey, tx)
 }
 
-func isTransactionDB(ctx context.Context) bool {
-	if isTransaction, ok := ctx.Value(transactionContextKey).(bool); !ok {
-		return false
+func getTransaction(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
+		return nil
 	} else {
-		return isTransaction
+		return tx
 	}
 }
 
 func (r *Repository) Rollback(ctx context.Context) error {
-	if isTransactionDB(ctx) {
-		r.db = r.db.Rollback()
-		if r.db.Error != nil {
+	if tx := getTransaction(ctx); tx != nil {
+		tx = tx.Rollback()
+		if tx.Error != nil {
 			return r.db.Error
 		}
 		return nil
@@ -53,7 +50,18 @@ func (r *Repository) Rollback(ctx context.Context) error {
 	return errors.New("no transaction")
 }
 
-func (r Repository) List() ([]*domain.Subscription, error) {
+func (r *Repository) Commit(ctx context.Context) error {
+	if tx := getTransaction(ctx); tx != nil {
+		tx = tx.Commit()
+		if tx.Error != nil {
+			return r.db.Error
+		}
+		return nil
+	}
+	return errors.New("no transaction")
+}
+
+func (r *Repository) List(ctx context.Context) ([]*domain.Subscription, error) {
 	var subscriptionModels []*Subscription
 	selectQuery := "select * from subscriptions"
 	result := r.db.Raw(selectQuery).Find(&subscriptionModels)
@@ -69,27 +77,26 @@ func (r Repository) List() ([]*domain.Subscription, error) {
 	return subscriptions, nil
 }
 
-func (r Repository) Create(sub *domain.Subscription, namespaceService domain.NamespaceService,
-	providerService domain.ProviderService, receiverService domain.ReceiverService) (*domain.Subscription, error) {
+func (r *Repository) Create(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
 	var model Subscription
 	model.fromDomain(sub)
 	var newSubscription *Subscription
 	var err error
-	createError := r.db.Transaction(func(tx *gorm.DB) error {
-		newSubscription, err = r.insertSubscriptionIntoDB(tx, &model)
-		if err != nil {
-			return errors.Wrap(err, "r.insertSubscriptionIntoDB")
-		}
-		return r.syncInUpstreamCurrentSubscriptionsOfNamespace(tx, newSubscription.NamespaceId,
-			namespaceService, providerService, receiverService)
-	})
-	if createError != nil {
-		return nil, createError
+
+	db := r.db
+	if tx := getTransaction(ctx); tx != nil {
+		db = tx
 	}
+
+	newSubscription, err = r.insertSubscriptionIntoDB(db, &model)
+	if err != nil {
+		return nil, errors.Wrap(err, "r.insertSubscriptionIntoDB")
+	}
+
 	return newSubscription.toDomain(), nil
 }
 
-func (r Repository) Get(id uint64) (*domain.Subscription, error) {
+func (r *Repository) Get(ctx context.Context, id uint64) (*domain.Subscription, error) {
 	var subscription Subscription
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&subscription)
 	if result.Error != nil {
@@ -102,7 +109,7 @@ func (r Repository) Get(id uint64) (*domain.Subscription, error) {
 	return subscription.toDomain(), nil
 }
 
-func (r Repository) Update(sub *domain.Subscription, namespaceService domain.NamespaceService,
+func (r *Repository) Update(ctx context.Context, sub *domain.Subscription, namespaceService domain.NamespaceService,
 	providerService domain.ProviderService, receiverService domain.ReceiverService) (*domain.Subscription, error) {
 	var model *Subscription
 	model = model.fromDomain(sub)
@@ -134,7 +141,7 @@ func (r Repository) Update(sub *domain.Subscription, namespaceService domain.Nam
 	return newSubscription.toDomain(), updateError
 }
 
-func (r Repository) Delete(id uint64, namespaceService domain.NamespaceService, providerService domain.ProviderService,
+func (r *Repository) Delete(ctx context.Context, id uint64, namespaceService domain.NamespaceService, providerService domain.ProviderService,
 	receiverService domain.ReceiverService) error {
 	deleteError := r.db.Transaction(func(tx *gorm.DB) error {
 		var subscription Subscription
@@ -155,7 +162,7 @@ func (r Repository) Delete(id uint64, namespaceService domain.NamespaceService, 
 	return deleteError
 }
 
-func (r Repository) Migrate() error {
+func (r *Repository) Migrate() error {
 	err := r.db.AutoMigrate(&Subscription{})
 	if err != nil {
 		return err
@@ -165,7 +172,7 @@ func (r Repository) Migrate() error {
 
 var alertmanagerClientCreator = alertmanager.NewClient
 
-func (r Repository) syncInUpstreamCurrentSubscriptionsOfNamespace(tx *gorm.DB, namespaceId uint64, namespaceService domain.NamespaceService,
+func (r *Repository) syncInUpstreamCurrentSubscriptionsOfNamespace(tx *gorm.DB, namespaceId uint64, namespaceService domain.NamespaceService,
 	providerService domain.ProviderService, receiverService domain.ReceiverService) error {
 	// fetch all subscriptions in this namespace.
 	subscriptionsInNamespace, err := r.getAllSubscriptionsWithinNamespace(tx, namespaceId)
@@ -200,7 +207,7 @@ func (r Repository) syncInUpstreamCurrentSubscriptionsOfNamespace(tx *gorm.DB, n
 	return nil
 }
 
-func (r Repository) getProviderAndNamespaceInfoFromNamespaceId(id uint64, namespaceService domain.NamespaceService,
+func (r *Repository) getProviderAndNamespaceInfoFromNamespaceId(id uint64, namespaceService domain.NamespaceService,
 	providerService domain.ProviderService) (*domain.Provider, *domain.Namespace, error) {
 	namespaceInfo, err := namespaceService.GetNamespace(id)
 	if err != nil {
@@ -213,7 +220,7 @@ func (r Repository) getProviderAndNamespaceInfoFromNamespaceId(id uint64, namesp
 	return providerInfo, namespaceInfo, nil
 }
 
-func (r Repository) insertSubscriptionIntoDB(tx *gorm.DB, sub *Subscription) (*Subscription, error) {
+func (r *Repository) insertSubscriptionIntoDB(tx *gorm.DB, sub *Subscription) (*Subscription, error) {
 	var newSubscription Subscription
 	sortReceivers(sub)
 	result := tx.Create(sub)
@@ -243,7 +250,7 @@ func (r Repository) getAllSubscriptionsWithinNamespace(tx *gorm.DB, id uint64) (
 	return subscriptionsInNamespace, nil
 }
 
-func (r Repository) deleteSubscriptionFromDB(tx *gorm.DB, id uint64) error {
+func (r *Repository) deleteSubscriptionFromDB(tx *gorm.DB, id uint64) error {
 	result := tx.Delete(Subscription{}, id)
 	return result.Error
 }

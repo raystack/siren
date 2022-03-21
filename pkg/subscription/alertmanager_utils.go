@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"fmt"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/subscription/alertmanager"
 	"github.com/pkg/errors"
