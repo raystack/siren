@@ -60,7 +60,7 @@ func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscriptio
 		return nil, errors.Wrap(err, "s.repository.Create")
 	}
 
-	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, newSubscription.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, newSubscription.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
 			return nil, errors.Wrap(err, "s.repository.Rollback")
 		}
@@ -95,7 +95,7 @@ func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscriptio
 		return nil, errors.Wrap(err, "s.repository.Update")
 	}
 
-	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, updatedSubscription.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, updatedSubscription.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
 			return nil, errors.Wrap(err, "s.repository.Rollback")
 		}
@@ -122,7 +122,7 @@ func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
 		return errors.Wrap(err, "s.repository.Delete")
 	}
 
-	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace, s.namespaceService, s.providerService, s.receiverService); err != nil {
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
 			return errors.Wrap(err, "s.repository.Rollback")
 		}
@@ -137,19 +137,18 @@ func (s Service) Migrate() error {
 
 var alertmanagerClientCreator = alertmanager.NewClient
 
-func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64, namespaceService domain.NamespaceService,
-	providerService domain.ProviderService, receiverService domain.ReceiverService) error {
+func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64) error {
 	// fetch all subscriptions in this namespace.
 	subscriptionsInNamespace, err := s.getAllSubscriptionsWithinNamespace(ctx, namespaceId)
 	if err != nil {
 		return errors.Wrap(err, "s.getAllSubscriptionsWithinNamespace")
 	}
 	// check provider type of the namespace
-	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(namespaceId, namespaceService, providerService)
+	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(namespaceId)
 	if err != nil {
 		return errors.Wrap(err, "s.getProviderAndNamespaceInfoFromNamespaceId")
 	}
-	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(subscriptionsInNamespace, receiverService)
+	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(subscriptionsInNamespace)
 	if err != nil {
 		return errors.Wrap(err, "s.addReceiversConfiguration")
 	}
@@ -186,22 +185,21 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 	return subscriptionsWithinNamespace, nil
 }
 
-func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64, namespaceService domain.NamespaceService,
-	providerService domain.ProviderService) (*domain.Provider, *domain.Namespace, error) {
-	namespaceInfo, err := namespaceService.GetNamespace(id)
+func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*domain.Provider, *domain.Namespace, error) {
+	namespaceInfo, err := s.namespaceService.GetNamespace(id)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get namespace details")
 	}
-	providerInfo, err := providerService.GetProvider(namespaceInfo.Provider)
+	providerInfo, err := s.providerService.GetProvider(namespaceInfo.Provider)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get provider details")
 	}
 	return providerInfo, namespaceInfo, nil
 }
 
-func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription, receiverService domain.ReceiverService) ([]SubscriptionEnrichedWithReceivers, error) {
+func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription) ([]SubscriptionEnrichedWithReceivers, error) {
 	res := make([]SubscriptionEnrichedWithReceivers, 0)
-	allReceivers, err := receiverService.ListReceivers()
+	allReceivers, err := s.receiverService.ListReceivers()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get receivers")
 	}
