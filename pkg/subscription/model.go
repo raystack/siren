@@ -3,10 +3,11 @@ package subscription
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"time"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type StringStringMap map[string]string
@@ -118,9 +119,9 @@ func (s *Subscription) toDomain() *domain.Subscription {
 
 type SubscriptionRepository interface {
 	Migrate() error
-	List() ([]*Subscription, error)
-	Create(*Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*Subscription, error)
-	Get(uint64) (*Subscription, error)
-	Update(*Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*Subscription, error)
+	List() ([]*domain.Subscription, error)
+	Create(*domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
+	Get(uint64) (*domain.Subscription, error)
+	Update(*domain.Subscription, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) (*domain.Subscription, error)
 	Delete(uint64, domain.NamespaceService, domain.ProviderService, domain.ReceiverService) error
 }

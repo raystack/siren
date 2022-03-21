@@ -1,6 +1,8 @@
 package subscription
 
 import (
+	"time"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
@@ -39,22 +41,16 @@ func (s Service) ListSubscriptions() ([]*domain.Subscription, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
 	}
-	domainSubscriptions := make([]*domain.Subscription, 0, len(subscriptions))
-	for i := 0; i < len(subscriptions); i++ {
-		domainSubscriptions = append(domainSubscriptions, subscriptions[i].toDomain())
-	}
 
-	return domainSubscriptions, nil
+	return subscriptions, nil
 }
 
-func (s Service) CreateSubscription(domainSubscription *domain.Subscription) (*domain.Subscription, error) {
-	sub := &Subscription{}
-	sub.fromDomain(domainSubscription)
+func (s Service) CreateSubscription(sub *domain.Subscription) (*domain.Subscription, error) {
 	newSubscription, err := s.repository.Create(sub, s.namespaceService, s.providerService, s.receiverService)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Create")
 	}
-	return newSubscription.toDomain(), nil
+	return newSubscription, nil
 }
 
 func (s Service) GetSubscription(id uint64) (*domain.Subscription, error) {
@@ -65,17 +61,15 @@ func (s Service) GetSubscription(id uint64) (*domain.Subscription, error) {
 	if subscription == nil {
 		return nil, nil
 	}
-	return subscription.toDomain(), nil
+	return subscription, nil
 }
 
-func (s Service) UpdateSubscription(domainSubscription *domain.Subscription) (*domain.Subscription, error) {
-	subscription := &Subscription{}
-	subscription.fromDomain(domainSubscription)
-	updatedSubscription, err := s.repository.Update(subscription, s.namespaceService, s.providerService, s.receiverService)
+func (s Service) UpdateSubscription(sub *domain.Subscription) (*domain.Subscription, error) {
+	updatedSubscription, err := s.repository.Update(sub, s.namespaceService, s.providerService, s.receiverService)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Update")
 	}
-	return updatedSubscription.toDomain(), nil
+	return updatedSubscription, nil
 }
 
 func (s Service) DeleteSubscription(id uint64) error {
@@ -84,4 +78,37 @@ func (s Service) DeleteSubscription(id uint64) error {
 
 func (s Service) Migrate() error {
 	return s.repository.Migrate()
+}
+
+type AuditLog struct {
+	Timestamp time.Time
+	Action    string // example: appeal.created, provider.created, provider.updated, etc.
+	Actor     string // example: user@example.com or system
+	Data      interface{}
+	Message   string
+}
+
+type AuditRepository interface {
+	List(filters map[string]interface{}) ([]*AuditLog, error)
+	Create(*AuditLog) error
+	BulkCreate([]*AuditLog) error
+}
+
+type AuditAction string
+
+var (
+	ProviderCreated     AuditAction = "provider.created"
+	ResourceBulkCreated AuditAction = "resource.bulkCreated"
+
+	// ...
+)
+
+type ProviderCreatedData domain.Provider
+type ResourceBulkCreatedData struct {
+	CreatedResourceIDs []string
+	RemovedResourceIDs []string
+}
+
+type AuditService interface {
+	Log(...*AuditLog) error
 }
