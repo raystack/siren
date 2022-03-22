@@ -17,7 +17,7 @@ import (
 
 // Service handles business logic
 type Service struct {
-	repository       SubscriptionRepository
+	repository       store.SubscriptionRepository
 	providerService  domain.ProviderService
 	namespaceService domain.NamespaceService
 	receiverService  domain.ReceiverService
@@ -25,9 +25,8 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(providerRepository store.ProviderRepository, namespaceRepository store.NamespaceRepository,
+func NewService(repository store.SubscriptionRepository, providerRepository store.ProviderRepository, namespaceRepository store.NamespaceRepository,
 	receiverRepository store.ReceiverRepository, db *gorm.DB, key string) (domain.SubscriptionService, error) {
-	repository := NewRepository(db)
 	namespaceService, err := namespace.NewService(namespaceRepository, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")

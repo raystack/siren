@@ -1,49 +1,42 @@
-package subscription
+package postgres_test
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/pkg/subscription/alertmanager"
+	"github.com/odpf/siren/store"
+	"github.com/odpf/siren/store/postgres"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"regexp"
-	"testing"
-	"time"
 )
 
-// AnyTime is used to expect arbitrary time value
-type AnyTime struct{}
-
-// Match satisfies sqlmock.Argument interface
-func (a AnyTime) Match(v driver.Value) bool {
-	_, ok := v.(time.Time)
-	return ok
-}
-
-type RepositoryTestSuite struct {
+type SubscriptionRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository SubscriptionRepository
+	repository store.SubscriptionRepository
 }
 
-func (s *RepositoryTestSuite) SetupTest() {
+func (s *SubscriptionRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewRepository(db)
+	s.repository = postgres.NewSubscriptionRepository(db)
 }
 
-func (s *RepositoryTestSuite) TearDownTest() {
+func (s *SubscriptionRepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func (s *RepositoryTestSuite) TestCreate() {
+func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 	match := make(StringStringMap)
 	inputRandomConfig := make(StringStringMap)
 	randomSlackReceiverConfig := make(map[string]interface{})
@@ -609,7 +602,7 @@ func (s *RepositoryTestSuite) TestCreate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestGet() {
+func (s *SubscriptionRepositoryTestSuite) TestGet() {
 	expectedSubscription := &Subscription{
 		Id:          1,
 		NamespaceId: 1,
@@ -656,7 +649,7 @@ func (s *RepositoryTestSuite) TestGet() {
 
 }
 
-func (s *RepositoryTestSuite) TestList() {
+func (s *SubscriptionRepositoryTestSuite) TestList() {
 	expectedSubscription := &Subscription{
 		Id:          1,
 		NamespaceId: 1,
@@ -695,7 +688,7 @@ func (s *RepositoryTestSuite) TestList() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestUpdate() {
+func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	match := make(StringStringMap)
 	inputRandomConfig := make(StringStringMap)
 	randomSlackReceiverConfig := make(map[string]interface{})
@@ -937,7 +930,7 @@ func (s *RepositoryTestSuite) TestUpdate() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestDelete() {
+func (s *SubscriptionRepositoryTestSuite) TestDelete() {
 	match := make(StringStringMap)
 	inputRandomConfig := make(StringStringMap)
 	randomSlackReceiverConfig := make(map[string]interface{})
@@ -1112,6 +1105,6 @@ func (s *RepositoryTestSuite) TestDelete() {
 	})
 }
 
-func TestRepository(t *testing.T) {
-	suite.Run(t, new(RepositoryTestSuite))
+func TestSubscriptionRepository(t *testing.T) {
+	suite.Run(t, new(SubscriptionRepositoryTestSuite))
 }

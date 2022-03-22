@@ -1,6 +1,8 @@
 package store
 
 import (
+	"context"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
@@ -43,18 +45,36 @@ type TemplatesRepository interface {
 	Migrate() error
 }
 
+type SubscriptionRepository interface {
+	Transactor
+	Migrate() error
+	List(context.Context) ([]*domain.Subscription, error)
+	Create(context.Context, *domain.Subscription) (*domain.Subscription, error)
+	Get(context.Context, uint64) (*domain.Subscription, error)
+	Update(context.Context, *domain.Subscription) (*domain.Subscription, error)
+	Delete(context.Context, uint64) error
+}
+
+type Transactor interface {
+	WithTransaction(ctx context.Context) context.Context
+	Rollback(ctx context.Context) error
+	Commit(ctx context.Context) error
+}
+
 type RepositoryContainer struct {
-	ProviderRepository  ProviderRepository
-	NamespaceRepository NamespaceRepository
-	TemplatesRepository TemplatesRepository
-	ReceiverRepository  ReceiverRepository
+	ProviderRepository     ProviderRepository
+	NamespaceRepository    NamespaceRepository
+	TemplatesRepository    TemplatesRepository
+	ReceiverRepository     ReceiverRepository
+	SubscriptionRepository SubscriptionRepository
 }
 
 func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
 	return &RepositoryContainer{
-		NamespaceRepository: postgres.NewNamespaceRepository(db),
-		ProviderRepository:  postgres.NewProviderRepository(db),
-		ReceiverRepository:  postgres.NewReceiverRepository(db),
-		TemplatesRepository: postgres.NewTemplateRepository(db),
+		NamespaceRepository:    postgres.NewNamespaceRepository(db),
+		ProviderRepository:     postgres.NewProviderRepository(db),
+		ReceiverRepository:     postgres.NewReceiverRepository(db),
+		TemplatesRepository:    postgres.NewTemplateRepository(db),
+		SubscriptionRepository: postgres.NewSubscriptionRepository(db),
 	}
 }

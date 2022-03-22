@@ -3,6 +3,9 @@ package v1beta1
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
@@ -10,8 +13,6 @@ import (
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"testing"
-	"time"
 )
 
 func TestGRPCServer_ListSubscriptions(t *testing.T) {
