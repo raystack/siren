@@ -48,28 +48,27 @@ func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription,
 	return subscriptions, nil
 }
 
-func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) error {
 	ctx = s.repository.WithTransaction(ctx)
 	sortReceivers(sub)
-	newSubscription, err := s.repository.Create(ctx, sub)
-	if err != nil {
+	if err := s.repository.Create(ctx, sub); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return nil, errors.Wrap(err, "s.repository.Rollback")
+			return errors.Wrap(err, "s.repository.Rollback")
 		}
-		return nil, errors.Wrap(err, "s.repository.Create")
+		return errors.Wrap(err, "s.repository.Create")
 	}
 
-	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, newSubscription.Namespace); err != nil {
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return nil, errors.Wrap(err, "s.repository.Rollback")
+			return errors.Wrap(err, "s.repository.Rollback")
 		}
-		return nil, errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
-		return nil, errors.Wrap(err, "s.repository.Commit")
+		return errors.Wrap(err, "s.repository.Commit")
 	}
-	return newSubscription, nil
+	return nil
 }
 
 func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscription, error) {
@@ -83,28 +82,27 @@ func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscr
 	return subscription, nil
 }
 
-func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) error {
 	ctx = s.repository.WithTransaction(ctx)
 	sortReceivers(sub)
-	updatedSubscription, err := s.repository.Update(ctx, sub)
-	if err != nil {
+	if err := s.repository.Update(ctx, sub); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return nil, errors.Wrap(err, "s.repository.Rollback")
+			return errors.Wrap(err, "s.repository.Rollback")
 		}
-		return nil, errors.Wrap(err, "s.repository.Update")
+		return errors.Wrap(err, "s.repository.Update")
 	}
 
-	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, updatedSubscription.Namespace); err != nil {
+	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return nil, errors.Wrap(err, "s.repository.Rollback")
+			return errors.Wrap(err, "s.repository.Rollback")
 		}
-		return nil, errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
-		return nil, errors.Wrap(err, "s.repository.Commit")
+		return errors.Wrap(err, "s.repository.Commit")
 	}
-	return updatedSubscription, nil
+	return nil
 }
 
 func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {

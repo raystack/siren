@@ -35,9 +35,9 @@ type Subscription struct {
 	UpdatedAt   time.Time
 }
 
-func (s *Subscription) FromDomain(sub *domain.Subscription) *Subscription {
+func (s *Subscription) FromDomain(sub *domain.Subscription) {
 	if s == nil {
-		return nil
+		return
 	}
 	s.Id = sub.Id
 	s.Urn = sub.Urn
@@ -53,7 +53,6 @@ func (s *Subscription) FromDomain(sub *domain.Subscription) *Subscription {
 	}
 	s.CreatedAt = sub.CreatedAt
 	s.UpdatedAt = sub.UpdatedAt
-	return s
 }
 
 func (s *Subscription) ToDomain() *domain.Subscription {

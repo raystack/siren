@@ -38,13 +38,13 @@ func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *emptypb.Empty) (*
 }
 
 func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.CreateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.CreateSubscription(ctx, &domain.Subscription{
+	subscription := &domain.Subscription{
 		Namespace: req.GetNamespace(),
 		Urn:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
-	})
-	if err != nil {
+	}
+	if err := s.container.SubscriptionService.CreateSubscription(ctx, subscription); err != nil {
 		s.logger.Error("failed to create subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -93,14 +93,14 @@ func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetS
 }
 
 func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.UpdateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.UpdateSubscription(ctx, &domain.Subscription{
+	subscription := &domain.Subscription{
 		Id:        req.GetId(),
 		Namespace: req.GetNamespace(),
 		Urn:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
-	})
-	if err != nil {
+	}
+	if err := s.container.SubscriptionService.UpdateSubscription(ctx, subscription); err != nil {
 		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
 			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}

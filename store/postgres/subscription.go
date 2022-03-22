@@ -10,45 +10,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	transactionContextKey = struct{}{}
-)
-
 // SubscriptionRepository talks to the store to read or insert data
 type SubscriptionRepository struct {
-	db *gorm.DB
+	*transaction
 }
 
 // NewSubscriptionRepository returns SubscriptionRepository struct
 func NewSubscriptionRepository(db *gorm.DB) *SubscriptionRepository {
-	return &SubscriptionRepository{db}
-}
-
-func (r *SubscriptionRepository) WithTransaction(ctx context.Context) context.Context {
-	tx := r.db.Begin()
-	return context.WithValue(ctx, transactionContextKey, tx)
-}
-
-func (r *SubscriptionRepository) Rollback(ctx context.Context) error {
-	if tx := extractTransaction(ctx); tx != nil {
-		tx = tx.Rollback()
-		if tx.Error != nil {
-			return r.db.Error
-		}
-		return nil
-	}
-	return errors.New("no transaction")
-}
-
-func (r *SubscriptionRepository) Commit(ctx context.Context) error {
-	if tx := extractTransaction(ctx); tx != nil {
-		tx = tx.Commit()
-		if tx.Error != nil {
-			return r.db.Error
-		}
-		return nil
-	}
-	return errors.New("no transaction")
+	return &SubscriptionRepository{&transaction{db}}
 }
 
 func (r *SubscriptionRepository) List(ctx context.Context) ([]*domain.Subscription, error) {
@@ -67,23 +36,21 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]*domain.Subscripti
 	return subscriptions, nil
 }
 
-func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
-	var m model.Subscription
+func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscription) error {
+	m := new(model.Subscription)
 	m.FromDomain(sub)
-	var newSubscription *model.Subscription
-	var err error
-
-	newSubscription, err = r.insertSubscriptionIntoDB(r.getDb(ctx), &m)
-	if err != nil {
-		return nil, errors.Wrap(err, "r.insertSubscriptionIntoDB")
+	if err := r.getDb(ctx).Create(m).Error; err != nil {
+		return errors.Wrap(err, "failed to insert subscription")
 	}
 
-	return newSubscription.ToDomain(), nil
+	newSubcription := m.ToDomain()
+	*sub = *newSubcription
+	return nil
 }
 
 func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*domain.Subscription, error) {
-	var subscription model.Subscription
-	result := r.getDb(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&subscription)
+	m := new(model.Subscription)
+	result := r.getDb(ctx).Where(fmt.Sprintf("id = %d", id)).Find(m)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -91,20 +58,23 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*domain.Su
 		return nil, nil
 	}
 
-	return subscription.ToDomain(), nil
+	return m.ToDomain(), nil
 }
 
-func (r *SubscriptionRepository) Update(ctx context.Context, sub *domain.Subscription) (*domain.Subscription, error) {
+func (r *SubscriptionRepository) Update(ctx context.Context, sub *domain.Subscription) error {
 	m := new(model.Subscription)
 	m.FromDomain(sub)
 	result := r.getDb(ctx).Where("id = ?", m.Id).Updates(m)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, errors.New("subscription doesn't exist")
+		return errors.New("subscription doesn't exist")
 	}
-	return m.ToDomain(), nil
+
+	newSubcription := m.ToDomain()
+	*sub = *newSubcription
+	return nil
 }
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
@@ -123,32 +93,10 @@ func (r *SubscriptionRepository) Migrate() error {
 	return nil
 }
 
-func (r *SubscriptionRepository) insertSubscriptionIntoDB(tx *gorm.DB, sub *model.Subscription) (*model.Subscription, error) {
-	var newSubscription model.Subscription
-	result := tx.Create(sub)
-	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "failed to insert subscription")
-	}
-
-	result = tx.Where(fmt.Sprintf("id = %d", sub.Id)).Find(&newSubscription)
-	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "failed to get newly inserted subscription")
-	}
-	return &newSubscription, nil
-}
-
 func (r *SubscriptionRepository) getDb(ctx context.Context) *gorm.DB {
 	db := r.db
 	if tx := extractTransaction(ctx); tx != nil {
 		db = tx
 	}
 	return db
-}
-
-func extractTransaction(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
-		return nil
-	} else {
-		return tx
-	}
 }

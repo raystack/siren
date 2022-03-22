@@ -22,9 +22,9 @@ type Subscription struct {
 
 type SubscriptionService interface {
 	ListSubscriptions(context.Context) ([]*Subscription, error)
-	CreateSubscription(context.Context, *Subscription) (*Subscription, error)
+	CreateSubscription(context.Context, *Subscription) error
 	GetSubscription(context.Context, uint64) (*Subscription, error)
-	UpdateSubscription(context.Context, *Subscription) (*Subscription, error)
+	UpdateSubscription(context.Context, *Subscription) error
 	DeleteSubscription(context.Context, uint64) error
 	Migrate() error
 }

@@ -49,9 +49,9 @@ type SubscriptionRepository interface {
 	Transactor
 	Migrate() error
 	List(context.Context) ([]*domain.Subscription, error)
-	Create(context.Context, *domain.Subscription) (*domain.Subscription, error)
+	Create(context.Context, *domain.Subscription) error
 	Get(context.Context, uint64) (*domain.Subscription, error)
-	Update(context.Context, *domain.Subscription) (*domain.Subscription, error)
+	Update(context.Context, *domain.Subscription) error
 	Delete(context.Context, uint64) error
 }
 
