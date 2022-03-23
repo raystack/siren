@@ -93,6 +93,7 @@ func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscriptio
 	}
 
 	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
+		fmt.Printf("err: %v\n", err)
 		if err := s.repository.Rollback(ctx); err != nil {
 			return errors.Wrap(err, "s.repository.Rollback")
 		}
@@ -109,6 +110,9 @@ func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
 	sub, err := s.repository.Get(ctx, id)
 	if err != nil {
 		return errors.Wrap(err, "s.repository.Get")
+	}
+	if sub == nil {
+		return errors.New("subscription not found")
 	}
 
 	ctx = s.repository.WithTransaction(ctx)
