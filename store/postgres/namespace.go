@@ -85,12 +85,16 @@ func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) error 
 		if result.RowsAffected == 0 {
 			return errors.New("namespace doesn't exist")
 		}
+		if err := r.db.Where(fmt.Sprintf("id = %d", m.Id)).Find(m).Error; err != nil {
+			return err
+		}
 
 		newNamespace, err := m.ToDomain()
 		if err != nil {
 			return err
 		}
 		*namespace = *newNamespace
+		fmt.Printf("namespace: %+v\n", namespace)
 
 		return nil
 	})

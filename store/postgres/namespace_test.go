@@ -227,6 +227,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
 			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
 			WHERE id = $7 AND "id" = $8`)
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
 
 		input := &domain.EncryptedNamespace{
 			Namespace: &domain.Namespace{
@@ -243,6 +244,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
 			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(1, 1))
+		expectedRows := sqlmock.
+			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
+			AddRow(input.Urn, input.Name, input.Provider, json.RawMessage(`{"foo":"bar"}`),
+				json.RawMessage(`{"foo": "bar"}`), input.CreatedAt, input.UpdatedAt,
+				input.Id)
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).WillReturnRows(expectedRows)
 		s.dbmock.ExpectCommit()
 
 		err := s.repository.Update(input)
@@ -252,8 +259,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 	})
 
 	s.Run("should return error if namespace does not exist", func() {
-		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces" 
-			SET "provider_id"=$1,"urn"=$2,"name"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7 
+		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
+			SET "provider_id"=$1,"urn"=$2,"name"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7
 			WHERE id = $8 AND "id" = $9`)
 
 		input := &domain.EncryptedNamespace{
@@ -281,7 +288,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error updating the namespace", func() {
 		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
-			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
+			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6
 			WHERE id = $7 AND "id" = $8`)
 
 		input := &domain.EncryptedNamespace{
@@ -300,6 +307,36 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
 			AnyTime{}, AnyTime{}, input.Id, input.Id).
 			WillReturnError(errors.New("random error"))
+		s.dbmock.ExpectRollback()
+
+		err := s.repository.Update(input)
+
+		s.EqualError(err, "random error")
+		s.Nil(s.dbmock.ExpectationsWereMet())
+	})
+
+	s.Run("should return error getting new namespace", func() {
+		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
+			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6
+			WHERE id = $7 AND "id" = $8`)
+		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
+
+		input := &domain.EncryptedNamespace{
+			Namespace: &domain.Namespace{
+				Id:        1,
+				Provider:  2,
+				Name:      "foo",
+				Labels:    labels,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			Credentials: `{"foo":"bar"}`,
+		}
+
+		s.dbmock.ExpectBegin()
+		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
+			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(1, 1))
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
 
 		err := s.repository.Update(input)
