@@ -2,6 +2,8 @@ package v1beta1
 
 import (
 	"context"
+	"strings"
+
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"google.golang.org/grpc/codes"
@@ -9,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"strings"
 )
 
 func (s *GRPCServer) ListNamespaces(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListNamespacesResponse, error) {
@@ -45,14 +46,14 @@ func (s *GRPCServer) ListNamespaces(_ context.Context, _ *emptypb.Empty) (*siren
 }
 
 func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.CreateNamespaceRequest) (*sirenv1beta1.Namespace, error) {
-	namespace, err := s.container.NamespaceService.CreateNamespace(&domain.Namespace{
+	namespace := &domain.Namespace{
 		Provider:    req.GetProvider(),
 		Urn:         req.GetUrn(),
 		Name:        req.GetName(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
-	})
-	if err != nil {
+	}
+	if err := s.container.NamespaceService.CreateNamespace(namespace); err != nil {
 		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
 			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
@@ -107,14 +108,14 @@ func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1beta1.GetNamesp
 }
 
 func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1beta1.UpdateNamespaceRequest) (*sirenv1beta1.Namespace, error) {
-	namespace, err := s.container.NamespaceService.UpdateNamespace(&domain.Namespace{
+	namespace := &domain.Namespace{
 		Id:          req.GetId(),
 		Provider:    req.GetProvider(),
 		Name:        req.GetName(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
-	})
-	if err != nil {
+	}
+	if err := s.container.NamespaceService.UpdateNamespace(namespace); err != nil {
 		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
 			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
