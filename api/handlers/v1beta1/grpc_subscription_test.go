@@ -12,6 +12,7 @@ import (
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -41,7 +42,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			},
 		}
 
-		mockedSubscriptionService.On("ListSubscriptions").Return(dummyResult, nil).Once()
+		mockedSubscriptionService.On("ListSubscriptions", context.Background()).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetSubscriptions()))
@@ -57,7 +58,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedSubscriptionService.On("ListSubscriptions").
+		mockedSubscriptionService.On("ListSubscriptions", context.Background()).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, res)
@@ -89,7 +90,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			UpdatedAt: time.Now(),
 		}
 
-		mockedSubscriptionService.On("GetSubscription", uint64(1)).Return(dummyResult, nil).Once()
+		mockedSubscriptionService.On("GetSubscription", context.Background(), uint64(1)).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetId())
@@ -104,7 +105,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedSubscriptionService.On("GetSubscription", uint64(1)).Return(nil, nil).Once()
+		mockedSubscriptionService.On("GetSubscription", context.Background(), uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = subscription not found")
@@ -118,7 +119,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedSubscriptionService.On("GetSubscription", uint64(1)).
+		mockedSubscriptionService.On("GetSubscription", context.Background(), uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
@@ -157,7 +158,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			UpdatedAt: time.Now(),
 		}
 
-		mockedSubscriptionService.On("CreateSubscription", payload).Return(dummyResult, nil).Once()
+		mockedSubscriptionService.On("CreateSubscription", context.Background(), payload).Return(nil).
+			Run(func(args mock.Arguments) {
+				s := args.Get(1).(*domain.Subscription)
+				*s = *dummyResult
+			}).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -181,8 +186,8 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 
-		mockedSubscriptionService.On("CreateSubscription", payload).
-			Return(nil, errors.New("random error")).Once()
+		mockedSubscriptionService.On("CreateSubscription", context.Background(), payload).
+			Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -225,7 +230,11 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			UpdatedAt: time.Now(),
 		}
 
-		mockedSubscriptionService.On("UpdateSubscription", payload).Return(dummyResult, nil).Once()
+		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(nil).
+			Run(func(args mock.Arguments) {
+				s := args.Get(1).(*domain.Subscription)
+				*s = *dummyResult
+			}).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -249,7 +258,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedSubscriptionService.On("UpdateSubscription", payload).Return(nil, errors.New("random error")).Once()
+		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -269,7 +278,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedSubscriptionService.On("UpdateSubscription", payload).Return(nil,
+		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(
 			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
@@ -293,7 +302,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 
-		mockedSubscriptionService.On("DeleteSubscription", uint64(1)).Return(nil).Once()
+		mockedSubscriptionService.On("DeleteSubscription", context.Background(), uint64(1)).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
 		assert.Nil(t, err)
 		assert.Equal(t, &emptypb.Empty{}, res)
@@ -308,7 +317,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 
-		mockedSubscriptionService.On("DeleteSubscription", uint64(1)).Return(errors.New("random error")).Once()
+		mockedSubscriptionService.On("DeleteSubscription", context.Background(), uint64(1)).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
