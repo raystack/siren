@@ -172,7 +172,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 }
 
 func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*domain.Subscription, error) {
-	subscriptions, err := s.repository.List(ctx) // TODO: pass namespaceID as list filter
+	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
 	}
