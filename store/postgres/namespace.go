@@ -94,7 +94,6 @@ func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) error 
 			return err
 		}
 		*namespace = *newNamespace
-		fmt.Printf("namespace: %+v\n", namespace)
 
 		return nil
 	})
