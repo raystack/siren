@@ -45,7 +45,7 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
 	subscriptionService, err := subscription.NewService(repositories.SubscriptionRepository, repositories.ProviderRepository,
-		repositories.NamespaceRepository, repositories.ReceiverRepository, db, c.EncryptionKey)
+		repositories.NamespaceRepository, repositories.ReceiverRepository, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create subscriptions service")
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/odpf/siren/pkg/subscription/alertmanager"
 	"github.com/odpf/siren/store"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 // Service handles business logic
@@ -26,7 +25,7 @@ type Service struct {
 
 // NewService returns service struct
 func NewService(repository store.SubscriptionRepository, providerRepository store.ProviderRepository, namespaceRepository store.NamespaceRepository,
-	receiverRepository store.ReceiverRepository, db *gorm.DB, key string) (domain.SubscriptionService, error) {
+	receiverRepository store.ReceiverRepository, key string) (domain.SubscriptionService, error) {
 	namespaceService, err := namespace.NewService(namespaceRepository, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
