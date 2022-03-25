@@ -1,10 +1,9 @@
 package model
 
 import (
-	"encoding/json"
-	"github.com/odpf/siren/domain"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/odpf/siren/domain"
 )
 
 type Namespace struct {
@@ -19,44 +18,37 @@ type Namespace struct {
 	UpdatedAt   time.Time
 }
 
-func (namespace *Namespace) FromDomain(n *domain.Namespace) (*Namespace, error) {
+func (namespace *Namespace) FromDomain(n *domain.EncryptedNamespace) error {
 	if n == nil {
-		return nil, nil
+		return nil
 	}
+
 	namespace.Id = n.Id
 	namespace.Urn = n.Urn
 	namespace.Name = n.Name
 	namespace.ProviderId = n.Provider
-	credentialsBytes, err := json.Marshal(n.Credentials)
-	if err != nil {
-		return nil, errors.Wrap(err, "json.Marshal")
-	}
-	namespace.Credentials = string(credentialsBytes)
-	namespace.Labels = n.Labels
+	namespace.Credentials = n.Credentials
+	namespace.Labels = StringStringMap(n.Labels)
 	namespace.CreatedAt = n.CreatedAt
 	namespace.UpdatedAt = n.UpdatedAt
-	return namespace, nil
+	return nil
 }
 
-func (namespace *Namespace) ToDomain() (*domain.Namespace, error) {
+func (namespace *Namespace) ToDomain() (*domain.EncryptedNamespace, error) {
 	if namespace == nil {
 		return nil, nil
 	}
-	decryptedCredentials := make(map[string]interface{})
-	err := json.Unmarshal([]byte(namespace.Credentials), &decryptedCredentials)
-	if err != nil {
-		return nil, errors.Wrap(err, "json.Unmarshal")
 
-	}
-	return &domain.Namespace{
-		Id:          namespace.Id,
-		Urn:         namespace.Urn,
-		Name:        namespace.Name,
-		Provider:    namespace.ProviderId,
-		Credentials: decryptedCredentials,
-		Labels:      namespace.Labels,
-		CreatedAt:   namespace.CreatedAt,
-		UpdatedAt:   namespace.UpdatedAt,
+	return &domain.EncryptedNamespace{
+		Namespace: &domain.Namespace{
+			Id:        namespace.Id,
+			Urn:       namespace.Urn,
+			Name:      namespace.Name,
+			Provider:  namespace.ProviderId,
+			Labels:    namespace.Labels,
+			CreatedAt: namespace.CreatedAt,
+			UpdatedAt: namespace.UpdatedAt,
+		},
+		Credentials: namespace.Credentials,
 	}, nil
 }
-

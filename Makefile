@@ -17,7 +17,7 @@ test: ## Run the tests
 	go test ./... -coverprofile=coverage.out
 
 coverage: ## Print code coverage
-	go test -race -coverprofile coverage.txt -covermode=atomic ./... & go tool cover -html=coverage.out
+	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
 
 proto: ## Generate the protobuf files
 	@echo " > generating protobuf from odpf/proton"
