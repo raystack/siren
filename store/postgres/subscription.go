@@ -72,6 +72,10 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *domain.Subscri
 		return errors.New("subscription doesn't exist")
 	}
 
+	if err := r.getDb(ctx).Where(fmt.Sprintf("id = %d", m.Id)).Find(m).Error; err != nil {
+		return err
+	}
+
 	newSubcription := m.ToDomain()
 	*sub = *newSubcription
 	return nil
