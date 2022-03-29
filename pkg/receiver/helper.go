@@ -3,11 +3,11 @@ package receiver
 import (
 	"bytes"
 	"encoding/base64"
+	"io"
+
 	"github.com/gtank/cryptopasta"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
-	"io"
 )
 
 var cryptopastaEncryptor = cryptopasta.Encrypt
@@ -15,7 +15,7 @@ var cryptopastaDecryptor = cryptopasta.Decrypt
 
 type Transformer interface {
 	PreTransform(*domain.Receiver) (*domain.Receiver, error)
-	PostTransform(*model.Receiver) (*model.Receiver, error)
+	PostTransform(*domain.Receiver) (*domain.Receiver, error)
 }
 
 type SlackHelper interface {
@@ -69,7 +69,7 @@ func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver,
 	return payload, nil
 }
 
-func (sh *slackHelper) PostTransform(r *model.Receiver) (*model.Receiver, error) {
+func (sh *slackHelper) PostTransform(r *domain.Receiver) (*domain.Receiver, error) {
 	encryptedToken := r.Configurations["token"].(string)
 	token, err := sh.Decrypt(encryptedToken)
 	if err != nil {

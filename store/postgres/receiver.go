@@ -3,6 +3,8 @@ package postgres
 import (
 	"errors"
 	"fmt"
+
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
@@ -17,35 +19,37 @@ func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
 	return &ReceiverRepository{db}
 }
 
-func (r ReceiverRepository) List() ([]*model.Receiver, error) {
-	var receivers []*model.Receiver
+func (r ReceiverRepository) List() ([]*domain.Receiver, error) {
+	var models []*model.Receiver
 	selectQuery := "select * from receivers"
-	result := r.db.Raw(selectQuery).Find(&receivers)
+	result := r.db.Raw(selectQuery).Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
+	}
+
+	var receivers []*domain.Receiver
+	for _, r := range models {
+		receivers = append(receivers, r.ToDomain())
 	}
 
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(receiver *model.Receiver) (*model.Receiver, error) {
-	var newReceiver model.Receiver
-	result := r.db.Create(receiver)
+func (r ReceiverRepository) Create(receiver *domain.Receiver) (*domain.Receiver, error) {
+	m := new(model.Receiver)
+	m.FromDomain(receiver)
+
+	result := r.db.Create(m)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&newReceiver)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return &newReceiver, nil
+	return m.ToDomain(), nil
 }
 
-func (r ReceiverRepository) Get(id uint64) (*model.Receiver, error) {
-	var receiver model.Receiver
-	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&receiver)
+func (r ReceiverRepository) Get(id uint64) (*domain.Receiver, error) {
+	receiver := new(model.Receiver)
+	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(receiver)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -53,29 +57,24 @@ func (r ReceiverRepository) Get(id uint64) (*model.Receiver, error) {
 		return nil, fmt.Errorf("receiver not found: %d", id)
 	}
 
-	return &receiver, nil
+	return receiver.ToDomain(), nil
 }
 
-func (r ReceiverRepository) Update(receiver *model.Receiver) (*model.Receiver, error) {
-	var newReceiver, existingReceiver model.Receiver
-	result := r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&existingReceiver)
+func (r ReceiverRepository) Update(receiver *domain.Receiver) (*domain.Receiver, error) {
+	var m model.Receiver
+	m.FromDomain(receiver)
+	result := r.db.Where("id = ?", m.Id).Updates(m)
 	if result.Error != nil {
 		return nil, result.Error
-	}
-	if result.RowsAffected == 0 {
+	} else if result.RowsAffected == 0 {
 		return nil, errors.New("receiver doesn't exist")
-	} else {
-		result = r.db.Where("id = ?", receiver.Id).Updates(receiver)
-		if result.Error != nil {
-			return nil, result.Error
-		}
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", receiver.Id)).Find(&newReceiver)
+	result = r.db.Where(fmt.Sprintf("id = %d", m.Id)).Find(&m)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &newReceiver, nil
+	return m.ToDomain(), nil
 }
 
 func (r ReceiverRepository) Delete(id uint64) error {

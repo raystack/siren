@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"encoding/json"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
@@ -62,7 +63,7 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 			}
 		}
 
-		domainReceivers = append(domainReceivers, receiver.ToDomain())
+		domainReceivers = append(domainReceivers, receiver)
 	}
 
 	return domainReceivers, nil
@@ -71,7 +72,6 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 
 func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
 	var err error
-	p := &model.Receiver{}
 
 	if receiver.Type == Slack {
 		receiver, err = service.slackHelper.PreTransform(receiver)
@@ -80,7 +80,7 @@ func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	payload := p.FromDomain(receiver)
+	payload := receiver
 	newReceiver, err := service.repository.Create(payload)
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.Create")
@@ -93,7 +93,7 @@ func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	return newReceiver.ToDomain(), nil
+	return newReceiver, nil
 }
 
 func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
@@ -123,12 +123,11 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 		receiver.Data["channels"] = string(data)
 	}
 
-	return receiver.ToDomain(), nil
+	return receiver, nil
 }
 
 func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
 	var err error
-	p := &model.Receiver{}
 
 	if receiver.Type == Slack {
 		receiver, err = service.slackHelper.PreTransform(receiver)
@@ -137,13 +136,13 @@ func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiv
 		}
 	}
 
-	payload := p.FromDomain(receiver)
+	payload := receiver
 	newReceiver, err := service.repository.Update(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	return newReceiver.ToDomain(), nil
+	return newReceiver, nil
 }
 
 func (service Service) DeleteReceiver(id uint64) error {
