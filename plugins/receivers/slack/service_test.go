@@ -1,19 +1,20 @@
-package receiver
+package slack
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/store/model"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type SlackRepositoryTestSuite struct {
 	suite.Suite
-	repository model.SlackRepository
-	slacker    *mocks.SlackService
+	service model.SlackRepository
+	slacker *mocks.SlackService
 }
 
 func TestSlackRepository(t *testing.T) {
@@ -28,7 +29,7 @@ func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {
 	}
 	defer func() { newService = oldServiceCreator }()
 	s.slacker = mockedSlackService
-	s.repository = &slackRepository{
+	s.service = &service{
 		Slacker: s.slacker,
 	}
 
@@ -36,7 +37,7 @@ func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {
 		s.slacker.On("GetJoinedChannelsList").Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{Name: "foo"}},
 			{GroupConversation: slack.GroupConversation{Name: "bar"}}}, nil).Once()
-		channels, err := s.repository.GetWorkspaceChannels("test_token")
+		channels, err := s.service.GetWorkspaceChannels("test_token")
 		s.Equal(2, len(channels))
 		s.Equal("foo", channels[0].Name)
 		s.Equal("bar", channels[1].Name)
@@ -48,7 +49,7 @@ func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {
 		s.slacker.On("GetJoinedChannelsList").
 			Return(nil, errors.New("random error")).Once()
 
-		channels, err := s.repository.GetWorkspaceChannels("test_token")
+		channels, err := s.service.GetWorkspaceChannels("test_token")
 		s.Nil(channels)
 		s.EqualError(err, "failed to fetch joined channel list: random error")
 	})

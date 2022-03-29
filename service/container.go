@@ -1,12 +1,13 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
 	"github.com/odpf/siren/pkg/subscription"
 	"github.com/odpf/siren/store"
-	"net/http"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alerts"

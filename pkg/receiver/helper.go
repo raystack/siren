@@ -7,6 +7,7 @@ import (
 
 	"github.com/gtank/cryptopasta"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/plugins/receivers/http"
 	"github.com/pkg/errors"
 )
 
@@ -25,11 +26,11 @@ type SlackHelper interface {
 }
 
 type slackHelper struct {
-	exchanger     Exchanger
+	exchanger     http.Exchanger
 	encryptionKey *[32]byte
 }
 
-func NewSlackHelper(httpClient Doer, encryptionKey string) (*slackHelper, error) {
+func NewSlackHelper(httpClient http.Doer, encryptionKey string) (*slackHelper, error) {
 	secretKey := &[32]byte{}
 	if len(encryptionKey) < 32 {
 		return nil, errors.New("random hash should be 32 chars in length")
@@ -40,7 +41,7 @@ func NewSlackHelper(httpClient Doer, encryptionKey string) (*slackHelper, error)
 	}
 
 	return &slackHelper{
-		exchanger:     NewSlackClient(httpClient),
+		exchanger:     http.NewSlackClient(httpClient),
 		encryptionKey: secretKey,
 	}, nil
 }

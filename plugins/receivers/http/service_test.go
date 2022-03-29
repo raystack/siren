@@ -1,14 +1,15 @@
-package receiver
+package http
 
 import (
 	"bytes"
 	"errors"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type HTTPTestSuite struct {

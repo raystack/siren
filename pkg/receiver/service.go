@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/plugins/receivers/http"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/odpf/siren/store"
 	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
@@ -33,7 +35,7 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(repository store.ReceiverRepository, httpClient Doer, encryptionKey string) (domain.ReceiverService, error) {
+func NewService(repository store.ReceiverRepository, httpClient http.Doer, encryptionKey string) (domain.ReceiverService, error) {
 	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create slack helper")
@@ -42,7 +44,7 @@ func NewService(repository store.ReceiverRepository, httpClient Doer, encryption
 	return &Service{
 		repository:      repository,
 		slackHelper:     slackHelper,
-		slackRepository: NewSlackRepository(),
+		slackRepository: slack.NewService(),
 	}, nil
 }
 
