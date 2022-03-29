@@ -14,8 +14,8 @@ var cryptopastaEncryptor = cryptopasta.Encrypt
 var cryptopastaDecryptor = cryptopasta.Decrypt
 
 type Transformer interface {
-	PreTransform(*domain.Receiver) (*domain.Receiver, error)
-	PostTransform(*domain.Receiver) (*domain.Receiver, error)
+	PreTransform(*domain.Receiver) error
+	PostTransform(*domain.Receiver) error
 }
 
 type SlackHelper interface {
@@ -45,7 +45,7 @@ func NewSlackHelper(httpClient Doer, encryptionKey string) (*slackHelper, error)
 	}, nil
 }
 
-func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver, error) {
+func (sh *slackHelper) PreTransform(payload *domain.Receiver) error {
 	configurations := payload.Configurations
 	clientId := configurations["client_id"].(string)
 	clientSecret := configurations["client_secret"].(string)
@@ -53,12 +53,12 @@ func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver,
 
 	response, err := sh.exchanger.Exchange(code, clientId, clientSecret)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to exchange code with slack OAuth server")
+		return errors.Wrap(err, "failed to exchange code with slack OAuth server")
 	}
 
 	token, err := sh.Encrypt(response.AccessToken)
 	if err != nil {
-		return nil, errors.Wrap(err, "encryption failed")
+		return errors.Wrap(err, "encryption failed")
 	}
 
 	newConfigurations := map[string]interface{}{}
@@ -66,17 +66,17 @@ func (sh *slackHelper) PreTransform(payload *domain.Receiver) (*domain.Receiver,
 	newConfigurations["token"] = token
 	payload.Configurations = newConfigurations
 
-	return payload, nil
+	return nil
 }
 
-func (sh *slackHelper) PostTransform(r *domain.Receiver) (*domain.Receiver, error) {
+func (sh *slackHelper) PostTransform(r *domain.Receiver) error {
 	encryptedToken := r.Configurations["token"].(string)
 	token, err := sh.Decrypt(encryptedToken)
 	if err != nil {
-		return nil, errors.Wrap(err, "slackHelper.Decrypt")
+		return errors.Wrap(err, "slackHelper.Decrypt")
 	}
 	r.Configurations["token"] = token
-	return r, nil
+	return nil
 }
 
 func (sh *slackHelper) Encrypt(s string) (string, error) {

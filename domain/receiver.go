@@ -15,12 +15,11 @@ type Receiver struct {
 	UpdatedAt      time.Time              `json:"updated_at"`
 }
 
-
 type ReceiverService interface {
 	ListReceivers() ([]*Receiver, error)
-	CreateReceiver(*Receiver) (*Receiver, error)
+	CreateReceiver(*Receiver) error
 	GetReceiver(uint64) (*Receiver, error)
-	UpdateReceiver(*Receiver) (*Receiver, error)
+	UpdateReceiver(*Receiver) error
 	DeleteReceiver(uint64) error
 	Migrate() error
 }

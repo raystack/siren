@@ -35,16 +35,18 @@ func (r ReceiverRepository) List() ([]*domain.Receiver, error) {
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(receiver *domain.Receiver) (*domain.Receiver, error) {
+func (r ReceiverRepository) Create(receiver *domain.Receiver) error {
 	m := new(model.Receiver)
 	m.FromDomain(receiver)
 
 	result := r.db.Create(m)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 
-	return m.ToDomain(), nil
+	newReceiver := m.ToDomain()
+	*receiver = *newReceiver
+	return nil
 }
 
 func (r ReceiverRepository) Get(id uint64) (*domain.Receiver, error) {
@@ -60,21 +62,24 @@ func (r ReceiverRepository) Get(id uint64) (*domain.Receiver, error) {
 	return receiver.ToDomain(), nil
 }
 
-func (r ReceiverRepository) Update(receiver *domain.Receiver) (*domain.Receiver, error) {
+func (r ReceiverRepository) Update(receiver *domain.Receiver) error {
 	var m model.Receiver
 	m.FromDomain(receiver)
 	result := r.db.Where("id = ?", m.Id).Updates(m)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	} else if result.RowsAffected == 0 {
-		return nil, errors.New("receiver doesn't exist")
+		return errors.New("receiver doesn't exist")
 	}
 
 	result = r.db.Where(fmt.Sprintf("id = %d", m.Id)).Find(&m)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return m.ToDomain(), nil
+
+	newReceiver := m.ToDomain()
+	*receiver = *newReceiver
+	return nil
 }
 
 func (r ReceiverRepository) Delete(id uint64) error {

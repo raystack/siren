@@ -57,8 +57,7 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 		receiver := receivers[i]
 
 		if receiver.Type == Slack {
-			receiver, err = service.slackHelper.PostTransform(receiver)
-			if err != nil {
+			if err = service.slackHelper.PostTransform(receiver); err != nil {
 				return nil, errors.Wrap(err, "slackHelper.PostTransform")
 			}
 		}
@@ -70,30 +69,24 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 
 }
 
-func (service Service) CreateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
-	var err error
-
+func (service Service) CreateReceiver(receiver *domain.Receiver) error {
 	if receiver.Type == Slack {
-		receiver, err = service.slackHelper.PreTransform(receiver)
-		if err != nil {
-			return nil, errors.Wrap(err, "slackHelper.PreTransform")
+		if err := service.slackHelper.PreTransform(receiver); err != nil {
+			return errors.Wrap(err, "slackHelper.PreTransform")
 		}
 	}
 
-	payload := receiver
-	newReceiver, err := service.repository.Create(payload)
-	if err != nil {
-		return nil, errors.Wrap(err, "service.repository.Create")
+	if err := service.repository.Create(receiver); err != nil {
+		return errors.Wrap(err, "service.repository.Create")
 	}
 
 	if receiver.Type == Slack {
-		newReceiver, err = service.slackHelper.PostTransform(newReceiver)
-		if err != nil {
-			return nil, errors.Wrap(err, "slackHelper.PostTransform")
+		if err := service.slackHelper.PostTransform(receiver); err != nil {
+			return errors.Wrap(err, "slackHelper.PostTransform")
 		}
 	}
 
-	return newReceiver, nil
+	return nil
 }
 
 func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
@@ -103,8 +96,7 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 	}
 
 	if receiver.Type == Slack {
-		receiver, err = service.slackHelper.PostTransform(receiver)
-		if err != nil {
+		if err := service.slackHelper.PostTransform(receiver); err != nil {
 			return nil, errors.Wrap(err, "slackHelper.PostTransform")
 		}
 
@@ -126,23 +118,18 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 	return receiver, nil
 }
 
-func (service Service) UpdateReceiver(receiver *domain.Receiver) (*domain.Receiver, error) {
-	var err error
-
+func (service Service) UpdateReceiver(receiver *domain.Receiver) error {
 	if receiver.Type == Slack {
-		receiver, err = service.slackHelper.PreTransform(receiver)
-		if err != nil {
-			return nil, errors.Wrap(err, "slackHelper.PreTransform")
+		if err := service.slackHelper.PreTransform(receiver); err != nil {
+			return errors.Wrap(err, "slackHelper.PreTransform")
 		}
 	}
 
-	payload := receiver
-	newReceiver, err := service.repository.Update(payload)
-	if err != nil {
-		return nil, err
+	if err := service.repository.Update(receiver); err != nil {
+		return err
 	}
 
-	return newReceiver, nil
+	return nil
 }
 
 func (service Service) DeleteReceiver(id uint64) error {

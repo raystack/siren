@@ -28,9 +28,9 @@ type ProviderRepository interface {
 type ReceiverRepository interface {
 	Migrate() error
 	List() ([]*domain.Receiver, error)
-	Create(*domain.Receiver) (*domain.Receiver, error)
+	Create(*domain.Receiver) error
 	Get(uint64) (*domain.Receiver, error)
-	Update(*domain.Receiver) (*domain.Receiver, error)
+	Update(*domain.Receiver) error
 	Delete(uint64) error
 }
 
