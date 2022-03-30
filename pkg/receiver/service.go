@@ -18,14 +18,6 @@ var (
 	jsonMarshal = json.Marshal
 )
 
-type CodeExchangeHTTPResponse struct {
-	AccessToken string `json:"access_token"`
-	Team        struct {
-		Name string `json:"name"`
-	} `json:"team"`
-	Ok bool `json:"ok"`
-}
-
 type slackService interface {
 	GetWorkspaceChannels(string) ([]slack.Channel, error)
 }
