@@ -1,12 +1,13 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/odpf/siren/pkg/namespace"
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
 	"github.com/odpf/siren/pkg/subscription"
 	"github.com/odpf/siren/store"
-	"net/http"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alerts"
@@ -43,8 +44,8 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
-	subscriptionService, err := subscription.NewService(repositories.ProviderRepository,
-		repositories.NamespaceRepository, repositories.ReceiverRepository, db, c.EncryptionKey)
+	subscriptionService, err := subscription.NewService(repositories.SubscriptionRepository, repositories.ProviderRepository,
+		repositories.NamespaceRepository, repositories.ReceiverRepository, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create subscriptions service")
 	}
