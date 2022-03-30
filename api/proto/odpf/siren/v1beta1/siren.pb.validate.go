@@ -60,6 +60,7 @@ func (m *PingRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return PingRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -160,6 +161,7 @@ func (m *PingResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return PingResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -366,6 +368,7 @@ func (m *Provider) validate(all bool) error {
 	if len(errors) > 0 {
 		return ProviderMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -472,6 +475,7 @@ func (m *ListProvidersRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProvidersRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -607,6 +611,7 @@ func (m *ListProvidersResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListProvidersResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -793,6 +798,7 @@ func (m *CreateProviderRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateProviderRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -904,6 +910,7 @@ func (m *GetProviderRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetProviderRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1081,6 +1088,7 @@ func (m *UpdateProviderRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateProviderRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1190,6 +1198,7 @@ func (m *DeleteProviderRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteProviderRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1388,6 +1397,7 @@ func (m *Namespace) validate(all bool) error {
 	if len(errors) > 0 {
 		return NamespaceMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1520,6 +1530,7 @@ func (m *ListNamespacesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListNamespacesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1734,6 +1745,7 @@ func (m *CreateNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1841,6 +1853,7 @@ func (m *GetNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -1988,6 +2001,7 @@ func (m *UpdateNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2093,6 +2107,7 @@ func (m *DeleteNamespaceRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteNamespaceRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2198,6 +2213,7 @@ func (m *ReceiverMetadata) validate(all bool) error {
 	if len(errors) > 0 {
 		return ReceiverMetadataMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2406,6 +2422,7 @@ func (m *Subscription) validate(all bool) error {
 	if len(errors) > 0 {
 		return SubscriptionMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2540,6 +2557,7 @@ func (m *ListSubscriptionsResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListSubscriptionsResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2690,6 +2708,7 @@ func (m *CreateSubscriptionRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateSubscriptionRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2795,6 +2814,7 @@ func (m *GetSubscriptionRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetSubscriptionRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -2947,6 +2967,7 @@ func (m *UpdateSubscriptionRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateSubscriptionRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3052,6 +3073,7 @@ func (m *DeleteSubscriptionRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteSubscriptionRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3286,6 +3308,7 @@ func (m *Receiver) validate(all bool) error {
 	if len(errors) > 0 {
 		return ReceiverMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3424,6 +3447,7 @@ func (m *ListReceiversResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListReceiversResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3578,6 +3602,7 @@ func (m *CreateReceiverRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateReceiverRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3689,6 +3714,7 @@ func (m *GetReceiverRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetReceiverRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3845,6 +3871,7 @@ func (m *UpdateReceiverRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateReceiverRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -3956,6 +3983,7 @@ func (m *DeleteReceiverRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteReceiverRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4094,6 +4122,7 @@ func (m *SendReceiverNotificationRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return SendReceiverNotificationRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4199,6 +4228,7 @@ func (m *SendReceiverNotificationResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return SendReceiverNotificationResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4330,6 +4360,7 @@ func (m *ListAlertsRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListAlertsRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4470,6 +4501,7 @@ func (m *Alerts) validate(all bool) error {
 	if len(errors) > 0 {
 		return AlertsMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4610,6 +4642,7 @@ func (m *Alert) validate(all bool) error {
 	if len(errors) > 0 {
 		return AlertMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4744,6 +4777,7 @@ func (m *CreateCortexAlertsRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return CreateCortexAlertsRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -4934,6 +4968,7 @@ func (m *CortexAlert) validate(all bool) error {
 	if len(errors) > 0 {
 		return CortexAlertMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5040,6 +5075,7 @@ func (m *Annotations) validate(all bool) error {
 	if len(errors) > 0 {
 		return AnnotationsMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5139,6 +5175,7 @@ func (m *Labels) validate(all bool) error {
 	if len(errors) > 0 {
 		return LabelsMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5351,6 +5388,7 @@ func (m *Rule) validate(all bool) error {
 	if len(errors) > 0 {
 		return RuleMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5466,6 +5504,7 @@ func (m *Variables) validate(all bool) error {
 	if len(errors) > 0 {
 		return VariablesMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5576,6 +5615,7 @@ func (m *ListRulesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListRulesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5709,6 +5749,7 @@ func (m *ListRulesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListRulesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -5839,6 +5880,7 @@ func (m *UpdateRuleResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateRuleResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6011,6 +6053,7 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpdateRuleRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6120,6 +6163,7 @@ func (m *ListTemplatesRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListTemplatesRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6247,6 +6291,7 @@ func (m *TemplateVariables) validate(all bool) error {
 	if len(errors) > 0 {
 		return TemplateVariablesMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6490,6 +6535,7 @@ func (m *Template) validate(all bool) error {
 	if len(errors) > 0 {
 		return TemplateMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6621,6 +6667,7 @@ func (m *TemplateResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return TemplateResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6791,6 +6838,7 @@ func (m *UpsertTemplateRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return UpsertTemplateRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -6928,6 +6976,7 @@ func (m *ListTemplatesResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return ListTemplatesResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7040,6 +7089,7 @@ func (m *GetTemplateByNameRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return GetTemplateByNameRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7145,6 +7195,7 @@ func (m *DeleteTemplateRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteTemplateRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7246,6 +7297,7 @@ func (m *DeleteTemplateResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return DeleteTemplateResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7360,6 +7412,7 @@ func (m *RenderTemplateRequest) validate(all bool) error {
 	if len(errors) > 0 {
 		return RenderTemplateRequestMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7465,6 +7518,7 @@ func (m *RenderTemplateResponse) validate(all bool) error {
 	if len(errors) > 0 {
 		return RenderTemplateResponseMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7567,16 +7621,7 @@ func (m *SendReceiverNotificationRequest_SlackPayload) validate(all bool) error 
 
 	// no validation rules for Message
 
-	if !_SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern.MatchString(m.GetReceiverName()) {
-		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
-			field:  "ReceiverName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ReceiverName
 
 	if _, ok := _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup[m.GetReceiverType()]; !ok {
 		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
@@ -7626,6 +7671,7 @@ func (m *SendReceiverNotificationRequest_SlackPayload) validate(all bool) error 
 	if len(errors) > 0 {
 		return SendReceiverNotificationRequest_SlackPayloadMultiError(errors)
 	}
+
 	return nil
 }
 
@@ -7704,8 +7750,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SendReceiverNotificationRequest_SlackPayloadValidationError{}
-
-var _SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup = map[string]struct{}{
 	"channel": {},
