@@ -2,17 +2,18 @@ package v1beta1
 
 import (
 	"context"
+	"strings"
+
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"strings"
 )
 
-func (s *GRPCServer) ListSubscriptions(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListSubscriptionsResponse, error) {
-	subscriptions, err := s.container.SubscriptionService.ListSubscriptions()
+func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListSubscriptionsResponse, error) {
+	subscriptions, err := s.container.SubscriptionService.ListSubscriptions(ctx)
 	if err != nil {
 		s.logger.Error("failed to list subscriptions", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -36,14 +37,14 @@ func (s *GRPCServer) ListSubscriptions(_ context.Context, _ *emptypb.Empty) (*si
 	return res, nil
 }
 
-func (s *GRPCServer) CreateSubscription(_ context.Context, req *sirenv1beta1.CreateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.CreateSubscription(&domain.Subscription{
+func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.CreateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
+	subscription := &domain.Subscription{
 		Namespace: req.GetNamespace(),
 		Urn:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
-	})
-	if err != nil {
+	}
+	if err := s.container.SubscriptionService.CreateSubscription(ctx, subscription); err != nil {
 		s.logger.Error("failed to create subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -64,8 +65,8 @@ func (s *GRPCServer) CreateSubscription(_ context.Context, req *sirenv1beta1.Cre
 	}, nil
 }
 
-func (s *GRPCServer) GetSubscription(_ context.Context, req *sirenv1beta1.GetSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.GetSubscription(req.GetId())
+func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
+	subscription, err := s.container.SubscriptionService.GetSubscription(ctx, req.GetId())
 	if err != nil {
 		s.logger.Error("failed to fetch subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -91,15 +92,15 @@ func (s *GRPCServer) GetSubscription(_ context.Context, req *sirenv1beta1.GetSub
 	}, nil
 }
 
-func (s *GRPCServer) UpdateSubscription(_ context.Context, req *sirenv1beta1.UpdateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.UpdateSubscription(&domain.Subscription{
+func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.UpdateSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
+	subscription := &domain.Subscription{
 		Id:        req.GetId(),
 		Namespace: req.GetNamespace(),
 		Urn:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
-	})
-	if err != nil {
+	}
+	if err := s.container.SubscriptionService.UpdateSubscription(ctx, subscription); err != nil {
 		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
 			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
@@ -124,8 +125,8 @@ func (s *GRPCServer) UpdateSubscription(_ context.Context, req *sirenv1beta1.Upd
 	}, nil
 }
 
-func (s *GRPCServer) DeleteSubscription(_ context.Context, req *sirenv1beta1.DeleteSubscriptionRequest) (*emptypb.Empty, error) {
-	err := s.container.SubscriptionService.DeleteSubscription(req.GetId())
+func (s *GRPCServer) DeleteSubscription(ctx context.Context, req *sirenv1beta1.DeleteSubscriptionRequest) (*emptypb.Empty, error) {
+	err := s.container.SubscriptionService.DeleteSubscription(ctx, req.GetId())
 	if err != nil {
 		s.logger.Error("failed to delete subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
