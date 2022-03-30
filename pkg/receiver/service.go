@@ -7,7 +7,6 @@ import (
 	"github.com/odpf/siren/plugins/receivers/http"
 	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/odpf/siren/store"
-	"github.com/odpf/siren/store/model"
 	"github.com/pkg/errors"
 )
 
@@ -27,11 +26,15 @@ type CodeExchangeHTTPResponse struct {
 	Ok bool `json:"ok"`
 }
 
+type slackService interface {
+	GetWorkspaceChannels(string) ([]slack.Channel, error)
+}
+
 // Service handles business logic
 type Service struct {
-	repository      store.ReceiverRepository
-	slackRepository model.SlackRepository
-	slackHelper     SlackHelper
+	repository   store.ReceiverRepository
+	slackService slackService
+	slackHelper  SlackHelper
 }
 
 // NewService returns service struct
@@ -42,9 +45,9 @@ func NewService(repository store.ReceiverRepository, httpClient http.Doer, encry
 	}
 
 	return &Service{
-		repository:      repository,
-		slackHelper:     slackHelper,
-		slackRepository: slack.NewService(),
+		repository:   repository,
+		slackHelper:  slackHelper,
+		slackService: slack.NewService(),
 	}, nil
 }
 
@@ -103,7 +106,7 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 		}
 
 		token := receiver.Configurations["token"].(string)
-		channels, err := service.slackRepository.GetWorkspaceChannels(token)
+		channels, err := service.slackService.GetWorkspaceChannels(token)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get channels")
 		}

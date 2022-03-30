@@ -1,4 +1,4 @@
-package slacknotifier
+package slack
 
 type NoChannelFoundErr struct {
 	Err error

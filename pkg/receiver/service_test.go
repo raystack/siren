@@ -2,11 +2,12 @@ package receiver
 
 import (
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 type ServiceTestSuite struct {
@@ -233,7 +234,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 	}
 
 	s.Run("should call repository Get method and return result in domain's type", func() {
-		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
 			Return(receiver, nil).Once()
@@ -264,7 +265,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 	})
 
 	s.Run("should return error if post transformation failed", func() {
-		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
 			Return(nil, errors.New("random error")).Once()
@@ -277,7 +278,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 	})
 
 	s.Run("should return error if getting slack channels failed", func() {
-		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
 			Return(receiver, nil).Once()
@@ -291,7 +292,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 	})
 
 	s.Run("should return error if invalid slack channels", func() {
-		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackRepository: s.slacker}
+		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		oldjsonMarshal := jsonMarshal
 		jsonMarshal = func(interface{}) ([]byte, error) {
 			return nil, errors.New("random error")

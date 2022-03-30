@@ -46,12 +46,3 @@ func (receiver *Receiver) ToDomain() *domain.Receiver {
 		UpdatedAt:      receiver.UpdatedAt,
 	}
 }
-
-type Channel struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type SlackRepository interface {
-	GetWorkspaceChannels(string) ([]Channel, error)
-}
