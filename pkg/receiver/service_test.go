@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
+	"github.com/odpf/siren/plugins/receivers/slack"
+	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -14,13 +15,13 @@ type ServiceTestSuite struct {
 	suite.Suite
 	slackHelperMock *MockSlackHelper
 	repositoryMock  *MockReceiverRepository
-	slacker         *MockSlackRepository
+	slacker         *MockSlackService
 }
 
 func (s *ServiceTestSuite) SetupTest() {
 	s.slackHelperMock = &MockSlackHelper{}
 	s.repositoryMock = &MockReceiverRepository{}
-	s.slacker = &MockSlackRepository{}
+	s.slacker = &MockSlackService{}
 }
 
 func TestService(t *testing.T) {
@@ -28,8 +29,8 @@ func TestService(t *testing.T) {
 }
 
 func (s *ServiceTestSuite) TestService_ListReceivers() {
-	configurations := make(model.StringInterfaceMap)
-	labels := make(model.StringStringMap)
+	configurations := make(map[string]interface{})
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
 	s.Run("should call repository List method and return result in domain's type", func() {
@@ -45,7 +46,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 				UpdatedAt:      time.Now(),
 			},
 		}
-		receivers := []*model.Receiver{
+		receivers := []*domain.Receiver{
 			{
 				Id:             10,
 				Name:           "foo",
@@ -60,7 +61,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 
 		s.repositoryMock.On("List").Return(receivers, nil).Once()
 		s.slackHelperMock.On("PostTransform", receivers[0]).
-			Return(receivers[0], nil).Once()
+			Return(nil).Once()
 
 		result, err := dummyService.ListReceivers()
 		s.Nil(err)
@@ -83,7 +84,7 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 
 	s.Run("should call repository List method and return error if post slack transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
-		receivers := []*model.Receiver{
+		receivers := []*domain.Receiver{
 			{
 				Id:             10,
 				Name:           "foo",
@@ -99,22 +100,22 @@ func (s *ServiceTestSuite) TestService_ListReceivers() {
 		s.repositoryMock.On("List").
 			Return(receivers, nil).Once()
 		s.slackHelperMock.On("PostTransform", receivers[0]).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
 		result, err := dummyService.ListReceivers()
-		s.Nil(result)
 		s.EqualError(err, "slackHelper.PostTransform: random error")
+		s.Nil(result)
 		s.repositoryMock.AssertCalled(s.T(), "List")
 	})
 }
 
 func (s *ServiceTestSuite) TestService_CreateReceiver() {
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"
 
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 
@@ -140,7 +141,7 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
-	receiver := &model.Receiver{
+	receiver := &domain.Receiver{
 		Id:             10,
 		Name:           "foo",
 		Type:           "slack",
@@ -153,24 +154,26 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 	s.Run("should call repository Create method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(transfromResponse, nil).Once()
-		s.repositoryMock.On("Create", receiver).Return(receiver, nil).Once()
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *transfromResponse
+			}).Return(nil).Once()
+		s.repositoryMock.On("Create", receiver).Return(nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(receiver, nil).Once()
+			Return(nil).Once()
 
-		result, err := dummyService.CreateReceiver(receiverRequest)
+		err := dummyService.CreateReceiver(receiverRequest)
 		s.Nil(err)
-		s.Equal(transfromResponse, result)
+		s.Equal(transfromResponse, receiverRequest)
 		s.repositoryMock.AssertCalled(s.T(), "Create", receiver)
 	})
 
 	s.Run("should call repository Create method and return error if pre transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
-		result, err := dummyService.CreateReceiver(receiverRequest)
-		s.Nil(result)
+		err := dummyService.CreateReceiver(receiverRequest)
 		s.EqualError(err, "slackHelper.PreTransform: random error")
 	})
 
@@ -178,38 +181,42 @@ func (s *ServiceTestSuite) TestService_CreateReceiver() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(transfromResponse, nil).Once()
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *transfromResponse
+			}).Return(nil).Once()
 		s.repositoryMock.On("Create", receiver).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
-		result, err := dummyService.CreateReceiver(receiverRequest)
-		s.Nil(result)
+		err := dummyService.CreateReceiver(receiverRequest)
 		s.EqualError(err, "service.repository.Create: random error")
 	})
 
 	s.Run("should call repository Create method and return error if post transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(transfromResponse, nil).Once()
-		s.repositoryMock.On("Create", receiver).Return(receiver, nil).Once()
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *transfromResponse
+			}).Return(nil).Once()
+		s.repositoryMock.On("Create", receiver).Return(nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
-		result, err := dummyService.CreateReceiver(receiverRequest)
-		s.Nil(result)
+		err := dummyService.CreateReceiver(receiverRequest)
 		s.EqualError(err, "slackHelper.PostTransform: random error")
 	})
 }
 
 func (s *ServiceTestSuite) TestService_GetReceiver() {
 	receiverID := uint64(10)
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["token"] = "key"
 
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
-	data := make(model.StringInterfaceMap)
+	data := make(map[string]interface{})
 	data["channels"] = "[{\"id\":\"1\",\"name\":\"foo\"}]"
 
 	timenow := time.Now()
@@ -223,7 +230,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		CreatedAt:      timenow,
 		UpdatedAt:      timenow,
 	}
-	receiver := &model.Receiver{
+	receiver := &domain.Receiver{
 		Id:             10,
 		Name:           "foo",
 		Type:           "slack",
@@ -237,9 +244,9 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(receiver, nil).Once()
+			Return(nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "key").
-			Return([]model.Channel{
+			Return([]slack.Channel{
 				{ID: "1", Name: "foo"},
 			}, nil).Once()
 
@@ -251,7 +258,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 	s.Run("should call repository Get method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock}
-		newConfigurations := make(model.StringInterfaceMap)
+		newConfigurations := make(map[string]interface{})
 		newConfigurations["token"] = "key"
 		receiver.Configurations = newConfigurations
 
@@ -268,7 +275,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
 		result, err := dummyService.GetReceiver(receiverID)
 		s.Nil(result)
@@ -281,7 +288,7 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock, slackService: s.slacker}
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(receiver, nil).Once()
+			Return(nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "key").
 			Return(nil, errors.New("random error")).Once()
 
@@ -299,15 +306,15 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 		}
 		defer func() { jsonMarshal = oldjsonMarshal }()
 
-		newConfigurations := make(model.StringInterfaceMap)
+		newConfigurations := make(map[string]interface{})
 		newConfigurations["token"] = "key"
 		receiver.Configurations = newConfigurations
 
 		s.repositoryMock.On("Get", receiverID).Return(receiver, nil).Once()
 		s.slackHelperMock.On("PostTransform", receiver).
-			Return(receiver, nil).Once()
+			Return(nil).Once()
 		s.slacker.On("GetWorkspaceChannels", "key").
-			Return([]model.Channel{
+			Return([]slack.Channel{
 				{ID: "1", Name: string([]byte{0xff})},
 			}, nil).Once()
 
@@ -320,12 +327,12 @@ func (s *ServiceTestSuite) TestService_GetReceiver() {
 
 func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 	timenow := time.Now()
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"
 
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 	receiverRequest := &domain.Receiver{
 		Id:             10,
@@ -337,7 +344,7 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 		UpdatedAt:      timenow,
 	}
 
-	receiver := &model.Receiver{
+	receiver := &domain.Receiver{
 		Id:     10,
 		Name:   "foo",
 		Type:   "slack",
@@ -366,44 +373,48 @@ func (s *ServiceTestSuite) TestService_UpdateReceiver() {
 	s.Run("should call repository Update method and return result in domain's type", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(receiverResponse, nil).Once()
-		s.repositoryMock.On("Update", receiver).Return(receiver, nil).Once()
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *receiverResponse
+			}).Return(nil).Once()
+		s.repositoryMock.On("Update", receiver).Return(nil).Once()
 
-		result, err := dummyService.UpdateReceiver(receiverRequest)
+		err := dummyService.UpdateReceiver(receiverRequest)
 		s.Nil(err)
-		s.Equal(receiverResponse, result)
+		s.Equal(receiverResponse, receiverRequest)
 		s.repositoryMock.AssertCalled(s.T(), "Update", receiver)
 	})
 
 	s.Run("should call repository Create method and return error if transformation failed", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
-		result, err := dummyService.UpdateReceiver(receiverRequest)
-		s.Nil(result)
+		err := dummyService.UpdateReceiver(receiverRequest)
 		s.EqualError(err, "slackHelper.PreTransform: random error")
 	})
 
 	s.Run("should call repository Update method and return error if any", func() {
 		dummyService := Service{repository: s.repositoryMock, slackHelper: s.slackHelperMock}
 		s.slackHelperMock.On("PreTransform", receiverRequest).
-			Return(receiverResponse, nil).Once()
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *receiverResponse
+			}).Return(nil).Once()
 		s.repositoryMock.On("Update", receiver).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
-		result, err := dummyService.UpdateReceiver(receiverRequest)
-		s.Nil(result)
+		err := dummyService.UpdateReceiver(receiverRequest)
 		s.EqualError(err, "random error")
 		s.repositoryMock.AssertCalled(s.T(), "Update", receiver)
 	})
 }
 
 func (s *ServiceTestSuite) TestService_DeleteReceiver() {
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["foo"] = "bar"
 
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 	receiverID := uint64(10)
 

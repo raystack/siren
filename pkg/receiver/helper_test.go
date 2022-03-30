@@ -2,10 +2,11 @@ package receiver
 
 import (
 	"errors"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
-	"github.com/stretchr/testify/suite"
 	"testing"
+
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/plugins/receivers/http"
+	"github.com/stretchr/testify/suite"
 )
 
 type SlackHelperTestSuite struct {
@@ -34,7 +35,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
 		Configurations: responseConfigurations,
 	}
 
-	codeExchangeHTTPResponse := CodeExchangeHTTPResponse{
+	codeExchangeHTTPResponse := http.CodeExchangeHTTPResponse{
 		AccessToken: "test-access-token",
 		Team: struct {
 			Name string `json:"name"`
@@ -58,9 +59,9 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
 			Return(codeExchangeHTTPResponse, nil).Once()
 
-		result, err := slackHelper.PreTransform(payload)
-		s.Equal(result, response)
+		err := slackHelper.PreTransform(payload)
 		s.Nil(err)
+		s.Equal(payload, response)
 		s.exchangerMock.AssertCalled(s.T(), "Exchange", "foo", "foo", "bar")
 	})
 
@@ -70,10 +71,9 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
 			Configurations: configurations,
 		}
 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
-			Return(CodeExchangeHTTPResponse{}, errors.New("random error")).Once()
+			Return(http.CodeExchangeHTTPResponse{}, errors.New("random error")).Once()
 
-		result, err := slackHelper.PreTransform(payload)
-		s.Nil(result)
+		err := slackHelper.PreTransform(payload)
 		s.EqualError(err, "failed to exchange code with slack OAuth server: random error")
 	})
 
@@ -92,15 +92,14 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
 			Return(codeExchangeHTTPResponse, nil).Once()
 
-		result, err := slackHelper.PreTransform(payload)
-		s.Nil(result)
+		err := slackHelper.PreTransform(payload)
 		s.EqualError(err, "encryption failed: random error")
 	})
 }
 
 func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 
-	response := &model.Receiver{
+	response := &domain.Receiver{
 		Configurations: map[string]interface{}{
 			"token": "test-token",
 		},
@@ -109,7 +108,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 	s.Run("should transform payload on successful decrypt", func() {
 		configurations := make(map[string]interface{})
 		configurations["token"] = "YmFy"
-		payload := &model.Receiver{
+		payload := &domain.Receiver{
 			Configurations: configurations,
 		}
 
@@ -122,15 +121,15 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 			return []byte("test-token"), nil
 		}
 
-		result, err := slackHelper.PostTransform(payload)
-		s.Equal(result, response)
+		err := slackHelper.PostTransform(payload)
 		s.Nil(err)
+		s.Equal(payload, response)
 	})
 
 	s.Run("should return error if slack token decryption failed", func() {
 		configurations := make(map[string]interface{})
 		configurations["token"] = "YmFy"
-		payload := &model.Receiver{
+		payload := &domain.Receiver{
 			Configurations: configurations,
 		}
 
@@ -143,8 +142,7 @@ func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 			return nil, errors.New("random error")
 		}
 
-		result, err := slackHelper.PostTransform(payload)
-		s.Nil(result)
+		err := slackHelper.PostTransform(payload)
 		s.EqualError(err, "slackHelper.Decrypt: random error")
 	})
 }

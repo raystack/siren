@@ -3,6 +3,10 @@ package v1beta1
 import (
 	"context"
 	"errors"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
@@ -13,9 +17,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestGRPCServer_ListReceiver(t *testing.T) {
@@ -137,7 +138,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
-			Return(payload, nil).Once()
+			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -174,7 +175,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		mockedReceiverService.
 			On("CreateReceiver", payload).
-			Return(payload, nil).Once()
+			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -211,7 +212,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		mockedReceiverService.
 			On("CreateReceiver", payload).
-			Return(payload, nil).Once()
+			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -355,7 +356,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
-			Return(nil, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -403,7 +404,10 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		mockedReceiverService.
 			On("CreateReceiver", mock.Anything).
-			Return(newPayload, nil)
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *newPayload
+			}).Return(nil)
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
@@ -569,7 +573,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
-			Return(payload, nil).Once()
+			Return(nil).Once()
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -741,7 +745,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
-			Return(nil, errors.New("random error"))
+			Return(errors.New("random error"))
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -766,7 +770,11 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		mockedReceiverService.
 			On("UpdateReceiver", mock.Anything).
-			Return(newPayload, nil)
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*domain.Receiver)
+				*r = *newPayload
+			}).
+			Return(nil)
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
