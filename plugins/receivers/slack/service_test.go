@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -14,7 +13,7 @@ import (
 type SlackRepositoryTestSuite struct {
 	suite.Suite
 	service SlackRepository
-	slacker *mocks.SlackService
+	client  *MockSlackCaller
 }
 
 func TestSlackRepository(t *testing.T) {
@@ -22,32 +21,49 @@ func TestSlackRepository(t *testing.T) {
 }
 
 func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {
-	oldServiceCreator := newService
-	mockedSlackService := &mocks.SlackService{}
-	newService = func(string) domain.SlackService {
-		return mockedSlackService
+	oldClientCreator := newClient
+	mockedSlackClient := &MockSlackCaller{}
+	newClient = func(string) slackCaller {
+		return mockedSlackClient
 	}
-	defer func() { newService = oldServiceCreator }()
-	s.slacker = mockedSlackService
-	s.service = &service{
-		Slacker: s.slacker,
-	}
+	defer func() { newClient = oldClientCreator }()
+	s.client = mockedSlackClient
+	s.service = NewService()
 
 	s.Run("should return joined channel list in a workspace", func() {
-		s.slacker.On("GetJoinedChannelsList").Return([]slack.Channel{
-			{GroupConversation: slack.GroupConversation{Name: "foo"}},
-			{GroupConversation: slack.GroupConversation{Name: "bar"}}}, nil).Once()
+		s.client.
+			On("GetConversationsForUser", mock.AnythingOfType("*slack.GetConversationsForUserParameters")).
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*slack.GetConversationsForUserParameters)
+				s.Equal(1000, r.Limit)
+				s.Equal([]string{"public_channel", "private_channel"}, r.Types)
+				s.Equal("", r.Cursor)
+			}).
+			Return([]slack.Channel{
+				{GroupConversation: slack.GroupConversation{Name: "foo"}},
+				{GroupConversation: slack.GroupConversation{Name: "bar"}}}, "nextCurr", nil).Once()
+		s.client.
+			On("GetConversationsForUser", mock.AnythingOfType("*slack.GetConversationsForUserParameters")).
+			Run(func(args mock.Arguments) {
+				r := args.Get(0).(*slack.GetConversationsForUserParameters)
+				s.Equal(1000, r.Limit)
+				s.Equal([]string{"public_channel", "private_channel"}, r.Types)
+				s.Equal("nextCurr", r.Cursor)
+			}).
+			Return([]slack.Channel{
+				{GroupConversation: slack.GroupConversation{Name: "baz"}}}, "", nil).Once()
 		channels, err := s.service.GetWorkspaceChannels("test_token")
-		s.Equal(2, len(channels))
+		s.Equal(3, len(channels))
 		s.Equal("foo", channels[0].Name)
 		s.Equal("bar", channels[1].Name)
+		s.Equal("baz", channels[2].Name)
 		s.Nil(err)
-		s.slacker.AssertExpectations(s.T())
+		s.client.AssertExpectations(s.T())
 	})
 
 	s.Run("should return error if get joined channel list fail", func() {
-		s.slacker.On("GetJoinedChannelsList").
-			Return(nil, errors.New("random error")).Once()
+		s.client.On("GetConversationsForUser", mock.Anything).
+			Return(nil, "", errors.New("random error")).Once()
 
 		channels, err := s.service.GetWorkspaceChannels("test_token")
 		s.Nil(channels)
@@ -56,21 +72,19 @@ func (s *SlackRepositoryTestSuite) TestGetWorkspaceChannel() {
 }
 
 func (s *SlackRepositoryTestSuite) TestNotify() {
-	oldServiceCreator := newService
-	mockedSlackService := &mocks.SlackService{}
-	newService = func(string) domain.SlackService {
-		return mockedSlackService
+	oldClientCreator := newClient
+	mockedSlackClient := &MockSlackCaller{}
+	newClient = func(string) slackCaller {
+		return mockedSlackClient
 	}
-	defer func() { newService = oldServiceCreator }()
-	s.slacker = mockedSlackService
-	s.service = &service{
-		Slacker: s.slacker,
-	}
+	defer func() { newClient = oldClientCreator }()
+	s.client = mockedSlackClient
+	s.service = NewService()
 
 	s.Run("should notify user identified by their email", func() {
-		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
 			Return(&slack.User{ID: "U20"}, nil).Once()
-		mockedSlackService.On("SendMessage", "U20",
+		mockedSlackClient.On("SendMessage", "U20",
 			mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
 		dummyMessage := &domain.SlackMessage{
 			ReceiverName: "foo@odpf.io",
@@ -84,9 +98,9 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 	})
 
 	s.Run("should return error if notifying user fails", func() {
-		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
 			Return(&slack.User{ID: "U20"}, nil).Once()
-		mockedSlackService.On("SendMessage", "U20",
+		mockedSlackClient.On("SendMessage", "U20",
 			mock.AnythingOfType("slack.MsgOption"),
 			mock.AnythingOfType("slack.MsgOption"),
 		).Return("", "", "", errors.New("random error")).Once()
@@ -103,7 +117,7 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 	})
 
 	s.Run("should return error if user lookup by email fails", func() {
-		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
 			Return(nil, errors.New("users_not_found")).Once()
 
 		dummyMessage := &domain.SlackMessage{
@@ -118,7 +132,7 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 	})
 
 	s.Run("should return error if user lookup by email returns any error", func() {
-		mockedSlackService.On("GetUserByEmail", "foo@odpf.io").
+		mockedSlackClient.On("GetUserByEmail", "foo@odpf.io").
 			Return(nil, errors.New("random error")).Once()
 
 		dummyMessage := &domain.SlackMessage{
@@ -133,16 +147,16 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 	})
 
 	s.Run("should notify if part of the channel", func() {
-		mockedSlackService.On("GetJoinedChannelsList").Return([]slack.Channel{
+		mockedSlackClient.On("GetConversationsForUser", mock.Anything).Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{
 				Name:         "foo",
 				Conversation: slack.Conversation{ID: "C01"}},
 			}, {GroupConversation: slack.GroupConversation{
 				Name:         "bar",
 				Conversation: slack.Conversation{ID: "C02"}},
-			}}, nil).Once()
+			}}, "", nil).Once()
 
-		mockedSlackService.On("SendMessage", "C01",
+		mockedSlackClient.On("SendMessage", "C01",
 			mock.AnythingOfType("slack.MsgOption"),
 			mock.AnythingOfType("slack.MsgOption"),
 		).Return("", "", "", nil).Once()
@@ -156,20 +170,20 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 		res, err := s.service.Notify(dummyMessage)
 		s.Nil(err)
 		s.True(res.OK)
-		mockedSlackService.AssertExpectations(s.T())
+		mockedSlackClient.AssertExpectations(s.T())
 	})
 
 	s.Run("should return error if not part of the channel", func() {
-		mockedSlackService.On("GetJoinedChannelsList").Return([]slack.Channel{
+		mockedSlackClient.On("GetConversationsForUser", mock.Anything).Return([]slack.Channel{
 			{GroupConversation: slack.GroupConversation{
 				Name:         "foo",
 				Conversation: slack.Conversation{ID: "C01"}},
 			}, {GroupConversation: slack.GroupConversation{
 				Name:         "bar",
 				Conversation: slack.Conversation{ID: "C02"}},
-			}}, nil).Once()
+			}}, "", nil).Once()
 
-		mockedSlackService.On("SendMessage", "C01",
+		mockedSlackClient.On("SendMessage", "C01",
 			mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
 
 		dummyMessage := &domain.SlackMessage{
@@ -184,9 +198,9 @@ func (s *SlackRepositoryTestSuite) TestNotify() {
 	})
 
 	s.Run("should return error failed to fetch joined channels list", func() {
-		mockedSlackService.On("GetJoinedChannelsList").
-			Return(nil, errors.New("random error")).Once()
-		mockedSlackService.On("SendMessage", "C01",
+		mockedSlackClient.On("GetConversationsForUser", mock.Anything).
+			Return(nil, "", errors.New("random error")).Once()
+		mockedSlackClient.On("SendMessage", "C01",
 			mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil).Once()
 
 		dummyMessage := &domain.SlackMessage{

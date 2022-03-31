@@ -4,26 +4,27 @@ import (
 	"fmt"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/plugins/clients/slack"
 	"github.com/pkg/errors"
 	goslack "github.com/slack-go/slack"
 )
 
-type service struct {
-	Slacker domain.SlackService
+type slackCaller interface {
+	SendMessage(string, ...goslack.MsgOption) (string, string, string, error)
+	GetUserByEmail(string) (*goslack.User, error)
+	GetConversationsForUser(params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
 }
+
+type service struct{}
 
 func NewService() *service {
-	return &service{
-		Slacker: nil,
-	}
+	return &service{}
 }
 
-var newService = slack.NewService
+var newClient = newSlackClient
 
 func (s *service) GetWorkspaceChannels(token string) ([]Channel, error) {
-	s.Slacker = newService(token)
-	joinedChannelList, err := s.Slacker.GetJoinedChannelsList()
+	client := newClient(token)
+	joinedChannelList, err := getJoinedChannelsList(client)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch joined channel list")
 	}
@@ -55,11 +56,11 @@ func (s *service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSend
 }
 
 func (s *service) notifyWithClient(message *SlackMessage, token string) error {
-	s.Slacker = newService(token)
+	client := newClient(token)
 	var channelID string
 	switch message.ReceiverType {
 	case "channel":
-		joinedChannelList, err := s.Slacker.GetJoinedChannelsList()
+		joinedChannelList, err := getJoinedChannelsList(client)
 		if err != nil {
 			return &JoinedChannelFetchErr{
 				Err: errors.Wrap(err, "failed to fetch joined channel list"),
@@ -72,7 +73,7 @@ func (s *service) notifyWithClient(message *SlackMessage, token string) error {
 			}
 		}
 	case "user":
-		user, err := s.Slacker.GetUserByEmail(message.ReceiverName)
+		user, err := client.GetUserByEmail(message.ReceiverName)
 		if err != nil {
 			if err.Error() == "users_not_found" {
 				return &UserLookupByEmailErr{
@@ -85,13 +86,33 @@ func (s *service) notifyWithClient(message *SlackMessage, token string) error {
 		}
 		channelID = user.ID
 	}
-	_, _, _, err := s.Slacker.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
+	_, _, _, err := client.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
 	if err != nil {
 		return &MsgSendErr{
 			Err: errors.Wrap(err, fmt.Sprintf("failed to send message to %s", message.ReceiverName)),
 		}
 	}
 	return nil
+}
+
+func getJoinedChannelsList(client slackCaller) ([]goslack.Channel, error) {
+	channelList := make([]goslack.Channel, 0)
+	curr := ""
+	for {
+		channels, nextCursor, err := client.GetConversationsForUser(&goslack.GetConversationsForUserParameters{
+			Types:  []string{"public_channel", "private_channel"},
+			Cursor: curr,
+			Limit:  1000})
+		if err != nil {
+			return channelList, err
+		}
+		channelList = append(channelList, channels...)
+		curr = nextCursor
+		if curr == "" {
+			break
+		}
+	}
+	return channelList, nil
 }
 
 func searchChannelId(channels []goslack.Channel, channelName string) string {
@@ -101,4 +122,8 @@ func searchChannelId(channels []goslack.Channel, channelName string) string {
 		}
 	}
 	return ""
+}
+
+func newSlackClient(token string) slackCaller {
+	return goslack.New(token)
 }
