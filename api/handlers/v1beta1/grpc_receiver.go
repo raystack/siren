@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"context"
 	"encoding/json"
+
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/utils"
@@ -72,13 +73,13 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver, err := s.container.ReceiverService.CreateReceiver(&domain.Receiver{
+	receiver := &domain.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
-	})
-	if err != nil {
+	}
+	if err := s.container.ReceiverService.CreateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
@@ -152,14 +153,14 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver, err := s.container.ReceiverService.UpdateReceiver(&domain.Receiver{
+	receiver := &domain.Receiver{
 		Id:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
-	})
-	if err != nil {
+	}
+	if err := s.container.ReceiverService.UpdateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 

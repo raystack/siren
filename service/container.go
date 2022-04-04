@@ -7,12 +7,12 @@ import (
 	"github.com/odpf/siren/pkg/provider"
 	"github.com/odpf/siren/pkg/receiver"
 	"github.com/odpf/siren/pkg/subscription"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/odpf/siren/store"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/alerts"
 	"github.com/odpf/siren/pkg/rules"
-	"github.com/odpf/siren/pkg/slacknotifier"
 	"github.com/odpf/siren/pkg/templates"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -34,7 +34,6 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 	rulesService := rules.NewService(repositories.TemplatesRepository, db)
 	alertHistoryService := alerts.NewService(db)
 
-	slackNotifierService := slacknotifier.NewService()
 	providerService := provider.NewService(repositories.ProviderRepository)
 	namespaceService, err := namespace.NewService(repositories.NamespaceRepository, c.EncryptionKey)
 	if err != nil {
@@ -55,7 +54,7 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 		RulesService:     rulesService,
 		AlertService:     alertHistoryService,
 		NotifierServices: domain.NotifierServices{
-			Slack: slackNotifierService,
+			Slack: slack.NewService(),
 		},
 		ProviderService:     providerService,
 		NamespaceService:    namespaceService,
