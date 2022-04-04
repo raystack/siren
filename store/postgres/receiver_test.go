@@ -4,15 +4,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/mocks"
-	"github.com/odpf/siren/store"
-	"github.com/odpf/siren/store/model"
-	"github.com/odpf/siren/store/postgres"
-	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store"
+	"github.com/odpf/siren/store/postgres"
+	"github.com/stretchr/testify/suite"
 )
 
 type ReceiverRepositoryTestSuite struct {
@@ -37,12 +38,12 @@ func (s *ReceiverRepositoryTestSuite) TearDownTest() {
 func (s *ReceiverRepositoryTestSuite) TestList() {
 	s.Run("should get all receivers", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from receivers`)
-		configurations := make(model.StringInterfaceMap)
+		configurations := make(map[string]interface{})
 		configurations["foo"] = "bar"
-		labels := make(model.StringStringMap)
+		labels := make(map[string]string)
 		labels["foo"] = "bar"
 
-		receiver := &model.Receiver{
+		receiver := &domain.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -51,7 +52,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		expectedReceivers := []*model.Receiver{receiver}
+		expectedReceivers := []*domain.Receiver{receiver}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "name", "type", "labels", "configurations", "created_at", "updated_at"}).
@@ -75,17 +76,16 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 }
 
 func (s *ReceiverRepositoryTestSuite) TestCreate() {
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
 	s.Run("should create a receiver", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -96,19 +96,11 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 		}
 
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedReceiver.Name,
-			expectedReceiver.Type, expectedReceiver.Labels, expectedReceiver.Configurations,
+			expectedReceiver.Type, json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
 			expectedReceiver.CreatedAt, expectedReceiver.UpdatedAt, expectedReceiver.Id).
 			WillReturnRows(sqlmock.NewRows(nil))
 
-		expectedRows := sqlmock.
-			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow(expectedReceiver.Name, expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.Id)
-
-		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
-		actualReceiver, err := s.repository.Create(expectedReceiver)
-		s.Equal(expectedReceiver, actualReceiver)
+		err := s.repository.Create(expectedReceiver)
 		s.Nil(err)
 	})
 
@@ -116,7 +108,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -127,51 +119,24 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 		}
 
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedReceiver.Name, expectedReceiver.Type,
-			expectedReceiver.Labels, expectedReceiver.Configurations,
+			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
 			expectedReceiver.CreatedAt, expectedReceiver.UpdatedAt, expectedReceiver.Id).
 			WillReturnError(errors.New("random error"))
 
-		actualReceiver, err := s.repository.Create(expectedReceiver)
+		err := s.repository.Create(expectedReceiver)
 		s.EqualError(err, "random error")
-		s.Nil(actualReceiver)
-	})
-
-	s.Run("should return error if finding newly inserted receiver fails", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
-											("name","type","labels","configurations","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &model.Receiver{
-			Id:             1,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedReceiver.Name,
-			expectedReceiver.Type, expectedReceiver.Labels, expectedReceiver.Configurations,
-			expectedReceiver.CreatedAt, expectedReceiver.UpdatedAt, expectedReceiver.Id).
-			WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
-
-		actualReceiver, err := s.repository.Create(expectedReceiver)
-		s.EqualError(err, "random error")
-		s.Nil(actualReceiver)
 	})
 }
 
 func (s *ReceiverRepositoryTestSuite) TestGet() {
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
 	s.Run("should get receiver by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -215,19 +180,19 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 }
 
 func (s *ReceiverRepositoryTestSuite) TestUpdate() {
-	configurations := make(model.StringInterfaceMap)
+	configurations := make(map[string]interface{})
 	configurations["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
+	updateQuery := regexp.QuoteMeta(`UPDATE "receivers"
+						SET "id"=$1,"name"=$2,"type"=$3,"labels"=$4,"configurations"=$5,"created_at"=$6,"updated_at"=$7
+						WHERE id = $8 AND "id" = $9`)
+	findQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
+
 	s.Run("should update a receiver", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "receivers"
-						SET "name"=$1,"type"=$2,"labels"=$3,"configurations"=$4,"created_at"=$5,"updated_at"=$6
-						WHERE id = $7 AND "id" = $8`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             10,
 			Name:           "foo",
 			Type:           "slack",
@@ -236,7 +201,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &model.Receiver{
+		input := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -246,32 +211,25 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			UpdatedAt:      timeNow,
 		}
 
-		expectedRows1 := sqlmock.
-			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow(expectedReceiver.Name, expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.Id)
 		expectedRows2 := sqlmock.
 			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
 			AddRow("baz", expectedReceiver.Type,
 				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
 				expectedReceiver.UpdatedAt, expectedReceiver.Id)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
-		s.dbmock.ExpectExec(updateQuery).WithArgs("baz", expectedReceiver.Type,
-			expectedReceiver.Labels, expectedReceiver.Configurations,
-			AnyTime{}, AnyTime{}, expectedReceiver.Id, expectedReceiver.Id).
+		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Id, "baz", input.Type,
+			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
+			AnyTime{}, AnyTime{}, input.Id, input.Id).
 			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows2)
+		s.dbmock.ExpectQuery(findQuery).WillReturnRows(expectedRows2)
 
-		actualReceiver, err := s.repository.Update(input)
-		s.Equal("baz", actualReceiver.Name)
+		err := s.repository.Update(input)
+		s.Equal("baz", input.Name)
 		s.Nil(err)
 	})
 
 	s.Run("should return error if receiver does not exist", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &model.Receiver{
+		input := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -281,40 +239,18 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			UpdatedAt:      timeNow,
 		}
 
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
+		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Id, "baz", input.Type,
+			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
+			AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		actualReceiver, err := s.repository.Update(input)
-		s.Nil(actualReceiver)
+		err := s.repository.Update(input)
 		s.EqualError(err, "receiver doesn't exist")
 	})
 
-	s.Run("should return error in finding the receiver", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
-		timeNow := time.Now()
-		input := &model.Receiver{
-			Id:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnError(errors.New("random error"))
-
-		actualReceiver, err := s.repository.Update(input)
-		s.Nil(actualReceiver)
-		s.EqualError(err, "random error")
-	})
-
 	s.Run("should return error updating the receiver", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "receivers"
-						SET "name"=$1,"type"=$2,"labels"=$3,"configurations"=$4,"created_at"=$5,"updated_at"=$6
-						WHERE id = $7 AND "id" = $8`)
 		timeNow := time.Now()
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -324,7 +260,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
-		input := &model.Receiver{
+		input := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -334,29 +270,18 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			UpdatedAt:      timeNow,
 		}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"urn", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow(expectedReceiver.Name, expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.Id)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
-		s.dbmock.ExpectExec(updateQuery).WithArgs("baz", expectedReceiver.Type, expectedReceiver.Labels,
-			expectedReceiver.Configurations, AnyTime{}, AnyTime{}, expectedReceiver.Id, expectedReceiver.Id).
+		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedReceiver.Id, "baz", expectedReceiver.Type,
+			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
+			AnyTime{}, AnyTime{}, expectedReceiver.Id, expectedReceiver.Id).
 			WillReturnError(errors.New("random error"))
 
-		actualReceiver, err := s.repository.Update(input)
-		s.Nil(actualReceiver)
+		err := s.repository.Update(input)
 		s.EqualError(err, "random error")
 	})
 
 	s.Run("should return error in finding the updated receiver", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "receivers"
-						SET "name"=$1,"type"=$2,"labels"=$3,"configurations"=$4,"created_at"=$5,"updated_at"=$6
-						WHERE id = $7 AND "id" = $8`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
 		timeNow := time.Now()
-		expectedReceiver := &model.Receiver{
+		expectedReceiver := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -365,7 +290,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &model.Receiver{
+		input := &domain.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -375,20 +300,13 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			UpdatedAt:      timeNow,
 		}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow(expectedReceiver.Name, expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.Id)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
-		s.dbmock.ExpectExec(updateQuery).WithArgs("baz",
-			expectedReceiver.Type, expectedReceiver.Labels, expectedReceiver.Configurations,
+		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedReceiver.Id, "baz", expectedReceiver.Type,
+			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
 			AnyTime{}, AnyTime{}, expectedReceiver.Id, expectedReceiver.Id).
 			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New("random error"))
+		s.dbmock.ExpectQuery(findQuery).WillReturnError(errors.New("random error"))
 
-		actualReceiver, err := s.repository.Update(input)
-		s.Nil(actualReceiver)
+		err := s.repository.Update(input)
 		s.EqualError(err, "random error")
 	})
 }

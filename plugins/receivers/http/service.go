@@ -1,4 +1,4 @@
-package receiver
+package http
 
 import (
 	"encoding/json"
@@ -11,6 +11,14 @@ import (
 )
 
 const OAuthServerEndpoint = "https://slack.com/api/oauth.v2.access"
+
+type CodeExchangeHTTPResponse struct {
+	AccessToken string `json:"access_token"`
+	Team        struct {
+		Name string `json:"name"`
+	} `json:"team"`
+	Ok bool `json:"ok"`
+}
 
 type Doer interface {
 	Do(req *http.Request) (*http.Response, error)

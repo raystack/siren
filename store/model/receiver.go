@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/odpf/siren/domain"
 	"time"
+
+	"github.com/odpf/siren/domain"
 )
 
 type Receiver struct {
@@ -16,9 +17,9 @@ type Receiver struct {
 	UpdatedAt      time.Time
 }
 
-func (receiver *Receiver) FromDomain(t *domain.Receiver) *Receiver {
+func (receiver *Receiver) FromDomain(t *domain.Receiver) {
 	if t == nil {
-		return nil
+		return
 	}
 	receiver.Id = t.Id
 	receiver.Name = t.Name
@@ -28,7 +29,6 @@ func (receiver *Receiver) FromDomain(t *domain.Receiver) *Receiver {
 	receiver.Data = t.Data
 	receiver.CreatedAt = t.CreatedAt
 	receiver.UpdatedAt = t.UpdatedAt
-	return receiver
 }
 
 func (receiver *Receiver) ToDomain() *domain.Receiver {
@@ -46,13 +46,3 @@ func (receiver *Receiver) ToDomain() *domain.Receiver {
 		UpdatedAt:      receiver.UpdatedAt,
 	}
 }
-
-type Channel struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type SlackRepository interface {
-	GetWorkspaceChannels(string) ([]Channel, error)
-}
-

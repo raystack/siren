@@ -29,10 +29,10 @@ type ProviderRepository interface {
 
 type ReceiverRepository interface {
 	Migrate() error
-	List() ([]*model.Receiver, error)
-	Create(*model.Receiver) (*model.Receiver, error)
-	Get(uint64) (*model.Receiver, error)
-	Update(*model.Receiver) (*model.Receiver, error)
+	List() ([]*domain.Receiver, error)
+	Create(*domain.Receiver) error
+	Get(uint64) (*domain.Receiver, error)
+	Update(*domain.Receiver) error
 	Delete(uint64) error
 }
 
