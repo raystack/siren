@@ -32,7 +32,7 @@ type Container struct {
 func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(repositories.TemplatesRepository)
 	rulesService := rules.NewService(repositories.TemplatesRepository, db)
-	alertHistoryService := alerts.NewService(db)
+	alertHistoryService := alerts.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
 	namespaceService, err := namespace.NewService(repositories.NamespaceRepository, c.EncryptionKey)
