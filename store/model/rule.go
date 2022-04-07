@@ -1,11 +1,10 @@
-package rules
+package model
 
 import (
 	"encoding/json"
 	"time"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 )
 
 type Rule struct {
@@ -17,12 +16,12 @@ type Rule struct {
 	GroupName             string `gorm:"uniqueIndex:unique_name"`
 	Template              string `gorm:"uniqueIndex:unique_name"`
 	Enabled               *bool
-	Variables             string           `gorm:"type:jsonb" sql:"type:jsonb"`
-	ProviderNamespace     uint64           `gorm:"uniqueIndex:unique_name"`
-	ProviderNamespaceInfo *model.Namespace `gorm:"foreignKey:ProviderNamespace"`
+	Variables             string     `gorm:"type:jsonb" sql:"type:jsonb"`
+	ProviderNamespace     uint64     `gorm:"uniqueIndex:unique_name"`
+	ProviderNamespaceInfo *Namespace `gorm:"foreignKey:ProviderNamespace"`
 }
 
-func (rule *Rule) fromDomain(r *domain.Rule) error {
+func (rule *Rule) FromDomain(r *domain.Rule) error {
 	rule.Id = r.Id
 	rule.Name = r.Name
 	rule.Enabled = &r.Enabled
@@ -42,7 +41,7 @@ func (rule *Rule) fromDomain(r *domain.Rule) error {
 	return nil
 }
 
-func (rule *Rule) toDomain() (*domain.Rule, error) {
+func (rule *Rule) ToDomain() (*domain.Rule, error) {
 	var variables []domain.RuleVariable
 	jsonBlob := []byte(rule.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)
@@ -61,11 +60,4 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 		CreatedAt:         rule.CreatedAt,
 		UpdatedAt:         rule.UpdatedAt,
 	}, nil
-}
-
-//Repository interface
-type RuleRepository interface {
-	Upsert(*domain.Rule, domain.TemplatesService) error
-	Get(string, string, string, string, uint64) ([]domain.Rule, error)
-	Migrate() error
 }

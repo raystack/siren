@@ -1,51 +1,44 @@
-package rules
+package postgres_test
 
 import (
 	"database/sql"
-	"database/sql/driver"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/store"
+	"github.com/odpf/siren/store/postgres"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
-// AnyTime is used to expect arbitrary time value
-type AnyTime struct{}
-
-// Match satisfies sqlmock.Argument interface
-func (a AnyTime) Match(v driver.Value) bool {
-	_, ok := v.(time.Time)
-	return ok
-}
-
-type RepositoryTestSuite struct {
+type RuleRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository RuleRepository
+	repository store.RuleRepository
 }
 
-func (s *RepositoryTestSuite) SetupTest() {
+func (s *RuleRepositoryTestSuite) SetupTest() {
 	db, mock, _ := mocks.NewStore()
 	s.sqldb, _ = db.DB()
 	s.dbmock = mock
-	s.repository = NewRepository(db)
+	s.repository = postgres.NewRuleRepository(db)
 }
 
-func (s *RepositoryTestSuite) TearDownTest() {
+func (s *RuleRepositoryTestSuite) TearDownTest() {
 	s.sqldb.Close()
 }
 
-func TestRepository(t *testing.T) {
-	suite.Run(t, new(RepositoryTestSuite))
+func TestRuleRepository(t *testing.T) {
+	suite.Run(t, new(RuleRepositoryTestSuite))
 }
 
-func (s *RepositoryTestSuite) TestUpsert() {
+func (s *RuleRepositoryTestSuite) TestUpsert() {
 	expectedTemplate := &domain.Template{
 		ID:        10,
 		CreatedAt: time.Now(),
@@ -1422,7 +1415,7 @@ func (s *RepositoryTestSuite) TestUpsert() {
 	})
 }
 
-func (s *RepositoryTestSuite) TestGet() {
+func (s *RuleRepositoryTestSuite) TestGet() {
 	var truebool = true
 	s.Run("should get rules filtered on parameters", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * from rules WHERE name = 'test-name' AND namespace = 'test-namespace' AND group_name = 'test-group'  AND template = 'test-template'`)

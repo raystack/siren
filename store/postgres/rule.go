@@ -1,4 +1,4 @@
-package rules
+package postgres
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/store/model"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
@@ -56,25 +57,25 @@ func newCortexClient(host string) (cortexCaller, error) {
 	return client, nil
 }
 
-// Repository talks to the store to read or insert data
-type Repository struct {
+// RuleRepository talks to the store to read or insert data
+type RuleRepository struct {
 	db *gorm.DB
 }
 
-// NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+// NewRuleRepository returns repository struct
+func NewRuleRepository(db *gorm.DB) *RuleRepository {
+	return &RuleRepository{db: db}
 }
 
-func (r Repository) Migrate() error {
-	err := r.db.AutoMigrate(&Rule{})
+func (r *RuleRepository) Migrate() error {
+	err := r.db.AutoMigrate(&model.Rule{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func postRuleGroupWith(rule *Rule, rulesWithinGroup []Rule, client cortexCaller, templateService domain.TemplatesService, tenantName string) error {
+func postRuleGroupWith(rule *model.Rule, rulesWithinGroup []model.Rule, client cortexCaller, templateService domain.TemplatesService, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if !*rulesWithinGroup[i].Enabled {
@@ -147,15 +148,15 @@ func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVar
 
 var cortexClientInstance = newCortexClient
 
-func (r Repository) Upsert(ruleDomain *domain.Rule, templatesService domain.TemplatesService) error {
-	rule := new(Rule)
-	if err := rule.fromDomain(ruleDomain); err != nil {
+func (r *RuleRepository) Upsert(ruleDomain *domain.Rule, templatesService domain.TemplatesService) error {
+	rule := new(model.Rule)
+	if err := rule.FromDomain(ruleDomain); err != nil {
 		return err
 	}
 
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
-	var existingRule Rule
-	var rulesWithinGroup []Rule
+	var existingRule model.Rule
+	var rulesWithinGroup []model.Rule
 	template, err := templatesService.GetByName(rule.Template)
 	if err != nil {
 		return err
@@ -231,7 +232,7 @@ func (r Repository) Upsert(ruleDomain *domain.Rule, templatesService domain.Temp
 			return errors.New("provider not supported")
 		}
 
-		newRule, err := rule.toDomain()
+		newRule, err := rule.ToDomain()
 		if err != nil {
 			return err
 		}
@@ -241,8 +242,8 @@ func (r Repository) Upsert(ruleDomain *domain.Rule, templatesService domain.Temp
 	})
 }
 
-func (r Repository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
-	var rules []Rule
+func (r *RuleRepository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
+	var rules []model.Rule
 	selectQuery := `SELECT * from rules`
 	selectQueryWithWhereClause := `SELECT * from rules WHERE `
 	var filterConditions []string
@@ -281,7 +282,7 @@ func (r Repository) Get(name, namespace, groupName, template string, providerNam
 
 	var domainRules []domain.Rule
 	for _, r := range rules {
-		rule, err := r.toDomain()
+		rule, err := r.ToDomain()
 		if err != nil {
 			return nil, err
 		}

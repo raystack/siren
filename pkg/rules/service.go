@@ -4,19 +4,18 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/pkg/templates"
 	"github.com/odpf/siren/store"
-	"gorm.io/gorm"
 )
 
 // Service handles business logic
 type Service struct {
-	repository      RuleRepository
+	repository      store.RuleRepository
 	templateService domain.TemplatesService
 }
 
 // NewService returns repository struct
-func NewService(templateRepository store.TemplatesRepository, db *gorm.DB) domain.RuleService {
+func NewService(repository store.RuleRepository, templateRepository store.TemplatesRepository) domain.RuleService {
 	return &Service{
-		repository:      NewRepository(db),
+		repository:      repository,
 		templateService: templates.NewService(templateRepository),
 	}
 }

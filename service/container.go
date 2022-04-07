@@ -31,7 +31,7 @@ type Container struct {
 
 func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(repositories.TemplatesRepository)
-	rulesService := rules.NewService(repositories.TemplatesRepository, db)
+	rulesService := rules.NewService(repositories.RuleRepository, repositories.TemplatesRepository)
 	alertHistoryService := alerts.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
