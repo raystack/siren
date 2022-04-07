@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
@@ -146,18 +147,21 @@ func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVar
 
 var cortexClientInstance = newCortexClient
 
-func (r Repository) Upsert(rule *Rule, templatesService domain.TemplatesService) (*Rule, error) {
+func (r Repository) Upsert(ruleDomain *domain.Rule, templatesService domain.TemplatesService) error {
+	rule := new(Rule)
+	if err := rule.fromDomain(ruleDomain); err != nil {
+		return err
+	}
 
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix,
-		rule.Namespace, rule.GroupName, rule.Template)
+	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
 	var existingRule Rule
 	var rulesWithinGroup []Rule
 	template, err := templatesService.GetByName(rule.Template)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if template == nil {
-		return nil, errors.New("template not found")
+		return errors.New("template not found")
 	}
 	templateVariables := template.Variables
 
@@ -165,16 +169,16 @@ func (r Repository) Upsert(rule *Rule, templatesService domain.TemplatesService)
 	jsonBlob := []byte(rule.Variables)
 	err = json.Unmarshal(jsonBlob, &ruleVariables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, ruleVariables)
 	jsonBytes, err := json.Marshal(finalRuleVariables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rule.Variables = string(jsonBytes)
-	err = r.db.Transaction(func(tx *gorm.DB) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
 		var data RuleResponse
 		result := r.db.Table("namespaces").
 			Select("namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host").
@@ -188,8 +192,8 @@ func (r Repository) Upsert(rule *Rule, templatesService domain.TemplatesService)
 			return errors.New("provider not found")
 		}
 
-		rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, data.ProviderUrn, data.NamespaceUrn,
-			rule.Namespace, rule.GroupName, rule.Template)
+		rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, data.ProviderUrn, data.NamespaceUrn, rule.Namespace, rule.GroupName, rule.Template)
+
 		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
 		if result.Error != nil {
 			return result.Error
@@ -227,15 +231,17 @@ func (r Repository) Upsert(rule *Rule, templatesService domain.TemplatesService)
 			return errors.New("provider not supported")
 		}
 
+		newRule, err := rule.toDomain()
+		if err != nil {
+			return err
+		}
+
+		*ruleDomain = *newRule
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return &existingRule, err
 }
 
-func (r Repository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]Rule, error) {
+func (r Repository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
 	var rules []Rule
 	selectQuery := `SELECT * from rules`
 	selectQueryWithWhereClause := `SELECT * from rules WHERE `
@@ -272,5 +278,15 @@ func (r Repository) Get(name, namespace, groupName, template string, providerNam
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return rules, nil
+
+	var domainRules []domain.Rule
+	for _, r := range rules {
+		rule, err := r.toDomain()
+		if err != nil {
+			return nil, err
+		}
+		domainRules = append(domainRules, *rule)
+	}
+
+	return domainRules, nil
 }

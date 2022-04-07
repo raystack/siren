@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"context"
+
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/utils"
@@ -60,7 +61,7 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleR
 		})
 	}
 
-	payload := &domain.Rule{
+	rule := &domain.Rule{
 		Enabled:           req.GetEnabled(),
 		GroupName:         req.GetGroupName(),
 		Namespace:         req.GetNamespace(),
@@ -69,8 +70,7 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleR
 		Variables:         variables,
 	}
 
-	rule, err := s.container.RulesService.Upsert(payload)
-	if err != nil {
+	if err := s.container.RulesService.Upsert(rule); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 

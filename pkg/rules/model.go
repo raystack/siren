@@ -2,9 +2,10 @@ package rules
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
-	"time"
 )
 
 type Rule struct {
@@ -21,7 +22,7 @@ type Rule struct {
 	ProviderNamespaceInfo *model.Namespace `gorm:"foreignKey:ProviderNamespace"`
 }
 
-func (rule *Rule) fromDomain(r *domain.Rule) (*Rule, error) {
+func (rule *Rule) fromDomain(r *domain.Rule) error {
 	rule.Id = r.Id
 	rule.Name = r.Name
 	rule.Enabled = &r.Enabled
@@ -31,14 +32,14 @@ func (rule *Rule) fromDomain(r *domain.Rule) (*Rule, error) {
 
 	jsonString, err := json.Marshal(r.Variables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	rule.Variables = string(jsonString)
 	rule.ProviderNamespace = r.ProviderNamespace
 	rule.CreatedAt = r.CreatedAt
 	rule.UpdatedAt = r.UpdatedAt
-	return rule, nil
+	return nil
 }
 
 func (rule *Rule) toDomain() (*domain.Rule, error) {
@@ -64,7 +65,7 @@ func (rule *Rule) toDomain() (*domain.Rule, error) {
 
 //Repository interface
 type RuleRepository interface {
-	Upsert(*Rule, domain.TemplatesService) (*Rule, error)
-	Get(string, string, string, string, uint64) ([]Rule, error)
+	Upsert(*domain.Rule, domain.TemplatesService) error
+	Get(string, string, string, string, uint64) ([]domain.Rule, error)
 	Migrate() error
 }
