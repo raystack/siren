@@ -62,8 +62,10 @@ type AlertRepository interface {
 }
 
 type RuleRepository interface {
-	Upsert(*domain.Rule, domain.TemplatesService) error
-	Get(string, string, string, string, uint64) ([]domain.Rule, error)
+	Transactor
+	Upsert(context.Context, *domain.Rule, domain.TemplatesService) error
+	Get(context.Context, string, string, string, string, uint64) ([]domain.Rule, error)
+	ListByGroup(context.Context, string, string, uint64) ([]*domain.Rule, error)
 	Migrate() error
 }
 

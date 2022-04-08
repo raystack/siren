@@ -2,33 +2,13 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
-	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
-	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
 
-const (
-	namePrefix = "siren_api"
-)
-
-type variable struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Value       string `json:"value"`
-	Description string `json:"description"`
-}
-
-type Variables struct {
-	Variables []variable `json:"variables"`
-}
 type RuleResponse struct {
 	NamespaceUrn string
 	ProviderUrn  string
@@ -36,35 +16,14 @@ type RuleResponse struct {
 	ProviderHost string
 }
 
-type cortexCaller interface {
-	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
-	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
-	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
-	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
-}
-
-func newCortexClient(host string) (cortexCaller, error) {
-	cortexConfig := cortexClient.Config{
-		Address:         host,
-		UseLegacyRoutes: false,
-	}
-
-	client, err := cortexClient.New(cortexConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
-	db *gorm.DB
+	*transaction
 }
 
 // NewRuleRepository returns repository struct
 func NewRuleRepository(db *gorm.DB) *RuleRepository {
-	return &RuleRepository{db: db}
+	return &RuleRepository{&transaction{db}}
 }
 
 func (r *RuleRepository) Migrate() error {
@@ -75,174 +34,33 @@ func (r *RuleRepository) Migrate() error {
 	return nil
 }
 
-func postRuleGroupWith(rule *model.Rule, rulesWithinGroup []model.Rule, client cortexCaller, templateService domain.TemplatesService, tenantName string) error {
-	renderedBodyForThisGroup := ""
-	for i := 0; i < len(rulesWithinGroup); i++ {
-		if !*rulesWithinGroup[i].Enabled {
-			continue
-		}
-		inputValue := make(map[string]string)
-		var variables []variable
-		jsonBlob := []byte(rulesWithinGroup[i].Variables)
-		_ = json.Unmarshal(jsonBlob, &variables)
-		for _, v := range variables {
-			inputValue[v.Name] = v.Value
-		}
-		renderedBody, err := templateService.Render(rulesWithinGroup[i].Template, inputValue)
-		if err != nil {
+func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule, templatesService domain.TemplatesService) error {
+	m := new(model.Rule)
+	if err := m.FromDomain(rule); err != nil {
+		return err
+	}
+
+	if result := r.getDb(ctx).Where("name = ?", m.Name).Updates(m); result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected == 0 {
+		if err := r.getDb(ctx).Create(m).Error; err != nil {
 			return err
 		}
-		renderedBodyForThisGroup += renderedBody
 	}
-	ctx := cortexClient.NewContextWithTenantId(context.Background(), tenantName)
-	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
-		if err != nil {
-			if err.Error() == "requested resource not found" {
-				return nil
-			} else {
-				return err
-			}
-		}
-		return nil
+
+	if err := r.getDb(ctx).Where("name = ?", m.Name).Find(m).Error; err != nil {
+		return err
 	}
-	var ruleNodes []rulefmt.RuleNode
-	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
+
+	newRule, err := m.ToDomain()
 	if err != nil {
 		return err
 	}
-	y := rwrulefmt.RuleGroup{
-		RuleGroup: rulefmt.RuleGroup{
-			Name:  rule.GroupName,
-			Rules: ruleNodes,
-		},
-	}
-	err = client.CreateRuleGroup(ctx, rule.Namespace, y)
-	return err
+	*rule = *newRule
+	return nil
 }
 
-func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {
-	var finalRuleVariables []domain.RuleVariable
-	for j := 0; j < len(templateVariables); j++ {
-		variableExist := false
-		matchingIndex := 0
-		for k := 0; k < len(ruleVariables); k++ {
-			if ruleVariables[k].Name == templateVariables[j].Name {
-				variableExist = true
-				matchingIndex = k
-			}
-		}
-		if !variableExist {
-			finalRuleVariables = append(finalRuleVariables, domain.RuleVariable{
-				Name:        templateVariables[j].Name,
-				Type:        templateVariables[j].Type,
-				Value:       templateVariables[j].Default,
-				Description: templateVariables[j].Description,
-			})
-		} else {
-			finalRuleVariables = append(finalRuleVariables, ruleVariables[matchingIndex])
-		}
-	}
-	return finalRuleVariables
-}
-
-var cortexClientInstance = newCortexClient
-
-func (r *RuleRepository) Upsert(ruleDomain *domain.Rule, templatesService domain.TemplatesService) error {
-	rule := new(model.Rule)
-	if err := rule.FromDomain(ruleDomain); err != nil {
-		return err
-	}
-
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
-	var existingRule model.Rule
-	var rulesWithinGroup []model.Rule
-	template, err := templatesService.GetByName(rule.Template)
-	if err != nil {
-		return err
-	}
-	if template == nil {
-		return errors.New("template not found")
-	}
-	templateVariables := template.Variables
-
-	var ruleVariables []domain.RuleVariable
-	jsonBlob := []byte(rule.Variables)
-	err = json.Unmarshal(jsonBlob, &ruleVariables)
-	if err != nil {
-		return err
-	}
-	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, ruleVariables)
-	jsonBytes, err := json.Marshal(finalRuleVariables)
-	if err != nil {
-		return err
-	}
-
-	rule.Variables = string(jsonBytes)
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		var data RuleResponse
-		result := r.db.Table("namespaces").
-			Select("namespaces.urn as namespace_urn, providers.urn as provider_urn, providers.type as provider_type, providers.host as provider_host").
-			Joins("RIGHT JOIN providers on providers.id = namespaces.provider_id").
-			Where("namespaces.id = ?", rule.ProviderNamespace).
-			Find(&data)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errors.New("provider not found")
-		}
-
-		rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, data.ProviderUrn, data.NamespaceUrn, rule.Namespace, rule.GroupName, rule.Template)
-
-		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			result = tx.Create(rule)
-		} else {
-			rule.Id = existingRule.Id
-			result = tx.Where("id = ?", existingRule.Id).Updates(rule)
-		}
-		if result.Error != nil {
-			return result.Error
-		}
-		result = tx.Where(fmt.Sprintf("name = '%s'", rule.Name)).Find(&existingRule)
-		if result.Error != nil {
-			return result.Error
-		}
-
-		if data.ProviderType == "cortex" {
-			client, err := cortexClientInstance(data.ProviderHost)
-			if err != nil {
-				return err
-			}
-
-			result = tx.Where(fmt.Sprintf("namespace = '%s' AND group_name = '%s' AND provider_namespace = '%d'",
-				rule.Namespace, rule.GroupName, rule.ProviderNamespace)).Find(&rulesWithinGroup)
-			if result.Error != nil {
-				return result.Error
-			}
-			err = postRuleGroupWith(rule, rulesWithinGroup, client, templatesService, data.NamespaceUrn)
-			if err != nil {
-				return err
-			}
-		} else {
-			return errors.New("provider not supported")
-		}
-
-		newRule, err := rule.ToDomain()
-		if err != nil {
-			return err
-		}
-
-		*ruleDomain = *newRule
-		return nil
-	})
-}
-
-func (r *RuleRepository) Get(name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
+func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
 	var rules []model.Rule
 	selectQuery := `SELECT * from rules`
 	selectQueryWithWhereClause := `SELECT * from rules WHERE `
@@ -275,7 +93,7 @@ func (r *RuleRepository) Get(name, namespace, groupName, template string, provid
 			}
 		}
 	}
-	result := r.db.Raw(finalSelectQuery).Scan(&rules)
+	result := r.getDb(ctx).Raw(finalSelectQuery).Scan(&rules)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -290,4 +108,22 @@ func (r *RuleRepository) Get(name, namespace, groupName, template string, provid
 	}
 
 	return domainRules, nil
+}
+
+func (r *RuleRepository) ListByGroup(ctx context.Context, namespace, groupName string, providerNamespace uint64) ([]*domain.Rule, error) {
+	var models []*model.Rule
+	if err := r.getDb(ctx).Where(fmt.Sprintf("namespace = '%s' AND group_name = '%s' AND provider_namespace = '%d'",
+		namespace, groupName, providerNamespace)).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	var rules []*domain.Rule
+	for _, r := range models {
+		rule, err := r.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rule)
+	}
+	return rules, nil
 }

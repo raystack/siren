@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
 
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
@@ -10,14 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
+func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
 	name := req.GetName()
 	namespace := req.GetNamespace()
 	groupName := req.GetGroupName()
 	template := req.GetTemplate()
 	providerNamespace := req.GetProviderNamespace()
 
-	rules, err := s.container.RulesService.Get(name, namespace, groupName, template, providerNamespace)
+	rules, err := s.container.RulesService.Get(ctx, name, namespace, groupName, template, providerNamespace)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -50,7 +51,7 @@ func (s *GRPCServer) ListRules(_ context.Context, req *sirenv1beta1.ListRulesReq
 	return res, nil
 }
 
-func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
+func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
 	variables := make([]domain.RuleVariable, 0)
 	for _, variable := range req.Variables {
 		variables = append(variables, domain.RuleVariable{
@@ -70,7 +71,8 @@ func (s *GRPCServer) UpdateRule(_ context.Context, req *sirenv1beta1.UpdateRuleR
 		Variables:         variables,
 	}
 
-	if err := s.container.RulesService.Upsert(rule); err != nil {
+	if err := s.container.RulesService.Upsert(ctx, rule); err != nil {
+		fmt.Printf("RulesService.Upsert err: %v\n", err)
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 

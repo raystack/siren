@@ -42,6 +42,14 @@ func (t *transaction) Commit(ctx context.Context) error {
 	return errors.New("no transaction")
 }
 
+func (t *transaction) getDb(ctx context.Context) *gorm.DB {
+	db := t.db
+	if tx := extractTransaction(ctx); tx != nil {
+		db = tx
+	}
+	return db
+}
+
 func extractTransaction(ctx context.Context) *gorm.DB {
 	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
 		return nil

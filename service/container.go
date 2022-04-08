@@ -31,7 +31,6 @@ type Container struct {
 
 func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(repositories.TemplatesRepository)
-	rulesService := rules.NewService(repositories.RuleRepository, repositories.TemplatesRepository)
 	alertHistoryService := alerts.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
@@ -39,6 +38,12 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}
+	rulesService := rules.NewService(
+		repositories.RuleRepository,
+		repositories.TemplatesRepository,
+		namespaceService,
+		providerService,
+	)
 	receiverService, err := receiver.NewService(repositories.ReceiverRepository, httpClient, c.EncryptionKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
