@@ -62,40 +62,25 @@ func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule, template
 
 func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
 	var rules []model.Rule
-	selectQuery := `SELECT * from rules`
-	selectQueryWithWhereClause := `SELECT * from rules WHERE `
-	var filterConditions []string
+	db := r.getDb(ctx)
 	if name != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("name = '%s' ", name))
+		db = db.Where("name = ?", name)
 	}
 	if namespace != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("namespace = '%s' ", namespace))
+		db = db.Where("namespace = ?", namespace)
 	}
 	if groupName != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("group_name = '%s' ", groupName))
+		db = db.Where("group_name = ?", groupName)
 	}
 	if template != "" {
-		filterConditions = append(filterConditions, fmt.Sprintf("template = '%s' ", template))
+		db = db.Where("template = ?", template)
 	}
 	if providerNamespace != 0 {
-		filterConditions = append(filterConditions, fmt.Sprintf("provider_namespace = '%d' ", providerNamespace))
+		db = db.Where("provider_namespace = ?", providerNamespace)
 	}
-	var finalSelectQuery string
-	if len(filterConditions) == 0 {
-		finalSelectQuery = selectQuery
-	} else {
-		finalSelectQuery = selectQueryWithWhereClause
-		for i := 0; i < len(filterConditions); i++ {
-			if i == 0 {
-				finalSelectQuery += filterConditions[i]
-			} else {
-				finalSelectQuery += " AND " + filterConditions[i]
-			}
-		}
-	}
-	result := r.getDb(ctx).Raw(finalSelectQuery).Scan(&rules)
-	if result.Error != nil {
-		return nil, result.Error
+
+	if err := db.Find(&rules).Error; err != nil {
+		return nil, err
 	}
 
 	var domainRules []domain.Rule
