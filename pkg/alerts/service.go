@@ -24,11 +24,11 @@ func (service Service) Create(alerts *domain.Alerts) ([]domain.Alert, error) {
 	result := make([]domain.Alert, 0, len(alerts.Alerts))
 
 	for i := 0; i < len(alerts.Alerts); i++ {
-		res, err := service.repository.Create(&alerts.Alerts[i])
+		err := service.repository.Create(&alerts.Alerts[i])
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, *res)
+		result = append(result, alerts.Alerts[i])
 	}
 	return result, nil
 }

@@ -56,7 +56,7 @@ type SubscriptionRepository interface {
 }
 
 type AlertRepository interface {
-	Create(*domain.Alert) (*domain.Alert, error)
+	Create(*domain.Alert) error
 	Get(string, uint64, uint64, uint64) ([]domain.Alert, error)
 	Migrate() error
 }

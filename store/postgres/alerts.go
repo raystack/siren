@@ -25,12 +25,12 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
-func (r Repository) Create(alert *domain.Alert) (*domain.Alert, error) {
+func (r Repository) Create(alert *domain.Alert) error {
 	result := r.db.Create(alert)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return alert, nil
+	return nil
 }
 
 func (r Repository) Get(resourceName string, providerId, startTime, endTime uint64) ([]domain.Alert, error) {

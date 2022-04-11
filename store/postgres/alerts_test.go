@@ -75,8 +75,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
 			expectedAlerts.Id).
 			WillReturnRows(sqlmock.NewRows(nil))
-		actualAlert, err := s.repository.Create(expectedAlerts)
-		s.Equal(expectedAlerts, actualAlert)
+		err := s.repository.Create(expectedAlerts)
 		s.Nil(err)
 	})
 
@@ -91,8 +90,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
 			expectedAlerts.Id).
 			WillReturnError(errors.New("random error"))
-		actualAlert, err := s.repository.Create(expectedAlerts)
-		s.Nil(actualAlert)
+		err := s.repository.Create(expectedAlerts)
 		s.EqualError(err, "random error")
 	})
 }
