@@ -19,12 +19,6 @@ type Alert struct {
 	UpdatedAt    time.Time
 }
 
-type AlertRepository interface {
-	Create(*Alert) (*Alert, error)
-	Get(string, uint64, uint64, uint64) ([]Alert, error)
-	Migrate() error
-}
-
 func (a *Alert) FromDomain(alert *domain.Alert) {
 	a.Id = alert.Id
 	a.ProviderId = alert.ProviderId

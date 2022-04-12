@@ -3,7 +3,6 @@ package alerts
 import (
 	"errors"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -15,7 +14,7 @@ func TestService_Get(t *testing.T) {
 		repositoryMock := &MockAlertRepository{}
 		dummyService := Service{repository: repositoryMock}
 		timenow := time.Now()
-		dummyAlerts := []model.Alert{
+		dummyAlerts := []domain.Alert{
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
 			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
@@ -38,7 +37,7 @@ func TestService_Get(t *testing.T) {
 		repositoryMock := &MockAlertRepository{}
 		dummyService := Service{repository: repositoryMock}
 		timenow := time.Now()
-		dummyAlerts := []model.Alert{
+		dummyAlerts := []domain.Alert{
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
 			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
@@ -75,10 +74,6 @@ func TestService_Create(t *testing.T) {
 	t.Run("should call repository Create method with proper arguments for firing alerts", func(t *testing.T) {
 		repositoryMock := &MockAlertRepository{}
 		dummyService := Service{repository: repositoryMock}
-		dummyAlerts := []model.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
-				Rule: "lagHigh", TriggeredAt: timenow},
-		}
 		alertsToBeCreated := &domain.Alerts{Alerts: []domain.Alert{
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
@@ -87,7 +82,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Create", mock.Anything).Return(&dummyAlerts[0], nil)
+		repositoryMock.On("Create", mock.Anything).Return(nil)
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedAlerts, actualAlerts)
@@ -97,10 +92,6 @@ func TestService_Create(t *testing.T) {
 	t.Run("should call repository Create method with proper arguments for resolved alerts", func(t *testing.T) {
 		repositoryMock := &MockAlertRepository{}
 		dummyService := Service{repository: repositoryMock}
-		dummyAlerts := []model.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
-				Rule: "lagHigh", TriggeredAt: timenow},
-		}
 		alertsToBeCreated := &domain.Alerts{Alerts: []domain.Alert{
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
@@ -109,7 +100,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Create", mock.Anything).Return(&dummyAlerts[0], nil)
+		repositoryMock.On("Create", mock.Anything).Return(nil)
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedAlerts, actualAlerts)
@@ -123,7 +114,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}}
-		repositoryMock.On("Create", mock.Anything).Return(nil, errors.New("random error"))
+		repositoryMock.On("Create", mock.Anything).Return(errors.New("random error"))
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.EqualError(t, err, "random error")
 		assert.Nil(t, actualAlerts)

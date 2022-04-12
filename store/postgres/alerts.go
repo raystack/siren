@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
 	"gorm.io/gorm"
 )
@@ -11,8 +12,8 @@ type Repository struct {
 	db *gorm.DB
 }
 
-// NewRepository returns repository struct
-func NewRepository(db *gorm.DB) *Repository {
+// NewAlertRepository returns repository struct
+func NewAlertRepository(db *gorm.DB) *Repository {
 	return &Repository{db}
 }
 
@@ -24,16 +25,16 @@ func (r Repository) Migrate() error {
 	return nil
 }
 
-func (r Repository) Create(alert *model.Alert) (*model.Alert, error) {
+func (r Repository) Create(alert *domain.Alert) error {
 	result := r.db.Create(alert)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return alert, nil
+	return nil
 }
 
-func (r Repository) Get(resourceName string, providerId, startTime, endTime uint64) ([]model.Alert, error) {
-	var alerts []model.Alert
+func (r Repository) Get(resourceName string, providerId, startTime, endTime uint64) ([]domain.Alert, error) {
+	var alerts []domain.Alert
 	selectQuery := fmt.Sprintf("select * from alerts where resource_name = '%s' AND provider_id = '%d' AND triggered_at BETWEEN to_timestamp('%d') AND to_timestamp('%d')",
 		resourceName, providerId, startTime, endTime)
 	result := r.db.Raw(selectQuery).Find(&alerts)
