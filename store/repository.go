@@ -55,6 +55,12 @@ type SubscriptionRepository interface {
 	Delete(context.Context, uint64) error
 }
 
+type AlertRepository interface {
+	Create(*domain.Alert) error
+	Get(string, uint64, uint64, uint64) ([]domain.Alert, error)
+	Migrate() error
+}
+
 type Transactor interface {
 	WithTransaction(ctx context.Context) context.Context
 	Rollback(ctx context.Context) error
@@ -67,6 +73,7 @@ type RepositoryContainer struct {
 	TemplatesRepository    TemplatesRepository
 	ReceiverRepository     ReceiverRepository
 	SubscriptionRepository SubscriptionRepository
+	AlertRepository        AlertRepository
 }
 
 func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
@@ -76,5 +83,6 @@ func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
 		ReceiverRepository:     postgres.NewReceiverRepository(db),
 		TemplatesRepository:    postgres.NewTemplateRepository(db),
 		SubscriptionRepository: postgres.NewSubscriptionRepository(db),
+		AlertRepository:        postgres.NewAlertRepository(db),
 	}
 }
