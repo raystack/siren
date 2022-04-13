@@ -114,12 +114,12 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 			return errors.Wrap(err, "cortex client initialization")
 		}
 
-		rulesWithinGroup, err := s.repository.ListByGroup(ctx, rule.Namespace, rule.GroupName, rule.ProviderNamespace)
+		rulesWithinGroup, err := s.repository.Get(ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace)
 		if err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}
-			return errors.Wrap(err, "s.repository.ListByGroup")
+			return errors.Wrap(err, "s.repository.Get")
 		}
 
 		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, client, namespace.Urn); err != nil {
@@ -146,7 +146,7 @@ func (s *Service) Get(ctx context.Context, name, namespace, groupName, template 
 	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
 }
 
-func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rulesWithinGroup []*domain.Rule, client cortexCaller, tenantName string) error {
+func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rulesWithinGroup []domain.Rule, client cortexCaller, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if !rulesWithinGroup[i].Enabled {

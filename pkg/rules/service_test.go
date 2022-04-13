@@ -71,18 +71,18 @@ func TestService_Upsert(t *testing.T) {
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
 		variablesMap := map[string]string{
-			"for":  "20m",
-			"team": "gojek",
+			"for":       "20m",
+			"test-name": "test-value",
 		}
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '20m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
-		dummyRulesInGroup := []*domain.Rule{rule}
+		dummyRulesInGroup := []domain.Rule{*rule}
 		mockTemplateService.On("GetByName", rule.Template).Return(dummyTemplate, nil).Once()
 		mockNamespaceService.On("GetNamespace", rule.ProviderNamespace).Return(dummyNamespace, nil).Once()
 		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, rule).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, rule.Namespace, rule.GroupName, rule.ProviderNamespace).Return(dummyRulesInGroup, nil).Once()
+		repositoryMock.On("Get", ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace).Return(dummyRulesInGroup, nil).Once()
 		mockTemplateService.On("Render", rule.Template, variablesMap).Return(expectedRender, nil).Once()
 		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
@@ -126,7 +126,7 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, rule).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, rule.Namespace, rule.GroupName, rule.ProviderNamespace).Return([]*domain.Rule{rule}, nil).Once()
+		repositoryMock.On("Get", ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace).Return([]domain.Rule{*rule}, nil).Once()
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
 
@@ -169,7 +169,7 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, rule).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, rule.Namespace, rule.GroupName, rule.ProviderNamespace).Return([]*domain.Rule{rule}, nil).Once()
+		repositoryMock.On("Get", ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace).Return([]domain.Rule{*rule}, nil).Once()
 		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("requested resource not found"))
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
 
@@ -346,7 +346,7 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.AssertExpectations(t)
 	})
 
-	t.Run("should return error if repository.ListByGroup returns error", func(t *testing.T) {
+	t.Run("should return error if repository.Get returns error", func(t *testing.T) {
 		repositoryMock := &RuleRepositoryMock{}
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
@@ -366,11 +366,11 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.On("GetProvider", mock.Anything).Return(&domain.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*domain.Rule")).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("random error")).Once()
+		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, rule)
-		assert.EqualError(t, err, "s.repository.ListByGroup: random error")
+		assert.EqualError(t, err, "s.repository.Get: random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -392,13 +392,13 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		dummyRulesInGroup := []*domain.Rule{rule}
+		dummyRulesInGroup := []domain.Rule{*rule}
 		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&domain.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&domain.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*domain.Rule")).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, mock.Anything, mock.Anything, mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
 		mockTemplateService.On("Render", mock.Anything, mock.AnythingOfType("map[string]string")).Return("", errors.New("random error")).Once()
 		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
@@ -428,13 +428,13 @@ func TestService_Upsert(t *testing.T) {
 
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '10m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
-		dummyRulesInGroup := []*domain.Rule{rule}
+		dummyRulesInGroup := []domain.Rule{*rule}
 		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&domain.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&domain.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*domain.Rule")).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, mock.Anything, mock.Anything, mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
 		mockTemplateService.On("Render", mock.Anything, mock.AnythingOfType("map[string]string")).Return(expectedRender, nil).Once()
 		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
@@ -467,7 +467,7 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.On("GetProvider", mock.Anything).Return(&domain.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*domain.Rule")).Return(nil).Once()
-		repositoryMock.On("ListByGroup", ctx, mock.Anything, mock.Anything, mock.Anything).Return([]*domain.Rule{}, nil).Once()
+		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return([]domain.Rule{}, nil).Once()
 		mockClient.On("DeleteRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 

@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store/model"
@@ -93,22 +92,4 @@ func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, te
 	}
 
 	return domainRules, nil
-}
-
-func (r *RuleRepository) ListByGroup(ctx context.Context, namespace, groupName string, providerNamespace uint64) ([]*domain.Rule, error) {
-	var models []*model.Rule
-	if err := r.getDb(ctx).Where(fmt.Sprintf("namespace = '%s' AND group_name = '%s' AND provider_namespace = '%d'",
-		namespace, groupName, providerNamespace)).Find(&models).Error; err != nil {
-		return nil, err
-	}
-
-	var rules []*domain.Rule
-	for _, r := range models {
-		rule, err := r.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		rules = append(rules, rule)
-	}
-	return rules, nil
 }
