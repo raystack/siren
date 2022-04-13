@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"fmt"
 
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
@@ -72,7 +71,6 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 	}
 
 	if err := s.container.RulesService.Upsert(ctx, rule); err != nil {
-		fmt.Printf("RulesService.Upsert err: %v\n", err)
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
