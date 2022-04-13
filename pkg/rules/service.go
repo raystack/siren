@@ -98,7 +98,7 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 		namespace.Urn, rule.Namespace, rule.GroupName, rule.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
-	if err := s.repository.Upsert(ctx, rule, s.templateService); err != nil {
+	if err := s.repository.Upsert(ctx, rule); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
 			return errors.Wrap(err, "s.repository.Rollback")
 		}
@@ -111,7 +111,7 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}
-			return errors.Wrap(err, "cortexClientInstance")
+			return errors.Wrap(err, "cortex client initialization")
 		}
 
 		rulesWithinGroup, err := s.repository.ListByGroup(ctx, rule.Namespace, rule.GroupName, rule.ProviderNamespace)
@@ -122,7 +122,8 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 			return errors.Wrap(err, "s.repository.ListByGroup")
 		}
 
-		if err := s.postRuleGroupWith(rule, rulesWithinGroup, client, namespace.Urn); err != nil {
+		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, client, namespace.Urn); err != nil {
+			fmt.Printf("err: %v\n", err)
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}
@@ -145,7 +146,7 @@ func (s *Service) Get(ctx context.Context, name, namespace, groupName, template 
 	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
 }
 
-func (s *Service) postRuleGroupWith(rule *domain.Rule, rulesWithinGroup []*domain.Rule, client cortexCaller, tenantName string) error {
+func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rulesWithinGroup []*domain.Rule, client cortexCaller, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if !rulesWithinGroup[i].Enabled {
@@ -159,18 +160,18 @@ func (s *Service) postRuleGroupWith(rule *domain.Rule, rulesWithinGroup []*domai
 
 		renderedBody, err := s.templateService.Render(rulesWithinGroup[i].Template, inputValue)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "s.templateService.Render")
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
-	ctx := cortexClient.NewContextWithTenantId(context.Background(), tenantName)
+	ctx = cortexClient.NewContextWithTenantId(ctx, tenantName)
 	if renderedBodyForThisGroup == "" {
 		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
 		if err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
 			} else {
-				return err
+				return errors.Wrap(err, "client.DeleteRuleGroup")
 			}
 		}
 		return nil
@@ -186,7 +187,10 @@ func (s *Service) postRuleGroupWith(rule *domain.Rule, rulesWithinGroup []*domai
 			Rules: ruleNodes,
 		},
 	}
-	return client.CreateRuleGroup(ctx, rule.Namespace, y)
+	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {
+		return errors.Wrap(err, "client.CreateRuleGroup")
+	}
+	return nil
 }
 
 func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {

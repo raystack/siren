@@ -34,7 +34,7 @@ func (r *RuleRepository) Migrate() error {
 	return nil
 }
 
-func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule, templatesService domain.TemplatesService) error {
+func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule) error {
 	m := new(model.Rule)
 	if err := m.FromDomain(rule); err != nil {
 		return err
