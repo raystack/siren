@@ -72,7 +72,10 @@ func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {
 	}
 	domainTemplates := make([]domain.Template, 0, len(templates))
 	for i := 0; i < len(templates); i++ {
-		t, _ := templates[i].ToDomain()
+		t, err := templates[i].ToDomain()
+		if err != nil {
+			return nil, err
+		}
 		domainTemplates = append(domainTemplates, *t)
 	}
 	return domainTemplates, nil
