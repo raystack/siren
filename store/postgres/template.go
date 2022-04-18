@@ -33,28 +33,33 @@ func (r TemplateRepository) Migrate() error {
 	return nil
 }
 
-func (r TemplateRepository) Upsert(template *model.Template) (*model.Template, error) {
+func (r TemplateRepository) Upsert(template *domain.Template) (*domain.Template, error) {
 	var newTemplate, existingTemplate model.Template
-	result := r.db.Where(fmt.Sprintf("name = '%s'", template.Name)).Find(&existingTemplate)
+	modelTemplate := &model.Template{}
+	_, err := modelTemplate.FromDomain(template)
+	if err != nil {
+		return nil, err
+	}
+	result := r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&existingTemplate)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		result = r.db.Create(template)
+		result = r.db.Create(modelTemplate)
 	} else {
-		result = r.db.Where("id = ?", existingTemplate.ID).Updates(template)
+		result = r.db.Where("id = ?", existingTemplate.ID).Updates(modelTemplate)
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	result = r.db.Where(fmt.Sprintf("name = '%s'", template.Name)).Find(&newTemplate)
+	result = r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&newTemplate)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return &newTemplate, nil
+	return newTemplate.ToDomain()
 }
 
-func (r TemplateRepository) Index(tag string) ([]model.Template, error) {
+func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {
 	var templates []model.Template
 	var result *gorm.DB
 	if tag == "" {
@@ -65,10 +70,15 @@ func (r TemplateRepository) Index(tag string) ([]model.Template, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return templates, nil
+	domainTemplates := make([]domain.Template, 0, len(templates))
+	for i := 0; i < len(templates); i++ {
+		t, _ := templates[i].ToDomain()
+		domainTemplates = append(domainTemplates, *t)
+	}
+	return domainTemplates, nil
 }
 
-func (r TemplateRepository) GetByName(name string) (*model.Template, error) {
+func (r TemplateRepository) GetByName(name string) (*domain.Template, error) {
 	var template model.Template
 	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
 	if result.Error != nil {
@@ -77,7 +87,7 @@ func (r TemplateRepository) GetByName(name string) (*model.Template, error) {
 	if result.RowsAffected == 0 {
 		return nil, nil
 	}
-	return &template, nil
+	return template.ToDomain()
 }
 
 func (r TemplateRepository) Delete(name string) error {
@@ -111,13 +121,9 @@ func (r TemplateRepository) Render(name string, requestVariables map[string]stri
 	if templateFromDB == nil {
 		return "", errors.New("template not found")
 	}
-	convertedTemplate, err := templateFromDB.ToDomain()
-	if err != nil {
-		return "", err
-	}
-	enrichedVariables := enrichWithDefaults(convertedTemplate.Variables, requestVariables)
+	enrichedVariables := enrichWithDefaults(templateFromDB.Variables, requestVariables)
 	var tpl bytes.Buffer
-	tmpl, err := templateParser(convertedTemplate.Body)
+	tmpl, err := templateParser(templateFromDB.Body)
 	if err != nil {
 		return "", err
 	}

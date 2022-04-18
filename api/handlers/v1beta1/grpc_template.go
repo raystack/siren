@@ -6,6 +6,7 @@ import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/utils"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -45,7 +46,9 @@ func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetT
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
-
+	if template == nil {
+		return nil, status.Errorf(codes.NotFound, "template not found")
+	}
 	variables := make([]*sirenv1beta1.TemplateVariables, 0)
 	for _, variable := range template.Variables {
 		variables = append(variables, &sirenv1beta1.TemplateVariables{

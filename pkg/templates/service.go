@@ -3,7 +3,6 @@ package templates
 import (
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/store"
-	"github.com/odpf/siren/store/model"
 )
 
 // Service handles business logic
@@ -21,37 +20,15 @@ func (service Service) Migrate() error {
 }
 
 func (service Service) Upsert(template *domain.Template) (*domain.Template, error) {
-	t := &model.Template{}
-	t, err := t.FromDomain(template)
-	if err != nil {
-		return nil, err
-	}
-	upsertedTemplate, err := service.repository.Upsert(t)
-	if err != nil {
-		return nil, err
-	}
-	return upsertedTemplate.ToDomain()
+	return service.repository.Upsert(template)
 }
 
 func (service Service) Index(tag string) ([]domain.Template, error) {
-	templates, err := service.repository.Index(tag)
-	if err != nil {
-		return nil, err
-	}
-	domainTemplates := make([]domain.Template, 0, len(templates))
-	for i := 0; i < len(templates); i++ {
-		t, _ := templates[i].ToDomain()
-		domainTemplates = append(domainTemplates, *t)
-	}
-	return domainTemplates, nil
+	return service.repository.Index(tag)
 }
 
 func (service Service) GetByName(name string) (*domain.Template, error) {
-	template, err := service.repository.GetByName(name)
-	if err != nil || template == nil {
-		return nil, err
-	}
-	return template.ToDomain()
+	return service.repository.GetByName(name)
 }
 
 func (service Service) Delete(name string) error {
