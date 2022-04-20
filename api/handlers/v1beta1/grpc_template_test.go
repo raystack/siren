@@ -229,9 +229,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 
-		mockedTemplatesService.
-			On("Upsert", template).
-			Return(template, nil).Once()
+		mockedTemplatesService.On("Upsert", template).Return(nil).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
@@ -249,9 +247,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedTemplatesService.
-			On("Upsert", template).
-			Return(nil, errors.New("random error")).Once()
+		mockedTemplatesService.On("Upsert", template).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")

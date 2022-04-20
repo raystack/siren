@@ -19,7 +19,7 @@ func (service Service) Migrate() error {
 	return service.repository.Migrate()
 }
 
-func (service Service) Upsert(template *domain.Template) (*domain.Template, error) {
+func (service Service) Upsert(template *domain.Template) error {
 	return service.repository.Upsert(template)
 }
 

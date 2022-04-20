@@ -198,8 +198,7 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(AnyTime{}, AnyTime{}, modelTemplate.Name, modelTemplate.Body,
 			modelTemplate.Tags, modelTemplate.Variables, modelTemplate.ID).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows)
-		actualTemplate, err := s.repository.Upsert(expectedTemplate)
-		s.Equal(expectedTemplate, actualTemplate)
+		err := s.repository.Upsert(expectedTemplate)
 		s.Nil(err)
 	})
 
@@ -258,8 +257,9 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			updatedModelTemplate.Tags, updatedModelTemplate.Variables, updatedModelTemplate.ID).
 			WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows2)
-		actualTemplate, err := s.repository.Upsert(input)
-		s.Equal(expectedTemplate, actualTemplate)
+		err := s.repository.Upsert(input)
+		s.Equal([]string{"updated-baz"}, expectedTemplate.Tags)
+		s.Equal("updated-foo", expectedTemplate.Variables[0].Name)
 		s.Nil(err)
 	})
 
@@ -276,9 +276,8 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			Tags:      []string{"baz"},
 			Variables: []domain.Variable{{Name: "foo"}},
 		}
-		actualTemplate, err := s.repository.Upsert(input)
+		err := s.repository.Upsert(input)
 		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplate)
 	})
 
 	s.Run("should return error if insert fails", func() {
@@ -310,9 +309,8 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			expectedTemplate.Body, expectedTemplate.Tags,
 			expectedTemplate.Variables, expectedTemplate.ID).WillReturnError(errors.New("random error"))
 
-		actualTemplate, err := s.repository.Upsert(input)
+		err := s.repository.Upsert(input)
 		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplate)
 	})
 
 	s.Run("should return error if update fails", func() {
@@ -351,9 +349,8 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			expectedTemplate.Variables, expectedTemplate.ID).
 			WillReturnError(errors.New(expectedErrorMessage))
 
-		actualTemplate, err := s.repository.Upsert(input)
+		err := s.repository.Upsert(input)
 		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplate)
 	})
 
 	s.Run("should return error if second select query fails", func() {
@@ -393,9 +390,8 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			expectedTemplate.Variables, expectedTemplate.ID).
 			WillReturnResult(sqlmock.NewResult(10, 1))
 		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New(expectedErrorMessage))
-		actualTemplate, err := s.repository.Upsert(input)
+		err := s.repository.Upsert(input)
 		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplate)
 	})
 }
 

@@ -33,16 +33,16 @@ func (r TemplateRepository) Migrate() error {
 	return nil
 }
 
-func (r TemplateRepository) Upsert(template *domain.Template) (*domain.Template, error) {
+func (r TemplateRepository) Upsert(template *domain.Template) error {
 	var newTemplate, existingTemplate model.Template
 	modelTemplate := &model.Template{}
-	_, err := modelTemplate.FromDomain(template)
+	err := modelTemplate.FromDomain(template)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	result := r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&existingTemplate)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
 		result = r.db.Create(modelTemplate)
@@ -50,13 +50,15 @@ func (r TemplateRepository) Upsert(template *domain.Template) (*domain.Template,
 		result = r.db.Where("id = ?", existingTemplate.ID).Updates(modelTemplate)
 	}
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 	result = r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&newTemplate)
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
-	return newTemplate.ToDomain()
+	res, err := newTemplate.ToDomain()
+	*template = *res
+	return err
 }
 
 func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {

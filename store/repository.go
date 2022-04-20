@@ -36,7 +36,7 @@ type ReceiverRepository interface {
 }
 
 type TemplatesRepository interface {
-	Upsert(*domain.Template) (*domain.Template, error)
+	Upsert(*domain.Template) error
 	Index(string) ([]domain.Template, error)
 	GetByName(string) (*domain.Template, error)
 	Delete(string) error

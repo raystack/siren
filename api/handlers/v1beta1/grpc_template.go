@@ -82,14 +82,14 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 			Description: variable.Description,
 		})
 	}
-	payload := &domain.Template{
+	template := &domain.Template{
 		ID:        uint(req.GetId()),
 		Name:      req.GetName(),
 		Body:      req.GetBody(),
 		Tags:      req.GetTags(),
 		Variables: variables,
 	}
-	template, err := s.container.TemplatesService.Upsert(payload)
+	err := s.container.TemplatesService.Upsert(template)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}

@@ -17,7 +17,7 @@ type Template struct {
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
 }
 
-func (template *Template) FromDomain(t *domain.Template) (*Template, error) {
+func (template *Template) FromDomain(t *domain.Template) error {
 	template.ID = t.ID
 	template.CreatedAt = t.CreatedAt
 	template.UpdatedAt = t.UpdatedAt
@@ -26,10 +26,10 @@ func (template *Template) FromDomain(t *domain.Template) (*Template, error) {
 	template.Body = t.Body
 	jsonString, err := json.Marshal(t.Variables)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	template.Variables = string(jsonString)
-	return template, nil
+	return nil
 }
 
 func (template *Template) ToDomain() (*domain.Template, error) {
