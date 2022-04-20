@@ -61,6 +61,13 @@ type AlertRepository interface {
 	Migrate() error
 }
 
+type RuleRepository interface {
+	Transactor
+	Upsert(context.Context, *domain.Rule) error
+	Get(context.Context, string, string, string, string, uint64) ([]domain.Rule, error)
+	Migrate() error
+}
+
 type Transactor interface {
 	WithTransaction(ctx context.Context) context.Context
 	Rollback(ctx context.Context) error
@@ -74,6 +81,7 @@ type RepositoryContainer struct {
 	ReceiverRepository     ReceiverRepository
 	SubscriptionRepository SubscriptionRepository
 	AlertRepository        AlertRepository
+	RuleRepository         RuleRepository
 }
 
 func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
@@ -84,5 +92,6 @@ func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
 		TemplatesRepository:    postgres.NewTemplateRepository(db),
 		SubscriptionRepository: postgres.NewSubscriptionRepository(db),
 		AlertRepository:        postgres.NewAlertRepository(db),
+		RuleRepository:         postgres.NewRuleRepository(db),
 	}
 }

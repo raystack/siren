@@ -96,11 +96,3 @@ func (r *SubscriptionRepository) Migrate() error {
 	}
 	return nil
 }
-
-func (r *SubscriptionRepository) getDb(ctx context.Context) *gorm.DB {
-	db := r.db
-	if tx := extractTransaction(ctx); tx != nil {
-		db = tx
-	}
-	return db
-}

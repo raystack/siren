@@ -3,15 +3,17 @@ package v1beta1
 import (
 	"context"
 	"errors"
-	"github.com/odpf/salt/log"
 	"testing"
 	"time"
+
+	"github.com/odpf/salt/log"
 
 	sirenv1beta1 "github.com/odpf/siren/api/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/mocks"
 	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGRPCServer_ListRules(t *testing.T) {
@@ -24,6 +26,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 	}
 
 	t.Run("should return stored rules", func(t *testing.T) {
+		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 		dummyResult := []domain.Rule{
 			{
@@ -53,20 +56,21 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		mockedRuleService.
-			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
 				dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
+		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetRules()))
 		assert.Equal(t, "foo", res.GetRules()[0].GetName())
 		assert.Equal(t, "test", res.GetRules()[0].GetNamespace())
 		assert.Equal(t, true, res.GetRules()[0].GetEnabled())
 		assert.Equal(t, 1, len(res.GetRules()[0].GetVariables()))
-		mockedRuleService.AssertCalled(t, "Get", "foo", "test", "foo", "foo", uint64(1))
+		mockedRuleService.AssertExpectations(t)
 	})
 
 	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
+		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
@@ -76,17 +80,17 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		mockedRuleService.
-			On("Get", dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
 				dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.ListRules(context.Background(), dummyPayload)
+		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
 func TestGRPCServer_UpdateRules(t *testing.T) {
-	dummyPayload := domain.Rule{
+	dummyPayload := &domain.Rule{
 		Enabled:   true,
 		GroupName: "foo",
 		Namespace: "test",
@@ -118,6 +122,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	}
 
 	t.Run("should update rule", func(t *testing.T) {
+		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 		dummyGRPCServer := GRPCServer{
 			container: &service.Container{
@@ -125,24 +130,30 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := dummyPayload
+		dummyResult := &domain.Rule{}
+		*dummyResult = *dummyPayload
 		dummyResult.Enabled = false
 		dummyResult.Name = "foo"
 
 		mockedRuleService.
-			On("Upsert", &dummyPayload).
-			Return(&dummyResult, nil).Once()
-		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
+			On("Upsert", ctx, dummyPayload).
+			Run(func(args mock.Arguments) {
+				r := args.Get(1).(*domain.Rule)
+				*r = *dummyResult
+			}).
+			Return(nil).Once()
+		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, err)
 
 		assert.Equal(t, "foo", res.GetRule().GetName())
 		assert.Equal(t, false, res.GetRule().GetEnabled())
 		assert.Equal(t, "test", res.GetRule().GetNamespace())
 		assert.Equal(t, 1, len(res.GetRule().GetVariables()))
-		mockedRuleService.AssertCalled(t, "Upsert", &dummyPayload)
+		mockedRuleService.AssertExpectations(t)
 	})
 
 	t.Run("should return error code 13 if getting rules failed", func(t *testing.T) {
+		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
@@ -152,9 +163,9 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		mockedRuleService.
-			On("Upsert", &dummyPayload).
-			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.UpdateRule(context.Background(), dummyReq)
+			On("Upsert", ctx, dummyPayload).
+			Return(errors.New("random error")).Once()
+		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
