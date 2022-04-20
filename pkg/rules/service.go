@@ -122,7 +122,6 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 		}
 
 		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, client, namespace.Urn); err != nil {
-			fmt.Printf("err: %v\n", err)
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}
