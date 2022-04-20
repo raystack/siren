@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/store/model"
 	"github.com/odpf/siren/store/postgres"
 	"gorm.io/gorm"
 )
@@ -37,9 +36,9 @@ type ReceiverRepository interface {
 }
 
 type TemplatesRepository interface {
-	Upsert(*model.Template) (*model.Template, error)
-	Index(string) ([]model.Template, error)
-	GetByName(string) (*model.Template, error)
+	Upsert(*domain.Template) error
+	Index(string) ([]domain.Template, error)
+	GetByName(string) (*domain.Template, error)
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
 	Migrate() error

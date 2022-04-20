@@ -23,7 +23,7 @@ type Template struct {
 
 // TemplatesService interface
 type TemplatesService interface {
-	Upsert(*Template) (*Template, error)
+	Upsert(*Template) error
 	Index(string) ([]Template, error)
 	GetByName(string) (*Template, error)
 	Delete(string) error

@@ -151,6 +151,25 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 		mockedTemplatesService.AssertCalled(t, "GetByName", dummyReq.Name)
 	})
 
+	t.Run("should return error code 5 if template does not exist", func(t *testing.T) {
+		mockedTemplatesService := &mocks.TemplatesService{}
+		dummyGRPCServer := GRPCServer{
+			container: &service.Container{
+				TemplatesService: mockedTemplatesService,
+			},
+			logger: log.NewNoop(),
+		}
+		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
+			Name: "foo",
+		}
+		mockedTemplatesService.
+			On("GetByName", "foo").
+			Return(nil, nil).Once()
+		res, err := dummyGRPCServer.GetTemplateByName(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = template not found")
+	})
+
 	t.Run("should return error code 13 if getting template by name failed", func(t *testing.T) {
 		mockedTemplatesService := &mocks.TemplatesService{}
 		dummyGRPCServer := GRPCServer{
@@ -210,9 +229,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 
-		mockedTemplatesService.
-			On("Upsert", template).
-			Return(template, nil).Once()
+		mockedTemplatesService.On("Upsert", template).Return(nil).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
@@ -230,9 +247,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedTemplatesService.
-			On("Upsert", template).
-			Return(nil, errors.New("random error")).Once()
+		mockedTemplatesService.On("Upsert", template).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
