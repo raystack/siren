@@ -7,7 +7,6 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/templates"
 	"github.com/odpf/siren/store"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
@@ -49,13 +48,13 @@ type Service struct {
 // NewService returns repository struct
 func NewService(
 	repository store.RuleRepository,
-	templateRepository store.TemplatesRepository,
+	templateService domain.TemplatesService,
 	namespaceService domain.NamespaceService,
 	providerService domain.ProviderService,
 ) *Service {
 	return &Service{
 		repository:       repository,
-		templateService:  templates.NewService(templateRepository),
+		templateService:  templateService,
 		namespaceService: namespaceService,
 		providerService:  providerService,
 	}

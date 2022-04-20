@@ -40,7 +40,7 @@ func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config
 	}
 	rulesService := rules.NewService(
 		repositories.RuleRepository,
-		repositories.TemplatesRepository,
+		templatesService,
 		namespaceService,
 		providerService,
 	)
