@@ -1,4 +1,4 @@
-package service
+package v1beta1
 
 import (
 	"net/http"
@@ -29,7 +29,7 @@ type Container struct {
 	SubscriptionService domain.SubscriptionService
 }
 
-func Init(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
+func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(repositories.TemplatesRepository)
 	alertHistoryService := alerts.NewService(repositories.AlertRepository)
 

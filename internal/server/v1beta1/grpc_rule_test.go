@@ -11,7 +11,6 @@ import (
 	"github.com/odpf/siren/domain"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/mocks"
-	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -50,7 +49,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		}
 
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				RulesService: mockedRuleService,
 			},
 			logger: log.NewNoop(),
@@ -74,7 +73,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				RulesService: mockedRuleService,
 			},
 			logger: log.NewNoop(),
@@ -125,7 +124,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				RulesService: mockedRuleService,
 			},
 			logger: log.NewNoop(),
@@ -157,7 +156,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				RulesService: mockedRuleService,
 			},
 			logger: log.NewNoop(),

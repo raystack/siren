@@ -10,7 +10,6 @@ import (
 	"github.com/odpf/siren/domain"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/mocks"
-	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -25,7 +24,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		}}
 		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := GRPCServer{container: &service.Container{
+		dummyGRPCServer := GRPCServer{container: &Container{
 			AlertService: mockedAlertService,
 		}}
 
@@ -50,7 +49,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				AlertService: mockedAlertService,
 			},
 			logger: log.NewNoop(),
@@ -120,7 +119,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.On("Create", payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := GRPCServer{container: &service.Container{
+		dummyGRPCServer := GRPCServer{container: &Container{
 			AlertService: mockedAlertService,
 		}}
 
@@ -181,7 +180,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.On("Create", payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := GRPCServer{container: &service.Container{
+		dummyGRPCServer := GRPCServer{container: &Container{
 			AlertService: mockedAlertService,
 		}}
 
@@ -200,7 +199,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				AlertService: mockedAlertService,
 			},
 			logger: log.NewNoop(),
@@ -257,7 +256,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			TriggeredAt:  time.Now(),
 		}}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				AlertService: mockedAlertService,
 			},
 			logger: log.NewNoop(),

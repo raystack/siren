@@ -11,7 +11,6 @@ import (
 	"github.com/odpf/siren/domain"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/mocks"
-	"github.com/odpf/siren/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -26,7 +25,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 	t.Run("should return list of all provider", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -61,7 +60,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 	t.Run("should return error code 13 if getting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -81,7 +80,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -140,7 +139,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 	t.Run("should create provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -158,7 +157,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 	t.Run("should return error code 13 if creating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -175,7 +174,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -213,7 +212,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 	t.Run("should return a provider", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -244,7 +243,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 	t.Run("should return error code 5 if no provider found", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -262,7 +261,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 	t.Run("should return error code 13 if getting provider failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -290,7 +289,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -344,7 +343,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 	t.Run("should update provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -364,7 +363,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 	t.Run("should return error code 13 if updating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -381,7 +380,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -415,7 +414,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 	t.Run("should delete provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),
@@ -432,7 +431,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 	t.Run("should return error code 13 if deleting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
-			container: &service.Container{
+			container: &Container{
 				ProviderService: mockedProviderService,
 			},
 			logger: log.NewNoop(),

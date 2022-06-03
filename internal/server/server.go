@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/service"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -80,7 +79,7 @@ func RunServer(c *domain.Config) error {
 
 	httpClient := &http.Client{}
 	repositories := store.NewRepositoryContainer(gormDB)
-	services, err := service.Init(repositories, gormDB, c, httpClient)
+	services, err := v1beta1.InitContainer(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
@@ -176,7 +175,7 @@ func RunMigrations(c *domain.Config) error {
 	}
 	httpClient := &http.Client{}
 	repositories := store.NewRepositoryContainer(gormDB)
-	services, err := service.Init(repositories, gormDB, c, httpClient)
+	services, err := v1beta1.InitContainer(repositories, gormDB, c, httpClient)
 	if err != nil {
 		return err
 	}
