@@ -3,17 +3,17 @@ package service
 import (
 	"net/http"
 
-	"github.com/odpf/siren/pkg/namespace"
-	"github.com/odpf/siren/pkg/provider"
-	"github.com/odpf/siren/pkg/receiver"
-	"github.com/odpf/siren/pkg/subscription"
+	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/internal/store"
 	"github.com/odpf/siren/plugins/receivers/slack"
-	"github.com/odpf/siren/store"
 
+	"github.com/odpf/siren/core/alerts"
+	"github.com/odpf/siren/core/rules"
+	"github.com/odpf/siren/core/templates"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/pkg/alerts"
-	"github.com/odpf/siren/pkg/rules"
-	"github.com/odpf/siren/pkg/templates"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
