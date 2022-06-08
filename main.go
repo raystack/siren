@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/odpf/siren/cmd"
+	"github.com/odpf/siren/cli"
 )
 
 func main() {
-	cmd.Execute()
+	cli.Execute()
 }
