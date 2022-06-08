@@ -1,18 +1,18 @@
 version: v1beta1
 plugins:
   - name: go
-    out: api/proto
+    out: internal/server/proto
     opt: paths=source_relative
   - name: go-grpc
-    out: api/proto
+    out: internal/server/proto
     opt: paths=source_relative,require_unimplemented_servers=true
   - name: grpc-gateway
-    out: api/proto
+    out: internal/server/proto
     opt:
       - paths=source_relative
       - allow_repeated_fields_in_body=true
   - name: validate
-    out: api/proto
+    out: internal/server/proto
     opt:
       - paths=source_relative
       - lang=go
