@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/odpf/siren/domain"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/utils"
+	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"

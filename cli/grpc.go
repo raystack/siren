@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc"
 )
 

@@ -8,11 +8,11 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/domain"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )

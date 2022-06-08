@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/MakeNowJust/heredoc v1.0.0
-	github.com/envoyproxy/protoc-gen-validate v0.6.2
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/spec v0.20.2 // indirect
@@ -30,12 +29,13 @@ require (
 	github.com/slack-go/slack v0.9.3
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
+	go.buf.build/odpf/gw/odpf/proton v1.1.97
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210825183410-e898025ed96a
 	golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect
-	google.golang.org/genproto v0.0.0-20210903162649-d08c68adba83
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
