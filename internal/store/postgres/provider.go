@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
@@ -25,7 +25,7 @@ func NewProviderRepository(db *gorm.DB) *ProviderRepository {
 	return &ProviderRepository{db}
 }
 
-func (r ProviderRepository) List(filters map[string]interface{}) ([]*domain.Provider, error) {
+func (r ProviderRepository) List(filters map[string]interface{}) ([]*provider.Provider, error) {
 	var providers []*model.Provider
 	var conditions Filters
 	if err := mapstructure.Decode(filters, &conditions); err != nil {
@@ -44,15 +44,15 @@ func (r ProviderRepository) List(filters map[string]interface{}) ([]*domain.Prov
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	domainProviders := make([]*domain.Provider, 0, len(providers))
+	domainProviders := make([]*provider.Provider, 0, len(providers))
 	for i := 0; i < len(providers); i++ {
-		provider := providers[i].ToDomain()
-		domainProviders = append(domainProviders, provider)
+		prov := providers[i].ToDomain()
+		domainProviders = append(domainProviders, prov)
 	}
 	return domainProviders, nil
 }
 
-func (r ProviderRepository) Create(provider *domain.Provider) (*domain.Provider, error) {
+func (r ProviderRepository) Create(provider *provider.Provider) (*provider.Provider, error) {
 	var newProvider model.Provider
 	result := r.db.Create(newProvider.FromDomain(provider))
 	if result.Error != nil {
@@ -67,7 +67,7 @@ func (r ProviderRepository) Create(provider *domain.Provider) (*domain.Provider,
 	return newProvider.ToDomain(), nil
 }
 
-func (r ProviderRepository) Get(id uint64) (*domain.Provider, error) {
+func (r ProviderRepository) Get(id uint64) (*provider.Provider, error) {
 	var provider model.Provider
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&provider)
 	if result.Error != nil {
@@ -80,7 +80,7 @@ func (r ProviderRepository) Get(id uint64) (*domain.Provider, error) {
 	return provider.ToDomain(), nil
 }
 
-func (r ProviderRepository) Update(provider *domain.Provider) (*domain.Provider, error) {
+func (r ProviderRepository) Update(provider *provider.Provider) (*provider.Provider, error) {
 	inputProvider := model.Provider{}
 	inputProvider.FromDomain(provider)
 	var newProvider, existingProvider model.Provider

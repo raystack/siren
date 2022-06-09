@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	domain "github.com/odpf/siren/domain"
+	provider "github.com/odpf/siren/core/provider"
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -23,20 +23,20 @@ func (_m *ProviderService) EXPECT() *ProviderService_Expecter {
 }
 
 // CreateProvider provides a mock function with given fields: _a0
-func (_m *ProviderService) CreateProvider(_a0 *domain.Provider) (*domain.Provider, error) {
+func (_m *ProviderService) CreateProvider(_a0 *provider.Provider) (*provider.Provider, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *domain.Provider
-	if rf, ok := ret.Get(0).(func(*domain.Provider) *domain.Provider); ok {
+	var r0 *provider.Provider
+	if rf, ok := ret.Get(0).(func(*provider.Provider) *provider.Provider); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Provider)
+			r0 = ret.Get(0).(*provider.Provider)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*domain.Provider) error); ok {
+	if rf, ok := ret.Get(1).(func(*provider.Provider) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -51,19 +51,19 @@ type ProviderService_CreateProvider_Call struct {
 }
 
 // CreateProvider is a helper method to define mock.On call
-//  - _a0 *domain.Provider
+//  - _a0 *provider.Provider
 func (_e *ProviderService_Expecter) CreateProvider(_a0 interface{}) *ProviderService_CreateProvider_Call {
 	return &ProviderService_CreateProvider_Call{Call: _e.mock.On("CreateProvider", _a0)}
 }
 
-func (_c *ProviderService_CreateProvider_Call) Run(run func(_a0 *domain.Provider)) *ProviderService_CreateProvider_Call {
+func (_c *ProviderService_CreateProvider_Call) Run(run func(_a0 *provider.Provider)) *ProviderService_CreateProvider_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.Provider))
+		run(args[0].(*provider.Provider))
 	})
 	return _c
 }
 
-func (_c *ProviderService_CreateProvider_Call) Return(_a0 *domain.Provider, _a1 error) *ProviderService_CreateProvider_Call {
+func (_c *ProviderService_CreateProvider_Call) Return(_a0 *provider.Provider, _a1 error) *ProviderService_CreateProvider_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
@@ -106,15 +106,15 @@ func (_c *ProviderService_DeleteProvider_Call) Return(_a0 error) *ProviderServic
 }
 
 // GetProvider provides a mock function with given fields: _a0
-func (_m *ProviderService) GetProvider(_a0 uint64) (*domain.Provider, error) {
+func (_m *ProviderService) GetProvider(_a0 uint64) (*provider.Provider, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *domain.Provider
-	if rf, ok := ret.Get(0).(func(uint64) *domain.Provider); ok {
+	var r0 *provider.Provider
+	if rf, ok := ret.Get(0).(func(uint64) *provider.Provider); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Provider)
+			r0 = ret.Get(0).(*provider.Provider)
 		}
 	}
 
@@ -146,21 +146,21 @@ func (_c *ProviderService_GetProvider_Call) Run(run func(_a0 uint64)) *ProviderS
 	return _c
 }
 
-func (_c *ProviderService_GetProvider_Call) Return(_a0 *domain.Provider, _a1 error) *ProviderService_GetProvider_Call {
+func (_c *ProviderService_GetProvider_Call) Return(_a0 *provider.Provider, _a1 error) *ProviderService_GetProvider_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // ListProviders provides a mock function with given fields: _a0
-func (_m *ProviderService) ListProviders(_a0 map[string]interface{}) ([]*domain.Provider, error) {
+func (_m *ProviderService) ListProviders(_a0 map[string]interface{}) ([]*provider.Provider, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []*domain.Provider
-	if rf, ok := ret.Get(0).(func(map[string]interface{}) []*domain.Provider); ok {
+	var r0 []*provider.Provider
+	if rf, ok := ret.Get(0).(func(map[string]interface{}) []*provider.Provider); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*domain.Provider)
+			r0 = ret.Get(0).([]*provider.Provider)
 		}
 	}
 
@@ -192,7 +192,7 @@ func (_c *ProviderService_ListProviders_Call) Run(run func(_a0 map[string]interf
 	return _c
 }
 
-func (_c *ProviderService_ListProviders_Call) Return(_a0 []*domain.Provider, _a1 error) *ProviderService_ListProviders_Call {
+func (_c *ProviderService_ListProviders_Call) Return(_a0 []*provider.Provider, _a1 error) *ProviderService_ListProviders_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
@@ -234,20 +234,20 @@ func (_c *ProviderService_Migrate_Call) Return(_a0 error) *ProviderService_Migra
 }
 
 // UpdateProvider provides a mock function with given fields: _a0
-func (_m *ProviderService) UpdateProvider(_a0 *domain.Provider) (*domain.Provider, error) {
+func (_m *ProviderService) UpdateProvider(_a0 *provider.Provider) (*provider.Provider, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *domain.Provider
-	if rf, ok := ret.Get(0).(func(*domain.Provider) *domain.Provider); ok {
+	var r0 *provider.Provider
+	if rf, ok := ret.Get(0).(func(*provider.Provider) *provider.Provider); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Provider)
+			r0 = ret.Get(0).(*provider.Provider)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*domain.Provider) error); ok {
+	if rf, ok := ret.Get(1).(func(*provider.Provider) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -262,19 +262,19 @@ type ProviderService_UpdateProvider_Call struct {
 }
 
 // UpdateProvider is a helper method to define mock.On call
-//  - _a0 *domain.Provider
+//  - _a0 *provider.Provider
 func (_e *ProviderService_Expecter) UpdateProvider(_a0 interface{}) *ProviderService_UpdateProvider_Call {
 	return &ProviderService_UpdateProvider_Call{Call: _e.mock.On("UpdateProvider", _a0)}
 }
 
-func (_c *ProviderService_UpdateProvider_Call) Run(run func(_a0 *domain.Provider)) *ProviderService_UpdateProvider_Call {
+func (_c *ProviderService_UpdateProvider_Call) Run(run func(_a0 *provider.Provider)) *ProviderService_UpdateProvider_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.Provider))
+		run(args[0].(*provider.Provider))
 	})
 	return _c
 }
 
-func (_c *ProviderService_UpdateProvider_Call) Return(_a0 *domain.Provider, _a1 error) *ProviderService_UpdateProvider_Call {
+func (_c *ProviderService_UpdateProvider_Call) Return(_a0 *provider.Provider, _a1 error) *ProviderService_UpdateProvider_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

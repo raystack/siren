@@ -7,6 +7,7 @@ import (
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	"github.com/pkg/errors"
@@ -30,10 +31,10 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface { //TODO to be refactored, for temporary only
-	ListProviders(map[string]interface{}) ([]*domain.Provider, error)
-	CreateProvider(*domain.Provider) (*domain.Provider, error)
-	GetProvider(uint64) (*domain.Provider, error)
-	UpdateProvider(*domain.Provider) (*domain.Provider, error)
+	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
+	CreateProvider(*provider.Provider) (*provider.Provider, error)
+	GetProvider(uint64) (*provider.Provider, error)
+	UpdateProvider(*provider.Provider) (*provider.Provider, error)
 	DeleteProvider(uint64) error
 	Migrate() error
 }

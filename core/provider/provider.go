@@ -1,6 +1,18 @@
-package domain
+package provider
 
-import "time"
+import (
+	"time"
+)
+
+//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ProviderRepository --filename provider_repository.go --output=./mocks
+type Repository interface {
+	Migrate() error
+	List(map[string]interface{}) ([]*Provider, error)
+	Create(*Provider) (*Provider, error)
+	Get(uint64) (*Provider, error)
+	Update(*Provider) (*Provider, error)
+	Delete(uint64) error
+}
 
 type Provider struct {
 	Id          uint64                 `json:"id"`
@@ -12,13 +24,4 @@ type Provider struct {
 	Labels      map[string]string      `json:"labels"`
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at"`
-}
-
-type ProviderService interface {
-	ListProviders(map[string]interface{}) ([]*Provider, error)
-	CreateProvider(*Provider) (*Provider, error)
-	GetProvider(uint64) (*Provider, error)
-	UpdateProvider(*Provider) (*Provider, error)
-	DeleteProvider(uint64) error
-	Migrate() error
 }

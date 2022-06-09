@@ -36,10 +36,10 @@ type ReceiverService interface { //TODO to be refactored, for temporary only
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface { //TODO to be refactored, for temporary only
-	ListProviders(map[string]interface{}) ([]*domain.Provider, error)
-	CreateProvider(*domain.Provider) (*domain.Provider, error)
-	GetProvider(uint64) (*domain.Provider, error)
-	UpdateProvider(*domain.Provider) (*domain.Provider, error)
+	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
+	CreateProvider(*provider.Provider) (*provider.Provider, error)
+	GetProvider(uint64) (*provider.Provider, error)
+	UpdateProvider(*provider.Provider) (*provider.Provider, error)
 	DeleteProvider(uint64) error
 	Migrate() error
 }
@@ -54,7 +54,7 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(repository store.SubscriptionRepository, providerRepository store.ProviderRepository, namespaceRepository namespace.Repository,
+func NewService(repository store.SubscriptionRepository, providerRepository provider.Repository, namespaceRepository namespace.Repository,
 	receiverRepository store.ReceiverRepository, key string) (domain.SubscriptionService, error) {
 	encryptionTransformer, err := namespace.NewTransformer(key)
 	if err != nil {
@@ -219,7 +219,7 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 	return subscriptionsWithinNamespace, nil
 }
 
-func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*domain.Provider, *namespace.Namespace, error) {
+func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*provider.Provider, *namespace.Namespace, error) {
 	namespaceInfo, err := s.namespaceService.GetNamespace(id)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get namespace details")

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -30,7 +30,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := []*domain.Provider{
+		dummyResult := []*provider.Provider{
 			{
 				Id:          1,
 				Host:        "foo",
@@ -87,7 +87,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := []*domain.Provider{
+		dummyResult := []*provider.Provider{
 			{
 				Id:          1,
 				Host:        "foo",
@@ -121,7 +121,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 
-	payload := &domain.Provider{
+	payload := &provider.Provider{
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -181,7 +181,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 		}
 
 		credentials["bar"] = string([]byte{0xff})
-		newPayload := &domain.Provider{
+		newPayload := &provider.Provider{
 			Host:        "foo",
 			Type:        "bar",
 			Name:        "foo",
@@ -217,7 +217,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Provider{
+		dummyResult := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -266,7 +266,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Provider{
+		dummyResult := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -296,7 +296,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 		}
 
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := &domain.Provider{
+		dummyResult := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -325,7 +325,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 
-	payload := &domain.Provider{
+	payload := &provider.Provider{
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -387,7 +387,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 		}
 
 		credentials["bar"] = string([]byte{0xff})
-		newPayload := &domain.Provider{
+		newPayload := &provider.Provider{
 			Host:        "foo",
 			Type:        "bar",
 			Name:        "foo",

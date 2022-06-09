@@ -5,19 +5,11 @@ import (
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
-
-type ProviderRepository interface {
-	Migrate() error
-	List(map[string]interface{}) ([]*domain.Provider, error)
-	Create(*domain.Provider) (*domain.Provider, error)
-	Get(uint64) (*domain.Provider, error)
-	Update(*domain.Provider) (*domain.Provider, error)
-	Delete(uint64) error
-}
 
 type ReceiverRepository interface {
 	Migrate() error
@@ -61,7 +53,7 @@ type Transactor interface {
 }
 
 type RepositoryContainer struct {
-	ProviderRepository     ProviderRepository
+	ProviderRepository     provider.Repository
 	NamespaceRepository    namespace.Repository
 	TemplatesRepository    TemplatesRepository
 	ReceiverRepository     ReceiverRepository

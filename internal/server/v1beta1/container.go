@@ -23,7 +23,7 @@ type Container struct {
 	RulesService        domain.RuleService
 	AlertService        AlertService
 	NotifierServices    domain.NotifierServices
-	ProviderService     domain.ProviderService
+	ProviderService     ProviderService
 	NamespaceService    NamespaceService
 	ReceiverService     domain.ReceiverService
 	SubscriptionService domain.SubscriptionService
