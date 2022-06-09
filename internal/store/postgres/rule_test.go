@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/mocks"
 	"github.com/stretchr/testify/suite"
@@ -20,7 +19,7 @@ type RuleRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.RuleRepository
+	repository *postgres.RuleRepository
 }
 
 func (s *RuleRepositoryTestSuite) SetupTest() {
@@ -44,7 +43,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 	insertQuery := regexp.QuoteMeta(`INSERT INTO "rules" ("created_at","updated_at","name","namespace","group_name","template","enabled","variables","provider_namespace") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
 	findQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = $1`)
 
-	rule := &domain.Rule{
+	theRule := &rule.Rule{
 		CreatedAt:         timeNow,
 		UpdatedAt:         timeNow,
 		Name:              "siren_api_gojek_foo_bar_tmpl",
@@ -53,7 +52,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 		Enabled:           true,
 		Template:          "tmpl",
 		ProviderNamespace: 1,
-		Variables: []domain.RuleVariable{
+		Variables: []rule.RuleVariable{
 			{Name: "for", Type: "string", Value: "10m", Description: "test"},
 			{Name: "team", Type: "string", Value: "gojek", Description: "test"},
 		},
@@ -62,24 +61,24 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 
 	s.Run("should update existing rule", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRow := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(rule.Id, rule.CreatedAt,
-				rule.UpdatedAt, rule.Name, rule.Namespace,
-				rule.GroupName, rule.Template, rule.Enabled,
-				variablesStr, rule.ProviderNamespace)
+			AddRow(theRule.Id, theRule.CreatedAt,
+				theRule.UpdatedAt, theRule.Name, theRule.Namespace,
+				theRule.GroupName, theRule.Template, theRule.Enabled,
+				variablesStr, theRule.ProviderNamespace)
 		s.dbmock.ExpectQuery(findQuery).
 			WillReturnRows(expectedRow)
 
 		ctx := context.Background()
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		s.Nil(err)
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
 	s.Run("should create new rule", func() {
-		rule := &domain.Rule{
+		theRule := &rule.Rule{
 			CreatedAt:         timeNow,
 			UpdatedAt:         timeNow,
 			Name:              "siren_api_gojek_foo_bar_tmpl",
@@ -88,36 +87,36 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 			Enabled:           true,
 			Template:          "tmpl",
 			ProviderNamespace: 1,
-			Variables: []domain.RuleVariable{
+			Variables: []rule.RuleVariable{
 				{Name: "for", Type: "string", Value: "10m", Description: "test"},
 				{Name: "team", Type: "string", Value: "gojek", Description: "test"},
 			},
 		}
 
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(rule.CreatedAt, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(theRule.CreatedAt, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		expectedID := uint64(1)
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
 		expectedRow := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(expectedID, rule.CreatedAt,
-				rule.UpdatedAt, rule.Name, rule.Namespace,
-				rule.GroupName, rule.Template, rule.Enabled,
-				variablesStr, rule.ProviderNamespace)
+			AddRow(expectedID, theRule.CreatedAt,
+				theRule.UpdatedAt, theRule.Name, theRule.Namespace,
+				theRule.GroupName, theRule.Template, theRule.Enabled,
+				variablesStr, theRule.ProviderNamespace)
 		s.dbmock.ExpectQuery(findQuery).
 			WillReturnRows(expectedRow)
 
 		ctx := context.Background()
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		s.Nil(err)
-		s.Equal(expectedID, rule.Id)
+		s.Equal(expectedID, theRule.Id)
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
 	s.Run("should create using transaction", func() {
-		rule := &domain.Rule{
+		theRule := &rule.Rule{
 			CreatedAt:         timeNow,
 			UpdatedAt:         timeNow,
 			Name:              "siren_api_gojek_foo_bar_tmpl",
@@ -126,7 +125,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 			Enabled:           true,
 			Template:          "tmpl",
 			ProviderNamespace: 1,
-			Variables: []domain.RuleVariable{
+			Variables: []rule.RuleVariable{
 				{Name: "for", Type: "string", Value: "10m", Description: "test"},
 				{Name: "team", Type: "string", Value: "gojek", Description: "test"},
 			},
@@ -134,68 +133,68 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(rule.CreatedAt, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(theRule.CreatedAt, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		expectedID := uint64(1)
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
 		expectedRow := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(expectedID, rule.CreatedAt,
-				rule.UpdatedAt, rule.Name, rule.Namespace,
-				rule.GroupName, rule.Template, rule.Enabled,
-				variablesStr, rule.ProviderNamespace)
+			AddRow(expectedID, theRule.CreatedAt,
+				theRule.UpdatedAt, theRule.Name, theRule.Namespace,
+				theRule.GroupName, theRule.Template, theRule.Enabled,
+				variablesStr, theRule.ProviderNamespace)
 		s.dbmock.ExpectQuery(findQuery).
 			WillReturnRows(expectedRow)
 		s.dbmock.ExpectCommit()
 
 		ctx := context.Background()
 		ctx = s.repository.WithTransaction(ctx)
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		commitErr := s.repository.Commit(ctx)
 		s.Nil(commitErr)
 		s.Nil(err)
-		s.Equal(expectedID, rule.Id)
+		s.Equal(expectedID, theRule.Id)
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
 	s.Run("should return error when updating rule", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnError(errors.New("random error"))
 
 		ctx := context.Background()
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		s.EqualError(err, "random error")
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
 	s.Run("should return error when inserting rule", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace).
 			WillReturnError(errors.New("random error"))
 
 		ctx := context.Background()
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		s.EqualError(err, "random error")
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
 	s.Run("should return error when finding new/updated rule", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace, rule.Name).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(AnyTime{}, AnyTime{}, rule.Name, rule.Namespace, rule.GroupName, rule.Template, rule.Enabled, variablesStr, rule.ProviderNamespace).
+			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 		s.dbmock.ExpectQuery(findQuery).
 			WillReturnError(errors.New("random error"))
 
 		ctx := context.Background()
-		err := s.repository.Upsert(ctx, rule)
+		err := s.repository.Upsert(ctx, theRule)
 		s.EqualError(err, "random error")
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
@@ -204,7 +203,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 func (s *RuleRepositoryTestSuite) TestGet() {
 	variablesStr := `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`
 
-	expectedRules := []domain.Rule{{
+	expectedRules := []rule.Rule{{
 		Id:                10,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
@@ -214,7 +213,7 @@ func (s *RuleRepositoryTestSuite) TestGet() {
 		Enabled:           true,
 		Template:          "tmpl",
 		ProviderNamespace: 1,
-		Variables: []domain.RuleVariable{
+		Variables: []rule.RuleVariable{
 			{Name: "for", Type: "string", Value: "10m", Description: "test"},
 			{Name: "team", Type: "string", Value: "gojek", Description: "test"},
 		},

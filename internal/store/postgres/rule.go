@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
@@ -33,7 +33,7 @@ func (r *RuleRepository) Migrate() error {
 	return nil
 }
 
-func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule) error {
+func (r *RuleRepository) Upsert(ctx context.Context, rule *rule.Rule) error {
 	m := new(model.Rule)
 	if err := m.FromDomain(rule); err != nil {
 		return err
@@ -59,7 +59,7 @@ func (r *RuleRepository) Upsert(ctx context.Context, rule *domain.Rule) error {
 	return nil
 }
 
-func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
+func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]rule.Rule, error) {
 	var rules []model.Rule
 	db := r.getDb(ctx)
 	if name != "" {
@@ -82,7 +82,7 @@ func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, te
 		return nil, err
 	}
 
-	var domainRules []domain.Rule
+	var domainRules []rule.Rule
 	for _, r := range rules {
 		rule, err := r.ToDomain()
 		if err != nil {

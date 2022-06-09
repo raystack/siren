@@ -8,8 +8,8 @@ import (
 
 	"github.com/odpf/salt/log"
 
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/core/rule"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -27,14 +27,14 @@ func TestGRPCServer_ListRules(t *testing.T) {
 	t.Run("should return stored rules", func(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
-		dummyResult := []domain.Rule{
+		dummyResult := []rule.Rule{
 			{
 				Name:      "foo",
 				Enabled:   true,
 				GroupName: "foo",
 				Namespace: "test",
 				Template:  "foo",
-				Variables: []domain.RuleVariable{
+				Variables: []rule.RuleVariable{
 					{
 						Name:        "foo",
 						Type:        "int",
@@ -89,12 +89,12 @@ func TestGRPCServer_ListRules(t *testing.T) {
 }
 
 func TestGRPCServer_UpdateRules(t *testing.T) {
-	dummyPayload := &domain.Rule{
+	dummyPayload := &rule.Rule{
 		Enabled:   true,
 		GroupName: "foo",
 		Namespace: "test",
 		Template:  "foo",
-		Variables: []domain.RuleVariable{
+		Variables: []rule.RuleVariable{
 			{
 				Name:        "foo",
 				Type:        "int",
@@ -129,7 +129,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Rule{}
+		dummyResult := &rule.Rule{}
 		*dummyResult = *dummyPayload
 		dummyResult.Enabled = false
 		dummyResult.Name = "foo"
@@ -137,7 +137,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		mockedRuleService.
 			On("Upsert", ctx, dummyPayload).
 			Run(func(args mock.Arguments) {
-				r := args.Get(1).(*domain.Rule)
+				r := args.Get(1).(*rule.Rule)
 				*r = *dummyResult
 			}).
 			Return(nil).Once()

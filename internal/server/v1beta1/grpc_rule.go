@@ -3,12 +3,19 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/utils"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+//go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks
+type RuleService interface {
+	Upsert(context.Context, *rule.Rule) error
+	Get(context.Context, string, string, string, string, uint64) ([]rule.Rule, error)
+	Migrate() error
+}
 
 func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
 	name := req.GetName()
@@ -51,9 +58,9 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 }
 
 func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
-	variables := make([]domain.RuleVariable, 0)
+	variables := make([]rule.RuleVariable, 0)
 	for _, variable := range req.Variables {
-		variables = append(variables, domain.RuleVariable{
+		variables = append(variables, rule.RuleVariable{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Value:       variable.Value,
@@ -61,7 +68,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		})
 	}
 
-	rule := &domain.Rule{
+	rule := &rule.Rule{
 		Enabled:           req.GetEnabled(),
 		GroupName:         req.GetGroupName(),
 		Namespace:         req.GetNamespace(),

@@ -1,4 +1,4 @@
-package rules
+package rule
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -61,9 +59,8 @@ type Variables struct {
 	Variables []variable `json:"variables"`
 }
 
-var cortexClientInstance = newCortexClient
-
-type cortexCaller interface {
+//go:generate mockery --name=CortexCaller -r --case underscore --with-expecter --structname CortexCaller --filename cortex_caller.go --output=./mocks
+type CortexCaller interface {
 	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
 	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
 	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
@@ -72,24 +69,27 @@ type cortexCaller interface {
 
 // Service handles business logic
 type Service struct {
-	repository       store.RuleRepository
+	repository       Repository
 	templateService  TemplatesService
 	namespaceService NamespaceService
 	providerService  ProviderService
+	cortexClient     CortexCaller
 }
 
 // NewService returns repository struct
 func NewService(
-	repository store.RuleRepository,
+	repository Repository,
 	templateService TemplatesService,
 	namespaceService NamespaceService,
 	providerService ProviderService,
+	cortexClient CortexCaller,
 ) *Service {
 	return &Service{
 		repository:       repository,
 		templateService:  templateService,
 		namespaceService: namespaceService,
 		providerService:  providerService,
+		cortexClient:     cortexClient,
 	}
 }
 
@@ -97,7 +97,7 @@ func (s *Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
+func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
 
 	template, err := s.templateService.GetByName(rule.Template)
@@ -138,14 +138,6 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 	}
 
 	if provider.Type == "cortex" {
-		client, err := cortexClientInstance(provider.Host)
-		if err != nil {
-			if err := s.repository.Rollback(ctx); err != nil {
-				return errors.Wrap(err, "s.repository.Rollback")
-			}
-			return errors.Wrap(err, "cortex client initialization")
-		}
-
 		rulesWithinGroup, err := s.repository.Get(ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace)
 		if err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
@@ -154,7 +146,7 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 			return errors.Wrap(err, "s.repository.Get")
 		}
 
-		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, client, namespace.Urn); err != nil {
+		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.Urn); err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}
@@ -173,11 +165,11 @@ func (s *Service) Upsert(ctx context.Context, rule *domain.Rule) error {
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]domain.Rule, error) {
+func (s *Service) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]Rule, error) {
 	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
 }
 
-func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rulesWithinGroup []domain.Rule, client cortexCaller, tenantName string) error {
+func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexCaller, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if !rulesWithinGroup[i].Enabled {
@@ -224,8 +216,8 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rule
 	return nil
 }
 
-func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {
-	var finalRuleVariables []domain.RuleVariable
+func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleVariables []RuleVariable) []RuleVariable {
+	var finalRuleVariables []RuleVariable
 	for j := 0; j < len(templateVariables); j++ {
 		variableExist := false
 		matchingIndex := 0
@@ -236,7 +228,7 @@ func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleV
 			}
 		}
 		if !variableExist {
-			finalRuleVariables = append(finalRuleVariables, domain.RuleVariable{
+			finalRuleVariables = append(finalRuleVariables, RuleVariable{
 				Name:        templateVariables[j].Name,
 				Type:        templateVariables[j].Type,
 				Value:       templateVariables[j].Default,
@@ -249,7 +241,7 @@ func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleV
 	return finalRuleVariables
 }
 
-func newCortexClient(host string) (cortexCaller, error) {
+func NewCortexClient(host string) (CortexCaller, error) {
 	cortexConfig := cortexClient.Config{
 		Address:         host,
 		UseLegacyRoutes: false,

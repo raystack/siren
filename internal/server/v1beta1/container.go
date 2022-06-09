@@ -7,7 +7,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/rules"
+	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
@@ -20,7 +20,7 @@ import (
 
 type Container struct {
 	TemplateService     TemplateService
-	RulesService        domain.RuleService
+	RulesService        RuleService
 	AlertService        AlertService
 	NotifierServices    NotifierServices
 	ProviderService     ProviderService
@@ -43,11 +43,18 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}
-	rulesService := rules.NewService(
+
+	cortexClient, err := rule.NewCortexClient(c.Cortex.Address)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init cortex client")
+	}
+
+	rulesService := rule.NewService(
 		repositories.RuleRepository,
 		templateService,
 		namespaceService,
 		providerService,
+		cortexClient,
 	)
 	receiverExchange := slackclient.NewSlackClient(&http.Client{})
 	receiverSlackHelper, err := receiver.NewSlackHelper(receiverExchange, c.EncryptionKey)

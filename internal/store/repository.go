@@ -7,11 +7,18 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
+
+type Transactor interface {
+	WithTransaction(ctx context.Context) context.Context
+	Rollback(ctx context.Context) error
+	Commit(ctx context.Context) error
+}
 
 type SubscriptionRepository interface {
 	Transactor
@@ -23,19 +30,6 @@ type SubscriptionRepository interface {
 	Delete(context.Context, uint64) error
 }
 
-type RuleRepository interface {
-	Transactor
-	Upsert(context.Context, *domain.Rule) error
-	Get(context.Context, string, string, string, string, uint64) ([]domain.Rule, error)
-	Migrate() error
-}
-
-type Transactor interface {
-	WithTransaction(ctx context.Context) context.Context
-	Rollback(ctx context.Context) error
-	Commit(ctx context.Context) error
-}
-
 type RepositoryContainer struct {
 	ProviderRepository     provider.Repository
 	NamespaceRepository    namespace.Repository
@@ -43,7 +37,7 @@ type RepositoryContainer struct {
 	ReceiverRepository     receiver.Repository
 	SubscriptionRepository SubscriptionRepository
 	AlertRepository        alert.Repository
-	RuleRepository         RuleRepository
+	RuleRepository         rule.Repository
 }
 
 func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {
