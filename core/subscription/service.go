@@ -14,19 +14,53 @@ import (
 	"github.com/pkg/errors"
 )
 
+//go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
+type NamespaceService interface { //TODO to be refactored, for temporary only
+	ListNamespaces() ([]*namespace.Namespace, error)
+	CreateNamespace(*namespace.Namespace) error
+	GetNamespace(uint64) (*namespace.Namespace, error)
+	UpdateNamespace(*namespace.Namespace) error
+	DeleteNamespace(uint64) error
+	Migrate() error
+}
+
+//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
+type ReceiverService interface { //TODO to be refactored, for temporary only
+	CreateReceiver(*domain.Receiver) error
+	GetReceiver(uint64) (*domain.Receiver, error)
+	UpdateReceiver(*domain.Receiver) error
+	ListReceivers() ([]*domain.Receiver, error)
+	DeleteReceiver(uint64) error
+	Migrate() error
+}
+
+//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
+type ProviderService interface { //TODO to be refactored, for temporary only
+	ListProviders(map[string]interface{}) ([]*domain.Provider, error)
+	CreateProvider(*domain.Provider) (*domain.Provider, error)
+	GetProvider(uint64) (*domain.Provider, error)
+	UpdateProvider(*domain.Provider) (*domain.Provider, error)
+	DeleteProvider(uint64) error
+	Migrate() error
+}
+
 // Service handles business logic
 type Service struct {
 	repository       store.SubscriptionRepository
-	providerService  domain.ProviderService
-	namespaceService domain.NamespaceService
-	receiverService  domain.ReceiverService
+	providerService  ProviderService
+	namespaceService NamespaceService
+	receiverService  ReceiverService
 	amClient         alertmanager.Client
 }
 
 // NewService returns service struct
-func NewService(repository store.SubscriptionRepository, providerRepository store.ProviderRepository, namespaceRepository store.NamespaceRepository,
+func NewService(repository store.SubscriptionRepository, providerRepository store.ProviderRepository, namespaceRepository namespace.Repository,
 	receiverRepository store.ReceiverRepository, key string) (domain.SubscriptionService, error) {
-	namespaceService, err := namespace.NewService(namespaceRepository, key)
+	encryptionTransformer, err := namespace.NewTransformer(key)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create namespace transformer")
+	}
+	namespaceService, err := namespace.NewService(namespaceRepository, encryptionTransformer)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}
@@ -185,7 +219,7 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 	return subscriptionsWithinNamespace, nil
 }
 
-func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*domain.Provider, *domain.Namespace, error) {
+func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*domain.Provider, *namespace.Namespace, error) {
 	namespaceInfo, err := s.namespaceService.GetNamespace(id)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get namespace details")

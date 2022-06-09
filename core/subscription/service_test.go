@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/subscription/alertmanager"
+	"github.com/odpf/siren/core/subscription/mocks"
 	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,7 +29,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 	}
-	dummyNamespace := &domain.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
+	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
 	dummyProvider := &domain.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*domain.Receiver{
 		{Id: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
@@ -159,7 +160,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Create", ctx, input).Return(nil).Once()
 		repositoryMock.On("List", ctx).Return([]*domain.Subscription{}, nil).Once()
-		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(&domain.Namespace{}, nil).Once()
+		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(&namespace.Namespace{}, nil).Once()
 		providerServiceMock.On("GetProvider", mock.AnythingOfType("uint64")).Return(nil, errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
@@ -201,7 +202,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
 		repositoryMock.On("Create", ctx, input).Return(nil).Once()
 		repositoryMock.On("List", ctx).Return([]*domain.Subscription{}, nil).Once()
-		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(&domain.Namespace{}, nil).Once()
+		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(&namespace.Namespace{}, nil).Once()
 		providerServiceMock.On("GetProvider", mock.AnythingOfType("uint64")).Return(&domain.Provider{}, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(nil, errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
@@ -433,7 +434,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 	}
-	dummyNamespace := &domain.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
+	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
 	dummyProvider := &domain.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*domain.Receiver{
 		{Id: 1, Type: "slack", Configurations: map[string]interface{}{}},
@@ -579,7 +580,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 		Id:        1,
 		Namespace: 1,
 	}
-	dummyNamespace := &domain.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
+	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
 	dummyProvider := &domain.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*domain.Receiver{
 		{Id: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},

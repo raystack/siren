@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -31,7 +31,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := []*domain.Namespace{
+		dummyResult := []*namespace.Namespace{
 			{
 				Id:          1,
 				Provider:    2,
@@ -77,7 +77,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := []*domain.Namespace{
+		dummyResult := []*namespace.Namespace{
 			{
 				Id:          1,
 				Provider:    2,
@@ -103,7 +103,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	labels["foo"] = "bar"
 
 	credentialsData, _ := structpb.NewStruct(credentials)
-	payload := &domain.Namespace{
+	payload := &namespace.Namespace{
 		Provider:    2,
 		Name:        "foo",
 		Credentials: credentials,
@@ -170,8 +170,8 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedNamespaceService.On("CreateNamespace", mock.AnythingOfType("*domain.Namespace")).Return(nil).Run(func(args mock.Arguments) {
-			n := args.Get(0).(*domain.Namespace)
+		mockedNamespaceService.On("CreateNamespace", mock.AnythingOfType("*namespace.Namespace")).Return(nil).Run(func(args mock.Arguments) {
+			n := args.Get(0).(*namespace.Namespace)
 			credentials["bar"] = string([]byte{0xff})
 			n.Credentials = credentials
 		}).Once()
@@ -196,7 +196,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Namespace{
+		dummyResult := &namespace.Namespace{
 			Id:          1,
 			Provider:    2,
 			Name:        "foo",
@@ -256,7 +256,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := &domain.Namespace{
+		dummyResult := &namespace.Namespace{
 			Id:          1,
 			Provider:    2,
 			Name:        "foo",
@@ -281,7 +281,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	labels["foo"] = "bar"
 
 	credentialsData, _ := structpb.NewStruct(credentials)
-	payload := &domain.Namespace{
+	payload := &namespace.Namespace{
 		Id:          1,
 		Provider:    2,
 		Name:        "foo",
@@ -352,8 +352,8 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		mockedNamespaceService.On("UpdateNamespace", mock.AnythingOfType("*domain.Namespace")).Return(nil).Run(func(args mock.Arguments) {
-			n := args.Get(0).(*domain.Namespace)
+		mockedNamespaceService.On("UpdateNamespace", mock.AnythingOfType("*namespace.Namespace")).Return(nil).Run(func(args mock.Arguments) {
+			n := args.Get(0).(*namespace.Namespace)
 			credentials["foo"] = string([]byte{0xff})
 			n.Credentials = credentials
 		}).Once()

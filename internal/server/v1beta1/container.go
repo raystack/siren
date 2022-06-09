@@ -24,7 +24,7 @@ type Container struct {
 	AlertService        AlertService
 	NotifierServices    domain.NotifierServices
 	ProviderService     domain.ProviderService
-	NamespaceService    domain.NamespaceService
+	NamespaceService    NamespaceService
 	ReceiverService     domain.ReceiverService
 	SubscriptionService domain.SubscriptionService
 }
@@ -34,7 +34,12 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 	alertHistoryService := alert.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
-	namespaceService, err := namespace.NewService(repositories.NamespaceRepository, c.EncryptionKey)
+
+	encryptionTransformer, err := namespace.NewTransformer(c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create namespace transformer")
+	}
+	namespaceService, err := namespace.NewService(repositories.NamespaceRepository, encryptionTransformer)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}

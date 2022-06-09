@@ -6,6 +6,7 @@ import (
 
 	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	"github.com/pkg/errors"
@@ -16,6 +17,36 @@ import (
 const (
 	namePrefix = "siren_api"
 )
+
+//go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
+type NamespaceService interface { //TODO to be refactored, for temporary only
+	ListNamespaces() ([]*namespace.Namespace, error)
+	CreateNamespace(*namespace.Namespace) error
+	GetNamespace(uint64) (*namespace.Namespace, error)
+	UpdateNamespace(*namespace.Namespace) error
+	DeleteNamespace(uint64) error
+	Migrate() error
+}
+
+//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
+type ProviderService interface { //TODO to be refactored, for temporary only
+	ListProviders(map[string]interface{}) ([]*domain.Provider, error)
+	CreateProvider(*domain.Provider) (*domain.Provider, error)
+	GetProvider(uint64) (*domain.Provider, error)
+	UpdateProvider(*domain.Provider) (*domain.Provider, error)
+	DeleteProvider(uint64) error
+	Migrate() error
+}
+
+//go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
+type TemplatesService interface {
+	Upsert(*domain.Template) error
+	Index(string) ([]domain.Template, error)
+	GetByName(string) (*domain.Template, error)
+	Delete(string) error
+	Render(string, map[string]string) (string, error)
+	Migrate() error
+}
 
 type variable struct {
 	Name        string `json:"name"`
@@ -41,16 +72,16 @@ type cortexCaller interface {
 type Service struct {
 	repository       store.RuleRepository
 	templateService  domain.TemplatesService
-	namespaceService domain.NamespaceService
-	providerService  domain.ProviderService
+	namespaceService NamespaceService
+	providerService  ProviderService
 }
 
 // NewService returns repository struct
 func NewService(
 	repository store.RuleRepository,
 	templateService domain.TemplatesService,
-	namespaceService domain.NamespaceService,
-	providerService domain.ProviderService,
+	namespaceService NamespaceService,
+	providerService ProviderService,
 ) *Service {
 	return &Service{
 		repository:       repository,

@@ -7,11 +7,10 @@ import (
 	"io"
 
 	"github.com/gtank/cryptopasta"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
 	"github.com/pkg/errors"
 )
 
+//go:generate mockery --name=EncryptorDecryptor -r --case underscore --with-expecter --structname EncryptorDecryptor --filename encryptor_decryptor.go --output=./mocks
 type EncryptorDecryptor interface {
 	Encrypt(string) (string, error)
 	Decrypt(string) (string, error)
@@ -58,27 +57,22 @@ func (t *Transformer) Decrypt(s string) (string, error) {
 
 // Service handles business logic
 type Service struct {
-	repository  store.NamespaceRepository
+	repository  Repository
 	transformer EncryptorDecryptor
 }
 
 // NewService returns service struct
-func NewService(repository store.NamespaceRepository, encryptionKey string) (domain.NamespaceService, error) {
-	transformer, err := NewTransformer(encryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create transformer")
-	}
-
+func NewService(repository Repository, transformer EncryptorDecryptor) (*Service, error) {
 	return &Service{repository, transformer}, nil
 }
 
-func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
+func (s Service) ListNamespaces() ([]*Namespace, error) {
 	encrytpedNamespaces, err := s.repository.List()
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
 	}
 
-	namespaces := make([]*domain.Namespace, 0, len(encrytpedNamespaces))
+	namespaces := make([]*Namespace, 0, len(encrytpedNamespaces))
 	for _, en := range encrytpedNamespaces {
 		ns, err := s.decrypt(en)
 		if err != nil {
@@ -89,7 +83,7 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 	return namespaces, nil
 }
 
-func (s Service) CreateNamespace(namespace *domain.Namespace) error {
+func (s Service) CreateNamespace(namespace *Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return err
@@ -105,7 +99,7 @@ func (s Service) CreateNamespace(namespace *domain.Namespace) error {
 	return nil
 }
 
-func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
+func (s Service) GetNamespace(id uint64) (*Namespace, error) {
 	encryptedNamespace, err := s.repository.Get(id)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Get")
@@ -117,7 +111,7 @@ func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s Service) UpdateNamespace(namespace *domain.Namespace) error {
+func (s Service) UpdateNamespace(namespace *Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return err
@@ -140,7 +134,7 @@ func (s Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-func (s Service) encrypt(ns *domain.Namespace) (*domain.EncryptedNamespace, error) {
+func (s Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 	plainTextCredentials, err := json.Marshal(ns.Credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "json.Marshal")
@@ -150,13 +144,13 @@ func (s Service) encrypt(ns *domain.Namespace) (*domain.EncryptedNamespace, erro
 		return nil, errors.Wrap(err, "s.transformer.Encrypt")
 	}
 
-	return &domain.EncryptedNamespace{
+	return &EncryptedNamespace{
 		Namespace:   ns,
 		Credentials: encryptedCredentials,
 	}, nil
 }
 
-func (s Service) decrypt(ens *domain.EncryptedNamespace) (*domain.Namespace, error) {
+func (s Service) decrypt(ens *EncryptedNamespace) (*Namespace, error) {
 	decryptedCredentialsStr, err := s.transformer.Decrypt(ens.Credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.transformer.Decrypt")

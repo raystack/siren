@@ -4,19 +4,11 @@ import (
 	"context"
 
 	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
-
-type NamespaceRepository interface {
-	Migrate() error
-	List() ([]*domain.EncryptedNamespace, error)
-	Create(*domain.EncryptedNamespace) error
-	Get(uint64) (*domain.EncryptedNamespace, error)
-	Update(*domain.EncryptedNamespace) error
-	Delete(uint64) error
-}
 
 type ProviderRepository interface {
 	Migrate() error
@@ -70,7 +62,7 @@ type Transactor interface {
 
 type RepositoryContainer struct {
 	ProviderRepository     ProviderRepository
-	NamespaceRepository    NamespaceRepository
+	NamespaceRepository    namespace.Repository
 	TemplatesRepository    TemplatesRepository
 	ReceiverRepository     ReceiverRepository
 	SubscriptionRepository SubscriptionRepository
