@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"net/http"
 
+	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
@@ -10,7 +11,6 @@ import (
 	"github.com/odpf/siren/internal/store"
 	"github.com/odpf/siren/plugins/receivers/slack"
 
-	"github.com/odpf/siren/core/alerts"
 	"github.com/odpf/siren/core/rules"
 	"github.com/odpf/siren/core/templates"
 	"github.com/odpf/siren/domain"
@@ -21,7 +21,7 @@ import (
 type Container struct {
 	TemplatesService    domain.TemplatesService
 	RulesService        domain.RuleService
-	AlertService        domain.AlertService
+	AlertService        AlertService
 	NotifierServices    domain.NotifierServices
 	ProviderService     domain.ProviderService
 	NamespaceService    domain.NamespaceService
@@ -31,7 +31,7 @@ type Container struct {
 
 func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
 	templatesService := templates.NewService(repositories.TemplatesRepository)
-	alertHistoryService := alerts.NewService(repositories.AlertRepository)
+	alertHistoryService := alert.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
 	namespaceService, err := namespace.NewService(repositories.NamespaceRepository, c.EncryptionKey)

@@ -1,8 +1,9 @@
 package model
 
 import (
-	"github.com/odpf/siren/domain"
 	"time"
+
+	"github.com/odpf/siren/core/alert"
 )
 
 type Alert struct {
@@ -19,7 +20,7 @@ type Alert struct {
 	UpdatedAt    time.Time
 }
 
-func (a *Alert) FromDomain(alert *domain.Alert) {
+func (a *Alert) FromDomain(alert *alert.Alert) {
 	a.Id = alert.Id
 	a.ProviderId = alert.ProviderId
 	a.ResourceName = alert.ResourceName
@@ -32,8 +33,8 @@ func (a *Alert) FromDomain(alert *domain.Alert) {
 	a.UpdatedAt = alert.UpdatedAt
 }
 
-func (a *Alert) ToDomain() domain.Alert {
-	return domain.Alert{
+func (a *Alert) ToDomain() alert.Alert {
+	return alert.Alert{
 		Id:           a.Id,
 		ProviderId:   a.ProviderId,
 		ResourceName: a.ResourceName,

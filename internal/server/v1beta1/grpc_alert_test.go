@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -18,7 +18,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 	t.Run("should return alert history objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		timenow := time.Now()
-		dummyAlerts := []domain.Alert{{
+		dummyAlerts := []alert.Alert{{
 			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
 			TriggeredAt: timenow,
 		}}
@@ -73,8 +73,8 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 
 func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	timenow := timestamppb.New(time.Now())
-	payload := &domain.Alerts{
-		Alerts: []domain.Alert{
+	payload := &alert.Alerts{
+		Alerts: []alert.Alert{
 			{
 				ProviderId:   1,
 				ResourceName: "foo",
@@ -107,7 +107,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should create alerts objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyAlerts := []domain.Alert{{
+		dummyAlerts := []alert.Alert{{
 			Id:           1,
 			ProviderId:   1,
 			ResourceName: "foo",
@@ -155,8 +155,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		payload := &domain.Alerts{
-			Alerts: []domain.Alert{
+		payload := &alert.Alerts{
+			Alerts: []alert.Alert{
 				{
 					ProviderId:   1,
 					ResourceName: "foo",
@@ -168,7 +168,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		dummyAlerts := []domain.Alert{{
+		dummyAlerts := []alert.Alert{{
 			Id:           1,
 			ProviderId:   1,
 			ResourceName: "foo",
@@ -246,7 +246,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		dummyAlerts := []domain.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ProviderId:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",

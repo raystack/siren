@@ -1,19 +1,16 @@
-package alerts
+package alert
 
 import (
 	"time"
-
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
 )
 
 // Service handles business logic
 type Service struct {
-	repository store.AlertRepository
+	repository Repository
 }
 
 // NewService returns repository struct
-func NewService(repository store.AlertRepository) domain.AlertService {
+func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
@@ -21,8 +18,8 @@ func (service Service) Migrate() error {
 	return service.repository.Migrate()
 }
 
-func (service Service) Create(alerts *domain.Alerts) ([]domain.Alert, error) {
-	result := make([]domain.Alert, 0, len(alerts.Alerts))
+func (service Service) Create(alerts *Alerts) ([]Alert, error) {
+	result := make([]Alert, 0, len(alerts.Alerts))
 
 	for i := 0; i < len(alerts.Alerts); i++ {
 		err := service.repository.Create(&alerts.Alerts[i])
@@ -34,7 +31,7 @@ func (service Service) Create(alerts *domain.Alerts) ([]domain.Alert, error) {
 	return result, nil
 }
 
-func (service Service) Get(resourceName string, providerId, startTime, endTime uint64) ([]domain.Alert, error) {
+func (service Service) Get(resourceName string, providerId, startTime, endTime uint64) ([]Alert, error) {
 	if endTime == 0 {
 		endTime = uint64(time.Now().Unix())
 	}

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 
+	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
@@ -54,12 +55,6 @@ type SubscriptionRepository interface {
 	Delete(context.Context, uint64) error
 }
 
-type AlertRepository interface {
-	Create(*domain.Alert) error
-	Get(string, uint64, uint64, uint64) ([]domain.Alert, error)
-	Migrate() error
-}
-
 type RuleRepository interface {
 	Transactor
 	Upsert(context.Context, *domain.Rule) error
@@ -79,7 +74,7 @@ type RepositoryContainer struct {
 	TemplatesRepository    TemplatesRepository
 	ReceiverRepository     ReceiverRepository
 	SubscriptionRepository SubscriptionRepository
-	AlertRepository        AlertRepository
+	AlertRepository        alert.Repository
 	RuleRepository         RuleRepository
 }
 
