@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/gtank/cryptopasta"
-	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/plugins/receivers/http"
 	"github.com/pkg/errors"
 )
@@ -15,22 +14,28 @@ var cryptopastaEncryptor = cryptopasta.Encrypt
 var cryptopastaDecryptor = cryptopasta.Decrypt
 
 type Transformer interface {
-	PreTransform(*domain.Receiver) error
-	PostTransform(*domain.Receiver) error
+	PreTransform(*Receiver) error
+	PostTransform(*Receiver) error
 }
 
+//go:generate mockery --name=SlackHelper -r --case underscore --with-expecter --structname SlackHelper --filename slack_helper.go --output=./mocks
 type SlackHelper interface {
 	Transformer
 	Encrypt(string) (string, error)
 	Decrypt(string) (string, error)
 }
 
+//go:generate mockery --name=Exchanger -r --case underscore --with-expecter --structname Exchanger --filename exchanger.go --output=./mocks
+type Exchanger interface {
+	Exchange(string, string, string) (http.CodeExchangeHTTPResponse, error)
+}
+
 type slackHelper struct {
-	exchanger     http.Exchanger
+	exchanger     Exchanger
 	encryptionKey *[32]byte
 }
 
-func NewSlackHelper(httpClient http.Doer, encryptionKey string) (*slackHelper, error) {
+func NewSlackHelper(exchanger Exchanger, encryptionKey string) (*slackHelper, error) {
 	secretKey := &[32]byte{}
 	if len(encryptionKey) < 32 {
 		return nil, errors.New("random hash should be 32 chars in length")
@@ -41,12 +46,12 @@ func NewSlackHelper(httpClient http.Doer, encryptionKey string) (*slackHelper, e
 	}
 
 	return &slackHelper{
-		exchanger:     http.NewSlackClient(httpClient),
+		exchanger:     exchanger,
 		encryptionKey: secretKey,
 	}, nil
 }
 
-func (sh *slackHelper) PreTransform(payload *domain.Receiver) error {
+func (sh *slackHelper) PreTransform(payload *Receiver) error {
 	configurations := payload.Configurations
 	clientId := configurations["client_id"].(string)
 	clientSecret := configurations["client_secret"].(string)
@@ -70,7 +75,7 @@ func (sh *slackHelper) PreTransform(payload *domain.Receiver) error {
 	return nil
 }
 
-func (sh *slackHelper) PostTransform(r *domain.Receiver) error {
+func (sh *slackHelper) PostTransform(r *Receiver) error {
 	encryptedToken := r.Configurations["token"].(string)
 	token, err := sh.Decrypt(encryptedToken)
 	if err != nil {

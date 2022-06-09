@@ -1,14 +1,15 @@
 package slack
 
+//TODO refactor this, code is not testable
 import (
 	"fmt"
 
-	"github.com/odpf/siren/domain"
 	"github.com/pkg/errors"
 	goslack "github.com/slack-go/slack"
 )
 
-type slackCaller interface {
+//go:generate mockery --name=SlackCaller -r --case underscore --with-expecter --structname SlackCaller --filename slack_caller.go --output=./mocks
+type SlackCaller interface {
 	SendMessage(string, ...goslack.MsgOption) (string, string, string, error)
 	GetUserByEmail(string) (*goslack.User, error)
 	GetConversationsForUser(params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
@@ -39,11 +40,10 @@ func (s *service) GetWorkspaceChannels(token string) ([]Channel, error) {
 	return result, nil
 }
 
-func (s *service) Notify(message *domain.SlackMessage) (*domain.SlackMessageSendResponse, error) {
+func (s *service) Notify(message *SlackMessage) (*SlackMessageSendResponse, error) {
 	payload := new(SlackMessage)
-	payload.fromDomain(message)
 
-	res := &domain.SlackMessageSendResponse{
+	res := &SlackMessageSendResponse{
 		OK: false,
 	}
 
@@ -95,7 +95,7 @@ func (s *service) notifyWithClient(message *SlackMessage, token string) error {
 	return nil
 }
 
-func getJoinedChannelsList(client slackCaller) ([]goslack.Channel, error) {
+func getJoinedChannelsList(client SlackCaller) ([]goslack.Channel, error) {
 	channelList := make([]goslack.Channel, 0)
 	curr := ""
 	for {
@@ -124,6 +124,6 @@ func searchChannelId(channels []goslack.Channel, channelName string) string {
 	return ""
 }
 
-func newSlackClient(token string) slackCaller {
+func newSlackClient(token string) SlackCaller {
 	return goslack.New(token)
 }

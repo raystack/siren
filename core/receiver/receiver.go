@@ -1,8 +1,18 @@
-package domain
+package receiver
 
 import (
 	"time"
 )
+
+//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ReceiverRepository --filename receiver_repository.go --output=./mocks
+type Repository interface {
+	Migrate() error
+	List() ([]*Receiver, error)
+	Create(*Receiver) error
+	Get(uint64) (*Receiver, error)
+	Update(*Receiver) error
+	Delete(uint64) error
+}
 
 type Receiver struct {
 	Id             uint64                 `json:"id"`
@@ -13,13 +23,4 @@ type Receiver struct {
 	Data           map[string]interface{} `json:"data"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
-}
-
-type ReceiverService interface {
-	ListReceivers() ([]*Receiver, error)
-	CreateReceiver(*Receiver) error
-	GetReceiver(uint64) (*Receiver, error)
-	UpdateReceiver(*Receiver) error
-	DeleteReceiver(uint64) error
-	Migrate() error
 }

@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/odpf/siren/utils"
-	"github.com/slack-go/slack"
+	goslack "github.com/slack-go/slack"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,6 +21,25 @@ const (
 	Pagerduty string = "pagerduty"
 	Http      string = "http"
 )
+
+//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
+type ReceiverService interface {
+	ListReceivers() ([]*receiver.Receiver, error)
+	CreateReceiver(*receiver.Receiver) error
+	GetReceiver(uint64) (*receiver.Receiver, error)
+	UpdateReceiver(*receiver.Receiver) error
+	DeleteReceiver(uint64) error
+	Migrate() error
+}
+
+type NotifierServices struct { //TODO to be refactored, temporary only
+	Slack SlackNotifierService
+}
+
+//go:generate mockery --name=SlackNotifierService -r --case underscore --with-expecter --structname SlackNotifierService --filename slack_notifier_service.go --output=./mocks
+type SlackNotifierService interface { //TODO to be refactored, temporary only
+	Notify(*slack.SlackMessage) (*slack.SlackMessageSendResponse, error)
+}
 
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.container.ReceiverService.ListReceivers()
@@ -73,7 +93,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver := &domain.Receiver{
+	receiver := &receiver.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
@@ -153,7 +173,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver := &domain.Receiver{
+	receiver := &receiver.Receiver{
 		Id:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
@@ -191,12 +211,12 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteR
 
 func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1beta1.SendReceiverNotificationRequest) (*sirenv1beta1.SendReceiverNotificationResponse, error) {
 	var res *sirenv1beta1.SendReceiverNotificationResponse
-	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	rcv, err := s.container.ReceiverService.GetReceiver(req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	switch receiver.Type {
+	switch rcv.Type {
 	case Slack:
 		slackPayload := req.GetSlack()
 
@@ -206,17 +226,17 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
 		}
 
-		blocks := slack.Blocks{}
+		blocks := goslack.Blocks{}
 		err = json.Unmarshal(b, &blocks)
 		if err != nil {
 			s.logger.Error("failed to parse blocks", "error", err)
 			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
 		}
 
-		payload := &domain.SlackMessage{
+		payload := &slack.SlackMessage{
 			ReceiverName: slackPayload.GetReceiverName(),
 			ReceiverType: slackPayload.GetReceiverType(),
-			Token:        receiver.Configurations["token"].(string),
+			Token:        rcv.Configurations["token"].(string),
 			Message:      slackPayload.GetMessage(),
 			Blocks:       blocks,
 		}

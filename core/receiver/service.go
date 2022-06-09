@@ -3,9 +3,6 @@ package receiver
 import (
 	"encoding/json"
 
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-	"github.com/odpf/siren/plugins/receivers/http"
 	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/pkg/errors"
 )
@@ -18,38 +15,34 @@ var (
 	jsonMarshal = json.Marshal
 )
 
-type slackService interface {
+//go:generate mockery --name=SlackService -r --case underscore --with-expecter --structname SlackService --filename slack_service.go --output=./mocks
+type SlackService interface {
 	GetWorkspaceChannels(string) ([]slack.Channel, error)
 }
 
 // Service handles business logic
 type Service struct {
-	repository   store.ReceiverRepository
-	slackService slackService
+	repository   Repository
+	slackService SlackService
 	slackHelper  SlackHelper
 }
 
 // NewService returns service struct
-func NewService(repository store.ReceiverRepository, httpClient http.Doer, encryptionKey string) (domain.ReceiverService, error) {
-	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create slack helper")
-	}
-
+func NewService(repository Repository, slackHelper SlackHelper, slackService SlackService) (*Service, error) {
 	return &Service{
 		repository:   repository,
 		slackHelper:  slackHelper,
-		slackService: slack.NewService(),
+		slackService: slackService,
 	}, nil
 }
 
-func (service Service) ListReceivers() ([]*domain.Receiver, error) {
+func (service Service) ListReceivers() ([]*Receiver, error) {
 	receivers, err := service.repository.List()
 	if err != nil {
 		return nil, errors.Wrap(err, "service.repository.List")
 	}
 
-	domainReceivers := make([]*domain.Receiver, 0, len(receivers))
+	domainReceivers := make([]*Receiver, 0, len(receivers))
 	for i := 0; i < len(receivers); i++ {
 		receiver := receivers[i]
 
@@ -66,7 +59,7 @@ func (service Service) ListReceivers() ([]*domain.Receiver, error) {
 
 }
 
-func (service Service) CreateReceiver(receiver *domain.Receiver) error {
+func (service Service) CreateReceiver(receiver *Receiver) error {
 	if receiver.Type == Slack {
 		if err := service.slackHelper.PreTransform(receiver); err != nil {
 			return errors.Wrap(err, "slackHelper.PreTransform")
@@ -86,7 +79,7 @@ func (service Service) CreateReceiver(receiver *domain.Receiver) error {
 	return nil
 }
 
-func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
+func (service Service) GetReceiver(id uint64) (*Receiver, error) {
 	receiver, err := service.repository.Get(id)
 	if err != nil {
 		return nil, err
@@ -115,7 +108,7 @@ func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
 	return receiver, nil
 }
 
-func (service Service) UpdateReceiver(receiver *domain.Receiver) error {
+func (service Service) UpdateReceiver(receiver *Receiver) error {
 	if receiver.Type == Slack {
 		if err := service.slackHelper.PreTransform(receiver); err != nil {
 			return errors.Wrap(err, "slackHelper.PreTransform")

@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/receiver"
 )
 
 type Receiver struct {
@@ -17,32 +17,32 @@ type Receiver struct {
 	UpdatedAt      time.Time
 }
 
-func (receiver *Receiver) FromDomain(t *domain.Receiver) {
+func (rcv *Receiver) FromDomain(t *receiver.Receiver) {
 	if t == nil {
 		return
 	}
-	receiver.Id = t.Id
-	receiver.Name = t.Name
-	receiver.Type = t.Type
-	receiver.Labels = t.Labels
-	receiver.Configurations = t.Configurations
-	receiver.Data = t.Data
-	receiver.CreatedAt = t.CreatedAt
-	receiver.UpdatedAt = t.UpdatedAt
+	rcv.Id = t.Id
+	rcv.Name = t.Name
+	rcv.Type = t.Type
+	rcv.Labels = t.Labels
+	rcv.Configurations = t.Configurations
+	rcv.Data = t.Data
+	rcv.CreatedAt = t.CreatedAt
+	rcv.UpdatedAt = t.UpdatedAt
 }
 
-func (receiver *Receiver) ToDomain() *domain.Receiver {
-	if receiver == nil {
+func (rcv *Receiver) ToDomain() *receiver.Receiver {
+	if rcv == nil {
 		return nil
 	}
-	return &domain.Receiver{
-		Id:             receiver.Id,
-		Name:           receiver.Name,
-		Type:           receiver.Type,
-		Labels:         receiver.Labels,
-		Configurations: receiver.Configurations,
-		Data:           receiver.Data,
-		CreatedAt:      receiver.CreatedAt,
-		UpdatedAt:      receiver.UpdatedAt,
+	return &receiver.Receiver{
+		Id:             rcv.Id,
+		Name:           rcv.Name,
+		Type:           rcv.Type,
+		Labels:         rcv.Labels,
+		Configurations: rcv.Configurations,
+		Data:           rcv.Data,
+		CreatedAt:      rcv.CreatedAt,
+		UpdatedAt:      rcv.UpdatedAt,
 	}
 }

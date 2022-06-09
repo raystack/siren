@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
-	"github.com/slack-go/slack"
+	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/plugins/receivers/slack"
+	goslack "github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -23,7 +24,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
-	dummyResult := []*domain.Receiver{
+	dummyResult := []*receiver.Receiver{
 		{
 			Id:             1,
 			Name:           "foo",
@@ -83,7 +84,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
-		dummyResult := []*domain.Receiver{
+		dummyResult := []*receiver.Receiver{
 			{
 				Id:             1,
 				Name:           "foo",
@@ -120,7 +121,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		Labels:         labels,
 		Configurations: configurationsData,
 	}
-	payload := &domain.Receiver{
+	payload := &receiver.Receiver{
 		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
@@ -157,7 +158,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		configurations := make(map[string]interface{})
 		configurations["service_key"] = "foo"
-		payload := &domain.Receiver{
+		payload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "pagerduty",
 			Labels:         labels,
@@ -194,7 +195,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 		configurations := make(map[string]interface{})
 		configurations["url"] = "foo"
-		payload := &domain.Receiver{
+		payload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "http",
 			Labels:         labels,
@@ -394,7 +395,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		}
 
 		configurations["workspace"] = string([]byte{0xff})
-		newPayload := &domain.Receiver{
+		newPayload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "slack",
 			Labels:         labels,
@@ -404,7 +405,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 		mockedReceiverService.
 			On("CreateReceiver", mock.Anything).
 			Run(func(args mock.Arguments) {
-				r := args.Get(0).(*domain.Receiver)
+				r := args.Get(0).(*receiver.Receiver)
 				*r = *newPayload
 			}).Return(nil)
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -424,7 +425,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	dummyReq := &sirenv1beta1.GetReceiverRequest{
 		Id: 1,
 	}
-	payload := &domain.Receiver{
+	payload := &receiver.Receiver{
 		Name:           "foo",
 		Type:           "bar",
 		Labels:         labels,
@@ -495,7 +496,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		}
 
 		configurations["foo"] = string([]byte{0xff})
-		payload := &domain.Receiver{
+		payload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -521,7 +522,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 		}
 		data := make(map[string]interface{})
 		data["channels"] = string([]byte{0xff})
-		payload := &domain.Receiver{
+		payload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -555,7 +556,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		Labels:         labels,
 		Configurations: configurationsData,
 	}
-	payload := &domain.Receiver{
+	payload := &receiver.Receiver{
 		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
@@ -760,7 +761,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			logger: log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
-		newPayload := &domain.Receiver{
+		newPayload := &receiver.Receiver{
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -770,7 +771,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		mockedReceiverService.
 			On("UpdateReceiver", mock.Anything).
 			Run(func(args mock.Arguments) {
-				r := args.Get(0).(*domain.Receiver)
+				r := args.Get(0).(*receiver.Receiver)
 				*r = *newPayload
 			}).
 			Return(nil)
@@ -828,7 +829,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
-	receiverResult := &domain.Receiver{
+	receiverResult := &receiver.Receiver{
 		Id:             1,
 		Name:           "foo",
 		Type:           "slack",
@@ -840,16 +841,16 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &domain.SlackMessage{
+		dummyPayload := &slack.SlackMessage{
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Token:        "foo",
 			Message:      "bar",
-			Blocks: slack.Blocks{
-				BlockSet: []slack.Block{
-					&slack.SectionBlock{
-						Type: slack.MBTSection,
-						Text: &slack.TextBlockObject{
+			Blocks: goslack.Blocks{
+				BlockSet: []goslack.Block{
+					&goslack.SectionBlock{
+						Type: goslack.MBTSection,
+						Text: &goslack.TextBlockObject{
 							Type: "mrkdwn",
 							Text: "Hello",
 						},
@@ -857,14 +858,14 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 				},
 			},
 		}
-		dummyResult := &domain.SlackMessageSendResponse{
+		dummyResult := &slack.SlackMessageSendResponse{
 			OK: true,
 		}
 
 		dummyGRPCServer := GRPCServer{
 			container: &Container{
 				ReceiverService: mockedReceiverService,
-				NotifierServices: domain.NotifierServices{
+				NotifierServices: NotifierServices{
 					Slack: mockedSlackNotifierService,
 				},
 			},
@@ -923,21 +924,21 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &domain.SlackMessage{
+		dummyPayload := &slack.SlackMessage{
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Token:        "foo",
 			Message:      "bar",
-			Blocks:       slack.Blocks{},
+			Blocks:       goslack.Blocks{},
 		}
-		dummyResult := &domain.SlackMessageSendResponse{
+		dummyResult := &slack.SlackMessageSendResponse{
 			OK: true,
 		}
 
 		dummyGRPCServer := GRPCServer{
 			container: &Container{
 				ReceiverService: mockedReceiverService,
-				NotifierServices: domain.NotifierServices{
+				NotifierServices: NotifierServices{
 					Slack: mockedSlackNotifierService,
 				},
 			},
@@ -971,7 +972,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		dummyGRPCServer := GRPCServer{
 			container: &Container{
 				ReceiverService: mockedReceiverService,
-				NotifierServices: domain.NotifierServices{
+				NotifierServices: NotifierServices{
 					Slack: mockedSlackNotifierService,
 				},
 			},
@@ -1032,14 +1033,14 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		dummyGRPCServer := GRPCServer{
 			container: &Container{
 				ReceiverService: mockedReceiverService,
-				NotifierServices: domain.NotifierServices{
+				NotifierServices: NotifierServices{
 					Slack: mockedSlackNotifierService,
 				},
 			},
 			logger: log.NewNoop(),
 		}
 
-		receiverResult := &domain.Receiver{
+		receiverResult := &receiver.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "random",

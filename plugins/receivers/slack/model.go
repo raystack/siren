@@ -1,22 +1,43 @@
 package slack
 
 import (
-	"github.com/odpf/siren/domain"
+	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
+	"gopkg.in/go-playground/validator.v9"
 )
 
-type SlackMessage struct {
-	ReceiverName string       `json:"receiver_name"`
-	ReceiverType string       `json:"receiver_type"`
-	Message      string       `json:"message"`
-	Blocks       slack.Blocks `json:"block"`
+// type SlackMessage struct {
+// 	ReceiverName string       `json:"receiver_name"`
+// 	ReceiverType string       `json:"receiver_type"`
+// 	Message      string       `json:"message"`
+// 	Blocks       slack.Blocks `json:"block"`
+// }
+
+// func (message *SlackMessage) fromDomain(m *receiver.SlackMessage) {
+// 	message.ReceiverType = m.ReceiverType
+// 	message.ReceiverName = m.ReceiverName
+// 	message.Message = m.Message
+// 	message.Blocks = m.Blocks
+// }
+
+type SlackMessageSendResponse struct {
+	OK bool `json:"ok"`
 }
 
-func (message *SlackMessage) fromDomain(m *domain.SlackMessage) {
-	message.ReceiverType = m.ReceiverType
-	message.ReceiverName = m.ReceiverName
-	message.Message = m.Message
-	message.Blocks = m.Blocks
+type SlackMessage struct {
+	ReceiverName string       `json:"receiver_name" validate:"required"`
+	ReceiverType string       `json:"receiver_type" validate:"required,oneof=user channel"`
+	Token        string       `json:"token" validate:"required"`
+	Message      string       `json:"message"`
+	Blocks       slack.Blocks `json:"blocks"`
+}
+
+func (sm *SlackMessage) Validate() error {
+	v := validator.New()
+	if sm.Message == "" && len(sm.Blocks.BlockSet) == 0 {
+		return errors.New("non empty message or non zero length block is required")
+	}
+	return v.Struct(sm)
 }
 
 type Channel struct {
@@ -26,5 +47,5 @@ type Channel struct {
 
 type SlackRepository interface {
 	GetWorkspaceChannels(string) ([]Channel, error)
-	Notify(*domain.SlackMessage) (*domain.SlackMessageSendResponse, error)
+	Notify(*SlackMessage) (*SlackMessageSendResponse, error)
 }

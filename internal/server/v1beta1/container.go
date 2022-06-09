@@ -7,13 +7,13 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/internal/store"
-	"github.com/odpf/siren/plugins/receivers/slack"
-
 	"github.com/odpf/siren/core/rules"
+	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/templates"
 	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/internal/store"
+	slackclient "github.com/odpf/siren/plugins/receivers/http"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -22,10 +22,10 @@ type Container struct {
 	TemplatesService    domain.TemplatesService
 	RulesService        domain.RuleService
 	AlertService        AlertService
-	NotifierServices    domain.NotifierServices
+	NotifierServices    NotifierServices
 	ProviderService     ProviderService
 	NamespaceService    NamespaceService
-	ReceiverService     domain.ReceiverService
+	ReceiverService     ReceiverService
 	SubscriptionService domain.SubscriptionService
 }
 
@@ -49,7 +49,12 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 		namespaceService,
 		providerService,
 	)
-	receiverService, err := receiver.NewService(repositories.ReceiverRepository, httpClient, c.EncryptionKey)
+	receiverExchange := slackclient.NewSlackClient(&http.Client{})
+	receiverSlackHelper, err := receiver.NewSlackHelper(receiverExchange, c.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create slack helper")
+	}
+	receiverService, err := receiver.NewService(repositories.ReceiverRepository, receiverSlackHelper, slack.NewService())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
@@ -63,7 +68,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 		TemplatesService: templatesService,
 		RulesService:     rulesService,
 		AlertService:     alertHistoryService,
-		NotifierServices: domain.NotifierServices{
+		NotifierServices: NotifierServices{
 			Slack: slack.NewService(),
 		},
 		ProviderService:     providerService,

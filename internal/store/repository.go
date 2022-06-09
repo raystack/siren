@@ -6,19 +6,11 @@ import (
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
-
-type ReceiverRepository interface {
-	Migrate() error
-	List() ([]*domain.Receiver, error)
-	Create(*domain.Receiver) error
-	Get(uint64) (*domain.Receiver, error)
-	Update(*domain.Receiver) error
-	Delete(uint64) error
-}
 
 type TemplatesRepository interface {
 	Upsert(*domain.Template) error
@@ -56,7 +48,7 @@ type RepositoryContainer struct {
 	ProviderRepository     provider.Repository
 	NamespaceRepository    namespace.Repository
 	TemplatesRepository    TemplatesRepository
-	ReceiverRepository     ReceiverRepository
+	ReceiverRepository     receiver.Repository
 	SubscriptionRepository SubscriptionRepository
 	AlertRepository        alert.Repository
 	RuleRepository         RuleRepository

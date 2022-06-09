@@ -3,6 +3,7 @@ package subscription
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 
 	"github.com/odpf/siren/core/namespace"
@@ -11,6 +12,8 @@ import (
 	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
+	slackclient "github.com/odpf/siren/plugins/receivers/http"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/pkg/errors"
 )
 
@@ -26,10 +29,10 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface { //TODO to be refactored, for temporary only
-	CreateReceiver(*domain.Receiver) error
-	GetReceiver(uint64) (*domain.Receiver, error)
-	UpdateReceiver(*domain.Receiver) error
-	ListReceivers() ([]*domain.Receiver, error)
+	CreateReceiver(*receiver.Receiver) error
+	GetReceiver(uint64) (*receiver.Receiver, error)
+	UpdateReceiver(*receiver.Receiver) error
+	ListReceivers() ([]*receiver.Receiver, error)
 	DeleteReceiver(uint64) error
 	Migrate() error
 }
@@ -55,7 +58,7 @@ type Service struct {
 
 // NewService returns service struct
 func NewService(repository store.SubscriptionRepository, providerRepository provider.Repository, namespaceRepository namespace.Repository,
-	receiverRepository store.ReceiverRepository, key string) (domain.SubscriptionService, error) {
+	receiverRepository receiver.Repository, key string) (domain.SubscriptionService, error) {
 	encryptionTransformer, err := namespace.NewTransformer(key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace transformer")
@@ -64,7 +67,13 @@ func NewService(repository store.SubscriptionRepository, providerRepository prov
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}
-	receiverService, err := receiver.NewService(receiverRepository, nil, key)
+
+	receiverExchange := slackclient.NewSlackClient(&http.Client{})
+	receiverSlackHelper, err := receiver.NewSlackHelper(receiverExchange, key)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create slack helper")
+	}
+	receiverService, err := receiver.NewService(receiverRepository, receiverSlackHelper, slack.NewService())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
@@ -240,7 +249,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription)
 	for _, item := range subscriptions {
 		enrichedReceivers := make([]EnrichedReceiverMetadata, 0)
 		for _, receiverItem := range item.Receivers {
-			var receiverInfo *domain.Receiver
+			var receiverInfo *receiver.Receiver
 			for idx := range allReceivers {
 				if allReceivers[idx].Id == receiverItem.Id {
 					receiverInfo = allReceivers[idx]
