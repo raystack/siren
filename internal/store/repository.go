@@ -7,19 +7,11 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
-
-type TemplatesRepository interface {
-	Upsert(*domain.Template) error
-	Index(string) ([]domain.Template, error)
-	GetByName(string) (*domain.Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
-	Migrate() error
-}
 
 type SubscriptionRepository interface {
 	Transactor
@@ -47,7 +39,7 @@ type Transactor interface {
 type RepositoryContainer struct {
 	ProviderRepository     provider.Repository
 	NamespaceRepository    namespace.Repository
-	TemplatesRepository    TemplatesRepository
+	TemplatesRepository    template.Repository
 	ReceiverRepository     receiver.Repository
 	SubscriptionRepository SubscriptionRepository
 	AlertRepository        alert.Repository

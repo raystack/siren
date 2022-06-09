@@ -8,6 +8,7 @@ import (
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	"github.com/pkg/errors"
@@ -41,9 +42,9 @@ type ProviderService interface { //TODO to be refactored, for temporary only
 
 //go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
 type TemplatesService interface {
-	Upsert(*domain.Template) error
-	Index(string) ([]domain.Template, error)
-	GetByName(string) (*domain.Template, error)
+	Upsert(*template.Template) error
+	Index(string) ([]template.Template, error)
+	GetByName(string) (*template.Template, error)
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
 	Migrate() error
@@ -72,7 +73,7 @@ type cortexCaller interface {
 // Service handles business logic
 type Service struct {
 	repository       store.RuleRepository
-	templateService  domain.TemplatesService
+	templateService  TemplatesService
 	namespaceService NamespaceService
 	providerService  ProviderService
 }
@@ -80,7 +81,7 @@ type Service struct {
 // NewService returns repository struct
 func NewService(
 	repository store.RuleRepository,
-	templateService domain.TemplatesService,
+	templateService TemplatesService,
 	namespaceService NamespaceService,
 	providerService ProviderService,
 ) *Service {
@@ -223,7 +224,7 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *domain.Rule, rule
 	return nil
 }
 
-func mergeRuleVariablesWithDefaults(templateVariables []domain.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {
+func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleVariables []domain.RuleVariable) []domain.RuleVariable {
 	var finalRuleVariables []domain.RuleVariable
 	for j := 0; j < len(templateVariables); j++ {
 		variableExist := false

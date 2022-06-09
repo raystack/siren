@@ -1,17 +1,12 @@
-package templates
-
-import (
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-)
+package template
 
 // Service handles business logic
 type Service struct {
-	repository store.TemplatesRepository
+	repository Repository
 }
 
 // NewService returns repository struct
-func NewService(repository store.TemplatesRepository) domain.TemplatesService {
+func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
@@ -19,15 +14,15 @@ func (service Service) Migrate() error {
 	return service.repository.Migrate()
 }
 
-func (service Service) Upsert(template *domain.Template) error {
+func (service Service) Upsert(template *Template) error {
 	return service.repository.Upsert(template)
 }
 
-func (service Service) Index(tag string) ([]domain.Template, error) {
+func (service Service) Index(tag string) ([]Template, error) {
 	return service.repository.Index(tag)
 }
 
-func (service Service) GetByName(name string) (*domain.Template, error) {
+func (service Service) GetByName(name string) (*Template, error) {
 	return service.repository.GetByName(name)
 }
 

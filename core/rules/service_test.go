@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/rules/mocks"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -15,14 +16,14 @@ import (
 )
 
 func TestService_Upsert(t *testing.T) {
-	dummyTemplate := &domain.Template{
+	dummyTemplate := &template.Template{
 		ID:        10,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Name:      "tmpl",
 		Body:      "-\n    alert: Test\n    expr: 'test-expr'\n    for: '[[.for]]'\n    labels: {severity: WARNING, team:  [[.team]] }\n    annotations: {description: 'test'}\n-\n",
 		Tags:      []string{"baz"},
-		Variables: []domain.Variable{
+		Variables: []template.Variable{
 			{
 				Name:        "for",
 				Default:     "10m",
@@ -213,7 +214,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{templateService: mockTemplateService, namespaceService: mockNamespaceService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, rule)
@@ -228,7 +229,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{templateService: mockTemplateService, namespaceService: mockNamespaceService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(nil, nil).Once()
 
 		err := dummyService.Upsert(ctx, rule)
@@ -244,7 +245,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(nil, errors.New("random error")).Once()
 
@@ -262,7 +263,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(nil, nil).Once()
 
@@ -281,7 +282,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -304,7 +305,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -327,7 +328,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -350,7 +351,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := Service{repository: repositoryMock, templateService: mockTemplateService, namespaceService: mockNamespaceService, providerService: mockProviderService}
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -379,7 +380,7 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -408,7 +409,7 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -438,7 +439,7 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -469,7 +470,7 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -501,7 +502,7 @@ func TestService_Upsert(t *testing.T) {
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
 		dummyRulesInGroup := []domain.Rule{*rule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -535,7 +536,7 @@ func TestService_Upsert(t *testing.T) {
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
 		dummyRulesInGroup := []domain.Rule{*rule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -571,7 +572,7 @@ func TestService_Upsert(t *testing.T) {
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '10m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
 		dummyRulesInGroup := []domain.Rule{*rule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -604,7 +605,7 @@ func TestService_Upsert(t *testing.T) {
 		}
 		defer func() { cortexClientInstance = oldCortexClientCreator }()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&domain.Template{}, nil).Once()
+		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
 		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()

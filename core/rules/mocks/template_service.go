@@ -3,8 +3,9 @@
 package mocks
 
 import (
-	domain "github.com/odpf/siren/domain"
 	mock "github.com/stretchr/testify/mock"
+
+	template "github.com/odpf/siren/core/template"
 
 	testing "testing"
 )
@@ -60,15 +61,15 @@ func (_c *TemplatesService_Delete_Call) Return(_a0 error) *TemplatesService_Dele
 }
 
 // GetByName provides a mock function with given fields: _a0
-func (_m *TemplatesService) GetByName(_a0 string) (*domain.Template, error) {
+func (_m *TemplatesService) GetByName(_a0 string) (*template.Template, error) {
 	ret := _m.Called(_a0)
 
-	var r0 *domain.Template
-	if rf, ok := ret.Get(0).(func(string) *domain.Template); ok {
+	var r0 *template.Template
+	if rf, ok := ret.Get(0).(func(string) *template.Template); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Template)
+			r0 = ret.Get(0).(*template.Template)
 		}
 	}
 
@@ -100,21 +101,21 @@ func (_c *TemplatesService_GetByName_Call) Run(run func(_a0 string)) *TemplatesS
 	return _c
 }
 
-func (_c *TemplatesService_GetByName_Call) Return(_a0 *domain.Template, _a1 error) *TemplatesService_GetByName_Call {
+func (_c *TemplatesService_GetByName_Call) Return(_a0 *template.Template, _a1 error) *TemplatesService_GetByName_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // Index provides a mock function with given fields: _a0
-func (_m *TemplatesService) Index(_a0 string) ([]domain.Template, error) {
+func (_m *TemplatesService) Index(_a0 string) ([]template.Template, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []domain.Template
-	if rf, ok := ret.Get(0).(func(string) []domain.Template); ok {
+	var r0 []template.Template
+	if rf, ok := ret.Get(0).(func(string) []template.Template); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.Template)
+			r0 = ret.Get(0).([]template.Template)
 		}
 	}
 
@@ -146,7 +147,7 @@ func (_c *TemplatesService_Index_Call) Run(run func(_a0 string)) *TemplatesServi
 	return _c
 }
 
-func (_c *TemplatesService_Index_Call) Return(_a0 []domain.Template, _a1 error) *TemplatesService_Index_Call {
+func (_c *TemplatesService_Index_Call) Return(_a0 []template.Template, _a1 error) *TemplatesService_Index_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
@@ -233,11 +234,11 @@ func (_c *TemplatesService_Render_Call) Return(_a0 string, _a1 error) *Templates
 }
 
 // Upsert provides a mock function with given fields: _a0
-func (_m *TemplatesService) Upsert(_a0 *domain.Template) error {
+func (_m *TemplatesService) Upsert(_a0 *template.Template) error {
 	ret := _m.Called(_a0)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*domain.Template) error); ok {
+	if rf, ok := ret.Get(0).(func(*template.Template) error); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
@@ -252,14 +253,14 @@ type TemplatesService_Upsert_Call struct {
 }
 
 // Upsert is a helper method to define mock.On call
-//  - _a0 *domain.Template
+//  - _a0 *template.Template
 func (_e *TemplatesService_Expecter) Upsert(_a0 interface{}) *TemplatesService_Upsert_Call {
 	return &TemplatesService_Upsert_Call{Call: _e.mock.On("Upsert", _a0)}
 }
 
-func (_c *TemplatesService_Upsert_Call) Run(run func(_a0 *domain.Template)) *TemplatesService_Upsert_Call {
+func (_c *TemplatesService_Upsert_Call) Run(run func(_a0 *template.Template)) *TemplatesService_Upsert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*domain.Template))
+		run(args[0].(*template.Template))
 	})
 	return _c
 }

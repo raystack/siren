@@ -9,7 +9,7 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rules"
 	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/templates"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	slackclient "github.com/odpf/siren/plugins/receivers/http"
@@ -19,7 +19,7 @@ import (
 )
 
 type Container struct {
-	TemplatesService    domain.TemplatesService
+	TemplateService     TemplateService
 	RulesService        domain.RuleService
 	AlertService        AlertService
 	NotifierServices    NotifierServices
@@ -30,7 +30,7 @@ type Container struct {
 }
 
 func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
-	templatesService := templates.NewService(repositories.TemplatesRepository)
+	templateService := template.NewService(repositories.TemplatesRepository)
 	alertHistoryService := alert.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
@@ -45,7 +45,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 	}
 	rulesService := rules.NewService(
 		repositories.RuleRepository,
-		templatesService,
+		templateService,
 		namespaceService,
 		providerService,
 	)
@@ -65,9 +65,9 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 	}
 
 	return &Container{
-		TemplatesService: templatesService,
-		RulesService:     rulesService,
-		AlertService:     alertHistoryService,
+		TemplateService: templateService,
+		RulesService:    rulesService,
+		AlertService:    alertHistoryService,
 		NotifierServices: NotifierServices{
 			Slack: slack.NewService(),
 		},
@@ -79,7 +79,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 }
 
 func (container *Container) MigrateAll(db *gorm.DB) error {
-	err := container.TemplatesService.Migrate()
+	err := container.TemplateService.Migrate()
 	if err != nil {
 		return err
 	}
