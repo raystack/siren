@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"net/http"
 
+	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
@@ -11,7 +12,6 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	slackclient "github.com/odpf/siren/plugins/receivers/http"
 	"github.com/odpf/siren/plugins/receivers/slack"
@@ -30,7 +30,7 @@ type Container struct {
 	SubscriptionService SubscriptionService
 }
 
-func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
+func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *config.Config, httpClient *http.Client) (*Container, error) {
 	templateService := template.NewService(repositories.TemplatesRepository)
 	alertHistoryService := alert.NewService(repositories.AlertRepository)
 
@@ -67,7 +67,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
 
-	amClient, err := alertmanager.NewClient(domain.CortexConfig{Address: c.Cortex.Address})
+	amClient, err := alertmanager.NewClient(config.CortexConfig{Address: c.Cortex.Address})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create alert manager client")
 	}

@@ -1,7 +1,7 @@
-package domain
+package alertmanager
 
 type SlackCredential struct {
-	Channel  string `json:"channel" validate:"required"`
+	Channel string `json:"channel" validate:"required"`
 }
 
 type SlackConfig struct {
@@ -14,9 +14,4 @@ type AlertCredential struct {
 	TeamName             string      `json:"team_name"`
 	PagerdutyCredentials string      `json:"pagerduty_credentials" validate:"required"`
 	SlackConfig          SlackConfig `json:"slack_config" validate:"required,dive,required"`
-}
-type AlertmanagerService interface {
-	Upsert(credential AlertCredential) error
-	Get(teamName string) (AlertCredential, error)
-	Migrate() error
 }

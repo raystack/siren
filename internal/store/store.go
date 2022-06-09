@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/config"
 	"gorm.io/gorm/logger"
 
 	"gorm.io/driver/postgres"
@@ -11,7 +11,7 @@ import (
 )
 
 // New returns the database instance
-func New(c *domain.DBConfig) (*gorm.DB, error) {
+func New(c *config.DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
 		c.Host,

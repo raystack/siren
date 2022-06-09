@@ -8,8 +8,8 @@ import (
 	_ "embed"
 
 	"github.com/grafana/cortex-tools/pkg/client"
-	"github.com/odpf/siren/domain"
-	"github.com/prometheus/alertmanager/config"
+	"github.com/odpf/siren/config"
+	promconfig "github.com/prometheus/alertmanager/config"
 )
 
 var (
@@ -35,11 +35,11 @@ type AlertmanagerClient struct {
 	helperTemplate string
 }
 
-func NewClient(c domain.CortexConfig) (*AlertmanagerClient, error) {
-	config := client.Config{
+func NewClient(c config.CortexConfig) (*AlertmanagerClient, error) {
+	cfg := client.Config{
 		Address: c.Address,
 	}
-	amClient, err := client.New(config)
+	amClient, err := client.New(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func generateAlertmanagerConfig(alertManagerConfig AMConfig) (string, error) {
 		return "", err
 	}
 	configStr := tpl.String()
-	_, err = config.Load(configStr)
+	_, err = promconfig.Load(configStr)
 	if err != nil {
 		return "", err
 	}

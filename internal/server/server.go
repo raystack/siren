@@ -20,6 +20,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/internal/server/v1beta1"
 	"github.com/odpf/siren/pkg/telemetry"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -27,7 +28,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
-	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
 	"golang.org/x/net/http2/h2c"
 )
@@ -58,7 +58,7 @@ func getZapLogLevelFromString(level string) zapcore.Level {
 }
 
 // RunServer runs the application server
-func RunServer(c *domain.Config) error {
+func RunServer(c *config.Config) error {
 	nr, err := telemetry.New(&c.NewRelic)
 	if err != nil {
 		return err
@@ -164,7 +164,7 @@ func RunServer(c *domain.Config) error {
 	return nil
 }
 
-func RunMigrations(c *domain.Config) error {
+func RunMigrations(c *config.Config) error {
 	gormDB, err := store.New(&c.DB)
 	if err != nil {
 		return err

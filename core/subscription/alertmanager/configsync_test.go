@@ -2,13 +2,14 @@ package alertmanager
 
 import (
 	"bytes"
-	"github.com/odpf/siren/domain"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"gopkg.in/yaml.v3"
+
+	"github.com/odpf/siren/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -117,7 +118,7 @@ type ConfigCompat struct {
 }
 
 func TestSyncConfig(t *testing.T) {
-	config := AMReceiverConfig{
+	amReceiverConfig := AMReceiverConfig{
 		Receiver: "config1",
 		Type:     "slack",
 		Match: map[string]string{
@@ -128,14 +129,14 @@ func TestSyncConfig(t *testing.T) {
 		},
 	}
 
-	receiverConfig := AMConfig{Receivers: []AMReceiverConfig{config}}
+	receiverConfig := AMConfig{Receivers: []AMReceiverConfig{amReceiverConfig}}
 
 	t.Run("should return error if alertmanager response code is non-2xx", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 		}))
 		defer ts.Close()
-		client, err := NewClient(domain.CortexConfig{
+		client, err := NewClient(config.CortexConfig{
 			Address: ts.URL,
 		})
 		if err != nil {
@@ -162,7 +163,7 @@ func TestSyncConfig(t *testing.T) {
 			assert.NotEmpty(t, helperTemplate)
 		}))
 		defer ts.Close()
-		client, err := NewClient(domain.CortexConfig{
+		client, err := NewClient(config.CortexConfig{
 			Address: ts.URL,
 		})
 		if err != nil {
