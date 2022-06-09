@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/pkg/errors"
 )
 
@@ -41,7 +41,7 @@ type EnrichedReceiverMetadataList []EnrichedReceiverMetadata
 
 type SubscriptionEnrichedWithReceivers struct {
 	Id          uint64
-	Namespace   *model.Namespace
+	Namespace   *namespace.Namespace
 	NamespaceId uint64
 	Urn         string
 	Receiver    EnrichedReceiverMetadataList

@@ -30,28 +30,24 @@ type AMConfig struct {
 	Receivers []AMReceiverConfig
 }
 
-type Client interface {
-	SyncConfig(AMConfig, string) error
-}
-
 type AlertmanagerClient struct {
 	CortexClient   client.CortexClient
 	helperTemplate string
 }
 
-func NewClient(c domain.CortexConfig) (Client, error) {
+func NewClient(c domain.CortexConfig) (*AlertmanagerClient, error) {
 	config := client.Config{
 		Address: c.Address,
 	}
 	amClient, err := client.New(config)
 	if err != nil {
-		return AlertmanagerClient{}, err
+		return nil, err
 	}
 
 	if err != nil {
-		return AlertmanagerClient{}, err
+		return nil, err
 	}
-	return AlertmanagerClient{
+	return &AlertmanagerClient{
 		CortexClient:   *amClient,
 		helperTemplate: helperTemplateString,
 	}, nil

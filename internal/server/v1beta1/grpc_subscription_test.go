@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -29,12 +29,12 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := []*domain.Subscription{
+		dummyResult := []*subscription.Subscription{
 			{
 				Id:        1,
 				Urn:       "foo",
 				Namespace: 1,
-				Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+				Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 				Match:     match,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -79,11 +79,11 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Subscription{
+		dummyResult := &subscription.Subscription{
 			Id:        1,
 			Urn:       "foo",
 			Namespace: 1,
-			Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -132,10 +132,10 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 	match := make(map[string]string)
 	match["foo"] = "baz"
 
-	payload := &domain.Subscription{
+	payload := &subscription.Subscription{
 		Namespace: 1,
 		Urn:       "foo",
-		Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 		Match:     match,
 	}
 
@@ -147,11 +147,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Subscription{
+		dummyResult := &subscription.Subscription{
 			Id:        1,
 			Urn:       "foo",
 			Namespace: 10,
-			Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -159,7 +159,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 		mockedSubscriptionService.On("CreateSubscription", context.Background(), payload).Return(nil).
 			Run(func(args mock.Arguments) {
-				s := args.Get(1).(*domain.Subscription)
+				s := args.Get(1).(*subscription.Subscription)
 				*s = *dummyResult
 			}).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
@@ -203,11 +203,11 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 	configuration["foo"] = "bar"
 	match := make(map[string]string)
 	match["foo"] = "baz"
-	payload := &domain.Subscription{
+	payload := &subscription.Subscription{
 		Id:        1,
 		Namespace: 10,
 		Urn:       "foo",
-		Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 		Match:     match,
 	}
 
@@ -219,11 +219,11 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			},
 			logger: log.NewNoop(),
 		}
-		dummyResult := &domain.Subscription{
+		dummyResult := &subscription.Subscription{
 			Id:        1,
 			Urn:       "foo",
 			Namespace: 10,
-			Receivers: []domain.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -231,7 +231,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(nil).
 			Run(func(args mock.Arguments) {
-				s := args.Get(1).(*domain.Subscription)
+				s := args.Get(1).(*subscription.Subscription)
 				*s = *dummyResult
 			}).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{

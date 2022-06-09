@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store"
@@ -26,7 +27,7 @@ type Container struct {
 	ProviderService     ProviderService
 	NamespaceService    NamespaceService
 	ReceiverService     ReceiverService
-	SubscriptionService domain.SubscriptionService
+	SubscriptionService SubscriptionService
 }
 
 func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *domain.Config, httpClient *http.Client) (*Container, error) {
@@ -65,11 +66,12 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *doma
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create receiver service")
 	}
-	subscriptionService, err := subscription.NewService(repositories.SubscriptionRepository, repositories.ProviderRepository,
-		repositories.NamespaceRepository, repositories.ReceiverRepository, c.EncryptionKey)
+
+	amClient, err := alertmanager.NewClient(domain.CortexConfig{Address: c.Cortex.Address})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create subscriptions service")
+		return nil, errors.Wrap(err, "failed to create alert manager client")
 	}
+	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, amClient)
 
 	return &Container{
 		TemplateService: templateService,

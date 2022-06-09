@@ -3,17 +3,12 @@ package subscription
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sort"
 
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/subscription/alertmanager"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-	slackclient "github.com/odpf/siren/plugins/receivers/http"
-	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/pkg/errors"
 )
 
@@ -47,41 +42,34 @@ type ProviderService interface { //TODO to be refactored, for temporary only
 	Migrate() error
 }
 
+//go:generate mockery --name=AMClient -r --case underscore --with-expecter --structname AMClient --filename am_client.go --output=./mocks
+type AMClient interface {
+	SyncConfig(alertmanager.AMConfig, string) error
+}
+
 // Service handles business logic
 type Service struct {
-	repository       store.SubscriptionRepository
+	repository       Repository
 	providerService  ProviderService
 	namespaceService NamespaceService
 	receiverService  ReceiverService
-	amClient         alertmanager.Client
+	amClient         AMClient
 }
 
 // NewService returns service struct
-func NewService(repository store.SubscriptionRepository, providerRepository provider.Repository, namespaceRepository namespace.Repository,
-	receiverRepository receiver.Repository, key string) (domain.SubscriptionService, error) {
-	encryptionTransformer, err := namespace.NewTransformer(key)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create namespace transformer")
-	}
-	namespaceService, err := namespace.NewService(namespaceRepository, encryptionTransformer)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create namespace service")
-	}
+func NewService(repository Repository, providerService ProviderService, namespaceService NamespaceService,
+	receiverService ReceiverService, amClient AMClient) *Service {
 
-	receiverExchange := slackclient.NewSlackClient(&http.Client{})
-	receiverSlackHelper, err := receiver.NewSlackHelper(receiverExchange, key)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create slack helper")
+	return &Service{
+		repository:       repository,
+		providerService:  providerService,
+		namespaceService: namespaceService,
+		receiverService:  receiverService,
+		amClient:         amClient,
 	}
-	receiverService, err := receiver.NewService(receiverRepository, receiverSlackHelper, slack.NewService())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create receiver service")
-	}
-	return &Service{repository, provider.NewService(providerRepository),
-		namespaceService, receiverService, nil}, nil
 }
 
-func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription, error) {
+func (s Service) ListSubscriptions(ctx context.Context) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
@@ -90,7 +78,7 @@ func (s Service) ListSubscriptions(ctx context.Context) ([]*domain.Subscription,
 	return subscriptions, nil
 }
 
-func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscription) error {
+func (s Service) CreateSubscription(ctx context.Context, sub *Subscription) error {
 	ctx = s.repository.WithTransaction(ctx)
 	sortReceivers(sub)
 	if err := s.repository.Create(ctx, sub); err != nil {
@@ -113,7 +101,7 @@ func (s Service) CreateSubscription(ctx context.Context, sub *domain.Subscriptio
 	return nil
 }
 
-func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscription, error) {
+func (s Service) GetSubscription(ctx context.Context, id uint64) (*Subscription, error) {
 	subscription, err := s.repository.Get(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.Get")
@@ -124,7 +112,7 @@ func (s Service) GetSubscription(ctx context.Context, id uint64) (*domain.Subscr
 	return subscription, nil
 }
 
-func (s Service) UpdateSubscription(ctx context.Context, sub *domain.Subscription) error {
+func (s Service) UpdateSubscription(ctx context.Context, sub *Subscription) error {
 	ctx = s.repository.WithTransaction(ctx)
 	sortReceivers(sub)
 	if err := s.repository.Update(ctx, sub); err != nil {
@@ -178,8 +166,6 @@ func (s Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-var alertmanagerClientCreator = alertmanager.NewClient
-
 func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64) error {
 	// fetch all subscriptions in this namespace.
 	subscriptionsInNamespace, err := s.getAllSubscriptionsWithinNamespace(ctx, namespaceId)
@@ -199,11 +185,6 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	switch providerInfo.Type {
 	case "cortex":
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
-		newAMClient, err := alertmanagerClientCreator(domain.CortexConfig{Address: providerInfo.Host})
-		if err != nil {
-			return errors.Wrap(err, "alertmanagerClientCreator: ")
-		}
-		s.amClient = newAMClient
 		err = s.amClient.SyncConfig(amConfig, namespaceInfo.Urn)
 		if err != nil {
 			return errors.Wrap(err, "s.amClient.SyncConfig")
@@ -214,12 +195,12 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	return nil
 }
 
-func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*domain.Subscription, error) {
+func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "s.repository.List")
 	}
-	var subscriptionsWithinNamespace []*domain.Subscription
+	var subscriptionsWithinNamespace []*Subscription
 	for _, sub := range subscriptions {
 		if sub.Namespace == id {
 			subscriptionsWithinNamespace = append(subscriptionsWithinNamespace, sub)
@@ -240,7 +221,7 @@ func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*provide
 	return providerInfo, namespaceInfo, nil
 }
 
-func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription) ([]SubscriptionEnrichedWithReceivers, error) {
+func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]SubscriptionEnrichedWithReceivers, error) {
 	res := make([]SubscriptionEnrichedWithReceivers, 0)
 	allReceivers, err := s.receiverService.ListReceivers()
 	if err != nil {
@@ -303,7 +284,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*domain.Subscription)
 	return res, nil
 }
 
-func sortReceivers(sub *domain.Subscription) {
+func sortReceivers(sub *Subscription) {
 	sort.Slice(sub.Receivers, func(i, j int) bool {
 		return sub.Receivers[i].Id < sub.Receivers[j].Id
 	})

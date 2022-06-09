@@ -8,8 +8,8 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
+	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/domain"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
@@ -20,22 +20,12 @@ type Transactor interface {
 	Commit(ctx context.Context) error
 }
 
-type SubscriptionRepository interface {
-	Transactor
-	Migrate() error
-	List(context.Context) ([]*domain.Subscription, error)
-	Create(context.Context, *domain.Subscription) error
-	Get(context.Context, uint64) (*domain.Subscription, error)
-	Update(context.Context, *domain.Subscription) error
-	Delete(context.Context, uint64) error
-}
-
 type RepositoryContainer struct {
 	ProviderRepository     provider.Repository
 	NamespaceRepository    namespace.Repository
 	TemplatesRepository    template.Repository
 	ReceiverRepository     receiver.Repository
-	SubscriptionRepository SubscriptionRepository
+	SubscriptionRepository subscription.Repository
 	AlertRepository        alert.Repository
 	RuleRepository         rule.Repository
 }
