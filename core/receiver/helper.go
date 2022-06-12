@@ -1,5 +1,6 @@
 package receiver
 
+//TODO change directory to mocks and mock struct name
 import (
 	"bytes"
 	"encoding/base64"
@@ -18,14 +19,14 @@ type Transformer interface {
 	PostTransform(*Receiver) error
 }
 
-//go:generate mockery --name=SlackHelper -r --case underscore --with-expecter --structname SlackHelper --filename slack_helper.go --output=./mocks
+//go:generate mockery --name=SlackHelper -r --case underscore --with-expecter --inpackage --filename slack_helper_mock.go --output=./
 type SlackHelper interface {
 	Transformer
 	Encrypt(string) (string, error)
 	Decrypt(string) (string, error)
 }
 
-//go:generate mockery --name=Exchanger -r --case underscore --with-expecter --structname Exchanger --filename exchanger.go --output=./mocks
+//go:generate mockery --name=Exchanger -r --case underscore --with-expecter --inpackage --filename exchanger_mock.go --output=./
 type Exchanger interface {
 	Exchange(string, string, string) (http.CodeExchangeHTTPResponse, error)
 }

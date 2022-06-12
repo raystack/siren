@@ -19,13 +19,13 @@ var (
 
 type ServiceTestSuite struct {
 	suite.Suite
-	slackHelperMock *mocks.SlackHelper
+	slackHelperMock *receiver.MockSlackHelper
 	repositoryMock  *mocks.ReceiverRepository
 	slacker         *mocks.SlackService
 }
 
 func (s *ServiceTestSuite) SetupTest() {
-	s.slackHelperMock = &mocks.SlackHelper{}
+	s.slackHelperMock = &receiver.MockSlackHelper{}
 	s.repositoryMock = &mocks.ReceiverRepository{}
 	s.slacker = &mocks.SlackService{}
 }

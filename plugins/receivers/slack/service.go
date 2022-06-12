@@ -41,13 +41,12 @@ func (s *service) GetWorkspaceChannels(token string) ([]Channel, error) {
 }
 
 func (s *service) Notify(message *SlackMessage) (*SlackMessageSendResponse, error) {
-	payload := new(SlackMessage)
 
 	res := &SlackMessageSendResponse{
 		OK: false,
 	}
 
-	if err := s.notifyWithClient(payload, message.Token); err != nil {
+	if err := s.notifyWithClient(message, message.Token); err != nil {
 		return res, errors.Wrap(err, "could not send notification")
 	}
 

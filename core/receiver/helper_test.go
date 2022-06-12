@@ -1,161 +1,170 @@
-package receiver_test
+package receiver
 
-// var cryptopastaEncryptor = cryptopasta.Encrypt
-// var cryptopastaDecryptor = cryptopasta.Decrypt
+//TODO move to black box testing
 
-// type SlackHelperTestSuite struct {
-// 	suite.Suite
-// 	exchangerMock *mocks.Exchanger
-// 	key           *[32]byte
-// 	keyString     string
-// }
+import (
+	"bytes"
+	"io"
+	"testing"
 
-// func TestSlackHelper(t *testing.T) {
-// 	suite.Run(t, new(SlackHelperTestSuite))
-// }
+	"github.com/odpf/siren/plugins/receivers/http"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/suite"
+)
 
-// func (s *SlackHelperTestSuite) SetupTest() {
-// 	s.exchangerMock = &mocks.Exchanger{}
-// 	s.keyString = "abcdefghijklmnopqrstuvwxyzabcdef"
+type SlackHelperTestSuite struct {
+	suite.Suite
+	exchangerMock *MockExchanger
+	key           *[32]byte
+	keyString     string
+}
 
-// 	secretKey := &[32]byte{}
-// 	_, err := io.ReadFull(bytes.NewBufferString(s.keyString), secretKey[:])
-// 	s.NoError(err)
-// 	s.key = secretKey
-// }
+func TestSlackHelper(t *testing.T) {
+	suite.Run(t, new(SlackHelperTestSuite))
+}
 
-// func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
-// 	configurations := make(map[string]interface{})
-// 	configurations["client_id"] = "foo"
-// 	configurations["client_secret"] = "bar"
-// 	configurations["auth_code"] = "foo"
+func (s *SlackHelperTestSuite) SetupTest() {
+	s.exchangerMock = &MockExchanger{}
+	s.keyString = "abcdefghijklmnopqrstuvwxyzabcdef"
 
-// 	responseConfigurations := make(map[string]interface{})
-// 	responseConfigurations["workspace"] = "test-name"
-// 	responseConfigurations["token"] = "rz+RFvt1Uo6mfJ0DsilnyYqeTI2bJD6OcCS14+AhesxN9sSVePr7jc56toOI"
-// 	response := &receiver.Receiver{
-// 		Configurations: responseConfigurations,
-// 	}
+	secretKey := &[32]byte{}
+	_, err := io.ReadFull(bytes.NewBufferString(s.keyString), secretKey[:])
+	s.NoError(err)
+	s.key = secretKey
+}
 
-// 	codeExchangeHTTPResponse := http.CodeExchangeHTTPResponse{
-// 		AccessToken: "test-access-token",
-// 		Team: struct {
-// 			Name string `json:"name"`
-// 		}{
-// 			Name: "test-name",
-// 		},
-// 	}
+func (s *SlackHelperTestSuite) TestSlackHelper_PreTransform() {
+	configurations := make(map[string]interface{})
+	configurations["client_id"] = "foo"
+	configurations["client_secret"] = "bar"
+	configurations["auth_code"] = "foo"
 
-// 	s.Run("should transform payload on successful code exchange", func() {
-// 		slackHelper, err := receiver.NewSlackHelper(s.exchangerMock, s.keyString)
-// 		s.NoError(err)
+	responseConfigurations := make(map[string]interface{})
+	responseConfigurations["workspace"] = "test-name"
+	responseConfigurations["token"] = "YmFy"
+	response := &Receiver{
+		Configurations: responseConfigurations,
+	}
 
-// 		var oldCryptopastaEncryptor = cryptopastaEncryptor
-// 		defer func() {
-// 			cryptopastaEncryptor = oldCryptopastaEncryptor
-// 		}()
-// 		cryptopastaEncryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
-// 			return []byte("bar"), nil
-// 		}
+	codeExchangeHTTPResponse := http.CodeExchangeHTTPResponse{
+		AccessToken: "test-access-token",
+		Team: struct {
+			Name string `json:"name"`
+		}{
+			Name: "test-name",
+		},
+	}
 
-// 		payload := &receiver.Receiver{
-// 			Configurations: configurations,
-// 		}
-// 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
-// 			Return(codeExchangeHTTPResponse, nil).Once()
+	s.Run("should transform payload on successful code exchange", func() {
+		slackHelper, err := NewSlackHelper(s.exchangerMock, s.keyString)
+		s.NoError(err)
 
-// 		err = slackHelper.PreTransform(payload)
-// 		s.Nil(err)
-// 		s.Equal(payload, response)
-// 		s.exchangerMock.AssertCalled(s.T(), "Exchange", "foo", "foo", "bar")
-// 	})
+		var oldCryptopastaEncryptor = cryptopastaEncryptor
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaEncryptor
+		}()
+		cryptopastaEncryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return []byte("bar"), nil
+		}
 
-// 	s.Run("should return error if code exchange failed", func() {
-// 		slackHelper, err := receiver.NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
-// 		s.NoError(err)
+		payload := &Receiver{
+			Configurations: configurations,
+		}
+		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
+			Return(codeExchangeHTTPResponse, nil).Once()
 
-// 		payload := &receiver.Receiver{
-// 			Configurations: configurations,
-// 		}
-// 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
-// 			Return(http.CodeExchangeHTTPResponse{}, errors.New("random error")).Once()
+		err = slackHelper.PreTransform(payload)
+		s.Nil(err)
+		s.Equal(payload, response)
+		s.exchangerMock.AssertCalled(s.T(), "Exchange", "foo", "foo", "bar")
+	})
 
-// 		err = slackHelper.PreTransform(payload)
-// 		s.EqualError(err, "failed to exchange code with slack OAuth server: random error")
-// 	})
+	s.Run("should return error if code exchange failed", func() {
+		slackHelper, err := NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
+		s.NoError(err)
 
-// 	s.Run("should return error if access token encryption failed", func() {
-// 		slackHelper, err := receiver.NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
-// 		s.NoError(err)
+		payload := &Receiver{
+			Configurations: configurations,
+		}
+		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
+			Return(http.CodeExchangeHTTPResponse{}, errors.New("random error")).Once()
 
-// 		var oldCryptopastaEncryptor = cryptopastaEncryptor
-// 		defer func() {
-// 			cryptopastaEncryptor = oldCryptopastaEncryptor
-// 		}()
-// 		cryptopastaEncryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
-// 			return nil, errors.New("random error")
-// 		}
-// 		payload := &receiver.Receiver{
-// 			Configurations: configurations,
-// 		}
-// 		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
-// 			Return(codeExchangeHTTPResponse, nil).Once()
+		err = slackHelper.PreTransform(payload)
+		s.EqualError(err, "failed to exchange code with slack OAuth server: random error")
+	})
 
-// 		err = slackHelper.PreTransform(payload)
-// 		s.EqualError(err, "encryption failed: random error")
-// 	})
-// }
+	s.Run("should return error if access token encryption failed", func() {
+		slackHelper, err := NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
+		s.NoError(err)
 
-// func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
+		var oldCryptopastaEncryptor = cryptopastaEncryptor
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaEncryptor
+		}()
+		cryptopastaEncryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return nil, errors.New("random error")
+		}
+		payload := &Receiver{
+			Configurations: configurations,
+		}
+		s.exchangerMock.On("Exchange", "foo", "foo", "bar").
+			Return(codeExchangeHTTPResponse, nil).Once()
 
-// 	response := &receiver.Receiver{
-// 		Configurations: map[string]interface{}{
-// 			"token": "test-token",
-// 		},
-// 	}
+		err = slackHelper.PreTransform(payload)
+		s.EqualError(err, "encryption failed: random error")
+	})
+}
 
-// 	s.Run("should transform payload on successful decrypt", func() {
-// 		configurations := make(map[string]interface{})
-// 		configurations["token"] = "YmFy"
-// 		payload := &receiver.Receiver{
-// 			Configurations: configurations,
-// 		}
+func (s *SlackHelperTestSuite) TestSlackHelper_PostTransform() {
 
-// 		slackHelper, err := receiver.NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
-// 		s.NoError(err)
+	response := &Receiver{
+		Configurations: map[string]interface{}{
+			"token": "test-token",
+		},
+	}
 
-// 		var oldCryptopastaDecryptor = cryptopastaDecryptor
-// 		defer func() {
-// 			cryptopastaEncryptor = oldCryptopastaDecryptor
-// 		}()
-// 		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
-// 			return []byte("test-token"), nil
-// 		}
+	s.Run("should transform payload on successful decrypt", func() {
+		configurations := make(map[string]interface{})
+		configurations["token"] = "YmFy"
+		payload := &Receiver{
+			Configurations: configurations,
+		}
 
-// 		err = slackHelper.PostTransform(payload)
-// 		s.Nil(err)
-// 		s.Equal(payload, response)
-// 	})
+		slackHelper, err := NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
+		s.NoError(err)
 
-// 	s.Run("should return error if slack token decryption failed", func() {
-// 		configurations := make(map[string]interface{})
-// 		configurations["token"] = "YmFy"
-// 		payload := &receiver.Receiver{
-// 			Configurations: configurations,
-// 		}
+		var oldCryptopastaDecryptor = cryptopastaDecryptor
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaDecryptor
+		}()
+		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return []byte("test-token"), nil
+		}
 
-// 		slackHelper, err := receiver.NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
-// 		s.NoError(err)
+		err = slackHelper.PostTransform(payload)
+		s.Nil(err)
+		s.Equal(payload, response)
+	})
 
-// 		var oldCryptopastaDecryptor = cryptopastaDecryptor
-// 		defer func() {
-// 			cryptopastaEncryptor = oldCryptopastaDecryptor
-// 		}()
-// 		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
-// 			return nil, errors.New("random error")
-// 		}
+	s.Run("should return error if slack token decryption failed", func() {
+		configurations := make(map[string]interface{})
+		configurations["token"] = "YmFy"
+		payload := &Receiver{
+			Configurations: configurations,
+		}
 
-// 		err = slackHelper.PostTransform(payload)
-// 		s.EqualError(err, "slackHelper.Decrypt: random error")
-// 	})
-// }
+		slackHelper, err := NewSlackHelper(s.exchangerMock, "abcdefghijklmnopqrstuvwxyzabcdef")
+		s.NoError(err)
+
+		var oldCryptopastaDecryptor = cryptopastaDecryptor
+		defer func() {
+			cryptopastaEncryptor = oldCryptopastaDecryptor
+		}()
+		cryptopastaDecryptor = func(_ []byte, _ *[32]byte) ([]byte, error) {
+			return nil, errors.New("random error")
+		}
+
+		err = slackHelper.PostTransform(payload)
+		s.EqualError(err, "slackHelper.Decrypt: random error")
+	})
+}
