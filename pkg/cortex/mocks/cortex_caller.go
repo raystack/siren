@@ -25,6 +25,45 @@ func (_m *CortexCaller) EXPECT() *CortexCaller_Expecter {
 	return &CortexCaller_Expecter{mock: &_m.Mock}
 }
 
+// CreateAlertmanagerConfig provides a mock function with given fields: ctx, cfg, templates
+func (_m *CortexCaller) CreateAlertmanagerConfig(ctx context.Context, cfg string, templates map[string]string) error {
+	ret := _m.Called(ctx, cfg, templates)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, map[string]string) error); ok {
+		r0 = rf(ctx, cfg, templates)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CortexCaller_CreateAlertmanagerConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateAlertmanagerConfig'
+type CortexCaller_CreateAlertmanagerConfig_Call struct {
+	*mock.Call
+}
+
+// CreateAlertmanagerConfig is a helper method to define mock.On call
+//  - ctx context.Context
+//  - cfg string
+//  - templates map[string]string
+func (_e *CortexCaller_Expecter) CreateAlertmanagerConfig(ctx interface{}, cfg interface{}, templates interface{}) *CortexCaller_CreateAlertmanagerConfig_Call {
+	return &CortexCaller_CreateAlertmanagerConfig_Call{Call: _e.mock.On("CreateAlertmanagerConfig", ctx, cfg, templates)}
+}
+
+func (_c *CortexCaller_CreateAlertmanagerConfig_Call) Run(run func(ctx context.Context, cfg string, templates map[string]string)) *CortexCaller_CreateAlertmanagerConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(map[string]string))
+	})
+	return _c
+}
+
+func (_c *CortexCaller_CreateAlertmanagerConfig_Call) Return(_a0 error) *CortexCaller_CreateAlertmanagerConfig_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // CreateRuleGroup provides a mock function with given fields: ctx, namespace, rg
 func (_m *CortexCaller) CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error {
 	ret := _m.Called(ctx, namespace, rg)

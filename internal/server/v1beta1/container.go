@@ -11,9 +11,9 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
@@ -46,7 +46,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *conf
 		return nil, errors.Wrap(err, "failed to create namespace service")
 	}
 
-	cortexClient, err := rule.NewCortexClient(c.Cortex.Address)
+	cortexClient, err := cortex.NewClient(cortex.Config{Address: c.Cortex.Address})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to init cortex client")
 	}
@@ -68,11 +68,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *conf
 	receiverSecureService := receiver.NewSecureService(encryptor, repositories.ReceiverRepository)
 	receiverService := receiver.NewService(receiverSecureService, slackClient)
 
-	amClient, err := alertmanager.NewClient(config.CortexConfig{Address: c.Cortex.Address})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create alert manager client")
-	}
-	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, amClient)
+	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 
 	return &Container{
 		TemplateService: templateService,

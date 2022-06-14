@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -59,21 +60,13 @@ type Variables struct {
 	Variables []variable `json:"variables"`
 }
 
-//go:generate mockery --name=CortexCaller -r --case underscore --with-expecter --structname CortexCaller --filename cortex_caller.go --output=./mocks
-type CortexCaller interface {
-	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error
-	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
-	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
-	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
-}
-
 // Service handles business logic
 type Service struct {
 	repository       Repository
 	templateService  TemplatesService
 	namespaceService NamespaceService
 	providerService  ProviderService
-	cortexClient     CortexCaller
+	cortexClient     CortexClient
 }
 
 // NewService returns repository struct
@@ -82,7 +75,7 @@ func NewService(
 	templateService TemplatesService,
 	namespaceService NamespaceService,
 	providerService ProviderService,
-	cortexClient CortexCaller,
+	cortexClient CortexClient,
 ) *Service {
 	return &Service{
 		repository:       repository,
@@ -169,7 +162,7 @@ func (s *Service) Get(ctx context.Context, name, namespace, groupName, template 
 	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
 }
 
-func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexCaller, tenantName string) error {
+func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexClient, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for i := 0; i < len(rulesWithinGroup); i++ {
 		if !rulesWithinGroup[i].Enabled {
@@ -204,10 +197,12 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 	if err != nil {
 		return err
 	}
-	y := rwrulefmt.RuleGroup{
-		RuleGroup: rulefmt.RuleGroup{
-			Name:  rule.GroupName,
-			Rules: ruleNodes,
+	y := cortex.RuleGroup{
+		RuleGroup: rwrulefmt.RuleGroup{
+			RuleGroup: rulefmt.RuleGroup{
+				Name:  rule.GroupName,
+				Rules: ruleNodes,
+			},
 		},
 	}
 	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {
@@ -239,18 +234,4 @@ func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleV
 		}
 	}
 	return finalRuleVariables
-}
-
-func NewCortexClient(host string) (CortexCaller, error) {
-	cortexConfig := cortexClient.Config{
-		Address:         host,
-		UseLegacyRoutes: false,
-	}
-
-	client, err := cortexClient.New(cortexConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
 }

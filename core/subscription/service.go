@@ -8,7 +8,6 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/pkg/errors"
 )
 
@@ -42,30 +41,25 @@ type ProviderService interface { //TODO to be refactored, for temporary only
 	Migrate() error
 }
 
-//go:generate mockery --name=AMClient -r --case underscore --with-expecter --structname AMClient --filename am_client.go --output=./mocks
-type AMClient interface {
-	SyncConfig(alertmanager.AMConfig, string) error
-}
-
 // Service handles business logic
 type Service struct {
 	repository       Repository
 	providerService  ProviderService
 	namespaceService NamespaceService
 	receiverService  ReceiverService
-	amClient         AMClient
+	cortexClient     CortexClient
 }
 
 // NewService returns service struct
 func NewService(repository Repository, providerService ProviderService, namespaceService NamespaceService,
-	receiverService ReceiverService, amClient AMClient) *Service {
+	receiverService ReceiverService, cortexClient CortexClient) *Service {
 
 	return &Service{
 		repository:       repository,
 		providerService:  providerService,
 		namespaceService: namespaceService,
 		receiverService:  receiverService,
-		amClient:         amClient,
+		cortexClient:     cortexClient,
 	}
 }
 
@@ -185,9 +179,9 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	switch providerInfo.Type {
 	case "cortex":
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
-		err = s.amClient.SyncConfig(amConfig, namespaceInfo.Urn)
+		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.Urn)
 		if err != nil {
-			return errors.Wrap(err, "s.amClient.SyncConfig")
+			return errors.Wrap(err, "s.amClient.CreateAlertmanagerConfig")
 		}
 	default:
 		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", providerInfo.Type))

@@ -63,7 +63,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -97,7 +97,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
@@ -135,7 +135,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -209,7 +209,7 @@ func TestService_Upsert(t *testing.T) {
 	t.Run("should return error if namespace not found", func(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, nil, mockClient)
 		ctx := context.Background()
 
@@ -226,7 +226,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -245,7 +245,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -265,7 +265,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -289,7 +289,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -313,7 +313,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -337,7 +337,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -361,7 +361,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -386,7 +386,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -411,7 +411,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -439,7 +439,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -467,7 +467,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -497,7 +497,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
@@ -523,7 +523,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService := &mocks.TemplatesService{}
 		mockNamespaceService := &mocks.NamespaceService{}
 		mockProviderService := &mocks.ProviderService{}
-		mockClient := &mocks.CortexCaller{}
+		mockClient := &mocks.CortexClient{}
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 

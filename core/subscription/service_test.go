@@ -10,8 +10,8 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/core/subscription/mocks"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -40,11 +40,11 @@ func TestService_CreateSubscription(t *testing.T) {
 	}
 
 	t.Run("should call repository create method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := new(mocks.CortexClient)
 		ctx := context.Background()
 
 		expectedID := uint64(1)
@@ -75,9 +75,9 @@ func TestService_CreateSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), dummyNamespace.Urn).
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
 			Run(func(args mock.Arguments) {
-				c := args.Get(0).(alertmanager.AMConfig)
+				c := args.Get(0).(cortex.AlertManagerConfig)
 				assert.Len(t, c.Receivers, 3)
 				assert.Equal(t, "foo_receiverId_1_idx_0", c.Receivers[0].Receiver)
 				assert.Equal(t, "bar_receiverId_2_idx_0", c.Receivers[1].Receiver)
@@ -85,7 +85,7 @@ func TestService_CreateSubscription(t *testing.T) {
 			}).Return(nil).Once()
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
 		assert.Nil(t, err)
@@ -93,10 +93,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in subscription creation", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -110,10 +110,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in fetching all subscriptions within given namespace", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -128,10 +128,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in fetching namespace details", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -147,10 +147,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in fetching provider details", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -167,10 +167,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error for unsupported providers", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -189,10 +189,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in fetching all receivers", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -210,10 +210,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error if receiver id not found", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -231,10 +231,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error if slack channel name not specified in subscription configs", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -256,10 +256,10 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error for unsupported receiver type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -277,11 +277,11 @@ func TestService_CreateSubscription(t *testing.T) {
 	})
 
 	// t.Run("should return error in alertmanager client initialization", func(t *testing.T) {
-	// 	repositoryMock := &mocks.SubscriptionRepository{}
-	// 	providerServiceMock := &mocks.ProviderService{}
-	// 	namespaceServiceMock := &mocks.NamespaceService{}
-	// 	receiverServiceMock := &mocks.ReceiverService{}
-	// 	amClientMock := &mocks.AMClient{}
+	// 	repositoryMock := new(mocks.SubscriptionRepository)
+	// 	providerServiceMock := new(mocks.ProviderService)
+	// 	namespaceServiceMock := new(mocks.NamespaceService)
+	// 	receiverServiceMock := new(mocks.ReceiverService)
+	// 	cortexClientMock := &mocks.CortexClient{}
 	// 	ctx := context.Background()
 
 	// 	repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -292,18 +292,18 @@ func TestService_CreateSubscription(t *testing.T) {
 	// 	receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
 	// 	repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
-	// 	dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+	// 	dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 	// 	err := dummyService.CreateSubscription(context.Background(), input)
 
 	// 	assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: alertmanagerClientCreator: : random error")
 	// })
 
 	t.Run("should return error syncing config with alertmanager", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := &mocks.CortexClient{}
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -312,14 +312,14 @@ func TestService_CreateSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), "dummy").
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), "dummy").
 			Return(errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.SyncConfig: random error")
+		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
 	})
 }
 
@@ -327,7 +327,7 @@ func TestService_GetSubscription(t *testing.T) {
 	timeNow := time.Now()
 
 	t.Run("should call repository get method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		subsc := &subscription.Subscription{Urn: "test", Id: 1, Namespace: 1, Match: make(map[string]string),
@@ -345,7 +345,7 @@ func TestService_GetSubscription(t *testing.T) {
 	})
 
 	t.Run("should not return error if subscription doesn't exist", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		repositoryMock.On("Get", ctx, uint64(1)).Return(nil, nil).Once()
@@ -357,7 +357,7 @@ func TestService_GetSubscription(t *testing.T) {
 	})
 
 	t.Run("should call repository get method and return error if any", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		repositoryMock.On("Get", ctx, uint64(1)).Return(nil, errors.New("random error")).Once()
@@ -373,7 +373,7 @@ func TestService_ListSubscription(t *testing.T) {
 	timeNow := time.Now()
 
 	t.Run("should call repository list method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		subsc := &subscription.Subscription{Urn: "test", Id: 1, Namespace: 1, Match: make(map[string]string),
@@ -391,7 +391,7 @@ func TestService_ListSubscription(t *testing.T) {
 	})
 
 	t.Run("should call repository list method and return error if any", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		repositoryMock.On("List", ctx).Return(nil, errors.New("abcd")).Once()
@@ -427,11 +427,11 @@ func TestService_UpdateSubscription(t *testing.T) {
 	}
 
 	t.Run("should call repository update method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := &mocks.CortexClient{}
 		ctx := context.Background()
 
 		expectedSubscription := &subscription.Subscription{
@@ -469,9 +469,9 @@ func TestService_UpdateSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), dummyNamespace.Urn).
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
 			Run(func(args mock.Arguments) {
-				c := args.Get(0).(alertmanager.AMConfig)
+				c := args.Get(0).(cortex.AlertManagerConfig)
 				assert.Len(t, c.Receivers, 3)
 				assert.Equal(t, "test_receiverId_1_idx_0", c.Receivers[0].Receiver)
 				assert.Equal(t, "bar_receiverId_2_idx_0", c.Receivers[1].Receiver)
@@ -479,7 +479,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 			}).Return(nil).Once()
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.UpdateSubscription(context.Background(), input)
 		assert.Nil(t, err)
@@ -487,10 +487,10 @@ func TestService_UpdateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in subscription update", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
 		ctx := context.Background()
 
 		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
@@ -504,11 +504,11 @@ func TestService_UpdateSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in syncing alertmanager config", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := &mocks.CortexClient{}
 		ctx := context.Background()
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
@@ -535,14 +535,14 @@ func TestService_UpdateSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), dummyNamespace.Urn).
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
 			Return(errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.UpdateSubscription(context.Background(), input)
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.SyncConfig: random error")
+		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
 	})
 }
 
@@ -561,11 +561,11 @@ func TestService_DeleteSubscription(t *testing.T) {
 	}
 
 	t.Run("should call repository delete method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := &mocks.CortexClient{}
 		ctx := context.Background()
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
@@ -587,23 +587,23 @@ func TestService_DeleteSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", subsc.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), dummyNamespace.Urn).
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
 			Run(func(args mock.Arguments) {
-				c := args.Get(0).(alertmanager.AMConfig)
+				c := args.Get(0).(cortex.AlertManagerConfig)
 				assert.Len(t, c.Receivers, 2)
 				assert.Equal(t, "bar_receiverId_2_idx_0", c.Receivers[0].Receiver)
 				assert.Equal(t, "baz_receiverId_3_idx_0", c.Receivers[1].Receiver)
 			}).Return(nil).Once()
 		repositoryMock.On("Commit", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.DeleteSubscription(context.Background(), 1)
 		assert.Nil(t, err)
 	})
 
 	t.Run("should return error in fetching subscription", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		repositoryMock.On("Get", ctx, uint64(1)).Return(nil, errors.New("random error")).Once()
@@ -615,7 +615,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error if subscription does not exist", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
 		repositoryMock.On("Get", ctx, uint64(1)).Return(nil, nil).Once()
@@ -627,11 +627,11 @@ func TestService_DeleteSubscription(t *testing.T) {
 	})
 
 	t.Run("should return error in subscription delete", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
-		providerServiceMock := &mocks.ProviderService{}
-		namespaceServiceMock := &mocks.NamespaceService{}
-		receiverServiceMock := &mocks.ReceiverService{}
-		amClientMock := &mocks.AMClient{}
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		cortexClientMock := &mocks.CortexClient{}
 		ctx := context.Background()
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
@@ -653,20 +653,20 @@ func TestService_DeleteSubscription(t *testing.T) {
 		namespaceServiceMock.On("GetNamespace", subsc.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.On("ListReceivers").Return(dummyReceivers, nil).Once()
-		amClientMock.On("SyncConfig", mock.AnythingOfType("alertmanager.AMConfig"), dummyNamespace.Urn).
+		cortexClientMock.On("CreateAlertmanagerConfig", mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
 			Return(errors.New("random error")).Once()
 		repositoryMock.On("Rollback", ctx).Return(nil).Once()
 
-		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, amClientMock)
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.DeleteSubscription(context.Background(), 1)
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.SyncConfig: random error")
+		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
 	})
 }
 
 func TestService_Migrate(t *testing.T) {
 	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := &mocks.SubscriptionRepository{}
+		repositoryMock := new(mocks.SubscriptionRepository)
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 		repositoryMock.On("Migrate").Return(nil).Once()
 		err := dummyService.Migrate()

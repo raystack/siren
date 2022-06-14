@@ -3,13 +3,13 @@ package subscription
 import (
 	"fmt"
 
-	"github.com/odpf/siren/core/subscription/alertmanager"
+	"github.com/odpf/siren/pkg/cortex"
 )
 
-func getAMReceiverConfigPerSubscription(subscription SubscriptionEnrichedWithReceivers) []alertmanager.AMReceiverConfig {
-	amReceiverConfig := make([]alertmanager.AMReceiverConfig, 0)
+func getAMReceiverConfigPerSubscription(subscription SubscriptionEnrichedWithReceivers) []cortex.ReceiverConfig {
+	amReceiverConfig := make([]cortex.ReceiverConfig, 0)
 	for idx, item := range subscription.Receiver {
-		newAMReceiver := alertmanager.AMReceiverConfig{
+		newAMReceiver := cortex.ReceiverConfig{
 			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", subscription.Urn, item.Id, idx),
 			Match:         subscription.Match,
 			Configuration: item.Configuration,
@@ -20,12 +20,12 @@ func getAMReceiverConfigPerSubscription(subscription SubscriptionEnrichedWithRec
 	return amReceiverConfig
 }
 
-func getAmConfigFromSubscriptions(subscriptions []SubscriptionEnrichedWithReceivers) alertmanager.AMConfig {
-	amConfig := make([]alertmanager.AMReceiverConfig, 0)
+func getAmConfigFromSubscriptions(subscriptions []SubscriptionEnrichedWithReceivers) cortex.AlertManagerConfig {
+	amConfig := make([]cortex.ReceiverConfig, 0)
 	for _, item := range subscriptions {
 		amConfig = append(amConfig, getAMReceiverConfigPerSubscription(item)...)
 	}
-	return alertmanager.AMConfig{
+	return cortex.AlertManagerConfig{
 		Receivers: amConfig,
 	}
 }

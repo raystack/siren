@@ -25,7 +25,7 @@ type clientData struct {
 	token         string
 	creds         Credential
 	ctx           context.Context
-	goslackClient *goslack.Client
+	goslackClient GoSlackCaller
 }
 
 func NewClient(opts ...ClientOption) *Client {
@@ -46,7 +46,7 @@ func NewClient(opts ...ClientOption) *Client {
 // the order that took precedence
 // goslackClient - token - client secret
 // e.g. if user passes goslackClient, it will ignore the others
-func (c *Client) createGoSlackClient(opts ...ClientCallOption) (*goslack.Client, error) {
+func (c *Client) createGoSlackClient(opts ...ClientCallOption) (GoSlackCaller, error) {
 	c.data = &clientData{}
 	for _, opt := range opts {
 		opt(c.data)
@@ -99,8 +99,8 @@ func (c *Client) auth(ctx context.Context) (Credential, error) {
 	if err != nil {
 		return Credential{}, fmt.Errorf("failed to read response body: %w", err)
 	}
-	err = json.Unmarshal(bodyBytes, &response)
 
+	err = json.Unmarshal(bodyBytes, &response)
 	if err != nil {
 		return Credential{}, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
@@ -160,6 +160,8 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 			return err
 		}
 		channelID = user.ID
+	default:
+		return fmt.Errorf("unknown receiver type '%s'", message.ReceiverType)
 	}
 	_, _, _, err = gsc.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
 	if err != nil {
@@ -168,7 +170,7 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 	return nil
 }
 
-func (c *Client) getJoinedChannelsList(gsc *goslack.Client) ([]goslack.Channel, error) {
+func (c *Client) getJoinedChannelsList(gsc GoSlackCaller) ([]goslack.Channel, error) {
 	channelList := make([]goslack.Channel, 0)
 	curr := ""
 	for {

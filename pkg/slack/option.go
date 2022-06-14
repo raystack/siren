@@ -3,8 +3,6 @@ package slack
 import (
 	"context"
 	"net/http"
-
-	goslack "github.com/slack-go/slack"
 )
 
 type ClientOption func(*Client)
@@ -17,7 +15,7 @@ func ClientWithHTTPClient(httpClient *http.Client) ClientOption {
 
 type ClientCallOption func(*clientData)
 
-func CallWithGoSlackClient(gsc *goslack.Client) ClientCallOption {
+func CallWithGoSlackClient(gsc GoSlackCaller) ClientCallOption {
 	return func(c *clientData) {
 		c.goslackClient = gsc
 	}
