@@ -10,7 +10,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/odpf/siren/pkg/slack"
 	goslack "github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -841,7 +841,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &slack.SlackMessage{
+		dummyPayload := &slack.Message{
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Token:        "foo",
@@ -858,10 +858,6 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 				},
 			},
 		}
-		dummyResult := &slack.SlackMessageSendResponse{
-			OK: true,
-		}
-
 		dummyGRPCServer := GRPCServer{
 			container: &Container{
 				ReceiverService: mockedReceiverService,
@@ -913,7 +909,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		}
 
 		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
-		mockedSlackNotifierService.On("Notify", dummyPayload).Return(dummyResult, nil).Once()
+		mockedSlackNotifierService.On("Notify", dummyPayload).Return(nil).Once()
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, true, res.GetOk())
@@ -924,15 +920,12 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &slack.SlackMessage{
+		dummyPayload := &slack.Message{
 			ReceiverName: "foo",
 			ReceiverType: "channel",
 			Token:        "foo",
 			Message:      "bar",
 			Blocks:       goslack.Blocks{},
-		}
-		dummyResult := &slack.SlackMessageSendResponse{
-			OK: true,
 		}
 
 		dummyGRPCServer := GRPCServer{
@@ -959,7 +952,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 
 		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
 		mockedSlackNotifierService.On("Notify", dummyPayload).
-			Return(dummyResult, errors.New("random error")).Once()
+			Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)

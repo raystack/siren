@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/odpf/siren/config"
@@ -13,8 +14,8 @@ import (
 	"github.com/odpf/siren/core/subscription/alertmanager"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store"
-	slackclient "github.com/odpf/siren/plugins/receivers/http"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/odpf/siren/pkg/secret"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -57,15 +58,15 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *conf
 		providerService,
 		cortexClient,
 	)
-	receiverExchange := slackclient.NewSlackClient(&http.Client{})
-	receiverSlackHelper, err := receiver.NewSlackHelper(receiverExchange, c.EncryptionKey)
+
+	encryptor, err := secret.New(c.EncryptionKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create slack helper")
+		return nil, fmt.Errorf("cannot initialize encryptor: %w", err)
 	}
-	receiverService, err := receiver.NewService(repositories.ReceiverRepository, receiverSlackHelper, slack.NewService())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create receiver service")
-	}
+
+	slackClient := slack.NewClient(slack.ClientWithHTTPClient(&http.Client{}))
+	receiverSecureService := receiver.NewSecureService(encryptor, repositories.ReceiverRepository)
+	receiverService := receiver.NewService(receiverSecureService, slackClient)
 
 	amClient, err := alertmanager.NewClient(config.CortexConfig{Address: c.Cortex.Address})
 	if err != nil {
@@ -78,7 +79,7 @@ func InitContainer(repositories *store.RepositoryContainer, db *gorm.DB, c *conf
 		RulesService:    rulesService,
 		AlertService:    alertHistoryService,
 		NotifierServices: NotifierServices{
-			Slack: slack.NewService(),
+			Slack: slackClient,
 		},
 		ProviderService:     providerService,
 		NamespaceService:    namespaceService,

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/utils"
 	goslack "github.com/slack-go/slack"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
@@ -38,7 +38,7 @@ type NotifierServices struct { //TODO to be refactored, temporary only
 
 //go:generate mockery --name=SlackNotifierService -r --case underscore --with-expecter --structname SlackNotifierService --filename slack_notifier_service.go --output=./mocks
 type SlackNotifierService interface { //TODO to be refactored, temporary only
-	Notify(*slack.SlackMessage) (*slack.SlackMessageSendResponse, error)
+	Notify(*slack.Message, ...slack.ClientCallOption) error
 }
 
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
@@ -233,19 +233,19 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
 		}
 
-		payload := &slack.SlackMessage{
+		payload := &slack.Message{
 			ReceiverName: slackPayload.GetReceiverName(),
 			ReceiverType: slackPayload.GetReceiverType(),
 			Token:        rcv.Configurations["token"].(string),
 			Message:      slackPayload.GetMessage(),
 			Blocks:       blocks,
 		}
-		result, err := s.container.NotifierServices.Slack.Notify(payload)
+		err = s.container.NotifierServices.Slack.Notify(payload)
 		if err != nil {
 			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 		res = &sirenv1beta1.SendReceiverNotificationResponse{
-			Ok: result.OK,
+			Ok: true,
 		}
 	default:
 		return nil, status.Errorf(codes.NotFound, "Send notification not registered for this receiver")
