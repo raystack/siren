@@ -22,7 +22,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
 			TriggeredAt: timenow,
 		}}
-		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
+		mockedAlertService.EXPECT().Get("foo", uint64(1), uint64(100), uint64(200)).
 			Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -53,7 +53,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.On("Get", "foo", uint64(1), uint64(100), uint64(200)).
+		mockedAlertService.EXPECT().Get("foo", uint64(1), uint64(100), uint64(200)).
 			Return(nil, errors.New("random error")).Once()
 
 		dummyReq := &sirenv1beta1.ListAlertsRequest{
@@ -115,7 +115,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Rule:         "random",
 			TriggeredAt:  timenow.AsTime(),
 		}}
-		mockedAlertService.On("Create", payload).
+		mockedAlertService.EXPECT().Create(payload).
 			Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -176,7 +176,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Rule:         "random",
 			TriggeredAt:  timenow.AsTime(),
 		}}
-		mockedAlertService.On("Create", payload).
+		mockedAlertService.EXPECT().Create(payload).
 			Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -201,7 +201,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.On("Create", payload).
+		mockedAlertService.EXPECT().Create(payload).
 			Return(nil, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
@@ -256,7 +256,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.On("Create", payload).
+		mockedAlertService.EXPECT().Create(payload).
 			Return(dummyAlerts, nil).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)

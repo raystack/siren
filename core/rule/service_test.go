@@ -74,15 +74,15 @@ func TestService_Upsert(t *testing.T) {
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '20m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
 		dummyRulesInGroup := []rule.Rule{*theRule}
-		mockTemplateService.On("GetByName", theRule.Template).Return(dummyTemplate, nil).Once()
-		mockNamespaceService.On("GetNamespace", theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, theRule).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return(dummyRulesInGroup, nil).Once()
-		mockTemplateService.On("Render", theRule.Template, variablesMap).Return(expectedRender, nil).Once()
-		mockClient.On("CreateRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		repositoryMock.On("Commit", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
+		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return(dummyRulesInGroup, nil).Once()
+		mockTemplateService.EXPECT().Render(theRule.Template, variablesMap).Return(expectedRender, nil).Once()
+		mockClient.EXPECT().CreateRuleGroup(mock.Anything, "foo", mock.Anything).Return(nil)
+		repositoryMock.EXPECT().Commit(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.Nil(t, err)
@@ -113,14 +113,14 @@ func TestService_Upsert(t *testing.T) {
 			ProviderNamespace: 1,
 		}
 
-		mockTemplateService.On("GetByName", theRule.Template).Return(dummyTemplate, nil).Once()
-		mockNamespaceService.On("GetNamespace", theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, theRule).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
-		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", mock.Anything).Return(nil)
-		repositoryMock.On("Commit", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
+		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
+		mockClient.EXPECT().DeleteRuleGroup(mock.Anything, "foo", mock.Anything).Return(nil)
+		repositoryMock.EXPECT().Commit(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.Nil(t, err)
@@ -150,14 +150,14 @@ func TestService_Upsert(t *testing.T) {
 			ProviderNamespace: 1,
 		}
 
-		mockTemplateService.On("GetByName", theRule.Template).Return(dummyTemplate, nil).Once()
-		mockNamespaceService.On("GetNamespace", theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.On("GetProvider", dummyNamespace.Provider).Return(dummyProvider, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, theRule).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
-		mockClient.On("DeleteRuleGroup", mock.Anything, "foo", mock.Anything).Return(errors.New("requested resource not found"))
-		repositoryMock.On("Commit", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
+		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
+		mockClient.EXPECT().DeleteRuleGroup(mock.Anything, "foo", mock.Anything).Return(errors.New("requested resource not found"))
+		repositoryMock.EXPECT().Commit(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.Nil(t, err)
@@ -172,7 +172,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, nil, nil, nil)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(nil, errors.New("random error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.templateService.GetByName: random error")
@@ -184,7 +184,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, nil, nil, nil)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(nil, nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(nil, nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "template not found")
@@ -197,8 +197,8 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, nil, nil)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(nil, errors.New("random error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.namespaceService.GetNamespace: random error")
@@ -213,8 +213,8 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, nil, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(nil, nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(nil, nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "namespace not found")
@@ -230,9 +230,9 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(nil, errors.New("random error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.providerService.GetProvider: random error")
@@ -249,9 +249,9 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(nil, nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "provider not found")
@@ -269,12 +269,12 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
-		repositoryMock.On("Rollback", ctx).Return(errors.New("random rollback error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
@@ -293,12 +293,12 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Upsert: random error")
@@ -317,12 +317,12 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Rollback", ctx).Return(errors.New("random error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Rollback: random error")
@@ -341,12 +341,12 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "provider not supported")
@@ -365,13 +365,13 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
-		repositoryMock.On("Rollback", ctx).Return(errors.New("random rollback error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
@@ -390,13 +390,13 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Get: random error")
@@ -416,15 +416,15 @@ func TestService_Upsert(t *testing.T) {
 		ctx := context.Background()
 
 		dummyRulesInGroup := []rule.Rule{*theRule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
-		mockTemplateService.On("Render", mock.Anything, mock.AnythingOfType("map[string]string")).Return("", errors.New("random error")).Once()
-		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		mockTemplateService.EXPECT().Render(mock.Anything, mock.AnythingOfType("map[string]string")).Return("", errors.New("random error")).Once()
+		mockClient.EXPECT().CreateRuleGroup(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.postRuleGroupWith: s.templateService.Render: random error")
@@ -444,15 +444,15 @@ func TestService_Upsert(t *testing.T) {
 		ctx := context.Background()
 
 		dummyRulesInGroup := []rule.Rule{*theRule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
-		mockTemplateService.On("Render", mock.Anything, mock.AnythingOfType("map[string]string")).Return("", errors.New("random error")).Once()
-		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
-		repositoryMock.On("Rollback", ctx).Return(errors.New("random rollback error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		mockTemplateService.EXPECT().Render(mock.Anything, mock.AnythingOfType("map[string]string")).Return("", errors.New("random error")).Once()
+		mockClient.EXPECT().CreateRuleGroup(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
+		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
@@ -474,15 +474,15 @@ func TestService_Upsert(t *testing.T) {
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '10m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
 		dummyRulesInGroup := []rule.Rule{*theRule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
-		mockTemplateService.On("Render", mock.Anything, mock.AnythingOfType("map[string]string")).Return(expectedRender, nil).Once()
-		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		mockTemplateService.EXPECT().Render(mock.Anything, mock.AnythingOfType("map[string]string")).Return(expectedRender, nil).Once()
+		mockClient.EXPECT().CreateRuleGroup(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.postRuleGroupWith: client.CreateRuleGroup: random error")
@@ -501,14 +501,14 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
 		ctx := context.Background()
 
-		mockTemplateService.On("GetByName", mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return([]rule.Rule{}, nil).Once()
-		mockClient.On("DeleteRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
-		repositoryMock.On("Rollback", ctx).Return(nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return([]rule.Rule{}, nil).Once()
+		mockClient.EXPECT().DeleteRuleGroup(mock.Anything, mock.Anything, mock.Anything).Return(errors.New("random error"))
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "s.postRuleGroupWith: client.DeleteRuleGroup: random error")
@@ -530,15 +530,15 @@ func TestService_Upsert(t *testing.T) {
 		expectedRender := "-\n    alert: Test\n    expr: 'test-expr'\n    for: '20m'\n    labels: {severity: WARNING, team: 'gojek' }\n    annotations: {description: 'test'}\n-\n"
 
 		dummyRulesInGroup := []rule.Rule{*theRule}
-		mockTemplateService.On("GetByName", mock.Anything).Return(dummyTemplate, nil).Once()
-		mockNamespaceService.On("GetNamespace", mock.Anything).Return(dummyNamespace, nil).Once()
-		mockProviderService.On("GetProvider", mock.Anything).Return(dummyProvider, nil).Once()
-		repositoryMock.On("WithTransaction", ctx).Return(ctx).Once()
-		repositoryMock.On("Upsert", ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
-		repositoryMock.On("Get", ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
-		mockTemplateService.On("Render", mock.Anything, mock.Anything).Return(expectedRender, nil).Once()
-		mockClient.On("CreateRuleGroup", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		repositoryMock.On("Commit", ctx).Return(errors.New("random commit error")).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(dummyTemplate, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(dummyNamespace, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
+		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
+		mockTemplateService.EXPECT().Render(mock.Anything, mock.Anything).Return(expectedRender, nil).Once()
+		mockClient.EXPECT().CreateRuleGroup(mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		repositoryMock.EXPECT().Commit(ctx).Return(errors.New("random commit error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.Error(t, err, "s.repository.Rollback: random commit error")
@@ -566,7 +566,7 @@ func TestService_Get(t *testing.T) {
 			ProviderNamespace: 1,
 		}}
 
-		repositoryMock.On("Get", ctx, "foo", "gojek", "test-group", "test-tmpl", uint64(1)).
+		repositoryMock.EXPECT().Get(ctx, "foo", "gojek", "test-group", "test-tmpl", uint64(1)).
 			Return(dummyRules, nil).Once()
 
 		result, err := dummyService.
@@ -581,7 +581,7 @@ func TestService_Get(t *testing.T) {
 		dummyService := rule.NewService(repositoryMock, nil, nil, nil, nil)
 		ctx := context.Background()
 
-		repositoryMock.On("Get", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, uint64(0)).
+		repositoryMock.EXPECT().Get(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, uint64(0)).
 			Return(nil, errors.New("random error")).Once()
 
 		result, err := dummyService.Get(ctx, "foo", "", "", "", 0)
@@ -595,7 +595,7 @@ func TestService_Migrate(t *testing.T) {
 	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
 		repositoryMock := &mocks.RuleRepository{}
 		dummyService := rule.NewService(repositoryMock, nil, nil, nil, nil)
-		repositoryMock.On("Migrate").Return(nil).Once()
+		repositoryMock.EXPECT().Migrate().Return(nil).Once()
 		err := dummyService.Migrate()
 		assert.Nil(t, err)
 		repositoryMock.AssertCalled(t, "Migrate")

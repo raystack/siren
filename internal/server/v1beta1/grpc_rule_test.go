@@ -11,7 +11,6 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 )
 
@@ -52,9 +51,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			ruleService: mockedRuleService,
 			logger:      log.NewNoop(),
 		}
-		mockedRuleService.
-			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
-				dummyPayload.Template, dummyPayload.ProviderNamespace).
+		mockedRuleService.EXPECT().Get(ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+			dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, err)
@@ -74,9 +72,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			ruleService: mockedRuleService,
 			logger:      log.NewNoop(),
 		}
-		mockedRuleService.
-			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
-				dummyPayload.Template, dummyPayload.ProviderNamespace).
+		mockedRuleService.EXPECT().Get(ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
+			dummyPayload.Template, dummyPayload.ProviderNamespace).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, res)
@@ -128,10 +125,8 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		dummyResult.Enabled = false
 		dummyResult.Name = "foo"
 
-		mockedRuleService.
-			On("Upsert", ctx, dummyPayload).
-			Run(func(args mock.Arguments) {
-				r := args.Get(1).(*rule.Rule)
+		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).
+			Run(func(ctx context.Context, r *rule.Rule) {
 				*r = *dummyResult
 			}).
 			Return(nil).Once()
@@ -153,8 +148,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			ruleService: mockedRuleService,
 			logger:      log.NewNoop(),
 		}
-		mockedRuleService.
-			On("Upsert", ctx, dummyPayload).
+		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).
 			Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, res)

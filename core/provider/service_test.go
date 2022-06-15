@@ -32,7 +32,7 @@ func TestListProviders(t *testing.T) {
 				UpdatedAt:   time.Now(),
 			},
 		}
-		repositoryMock.On("List", map[string]interface{}{}).Return(dummyProviders, nil).Once()
+		repositoryMock.EXPECT().List(map[string]interface{}{}).Return(dummyProviders, nil).Once()
 		result, err := dummyService.ListProviders(map[string]interface{}{})
 		assert.Nil(t, err)
 		assert.Equal(t, len(dummyProviders), len(result))
@@ -43,7 +43,7 @@ func TestListProviders(t *testing.T) {
 	t.Run("should call repository List method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("List", map[string]interface{}{}).
+		repositoryMock.EXPECT().List(map[string]interface{}{}).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.ListProviders(map[string]interface{}{})
 		assert.Nil(t, result)
@@ -72,7 +72,7 @@ func TestCreateProvider(t *testing.T) {
 	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Create", dummyProvider).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().Create(dummyProvider).Return(dummyProvider, nil).Once()
 		result, err := dummyService.CreateProvider(dummyProvider)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyProvider, result)
@@ -82,7 +82,7 @@ func TestCreateProvider(t *testing.T) {
 	t.Run("should call repository Create method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Create", dummyProvider).
+		repositoryMock.EXPECT().Create(dummyProvider).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.CreateProvider(dummyProvider)
 		assert.Nil(t, result)
@@ -112,7 +112,7 @@ func TestGetProvider(t *testing.T) {
 	t.Run("should call repository Get method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Get", providerID).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().Get(providerID).Return(dummyProvider, nil).Once()
 		result, err := dummyService.GetProvider(providerID)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyProvider, result)
@@ -122,7 +122,7 @@ func TestGetProvider(t *testing.T) {
 	t.Run("should call repository Get method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Get", providerID).
+		repositoryMock.EXPECT().Get(providerID).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.GetProvider(providerID)
 		assert.Nil(t, result)
@@ -151,7 +151,7 @@ func TestUpdateProvider(t *testing.T) {
 	t.Run("should call repository Update method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Update", dummyProvider).Return(dummyProvider, nil).Once()
+		repositoryMock.EXPECT().Update(dummyProvider).Return(dummyProvider, nil).Once()
 		result, err := dummyService.UpdateProvider(dummyProvider)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyProvider, result)
@@ -161,7 +161,7 @@ func TestUpdateProvider(t *testing.T) {
 	t.Run("should call repository Update method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Update", dummyProvider).
+		repositoryMock.EXPECT().Update(dummyProvider).
 			Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.UpdateProvider(dummyProvider)
 		assert.Nil(t, result)
@@ -180,7 +180,7 @@ func TestDeleteProvider(t *testing.T) {
 	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Delete", providerID).Return(nil).Once()
+		repositoryMock.EXPECT().Delete(providerID).Return(nil).Once()
 		err := dummyService.DeleteProvider(providerID)
 		assert.Nil(t, err)
 		repositoryMock.AssertCalled(t, "Delete", providerID)
@@ -189,7 +189,7 @@ func TestDeleteProvider(t *testing.T) {
 	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Delete", providerID).
+		repositoryMock.EXPECT().Delete(providerID).
 			Return(errors.New("random error")).Once()
 		err := dummyService.DeleteProvider(providerID)
 		assert.EqualError(t, err, "random error")
@@ -201,7 +201,7 @@ func TestService_Migrate(t *testing.T) {
 	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.On("Migrate").Return(nil).Once()
+		repositoryMock.EXPECT().Migrate().Return(nil).Once()
 		err := dummyService.Migrate()
 		assert.Nil(t, err)
 		repositoryMock.AssertCalled(t, "Migrate")

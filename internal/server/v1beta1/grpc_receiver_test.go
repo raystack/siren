@@ -43,8 +43,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("ListReceivers").
+		mockedReceiverService.EXPECT().ListReceivers().
 			Return(dummyResult, nil).Once()
 
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
@@ -63,8 +62,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("ListReceivers").
+		mockedReceiverService.EXPECT().ListReceivers().
 			Return(nil, errors.New("random error"))
 
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
@@ -91,8 +89,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			},
 		}
 
-		mockedReceiverService.
-			On("ListReceivers").
+		mockedReceiverService.EXPECT().ListReceivers().
 			Return(dummyResult, nil)
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
 		assert.Nil(t, res)
@@ -129,8 +126,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("CreateReceiver", payload).
+		mockedReceiverService.EXPECT().CreateReceiver(payload).
 			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -164,8 +160,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			Configurations: configurationsData,
 		}
 
-		mockedReceiverService.
-			On("CreateReceiver", payload).
+		mockedReceiverService.EXPECT().CreateReceiver(payload).
 			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -199,8 +194,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			Configurations: configurationsData,
 		}
 
-		mockedReceiverService.
-			On("CreateReceiver", payload).
+		mockedReceiverService.EXPECT().CreateReceiver(payload).
 			Return(nil).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -331,8 +325,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("CreateReceiver", payload).
+		mockedReceiverService.EXPECT().CreateReceiver(payload).
 			Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -375,10 +368,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			Configurations: configurations,
 		}
 
-		mockedReceiverService.
-			On("CreateReceiver", mock.Anything).
-			Run(func(args mock.Arguments) {
-				r := args.Get(0).(*receiver.Receiver)
+		mockedReceiverService.EXPECT().CreateReceiver(mock.Anything).
+			Run(func(r *receiver.Receiver) {
 				*r = *newPayload
 			}).Return(nil)
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
@@ -411,8 +402,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("GetReceiver", receiverId).
+		mockedReceiverService.EXPECT().GetReceiver(receiverId).
 			Return(payload, nil).Once()
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
@@ -429,8 +419,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("GetReceiver", receiverId).
+		mockedReceiverService.EXPECT().GetReceiver(receiverId).
 			Return(nil, nil).Once()
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
@@ -444,8 +433,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("GetReceiver", receiverId).
+		mockedReceiverService.EXPECT().GetReceiver(receiverId).
 			Return(payload, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
@@ -468,8 +456,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Configurations: configurations,
 		}
 
-		mockedReceiverService.
-			On("GetReceiver", receiverId).
+		mockedReceiverService.EXPECT().GetReceiver(receiverId).
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -493,8 +480,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Data:           data,
 		}
 
-		mockedReceiverService.
-			On("GetReceiver", receiverId).
+		mockedReceiverService.EXPECT().GetReceiver(receiverId).
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -532,8 +518,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("UpdateReceiver", payload).
+		mockedReceiverService.EXPECT().UpdateReceiver(payload).
 			Return(nil).Once()
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
@@ -690,8 +675,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("UpdateReceiver", payload).
+		mockedReceiverService.EXPECT().UpdateReceiver(payload).
 			Return(errors.New("random error"))
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
@@ -713,10 +697,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 			Configurations: configurations,
 		}
 
-		mockedReceiverService.
-			On("UpdateReceiver", mock.Anything).
-			Run(func(args mock.Arguments) {
-				r := args.Get(0).(*receiver.Receiver)
+		mockedReceiverService.EXPECT().UpdateReceiver(mock.Anything).
+			Run(func(r *receiver.Receiver) {
 				*r = *newPayload
 			}).
 			Return(nil)
@@ -739,8 +721,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("DeleteReceiver", providerId).
+		mockedReceiverService.EXPECT().DeleteReceiver(providerId).
 			Return(nil).Once()
 
 		res, err := dummyGRPCServer.DeleteReceiver(context.Background(), dummyReq)
@@ -754,8 +735,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.
-			On("DeleteReceiver", providerId).
+		mockedReceiverService.EXPECT().DeleteReceiver(providerId).
 			Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.DeleteReceiver(context.Background(), dummyReq)

@@ -84,7 +84,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Create", mock.Anything).Return(nil)
+		repositoryMock.EXPECT().Create(mock.Anything).Return(nil)
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedAlerts, actualAlerts)
@@ -102,7 +102,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Create", mock.Anything).Return(nil)
+		repositoryMock.EXPECT().Create(mock.Anything).Return(nil)
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedAlerts, actualAlerts)
@@ -116,7 +116,7 @@ func TestService_Create(t *testing.T) {
 			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}}
-		repositoryMock.On("Create", mock.Anything).Return(errors.New("random error"))
+		repositoryMock.EXPECT().Create(mock.Anything).Return(errors.New("random error"))
 		actualAlerts, err := dummyService.Create(alertsToBeCreated)
 		assert.EqualError(t, err, "random error")
 		assert.Nil(t, actualAlerts)
@@ -127,7 +127,7 @@ func TestService_Migrate(t *testing.T) {
 	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
-		repositoryMock.On("Migrate").Return(nil).Once()
+		repositoryMock.EXPECT().Migrate().Return(nil).Once()
 		err := dummyService.Migrate()
 		assert.Nil(t, err)
 		repositoryMock.AssertCalled(t, "Migrate")
