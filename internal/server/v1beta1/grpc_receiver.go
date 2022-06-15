@@ -3,11 +3,11 @@ package v1beta1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/utils"
-	goslack "github.com/slack-go/slack"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,6 +29,7 @@ type ReceiverService interface {
 	GetReceiver(uint64) (*receiver.Receiver, error)
 	UpdateReceiver(*receiver.Receiver) error
 	DeleteReceiver(uint64) error
+	NotifyReceiver(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
 	Migrate() error
 }
 
@@ -42,7 +43,7 @@ type SlackNotifierService interface { //TODO to be refactored, temporary only
 }
 
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
-	receivers, err := s.container.ReceiverService.ListReceivers()
+	receivers, err := s.receiverService.ListReceivers()
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -99,7 +100,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.container.ReceiverService.CreateReceiver(receiver); err != nil {
+	if err := s.receiverService.CreateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
@@ -120,7 +121,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 }
 
 func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.Receiver, error) {
-	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	receiver, err := s.receiverService.GetReceiver(req.GetId())
 	if receiver == nil {
 		return nil, status.Errorf(codes.NotFound, "receiver not found")
 	}
@@ -180,7 +181,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.container.ReceiverService.UpdateReceiver(receiver); err != nil {
+	if err := s.receiverService.UpdateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
@@ -201,7 +202,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 }
 
 func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*emptypb.Empty, error) {
-	err := s.container.ReceiverService.DeleteReceiver(uint64(req.GetId()))
+	err := s.receiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -211,7 +212,7 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteR
 
 func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1beta1.SendReceiverNotificationRequest) (*sirenv1beta1.SendReceiverNotificationResponse, error) {
 	var res *sirenv1beta1.SendReceiverNotificationResponse
-	rcv, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	rcv, err := s.receiverService.GetReceiver(req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
@@ -225,23 +226,10 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 			s.logger.Error("failed to encode the payload JSON", "error", err)
 			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
 		}
-
-		blocks := goslack.Blocks{}
-		err = json.Unmarshal(b, &blocks)
-		if err != nil {
-			s.logger.Error("failed to parse blocks", "error", err)
-			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
-		}
-
-		payload := &slack.Message{
-			ReceiverName: slackPayload.GetReceiverName(),
-			ReceiverType: slackPayload.GetReceiverType(),
-			Token:        rcv.Configurations["token"].(string),
-			Message:      slackPayload.GetMessage(),
-			Blocks:       blocks,
-		}
-		err = s.container.NotifierServices.Slack.Notify(payload)
-		if err != nil {
+		if err := s.receiverService.NotifyReceiver(rcv, slackPayload.GetMessage(), slackPayload.GetReceiverName(), slackPayload.GetReceiverType(), b); err != nil {
+			if errors.Is(err, receiver.ErrInvalid) {
+				return nil, status.Errorf(codes.InvalidArgument, err.Error())
+			}
 			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 		res = &sirenv1beta1.SendReceiverNotificationResponse{

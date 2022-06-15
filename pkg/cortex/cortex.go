@@ -25,7 +25,3 @@ type ReceiverConfig struct {
 type AlertManagerConfig struct {
 	Receivers []ReceiverConfig
 }
-
-type RuleGroup struct {
-	rwrulefmt.RuleGroup
-}

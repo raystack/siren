@@ -8,6 +8,8 @@ import (
 	cortex "github.com/odpf/siren/pkg/cortex"
 	mock "github.com/stretchr/testify/mock"
 
+	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
+
 	testing "testing"
 )
 
@@ -63,11 +65,11 @@ func (_c *CortexClient_CreateAlertmanagerConfig_Call) Return(_a0 error) *CortexC
 }
 
 // CreateRuleGroup provides a mock function with given fields: ctx, namespace, rg
-func (_m *CortexClient) CreateRuleGroup(ctx context.Context, namespace string, rg cortex.RuleGroup) error {
+func (_m *CortexClient) CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error {
 	ret := _m.Called(ctx, namespace, rg)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, cortex.RuleGroup) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, rwrulefmt.RuleGroup) error); ok {
 		r0 = rf(ctx, namespace, rg)
 	} else {
 		r0 = ret.Error(0)
@@ -84,14 +86,14 @@ type CortexClient_CreateRuleGroup_Call struct {
 // CreateRuleGroup is a helper method to define mock.On call
 //  - ctx context.Context
 //  - namespace string
-//  - rg cortex.RuleGroup
+//  - rg rwrulefmt.RuleGroup
 func (_e *CortexClient_Expecter) CreateRuleGroup(ctx interface{}, namespace interface{}, rg interface{}) *CortexClient_CreateRuleGroup_Call {
 	return &CortexClient_CreateRuleGroup_Call{Call: _e.mock.On("CreateRuleGroup", ctx, namespace, rg)}
 }
 
-func (_c *CortexClient_CreateRuleGroup_Call) Run(run func(ctx context.Context, namespace string, rg cortex.RuleGroup)) *CortexClient_CreateRuleGroup_Call {
+func (_c *CortexClient_CreateRuleGroup_Call) Run(run func(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup)) *CortexClient_CreateRuleGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(cortex.RuleGroup))
+		run(args[0].(context.Context), args[1].(string), args[2].(rwrulefmt.RuleGroup))
 	})
 	return _c
 }
@@ -141,15 +143,15 @@ func (_c *CortexClient_DeleteRuleGroup_Call) Return(_a0 error) *CortexClient_Del
 }
 
 // GetRuleGroup provides a mock function with given fields: ctx, namespace, groupName
-func (_m *CortexClient) GetRuleGroup(ctx context.Context, namespace string, groupName string) (*cortex.RuleGroup, error) {
+func (_m *CortexClient) GetRuleGroup(ctx context.Context, namespace string, groupName string) (*rwrulefmt.RuleGroup, error) {
 	ret := _m.Called(ctx, namespace, groupName)
 
-	var r0 *cortex.RuleGroup
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *cortex.RuleGroup); ok {
+	var r0 *rwrulefmt.RuleGroup
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *rwrulefmt.RuleGroup); ok {
 		r0 = rf(ctx, namespace, groupName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*cortex.RuleGroup)
+			r0 = ret.Get(0).(*rwrulefmt.RuleGroup)
 		}
 	}
 
@@ -183,21 +185,21 @@ func (_c *CortexClient_GetRuleGroup_Call) Run(run func(ctx context.Context, name
 	return _c
 }
 
-func (_c *CortexClient_GetRuleGroup_Call) Return(_a0 *cortex.RuleGroup, _a1 error) *CortexClient_GetRuleGroup_Call {
+func (_c *CortexClient_GetRuleGroup_Call) Return(_a0 *rwrulefmt.RuleGroup, _a1 error) *CortexClient_GetRuleGroup_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // ListRules provides a mock function with given fields: ctx, namespace
-func (_m *CortexClient) ListRules(ctx context.Context, namespace string) (map[string][]cortex.RuleGroup, error) {
+func (_m *CortexClient) ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error) {
 	ret := _m.Called(ctx, namespace)
 
-	var r0 map[string][]cortex.RuleGroup
-	if rf, ok := ret.Get(0).(func(context.Context, string) map[string][]cortex.RuleGroup); ok {
+	var r0 map[string][]rwrulefmt.RuleGroup
+	if rf, ok := ret.Get(0).(func(context.Context, string) map[string][]rwrulefmt.RuleGroup); ok {
 		r0 = rf(ctx, namespace)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string][]cortex.RuleGroup)
+			r0 = ret.Get(0).(map[string][]rwrulefmt.RuleGroup)
 		}
 	}
 
@@ -230,7 +232,7 @@ func (_c *CortexClient_ListRules_Call) Run(run func(ctx context.Context, namespa
 	return _c
 }
 
-func (_c *CortexClient_ListRules_Call) Return(_a0 map[string][]cortex.RuleGroup, _a1 error) *CortexClient_ListRules_Call {
+func (_c *CortexClient_ListRules_Call) Return(_a0 map[string][]rwrulefmt.RuleGroup, _a1 error) *CortexClient_ListRules_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

@@ -24,7 +24,7 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 	startTime := req.GetStartTime()
 	endTime := req.GetEndTime()
 
-	alerts, err := s.container.AlertService.Get(resourceName, providerId, startTime, endTime)
+	alerts, err := s.alertService.Get(resourceName, providerId, startTime, endTime)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -72,7 +72,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 		}
 		alerts.Alerts = append(alerts.Alerts, alert)
 	}
-	createdAlerts, err := s.container.AlertService.Create(&alerts)
+	createdAlerts, err := s.alertService.Create(&alerts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

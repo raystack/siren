@@ -18,37 +18,65 @@ func TestSecureService_ListReceivers_Slack(t *testing.T) {
 		Setup       func(*mocks.ReceiverRepository, *mocks.Encryptor, testCase)
 		Err         error
 	}
-	var testCases = []testCase{
 
-		{
-			Description: "should return error if List repository error",
-			Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
-				rr.EXPECT().List().Return(nil, errors.New("some error"))
+	var (
+		timeNow   = time.Now()
+		testCases = []testCase{
+
+			{
+				Description: "should return error if List repository error",
+				Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return(nil, errors.New("some error"))
+				},
+				Err: errors.New("secureService.repository.List: some error"),
 			},
-			Err: errors.New("some error"),
-		},
-		{
-			Description: "should return error if List repository success and no token in configurations field in decrypt error",
-			Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
-				rr.EXPECT().List().Return([]*receiver.Receiver{
-					{
-						Id:   10,
-						Name: "foo",
-						Type: "slack",
-						Labels: map[string]string{
-							"foo": "bar",
+			{
+				Description: "should return error if List repository success and no token in configurations field in decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*receiver.Receiver{
+						{
+							Id:   10,
+							Name: "foo",
+							Type: "slack",
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
 						},
-						CreatedAt: time.Now(),
-						UpdatedAt: time.Now(),
-					},
-				}, nil)
+					}, nil)
+				},
+				Err: errors.New("no token field found"),
 			},
-			Err: errors.New("no token field found"),
-		},
-		{
-			Description: "should return error if List repository success and decrypt error",
-			Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
-				rr.EXPECT().List().Return([]*receiver.Receiver{
+			{
+				Description: "should return error if List repository success and decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*receiver.Receiver{
+						{
+							Id:   10,
+							Name: "foo",
+							Type: "slack",
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							Configurations: map[string]interface{}{
+								"token": "key",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
+				},
+				Err: errors.New("post transform decrypt failed: decrypt error"),
+			},
+			{
+				Description: "should success if list repository and decrypt success",
+				Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return(tc.Receivers, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+				},
+				Receivers: []*receiver.Receiver{
 					{
 						Id:   10,
 						Name: "foo",
@@ -59,38 +87,14 @@ func TestSecureService_ListReceivers_Slack(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-						CreatedAt: time.Now(),
-						UpdatedAt: time.Now(),
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
 					},
-				}, nil)
-				e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
-			},
-			Err: errors.New("post transform decrypt failed: decrypt error"),
-		},
-		{
-			Description: "should success if list repository and decrypt success",
-			Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
-				rr.EXPECT().List().Return(tc.Receivers, nil)
-				e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
-			},
-			Receivers: []*receiver.Receiver{
-				{
-					Id:   10,
-					Name: "foo",
-					Type: "slack",
-					Labels: map[string]string{
-						"foo": "bar",
-					},
-					Configurations: map[string]interface{}{
-						"token": "key",
-					},
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
 				},
+				Err: nil,
 			},
-			Err: nil,
-		},
-	}
+		}
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
@@ -161,7 +165,7 @@ func TestSecureService_CreateReceiver_Slack(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("some error"),
+			Err: errors.New("secureService.repository.Create: some error"),
 		},
 		{
 			Description: "should return error if decrypt return error",
@@ -229,13 +233,14 @@ func TestSecureService_GetReceiver_Slack(t *testing.T) {
 	}
 	var (
 		testID    = uint64(10)
+		timeNow   = time.Now()
 		testCases = []testCase{
 			{
 				Description: "should return error if Get repository error",
 				Setup: func(rr *mocks.ReceiverRepository, e *mocks.Encryptor, tc testCase) {
 					rr.EXPECT().Get(testID).Return(nil, errors.New("some error"))
 				},
-				Err: errors.New("some error"),
+				Err: errors.New("secureService.repository.Get: some error"),
 			},
 			{
 				Description: "should return error if Get repository success and no token field in configurations in decrypt error",
@@ -247,8 +252,8 @@ func TestSecureService_GetReceiver_Slack(t *testing.T) {
 						Labels: map[string]string{
 							"foo": "bar",
 						},
-						CreatedAt: time.Now(),
-						UpdatedAt: time.Now(),
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
 					}, nil)
 				},
 				Err: errors.New("no token field found"),
@@ -266,8 +271,8 @@ func TestSecureService_GetReceiver_Slack(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-						CreatedAt: time.Now(),
-						UpdatedAt: time.Now(),
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
 					}, nil)
 					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
 				},
@@ -289,8 +294,8 @@ func TestSecureService_GetReceiver_Slack(t *testing.T) {
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+					CreatedAt: timeNow,
+					UpdatedAt: timeNow,
 				},
 				Err: nil,
 			},
@@ -366,7 +371,7 @@ func TestSecureService_UpdateReceiver_Slack(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("some error"),
+			Err: errors.New("secureService.repository.Update: some error"),
 		},
 		{
 			Description: "should return nil error if no error returned",

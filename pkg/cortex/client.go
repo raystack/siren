@@ -6,6 +6,7 @@ import (
 	"html/template"
 
 	"github.com/grafana/cortex-tools/pkg/client"
+	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	promconfig "github.com/prometheus/alertmanager/config"
 )
 
@@ -36,6 +37,7 @@ func NewClient(cfg Config, opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
+// CreateAlertmanagerConfig uploads an alert manager config to cortex
 func (c *Client) CreateAlertmanagerConfig(amConfigs AlertManagerConfig, tenantID string) error {
 	cfg, err := c.generateAlertmanagerConfig(amConfigs)
 	if err != nil {
@@ -51,40 +53,6 @@ func (c *Client) CreateAlertmanagerConfig(amConfigs AlertManagerConfig, tenantID
 		return err
 	}
 	return nil
-}
-
-func (c *Client) CreateRuleGroup(ctx context.Context, namespace string, rg RuleGroup) error {
-	return c.cortexClient.CreateRuleGroup(ctx, namespace, rg.RuleGroup)
-}
-
-func (c *Client) DeleteRuleGroup(ctx context.Context, namespace, groupName string) error {
-	return c.cortexClient.DeleteRuleGroup(ctx, namespace, groupName)
-}
-
-func (c *Client) GetRuleGroup(ctx context.Context, namespace, groupName string) (*RuleGroup, error) {
-	rg, err := c.cortexClient.GetRuleGroup(ctx, namespace, groupName)
-	if err != nil {
-		return nil, err
-	}
-	return &RuleGroup{RuleGroup: *rg}, nil
-}
-
-func (c *Client) ListRules(ctx context.Context, namespace string) (map[string][]RuleGroup, error) {
-	crgsMap, err := c.cortexClient.ListRules(ctx, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	rgsMap := make(map[string][]RuleGroup)
-	for k, crgs := range crgsMap {
-		rgs := []RuleGroup{}
-		for _, crg := range crgs {
-			rgs = append(rgs, RuleGroup{crg})
-		}
-		rgsMap[k] = rgs
-	}
-
-	return rgsMap, nil
 }
 
 func (c *Client) generateAlertmanagerConfig(amConfigs AlertManagerConfig) (string, error) {
@@ -105,4 +73,20 @@ func (c *Client) generateAlertmanagerConfig(amConfigs AlertManagerConfig) (strin
 		return "", err
 	}
 	return configStr, nil
+}
+
+func (c *Client) CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error {
+	return c.cortexClient.CreateRuleGroup(ctx, namespace, rg)
+}
+
+func (c *Client) DeleteRuleGroup(ctx context.Context, namespace, groupName string) error {
+	return c.cortexClient.DeleteRuleGroup(ctx, namespace, groupName)
+}
+
+func (c *Client) GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error) {
+	return c.cortexClient.GetRuleGroup(ctx, namespace, groupName)
+}
+
+func (c *Client) ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error) {
+	return c.cortexClient.ListRules(ctx, namespace)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
+	goslack "github.com/slack-go/slack"
 )
 
 const (
@@ -20,6 +21,7 @@ type SecureServiceProxy interface {
 	GetReceiver(uint64) (*Receiver, error)
 	UpdateReceiver(*Receiver) error
 	DeleteReceiver(uint64) error
+	NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
 	Migrate() error
 }
 
@@ -93,6 +95,36 @@ func (s *Service) UpdateReceiver(rcv *Receiver) error {
 
 func (s *Service) DeleteReceiver(id uint64) error {
 	return s.secureService.DeleteReceiver(id)
+}
+
+func (s *Service) NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
+	switch rcv.Type {
+	case Slack:
+		blocks := goslack.Blocks{}
+		if err := json.Unmarshal(payloadBlock, &blocks); err != nil {
+			return fmt.Errorf("unable to parse slack block: %w", ErrInvalid)
+		}
+
+		token, ok := rcv.Configurations["token"].(string)
+		if !ok {
+			return fmt.Errorf("no token found in configuration: %w", ErrInvalid)
+		}
+
+		payloadMessage := &slack.Message{
+			ReceiverName: payloadReceiverName,
+			ReceiverType: payloadReceiverType,
+			Token:        rcv.Configurations["token"].(string),
+			Message:      payloadMessage,
+			Blocks:       blocks,
+		}
+		if err := s.slackClient.Notify(payloadMessage, slack.CallWithToken(token)); err != nil {
+			return fmt.Errorf("failed to notify: %w", err)
+		}
+
+	default:
+		return errors.New("type not recognized")
+	}
+	return nil
 }
 
 func (s *Service) Migrate() error {

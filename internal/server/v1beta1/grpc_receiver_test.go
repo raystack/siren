@@ -2,7 +2,9 @@ package v1beta1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -10,10 +12,9 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
-	"github.com/odpf/siren/pkg/slack"
-	goslack "github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -39,10 +40,8 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	t.Run("should return list of all receiver", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("ListReceivers").
@@ -61,10 +60,8 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	t.Run("should return error code 13 if getting providers failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("ListReceivers").
@@ -78,10 +75,8 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
 		dummyResult := []*receiver.Receiver{
@@ -131,10 +126,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("Should create a slack receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
@@ -151,10 +144,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("Should create a pagerduty receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		configurations := make(map[string]interface{})
 		configurations["service_key"] = "foo"
@@ -188,10 +179,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("Should create a http receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		configurations := make(map[string]interface{})
 		configurations["url"] = "foo"
@@ -225,10 +214,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack client_id configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_secret"] = "foo"
@@ -251,10 +238,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack client_secret configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -277,10 +262,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack auth_code configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -303,10 +286,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if pagerduty service_key configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
@@ -326,10 +307,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if http url configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		configurationsData, _ := structpb.NewStruct(slackConfigurations)
@@ -349,10 +328,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 13 if creating receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("CreateReceiver", payload).
@@ -366,10 +343,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if receiver is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
@@ -388,10 +363,8 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		configurations["workspace"] = string([]byte{0xff})
@@ -435,10 +408,8 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return a receiver", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -455,10 +426,8 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return error code 5 if no receiver found", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -472,10 +441,8 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return error code 13 if getting receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("GetReceiver", receiverId).
@@ -489,10 +456,8 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion of configuration failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		configurations["foo"] = string([]byte{0xff})
@@ -515,10 +480,8 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return error code 13 if data NewStruct conversion of data failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		data := make(map[string]interface{})
 		data["channels"] = string([]byte{0xff})
@@ -566,10 +529,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should update receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
@@ -586,10 +547,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack client_id configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_secret"] = "foo"
@@ -612,10 +571,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack client_secret configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -638,10 +595,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if slack auth_code configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -664,10 +619,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if pagerduty service_key configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -690,10 +643,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if http url configuration is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		slackConfigurations := make(map[string]interface{})
 		slackConfigurations["client_id"] = "foo"
@@ -716,10 +667,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 3 if receiver is missing", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		configurationsData, _ := structpb.NewStruct(configurations)
@@ -738,10 +687,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 13 if updating receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("UpdateReceiver", payload).
@@ -755,10 +702,8 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
 		newPayload := &receiver.Receiver{
@@ -791,10 +736,8 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 	t.Run("should delete receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("DeleteReceiver", providerId).
@@ -808,10 +751,8 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 	t.Run("should return error code 13 if deleting receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.
 			On("DeleteReceiver", providerId).
@@ -838,34 +779,11 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 	}
 
 	t.Run("should return OK response for slack notification", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &slack.Message{
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Token:        "foo",
-			Message:      "bar",
-			Blocks: goslack.Blocks{
-				BlockSet: []goslack.Block{
-					&goslack.SectionBlock{
-						Type: goslack.MBTSection,
-						Text: &goslack.TextBlockObject{
-							Type: "mrkdwn",
-							Text: "Hello",
-						},
-					},
-				},
-			},
-		}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-				NotifierServices: NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -878,21 +796,21 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Blocks: []*structpb.Struct{
 						{
 							Fields: map[string]*structpb.Value{
-								"type": &structpb.Value{
+								"type": {
 									Kind: &structpb.Value_StringValue{
 										StringValue: "section",
 									},
 								},
-								"text": &structpb.Value{
+								"text": {
 									Kind: &structpb.Value_StructValue{
 										StructValue: &structpb.Struct{
 											Fields: map[string]*structpb.Value{
-												"type": &structpb.Value{
+												"type": {
 													Kind: &structpb.Value_StringValue{
 														StringValue: "mrkdwn",
 													},
 												},
-												"text": &structpb.Value{
+												"text": {
 													Kind: &structpb.Value_StringValue{
 														StringValue: "Hello",
 													},
@@ -908,34 +826,28 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			},
 		}
 
-		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
-		mockedSlackNotifierService.On("Notify", dummyPayload).Return(nil).Once()
+		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
+		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
+		require.NoError(t, err)
+		mockedReceiverService.EXPECT().NotifyReceiver(
+			receiverResult,
+			dummyReq.GetSlack().GetMessage(),
+			dummyReq.GetSlack().GetReceiverName(),
+			dummyReq.GetSlack().GetReceiverType(),
+			blocksByte,
+		).Return(nil)
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, true, res.GetOk())
-		mockedSlackNotifierService.AssertCalled(t, "Notify", dummyPayload)
+		mockedReceiverService.AssertExpectations(t)
 	})
 
-	t.Run("should return error code 13 if send slack notification failed", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+	t.Run("should return internal server error if send slack notification failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyPayload := &slack.Message{
-			ReceiverName: "foo",
-			ReceiverType: "channel",
-			Token:        "foo",
-			Message:      "bar",
-			Blocks:       goslack.Blocks{},
-		}
-
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-				NotifierServices: NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -950,26 +862,62 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			},
 		}
 
-		mockedReceiverService.On("GetReceiver", uint64(1)).Return(receiverResult, nil).Once()
-		mockedSlackNotifierService.On("Notify", dummyPayload).
-			Return(errors.New("random error")).Once()
+		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
+		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
+		require.NoError(t, err)
+		mockedReceiverService.EXPECT().NotifyReceiver(
+			receiverResult,
+			dummyReq.GetSlack().GetMessage(),
+			dummyReq.GetSlack().GetReceiverName(),
+			dummyReq.GetSlack().GetReceiverType(),
+			blocksByte,
+		).Return(errors.New("some error"))
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some error")
 		assert.Nil(t, res)
 	})
 
-	t.Run("should return error code 3 if receiver not found", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
+	t.Run("should return invalid error if service return invalid error", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-				NotifierServices: NotifierServices{
-					Slack: mockedSlackNotifierService,
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
+		}
+
+		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
+			Id: 1,
+			Data: &sirenv1beta1.SendReceiverNotificationRequest_Slack{
+				Slack: &sirenv1beta1.SendReceiverNotificationRequest_SlackPayload{
+					ReceiverName: "foo",
+					ReceiverType: "channel",
+					Message:      "bar",
+					Blocks:       []*structpb.Struct{},
 				},
 			},
-			logger: log.NewNoop(),
+		}
+
+		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
+		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
+		require.NoError(t, err)
+		mockedReceiverService.EXPECT().NotifyReceiver(
+			receiverResult,
+			dummyReq.GetSlack().GetMessage(),
+			dummyReq.GetSlack().GetReceiverName(),
+			dummyReq.GetSlack().GetReceiverType(),
+			blocksByte,
+		).Return(fmt.Errorf("some error: %w", receiver.ErrInvalid))
+		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = some error: bad_request")
+		assert.Nil(t, res)
+	})
+
+	t.Run("should return invalid error if receiver not found", func(t *testing.T) {
+		mockedReceiverService := &mocks.ReceiverService{}
+
+		dummyGRPCServer := GRPCServer{
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		dummyReq := &sirenv1beta1.SendReceiverNotificationRequest{
@@ -982,21 +930,21 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 					Blocks: []*structpb.Struct{
 						{
 							Fields: map[string]*structpb.Value{
-								"type": &structpb.Value{
+								"type": {
 									Kind: &structpb.Value_StringValue{
 										StringValue: "section",
 									},
 								},
-								"text": &structpb.Value{
+								"text": {
 									Kind: &structpb.Value_StructValue{
 										StructValue: &structpb.Struct{
 											Fields: map[string]*structpb.Value{
-												"type": &structpb.Value{
+												"type": {
 													Kind: &structpb.Value_StringValue{
 														StringValue: "mrkdwn",
 													},
 												},
-												"text": &structpb.Value{
+												"text": {
 													Kind: &structpb.Value_StringValue{
 														StringValue: "Hello",
 													},
@@ -1012,7 +960,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			},
 		}
 
-		mockedReceiverService.On("GetReceiver", uint64(1)).
+		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = random error")
@@ -1020,17 +968,11 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 	})
 
 	t.Run("should return error code 3 if send notification for receiver not implemented", func(t *testing.T) {
-		mockedSlackNotifierService := &mocks.SlackNotifierService{}
 		mockedReceiverService := &mocks.ReceiverService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				ReceiverService: mockedReceiverService,
-				NotifierServices: NotifierServices{
-					Slack: mockedSlackNotifierService,
-				},
-			},
-			logger: log.NewNoop(),
+			receiverService: mockedReceiverService,
+			logger:          log.NewNoop(),
 		}
 
 		receiverResult := &receiver.Receiver{
@@ -1046,7 +988,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 			Data: nil,
 		}
 
-		mockedReceiverService.On("GetReceiver", uint64(1)).
+		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).
 			Return(receiverResult, nil).Once()
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = Send notification not registered for this receiver")

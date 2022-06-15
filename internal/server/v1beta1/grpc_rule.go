@@ -24,7 +24,7 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 	template := req.GetTemplate()
 	providerNamespace := req.GetProviderNamespace()
 
-	rules, err := s.container.RulesService.Get(ctx, name, namespace, groupName, template, providerNamespace)
+	rules, err := s.ruleService.Get(ctx, name, namespace, groupName, template, providerNamespace)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -77,7 +77,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		Variables:         variables,
 	}
 
-	if err := s.container.RulesService.Upsert(ctx, rule); err != nil {
+	if err := s.ruleService.Upsert(ctx, rule); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 

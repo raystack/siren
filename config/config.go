@@ -1,46 +1,39 @@
 package config
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 
 	"github.com/odpf/salt/config"
+	"github.com/odpf/siren/internal/server"
+	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/telemetry"
 )
 
+var (
+	//go:embed prometheus_alert_manager_helper.tmpl
+	promAMHelperTemplateString string
+	//go:embed prometheus_alert_manager_config.goyaml
+	promAMConfigYamlString string
+)
+
 // LoadConfig returns application configuration
-func LoadConfig(configFile string) (*Config, error) {
+func LoadConfig(configFile string) (Config, error) {
 	var cfg Config
 	loader := config.NewLoader(config.WithFile(configFile))
 
 	if err := loader.Load(&cfg); err != nil {
 		if errors.As(err, &config.ConfigFileNotFoundError{}) {
 			fmt.Println(err)
-			return &cfg, nil
+			return cfg, nil
 		}
-		return nil, err
+		return cfg, err
 	}
-	return &cfg, nil
-}
-
-// DBConfig contains the database configuration
-type DBConfig struct {
-	Host     string `mapstructure:"host" default:"localhost"`
-	User     string `mapstructure:"user" default:"postgres"`
-	Password string `mapstructure:"password" default:""`
-	Name     string `mapstructure:"name" default:"postgres"`
-	Port     string `mapstructure:"port" default:"5432"`
-	SslMode  string `mapstructure:"sslmode" default:"disable"`
-	LogLevel string `mapstructure:"log_level" default:"info"`
-}
-
-// CortexConfig contains the cortex configuration
-type CortexConfig struct {
-	Address string `mapstructure:"address" default:"http://localhost:8080"`
-}
-
-type SirenServiceConfig struct {
-	Host string `mapstructure:"host" default:"http://localhost:3000"`
+	cfg.Cortex.PrometheusAlertManagerConfigYaml = promAMConfigYamlString
+	cfg.Cortex.PrometheusAlertManagerHelperTemplate = promAMHelperTemplateString
+	return cfg, nil
 }
 
 type LogConfig struct {
@@ -54,11 +47,10 @@ type SlackApp struct {
 
 // Config contains the application configuration
 type Config struct {
-	Port          int                      `mapstructure:"port" default:"8080"`
-	DB            DBConfig                 `mapstructure:"db"`
-	Cortex        CortexConfig             `mapstructure:"cortex"`
+	DB            postgres.Config          `mapstructure:"db"`
+	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
-	SirenService  SirenServiceConfig       `mapstructure:"siren_service"`
+	SirenService  server.Config            `mapstructure:"siren_service"`
 	Log           LogConfig                `mapstructure:"log"`
 	SlackApp      SlackApp                 `mapstructure:"slack_app"`
 	EncryptionKey string                   `mapstructure:"encryption_key"`

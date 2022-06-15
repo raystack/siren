@@ -23,7 +23,7 @@ func NewSecureService(cryptoClient Encryptor, repository Repository) *SecureServ
 func (ss *SecureService) ListReceivers() ([]*Receiver, error) {
 	receivers, err := ss.repository.List()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("secureService.repository.List: %w", err)
 	}
 
 	domainReceivers := make([]*Receiver, 0, len(receivers))
@@ -51,7 +51,7 @@ func (ss *SecureService) CreateReceiver(rcv *Receiver) error {
 	}
 
 	if err := ss.repository.Create(rcv); err != nil {
-		return err
+		return fmt.Errorf("secureService.repository.Create: %w", err)
 	}
 
 	if rcv.Type == Slack {
@@ -66,7 +66,7 @@ func (ss *SecureService) CreateReceiver(rcv *Receiver) error {
 func (ss *SecureService) GetReceiver(id uint64) (*Receiver, error) {
 	rcv, err := ss.repository.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
 	}
 
 	if rcv.Type == Slack {
@@ -86,7 +86,7 @@ func (ss *SecureService) UpdateReceiver(rcv *Receiver) error {
 	}
 
 	if err := ss.repository.Update(rcv); err != nil {
-		return err
+		return fmt.Errorf("secureService.repository.Update: %w", err)
 	}
 
 	return nil
@@ -94,6 +94,10 @@ func (ss *SecureService) UpdateReceiver(rcv *Receiver) error {
 
 func (ss *SecureService) DeleteReceiver(id uint64) error {
 	return ss.repository.Delete(id)
+}
+
+func (ss *SecureService) NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
+	return nil
 }
 
 func (ss *SecureService) Migrate() error {

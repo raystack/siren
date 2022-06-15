@@ -223,6 +223,47 @@ func (_c *SecureServiceProxy_Migrate_Call) Return(_a0 error) *SecureServiceProxy
 	return _c
 }
 
+// NotifyReceiver provides a mock function with given fields: rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock
+func (_m *SecureServiceProxy) NotifyReceiver(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
+	ret := _m.Called(rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*receiver.Receiver, string, string, string, []byte) error); ok {
+		r0 = rf(rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SecureServiceProxy_NotifyReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NotifyReceiver'
+type SecureServiceProxy_NotifyReceiver_Call struct {
+	*mock.Call
+}
+
+// NotifyReceiver is a helper method to define mock.On call
+//  - rcv *receiver.Receiver
+//  - payloadMessage string
+//  - payloadReceiverName string
+//  - payloadReceiverType string
+//  - payloadBlock []byte
+func (_e *SecureServiceProxy_Expecter) NotifyReceiver(rcv interface{}, payloadMessage interface{}, payloadReceiverName interface{}, payloadReceiverType interface{}, payloadBlock interface{}) *SecureServiceProxy_NotifyReceiver_Call {
+	return &SecureServiceProxy_NotifyReceiver_Call{Call: _e.mock.On("NotifyReceiver", rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)}
+}
+
+func (_c *SecureServiceProxy_NotifyReceiver_Call) Run(run func(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte)) *SecureServiceProxy_NotifyReceiver_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(*receiver.Receiver), args[1].(string), args[2].(string), args[3].(string), args[4].([]byte))
+	})
+	return _c
+}
+
+func (_c *SecureServiceProxy_NotifyReceiver_Call) Return(_a0 error) *SecureServiceProxy_NotifyReceiver_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // UpdateReceiver provides a mock function with given fields: _a0
 func (_m *SecureServiceProxy) UpdateReceiver(_a0 *receiver.Receiver) error {
 	ret := _m.Called(_a0)

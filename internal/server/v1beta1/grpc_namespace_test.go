@@ -26,10 +26,8 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 	t.Run("should return list of all namespaces", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		dummyResult := []*namespace.Namespace{
 			{
@@ -56,10 +54,8 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 	t.Run("should return code 13 if getting namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("ListNamespaces").
 			Return(nil, errors.New("random error")).Once()
@@ -71,10 +67,8 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 	t.Run("should return code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []*namespace.Namespace{
@@ -119,10 +113,8 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	t.Run("should create a namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("CreateNamespace", payload).Return(nil).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
@@ -133,10 +125,8 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	t.Run("should return error code 13 if creating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("CreateNamespace", payload).
 			Return(errors.New("random error")).Once()
@@ -148,10 +138,8 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 
 		mockedNamespaceService.On("CreateNamespace", payload).Return(
@@ -165,10 +153,8 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("CreateNamespace", mock.AnythingOfType("*namespace.Namespace")).Return(nil).Run(func(args mock.Arguments) {
 			n := args.Get(0).(*namespace.Namespace)
@@ -191,10 +177,8 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 	t.Run("should get the namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		dummyResult := &namespace.Namespace{
 			Id:          1,
@@ -219,10 +203,8 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 	t.Run("should return error code 5 if no namespace found", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
@@ -234,10 +216,8 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 	t.Run("should return error code 13 if getting namespace fails", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("GetNamespace", uint64(1)).
 			Return(nil, errors.New("random error")).Once()
@@ -250,10 +230,8 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &namespace.Namespace{
@@ -299,10 +277,8 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	t.Run("should update a namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).Return(nil).Once()
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
@@ -314,10 +290,8 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).Return(
 			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
@@ -331,10 +305,8 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	t.Run("should return error code 13 if updating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", payload).
 			Return(errors.New("random error")).Once()
@@ -347,10 +319,8 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("UpdateNamespace", mock.AnythingOfType("*namespace.Namespace")).Return(nil).Run(func(args mock.Arguments) {
 			n := args.Get(0).(*namespace.Namespace)
@@ -374,10 +344,8 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 	t.Run("should delete namespace object", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("DeleteNamespace", namespaceId).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
@@ -389,10 +357,8 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 	t.Run("should return error code 13 if deleting namespace failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				NamespaceService: mockedNamespaceService,
-			},
-			logger: log.NewNoop(),
+			namespaceService: mockedNamespaceService,
+			logger:           log.NewNoop(),
 		}
 		mockedNamespaceService.On("DeleteNamespace", namespaceId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)

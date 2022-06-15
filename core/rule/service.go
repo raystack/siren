@@ -9,7 +9,6 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/cortex"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -197,12 +196,10 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 	if err != nil {
 		return err
 	}
-	y := cortex.RuleGroup{
-		RuleGroup: rwrulefmt.RuleGroup{
-			RuleGroup: rulefmt.RuleGroup{
-				Name:  rule.GroupName,
-				Rules: ruleNodes,
-			},
+	y := rwrulefmt.RuleGroup{
+		RuleGroup: rulefmt.RuleGroup{
+			Name:  rule.GroupName,
+			Rules: ruleNodes,
 		},
 	}
 	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {

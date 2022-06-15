@@ -49,10 +49,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		}
 
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				RulesService: mockedRuleService,
-			},
-			logger: log.NewNoop(),
+			ruleService: mockedRuleService,
+			logger:      log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
@@ -73,10 +71,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				RulesService: mockedRuleService,
-			},
-			logger: log.NewNoop(),
+			ruleService: mockedRuleService,
+			logger:      log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Get", ctx, dummyPayload.Name, dummyPayload.Namespace, dummyPayload.GroupName,
@@ -124,10 +120,8 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				RulesService: mockedRuleService,
-			},
-			logger: log.NewNoop(),
+			ruleService: mockedRuleService,
+			logger:      log.NewNoop(),
 		}
 		dummyResult := &rule.Rule{}
 		*dummyResult = *dummyPayload
@@ -156,10 +150,8 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				RulesService: mockedRuleService,
-			},
-			logger: log.NewNoop(),
+			ruleService: mockedRuleService,
+			logger:      log.NewNoop(),
 		}
 		mockedRuleService.
 			On("Upsert", ctx, dummyPayload).

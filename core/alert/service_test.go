@@ -28,7 +28,7 @@ func TestService_Get(t *testing.T) {
 			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Get", "foo", uint64(1), uint64(0), uint64(100)).Return(dummyAlerts, nil)
+		repositoryMock.EXPECT().Get("foo", uint64(1), uint64(0), uint64(100)).Return(dummyAlerts, nil)
 		actualAlerts, err := dummyService.Get("foo", 1, 0, 100)
 		assert.Nil(t, err)
 		assert.Equal(t, expectedAlerts, actualAlerts)
@@ -51,7 +51,7 @@ func TestService_Get(t *testing.T) {
 			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
-		repositoryMock.On("Get", "foo", uint64(1), uint64(0), mock.Anything).
+		repositoryMock.EXPECT().Get("foo", uint64(1), uint64(0), mock.Anything).
 			Return(dummyAlerts, nil)
 		actualAlerts, err := dummyService.Get("foo", 1, 0, 0)
 		assert.Nil(t, err)
@@ -62,7 +62,7 @@ func TestService_Get(t *testing.T) {
 	t.Run("should call repository Get method and handle errors", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
-		repositoryMock.On("Get", "foo", uint64(1), uint64(0), uint64(100)).
+		repositoryMock.EXPECT().Get("foo", uint64(1), uint64(0), uint64(100)).
 			Return(nil, errors.New("random error"))
 		actualAlerts, err := dummyService.Get("foo", 1, 0, 100)
 		assert.EqualError(t, err, "random error")

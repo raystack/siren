@@ -24,10 +24,8 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 	t.Run("should return list of all subscriptions", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		dummyResult := []*subscription.Subscription{
 			{
@@ -52,10 +50,8 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 	t.Run("should return error code 13 if getting subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		mockedSubscriptionService.On("ListSubscriptions", context.Background()).
 			Return(nil, errors.New("random error")).Once()
@@ -74,10 +70,8 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 	t.Run("should return a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
 			Id:        1,
@@ -99,10 +93,8 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 	t.Run("should return error code 5 if subscriptions not found", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		mockedSubscriptionService.On("GetSubscription", context.Background(), uint64(1)).Return(nil, nil).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
@@ -113,10 +105,8 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 	t.Run("should return error code 13 if getting subscription fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		mockedSubscriptionService.On("GetSubscription", context.Background(), uint64(1)).
 			Return(nil, errors.New("random error")).Once()
@@ -142,10 +132,8 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 	t.Run("should create a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
 			Id:        1,
@@ -179,10 +167,8 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 	t.Run("should return error code 13 if creating subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("CreateSubscription", context.Background(), payload).
@@ -214,10 +200,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 	t.Run("should update a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
 			Id:        1,
@@ -252,10 +236,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 	t.Run("should return error code 13 if creating subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
@@ -272,10 +254,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 	t.Run("should return error code 5 for bad requests", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 		mockedSubscriptionService.On("UpdateSubscription", context.Background(), payload).Return(
 			errors.New(`violates unique constraint "urn_provider_id_unique"`)).Once()
@@ -295,10 +275,8 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 	t.Run("should delete a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("DeleteSubscription", context.Background(), uint64(1)).Return(nil).Once()
@@ -310,10 +288,8 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 	t.Run("should return error code 13 if deleting subscription fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := GRPCServer{
-			container: &Container{
-				SubscriptionService: mockedSubscriptionService,
-			},
-			logger: log.NewNoop(),
+			subscriptionService: mockedSubscriptionService,
+			logger:              log.NewNoop(),
 		}
 
 		mockedSubscriptionService.On("DeleteSubscription", context.Background(), uint64(1)).Return(errors.New("random error")).Once()

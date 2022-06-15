@@ -23,7 +23,7 @@ type SubscriptionService interface {
 }
 
 func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListSubscriptionsResponse, error) {
-	subscriptions, err := s.container.SubscriptionService.ListSubscriptions(ctx)
+	subscriptions, err := s.subscriptionService.ListSubscriptions(ctx)
 	if err != nil {
 		s.logger.Error("failed to list subscriptions", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -54,7 +54,7 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	if err := s.container.SubscriptionService.CreateSubscription(ctx, subscription); err != nil {
+	if err := s.subscriptionService.CreateSubscription(ctx, subscription); err != nil {
 		s.logger.Error("failed to create subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -76,7 +76,7 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 }
 
 func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetSubscriptionRequest) (*sirenv1beta1.Subscription, error) {
-	subscription, err := s.container.SubscriptionService.GetSubscription(ctx, req.GetId())
+	subscription, err := s.subscriptionService.GetSubscription(ctx, req.GetId())
 	if err != nil {
 		s.logger.Error("failed to fetch subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -110,7 +110,7 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	if err := s.container.SubscriptionService.UpdateSubscription(ctx, subscription); err != nil {
+	if err := s.subscriptionService.UpdateSubscription(ctx, subscription); err != nil {
 		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
 			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
 		}
@@ -136,7 +136,7 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 }
 
 func (s *GRPCServer) DeleteSubscription(ctx context.Context, req *sirenv1beta1.DeleteSubscriptionRequest) (*emptypb.Empty, error) {
-	err := s.container.SubscriptionService.DeleteSubscription(ctx, req.GetId())
+	err := s.subscriptionService.DeleteSubscription(ctx, req.GetId())
 	if err != nil {
 		s.logger.Error("failed to delete subscription", "error", err)
 		return nil, status.Errorf(codes.Internal, err.Error())

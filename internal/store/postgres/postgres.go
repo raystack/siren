@@ -1,28 +1,26 @@
-package store
+package postgres
 
 import (
 	"fmt"
 
-	"github.com/odpf/siren/config"
-	"gorm.io/gorm/logger"
-
-	"gorm.io/driver/postgres"
+	gormpg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // New returns the database instance
-func New(c *config.DBConfig) (*gorm.DB, error) {
+func New(c Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
 		c.Host,
 		c.User,
 		c.Name,
 		c.Port,
-		c.SslMode,
+		c.SSLMode,
 		c.Password,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(getLogLevelFromString(c.LogLevel))})
+	db, err := gorm.Open(gormpg.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(getLogLevelFromString(c.LogLevel))})
 	if err != nil {
 		panic(err)
 	}

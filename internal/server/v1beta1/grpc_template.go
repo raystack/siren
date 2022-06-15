@@ -22,7 +22,7 @@ type TemplateService interface {
 }
 
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
-	templates, err := s.container.TemplateService.Index(req.GetTag())
+	templates, err := s.templateService.Index(req.GetTag())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -53,7 +53,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 }
 
 func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetTemplateByNameRequest) (*sirenv1beta1.TemplateResponse, error) {
-	template, err := s.container.TemplateService.GetByName(req.GetName())
+	template, err := s.templateService.GetByName(req.GetName())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -100,7 +100,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 		Tags:      req.GetTags(),
 		Variables: variables,
 	}
-	err := s.container.TemplateService.Upsert(template)
+	err := s.templateService.Upsert(template)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -129,7 +129,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 }
 
 func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
-	err := s.container.TemplateService.Delete(req.GetName())
+	err := s.templateService.Delete(req.GetName())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -137,7 +137,7 @@ func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteT
 }
 
 func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
-	body, err := s.container.TemplateService.Render(req.GetName(), req.GetVariables())
+	body, err := s.templateService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}

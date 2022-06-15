@@ -11,7 +11,7 @@ type NewRelicConfig struct {
 	License string `mapstructure:"license"`
 }
 
-func New(c *NewRelicConfig) (*newrelic.Application, error) {
+func New(c NewRelicConfig) (*newrelic.Application, error) {
 	return newrelic.NewApplication(
 		newrelic.ConfigAppName(c.AppName),
 		newrelic.ConfigEnabled(c.Enabled),
