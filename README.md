@@ -3,6 +3,7 @@
 ![test workflow](https://github.com/odpf/siren/actions/workflows/test.yaml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
 [![Version](https://img.shields.io/github/v/release/odpf/siren?logo=semantic-release)](Version)
+[![Coverage Status](https://coveralls.io/repos/github/odpf/siren/badge.svg?branch=main)](https://coveralls.io/github/odpf/siren?branch=main)
 
 Siren provides alerting on metrics of your applications using [Cortex metrics](https://cortexmetrics.io/) in a simple
 DIY configuration. With Siren, you can define templates(using go templates standard), and create/edit/enable/disable
