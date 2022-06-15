@@ -14,7 +14,7 @@ build: ## Build the siren binary
 	@echo " - build complete"
 
 test: ## Run the tests
-	go test ./... -coverprofile=coverage.out
+	go test ./... -race -coverprofile=coverage.out
 
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
