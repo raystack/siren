@@ -36,4 +36,4 @@ jobs:
       - name: Send coverage to coveralls
         uses: shogo82148/actions-goveralls@v1
         with:
-          path-to-profile: profile.cov
+          path-to-profile: coverage.out
