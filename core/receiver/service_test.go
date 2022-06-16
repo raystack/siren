@@ -34,7 +34,7 @@ func TestService_ListReceivers(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 					rr.EXPECT().List().Return([]*receiver.Receiver{
 						{
-							Id:   10,
+							ID:   10,
 							Name: "foo",
 							Type: "slack",
 							Labels: map[string]string{
@@ -48,7 +48,7 @@ func TestService_ListReceivers(t *testing.T) {
 						},
 					}, nil)
 					ss.EXPECT().Decrypt(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -68,7 +68,7 @@ func TestService_ListReceivers(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 					rr.EXPECT().List().Return([]*receiver.Receiver{
 						{
-							Id:   10,
+							ID:   10,
 							Name: "foo",
 							Type: "slack",
 							Labels: map[string]string{
@@ -82,7 +82,7 @@ func TestService_ListReceivers(t *testing.T) {
 						},
 					}, nil)
 					ss.EXPECT().Decrypt(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -97,7 +97,7 @@ func TestService_ListReceivers(t *testing.T) {
 				},
 				Receivers: []*receiver.Receiver{
 					{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -159,7 +159,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -180,7 +180,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
-					Id:   123,
+					ID:   123,
 					Type: "slack",
 					Configurations: map[string]interface{}{
 						"token": "key",
@@ -188,7 +188,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 				}).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -201,7 +201,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
-					Id:   123,
+					ID:   123,
 					Type: "slack",
 					Configurations: map[string]interface{}{
 						"token": "key",
@@ -210,7 +210,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 				ss.EXPECT().Decrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -223,7 +223,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
-					Id:   123,
+					ID:   123,
 					Type: "slack",
 					Configurations: map[string]interface{}{
 						"token": "key",
@@ -232,7 +232,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 				ss.EXPECT().Decrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -301,7 +301,7 @@ func TestService_GetReceiver(t *testing.T) {
 				Description: "should return error if Get repository success and decrypt error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 					rr.EXPECT().Get(testID).Return(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -314,7 +314,7 @@ func TestService_GetReceiver(t *testing.T) {
 						UpdatedAt: timeNow,
 					}, nil)
 					ss.EXPECT().Decrypt(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -333,7 +333,7 @@ func TestService_GetReceiver(t *testing.T) {
 				Description: "should success if Get repository and decrypt success",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 					rr.EXPECT().Get(testID).Return(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -346,7 +346,7 @@ func TestService_GetReceiver(t *testing.T) {
 						UpdatedAt: timeNow,
 					}, nil)
 					ss.EXPECT().Decrypt(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -359,7 +359,7 @@ func TestService_GetReceiver(t *testing.T) {
 						UpdatedAt: timeNow,
 					}).Return(nil)
 					ss.EXPECT().PopulateReceiver(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -371,7 +371,7 @@ func TestService_GetReceiver(t *testing.T) {
 						CreatedAt: timeNow,
 						UpdatedAt: timeNow,
 					}).Return(&receiver.Receiver{
-						Id:   10,
+						ID:   10,
 						Name: "foo",
 						Type: "slack",
 						Labels: map[string]string{
@@ -388,7 +388,7 @@ func TestService_GetReceiver(t *testing.T) {
 					}, nil)
 				},
 				Rcv: &receiver.Receiver{
-					Id:   10,
+					ID:   10,
 					Name: "foo",
 					Type: "slack",
 					Labels: map[string]string{
@@ -452,7 +452,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -473,7 +473,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Update(&receiver.Receiver{
-					Id:   123,
+					ID:   123,
 					Type: "slack",
 					Configurations: map[string]interface{}{
 						"token": "key",
@@ -481,7 +481,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				}).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",
@@ -494,7 +494,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Update(&receiver.Receiver{
-					Id:   123,
+					ID:   123,
 					Type: "slack",
 					Configurations: map[string]interface{}{
 						"token": "key",
@@ -502,7 +502,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				}).Return(nil)
 			},
 			Rcv: &receiver.Receiver{
-				Id:   123,
+				ID:   123,
 				Type: "slack",
 				Configurations: map[string]interface{}{
 					"token": "key",

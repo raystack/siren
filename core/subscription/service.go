@@ -180,7 +180,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	switch providerInfo.Type {
 	case "cortex":
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
-		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.Urn)
+		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.URN)
 		if err != nil {
 			return errors.Wrap(err, "s.amClient.CreateAlertmanagerConfig")
 		}
@@ -227,13 +227,13 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 		for _, receiverItem := range item.Receivers {
 			var receiverInfo *receiver.Receiver
 			for idx := range allReceivers {
-				if allReceivers[idx].Id == receiverItem.Id {
+				if allReceivers[idx].ID == receiverItem.ID {
 					receiverInfo = allReceivers[idx]
 					break
 				}
 			}
 			if receiverInfo == nil {
-				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.Id))
+				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.ID))
 			}
 			//initialize the nil map using the make function
 			//to avoid panics while adding elements in future
@@ -244,7 +244,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 			case "slack":
 				if _, ok := receiverItem.Configuration["channel_name"]; !ok {
 					return nil, errors.New(fmt.Sprintf(
-						"configuration.channel_name missing from receiver with id %d", receiverItem.Id))
+						"configuration.channel_name missing from receiver with id %d", receiverItem.ID))
 				}
 				if val, ok := receiverInfo.Configurations["token"]; ok {
 					receiverItem.Configuration["token"] = val.(string)
@@ -261,16 +261,16 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not supported via Siren inside Cortex`, receiverInfo.Type))
 			}
 			enrichedReceiver := EnrichedReceiverMetadata{
-				Id:            receiverItem.Id,
+				ID:            receiverItem.ID,
 				Configuration: receiverItem.Configuration,
 				Type:          receiverInfo.Type,
 			}
 			enrichedReceivers = append(enrichedReceivers, enrichedReceiver)
 		}
 		enrichedSubscription := SubscriptionEnrichedWithReceivers{
-			Id:          item.Id,
+			ID:          item.ID,
 			NamespaceId: item.Namespace,
-			Urn:         item.Urn,
+			URN:         item.URN,
 			Receiver:    enrichedReceivers,
 			Match:       item.Match,
 		}
@@ -281,16 +281,16 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 
 func sortReceivers(sub *Subscription) {
 	sort.Slice(sub.Receivers, func(i, j int) bool {
-		return sub.Receivers[i].Id < sub.Receivers[j].Id
+		return sub.Receivers[i].ID < sub.Receivers[j].ID
 	})
 }
 
-func getAMReceiverConfigPerSubscription(subscription SubscriptionEnrichedWithReceivers) []cortex.ReceiverConfig {
+func getAMReceiverConfigPerSubscription(sub SubscriptionEnrichedWithReceivers) []cortex.ReceiverConfig {
 	amReceiverConfig := make([]cortex.ReceiverConfig, 0)
-	for idx, item := range subscription.Receiver {
+	for idx, item := range sub.Receiver {
 		newAMReceiver := cortex.ReceiverConfig{
-			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", subscription.Urn, item.Id, idx),
-			Match:         subscription.Match,
+			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", sub.URN, item.ID, idx),
+			Match:         sub.Match,
 			Configuration: item.Configuration,
 			Type:          item.Type,
 		}

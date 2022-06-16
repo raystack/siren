@@ -30,7 +30,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 		dummyResult := []*provider.Provider{
 			{
-				Id:          1,
+				ID:          1,
 				Host:        "foo",
 				Type:        "bar",
 				Name:        "foo",
@@ -81,7 +81,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []*provider.Provider{
 			{
-				Id:          1,
+				ID:          1,
 				Host:        "foo",
 				Type:        "bar",
 				Name:        "foo",
@@ -199,7 +199,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 		dummyResult := &provider.Provider{
-			Id:          1,
+			ID:          1,
 			Host:        "foo",
 			Type:        "bar",
 			Name:        "foo",
@@ -241,7 +241,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 		dummyResult := &provider.Provider{
-			Id:          1,
+			ID:          1,
 			Host:        "foo",
 			Type:        "bar",
 			Name:        "foo",
@@ -268,7 +268,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &provider.Provider{
-			Id:          1,
+			ID:          1,
 			Host:        "foo",
 			Type:        "bar",
 			Name:        "foo",

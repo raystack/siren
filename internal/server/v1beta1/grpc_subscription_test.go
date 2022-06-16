@@ -28,10 +28,10 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 		}
 		dummyResult := []*subscription.Subscription{
 			{
-				Id:        1,
-				Urn:       "foo",
+				ID:        1,
+				URN:       "foo",
 				Namespace: 1,
-				Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+				Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 				Match:     match,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -73,10 +73,10 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
-			Id:        1,
-			Urn:       "foo",
+			ID:        1,
+			URN:       "foo",
 			Namespace: 1,
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -123,8 +123,8 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 	payload := &subscription.Subscription{
 		Namespace: 1,
-		Urn:       "foo",
-		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+		URN:       "foo",
+		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 		Match:     match,
 	}
 
@@ -135,10 +135,10 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
-			Id:        1,
-			Urn:       "foo",
+			ID:        1,
+			URN:       "foo",
 			Namespace: 10,
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -188,10 +188,10 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 	match := make(map[string]string)
 	match["foo"] = "baz"
 	payload := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 10,
-		Urn:       "foo",
-		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+		URN:       "foo",
+		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 		Match:     match,
 	}
 
@@ -202,10 +202,10 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 		dummyResult := &subscription.Subscription{
-			Id:        1,
-			Urn:       "foo",
+			ID:        1,
+			URN:       "foo",
 			Namespace: 10,
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

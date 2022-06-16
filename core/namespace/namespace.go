@@ -15,8 +15,8 @@ type Repository interface {
 }
 
 type Namespace struct {
-	Id          uint64                 `json:"id"`
-	Urn         string                 `json:"urn"`
+	ID          uint64                 `json:"id"`
+	URN         string                 `json:"urn"`
 	Name        string                 `json:"name"`
 	Provider    uint64                 `json:"provider"`
 	Credentials map[string]interface{} `json:"credentials"`

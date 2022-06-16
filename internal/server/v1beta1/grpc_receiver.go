@@ -51,20 +51,20 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 	res := &sirenv1beta1.ListReceiversResponse{
 		Receivers: make([]*sirenv1beta1.Receiver, 0),
 	}
-	for _, receiver := range receivers {
-		configurations, err := structpb.NewStruct(receiver.Configurations)
+	for _, rcv := range receivers {
+		configurations, err := structpb.NewStruct(rcv.Configurations)
 		if err != nil {
 			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 
 		item := &sirenv1beta1.Receiver{
-			Id:             receiver.Id,
-			Name:           receiver.Name,
-			Type:           receiver.Type,
+			Id:             rcv.ID,
+			Name:           rcv.Name,
+			Type:           rcv.Type,
 			Configurations: configurations,
-			Labels:         receiver.Labels,
-			CreatedAt:      timestamppb.New(receiver.CreatedAt),
-			UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
+			Labels:         rcv.Labels,
+			CreatedAt:      timestamppb.New(rcv.CreatedAt),
+			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
 		}
 		res.Receivers = append(res.Receivers, item)
 	}
@@ -110,7 +110,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 	}
 
 	return &sirenv1beta1.Receiver{
-		Id:             receiver.Id,
+		Id:             receiver.ID,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
@@ -140,7 +140,7 @@ func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceive
 	}
 
 	return &sirenv1beta1.Receiver{
-		Id:             receiver.Id,
+		Id:             receiver.ID,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,
@@ -175,7 +175,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 	}
 
 	receiver := &receiver.Receiver{
-		Id:             req.GetId(),
+		ID:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
@@ -191,7 +191,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 	}
 
 	return &sirenv1beta1.Receiver{
-		Id:             receiver.Id,
+		Id:             receiver.ID,
 		Name:           receiver.Name,
 		Type:           receiver.Type,
 		Labels:         receiver.Labels,

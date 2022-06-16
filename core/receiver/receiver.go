@@ -21,7 +21,7 @@ type Repository interface {
 }
 
 type Receiver struct {
-	Id             uint64                 `json:"id"`
+	ID             uint64                 `json:"id"`
 	Name           string                 `json:"name"`
 	Type           string                 `json:"type"`
 	Labels         map[string]string      `json:"labels"`

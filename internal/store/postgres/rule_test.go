@@ -64,7 +64,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 			WithArgs(AnyTime{}, AnyTime{}, theRule.Name, theRule.Namespace, theRule.GroupName, theRule.Template, theRule.Enabled, variablesStr, theRule.ProviderNamespace, theRule.Name).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRow := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(theRule.Id, theRule.CreatedAt,
+			AddRow(theRule.ID, theRule.CreatedAt,
 				theRule.UpdatedAt, theRule.Name, theRule.Namespace,
 				theRule.GroupName, theRule.Template, theRule.Enabled,
 				variablesStr, theRule.ProviderNamespace)
@@ -111,7 +111,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 		ctx := context.Background()
 		err := s.repository.Upsert(ctx, theRule)
 		s.Nil(err)
-		s.Equal(expectedID, theRule.Id)
+		s.Equal(expectedID, theRule.ID)
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
@@ -154,7 +154,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 		commitErr := s.repository.Commit(ctx)
 		s.Nil(commitErr)
 		s.Nil(err)
-		s.Equal(expectedID, theRule.Id)
+		s.Equal(expectedID, theRule.ID)
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 
@@ -204,7 +204,7 @@ func (s *RuleRepositoryTestSuite) TestGet() {
 	variablesStr := `[{"name":"for","type":"string","value":"10m","description":"test"},{"name":"team","type":"string","value":"gojek","description":"test"}]`
 
 	expectedRules := []rule.Rule{{
-		Id:                10,
+		ID:                10,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
 		Name:              "siren_api_gojek_foo_bar_tmpl",
@@ -223,7 +223,7 @@ func (s *RuleRepositoryTestSuite) TestGet() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules" WHERE name = $1 AND namespace = $2 AND group_name = $3 AND template = $4 AND provider_namespace = $5`)
 
 		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(expectedRules[0].Id, expectedRules[0].CreatedAt,
+			AddRow(expectedRules[0].ID, expectedRules[0].CreatedAt,
 				expectedRules[0].UpdatedAt, expectedRules[0].Name, expectedRules[0].Namespace,
 				expectedRules[0].GroupName, expectedRules[0].Template, expectedRules[0].Enabled,
 				variablesStr, expectedRules[0].ProviderNamespace)
@@ -244,7 +244,7 @@ func (s *RuleRepositoryTestSuite) TestGet() {
 	s.Run("should get rules all rules if empty filters passes", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules"`)
 		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(expectedRules[0].Id, expectedRules[0].CreatedAt,
+			AddRow(expectedRules[0].ID, expectedRules[0].CreatedAt,
 				expectedRules[0].UpdatedAt, expectedRules[0].Name, expectedRules[0].Namespace,
 				expectedRules[0].GroupName, expectedRules[0].Template, expectedRules[0].Enabled,
 				variablesStr, expectedRules[0].ProviderNamespace)
@@ -263,7 +263,7 @@ func (s *RuleRepositoryTestSuite) TestGet() {
 	s.Run("should use transaction", func() {
 		selectRuleQuery := regexp.QuoteMeta(`SELECT * FROM "rules"`)
 		expectedRuleRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "namespace", "group_name", "template", "enabled", "variables", "provider_namespace"}).
-			AddRow(expectedRules[0].Id, expectedRules[0].CreatedAt,
+			AddRow(expectedRules[0].ID, expectedRules[0].CreatedAt,
 				expectedRules[0].UpdatedAt, expectedRules[0].Name, expectedRules[0].Namespace,
 				expectedRules[0].GroupName, expectedRules[0].Template, expectedRules[0].Enabled,
 				variablesStr, expectedRules[0].ProviderNamespace)

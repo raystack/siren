@@ -113,7 +113,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 
 			res, err := client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
 				Host:        providerConfig.Host,
-				Urn:         providerConfig.Urn,
+				Urn:         providerConfig.URN,
 				Name:        providerConfig.Name,
 				Type:        providerConfig.Type,
 				Credentials: grpcCredentials,
@@ -174,9 +174,9 @@ func getProviderCmd(c *configuration) *cobra.Command {
 			}
 
 			provider := &provider.Provider{
-				Id:          res.GetId(),
+				ID:          res.GetId(),
 				Host:        res.GetHost(),
-				Urn:         res.GetUrn(),
+				URN:         res.GetUrn(),
 				Name:        res.GetName(),
 				Type:        res.GetType(),
 				Credentials: res.GetCredentials().AsMap(),

@@ -19,7 +19,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{{
-			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
+			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
 			TriggeredAt: timenow,
 		}}
 		mockedAlertService.EXPECT().Get("foo", uint64(1), uint64(100), uint64(200)).
@@ -74,7 +74,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	payload := &alert.Alerts{
 		Alerts: []alert.Alert{
 			{
-				ProviderId:   1,
+				ProviderID:   1,
 				ResourceName: "foo",
 				MetricName:   "bar",
 				MetricValue:  "30",
@@ -106,8 +106,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	t.Run("should create alerts objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyAlerts := []alert.Alert{{
-			Id:           1,
-			ProviderId:   1,
+			ID:           1,
+			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",
 			MetricValue:  "30",
@@ -156,7 +156,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		payload := &alert.Alerts{
 			Alerts: []alert.Alert{
 				{
-					ProviderId:   1,
+					ProviderID:   1,
 					ResourceName: "foo",
 					MetricName:   "bar",
 					MetricValue:  "30",
@@ -167,8 +167,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		}
 		dummyAlerts := []alert.Alert{{
-			Id:           1,
-			ProviderId:   1,
+			ID:           1,
+			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",
 			MetricValue:  "30",
@@ -243,7 +243,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		}
 		dummyAlerts := []alert.Alert{{
-			ProviderId:   1,
+			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",
 			MetricValue:  "30",

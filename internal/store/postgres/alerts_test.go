@@ -37,14 +37,14 @@ func (s *AlertsRepositoryTestSuite) TestGet() {
 	s.Run("should fetch matching alert history objects", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from alerts where resource_name = 'foo' AND provider_id = '1' AND triggered_at BETWEEN to_timestamp('0') AND to_timestamp('1000')`)
 		expectedAlert := alert.Alert{
-			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}
 		expectedAlerts := []alert.Alert{expectedAlert}
 		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "resource_name", "provider_id",
 			"severity", "metric_name", "metric_value", "rule", "triggered_at"}).
-			AddRow(expectedAlert.Id, expectedAlert.CreatedAt,
-				expectedAlert.UpdatedAt, expectedAlert.ResourceName, expectedAlert.ProviderId, expectedAlert.Severity,
+			AddRow(expectedAlert.ID, expectedAlert.CreatedAt,
+				expectedAlert.UpdatedAt, expectedAlert.ResourceName, expectedAlert.ProviderID, expectedAlert.Severity,
 				expectedAlert.MetricName, expectedAlert.MetricValue, expectedAlert.Rule, expectedAlert.TriggeredAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
@@ -67,13 +67,13 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 	s.Run("should create alert object", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
 		expectedAlerts := &alert.Alert{
-			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderId,
+		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderID,
 			expectedAlerts.ResourceName, expectedAlerts.MetricName, expectedAlerts.MetricValue, expectedAlerts.Severity,
 			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
-			expectedAlerts.Id).
+			expectedAlerts.ID).
 			WillReturnRows(sqlmock.NewRows(nil))
 		err := s.repository.Create(expectedAlerts)
 		s.Nil(err)
@@ -82,13 +82,13 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 	s.Run("should return error in alert history creation", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
 		expectedAlerts := &alert.Alert{
-			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderId,
+		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderID,
 			expectedAlerts.ResourceName, expectedAlerts.MetricName, expectedAlerts.MetricValue, expectedAlerts.Severity,
 			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
-			expectedAlerts.Id).
+			expectedAlerts.ID).
 			WillReturnError(errors.New("random error"))
 		err := s.repository.Create(expectedAlerts)
 		s.EqualError(err, "random error")

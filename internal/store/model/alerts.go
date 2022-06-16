@@ -7,9 +7,9 @@ import (
 )
 
 type Alert struct {
-	Id           uint64 `gorm:"primarykey"`
+	ID           uint64 `gorm:"primarykey"`
 	Provider     *Provider
-	ProviderId   uint64
+	ProviderID   uint64
 	ResourceName string
 	MetricName   string
 	MetricValue  string
@@ -20,23 +20,23 @@ type Alert struct {
 	UpdatedAt    time.Time
 }
 
-func (a *Alert) FromDomain(alert *alert.Alert) {
-	a.Id = alert.Id
-	a.ProviderId = alert.ProviderId
-	a.ResourceName = alert.ResourceName
-	a.MetricName = alert.MetricName
-	a.MetricValue = alert.MetricValue
-	a.Severity = alert.Severity
-	a.Rule = alert.Rule
-	a.TriggeredAt = alert.TriggeredAt
-	a.CreatedAt = alert.CreatedAt
-	a.UpdatedAt = alert.UpdatedAt
+func (a *Alert) FromDomain(alrt *alert.Alert) {
+	a.ID = alrt.ID
+	a.ProviderID = alrt.ProviderID
+	a.ResourceName = alrt.ResourceName
+	a.MetricName = alrt.MetricName
+	a.MetricValue = alrt.MetricValue
+	a.Severity = alrt.Severity
+	a.Rule = alrt.Rule
+	a.TriggeredAt = alrt.TriggeredAt
+	a.CreatedAt = alrt.CreatedAt
+	a.UpdatedAt = alrt.UpdatedAt
 }
 
 func (a *Alert) ToDomain() alert.Alert {
 	return alert.Alert{
-		Id:           a.Id,
-		ProviderId:   a.ProviderId,
+		ID:           a.ID,
+		ProviderID:   a.ProviderID,
 		ResourceName: a.ResourceName,
 		MetricName:   a.MetricName,
 		MetricValue:  a.MetricValue,

@@ -118,8 +118,8 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 		return errors.New("provider not found")
 	}
 
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.Urn,
-		namespace.Urn, rule.Namespace, rule.GroupName, rule.Template)
+	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
+		namespace.URN, rule.Namespace, rule.GroupName, rule.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
 	if err := s.repository.Upsert(ctx, rule); err != nil {
@@ -138,7 +138,7 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 			return errors.Wrap(err, "s.repository.Get")
 		}
 
-		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.Urn); err != nil {
+		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}

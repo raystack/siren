@@ -18,25 +18,25 @@ import (
 
 func TestService_CreateSubscription(t *testing.T) {
 	receivers := []subscription.ReceiverMetadata{
-		{Id: 1, Configuration: map[string]string{"channel_name": "test"}},
+		{ID: 1, Configuration: map[string]string{"channel_name": "test"}},
 	}
 	match := make(map[string]string)
 	match["foo"] = "bar"
 	timeNow := time.Now()
 	input := &subscription.Subscription{
-		Urn:       "foo",
+		URN:       "foo",
 		Namespace: 1,
 		Receivers: receivers,
 		Match:     match,
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 	}
-	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
-	dummyProvider := &provider.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
+	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
+	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*receiver.Receiver{
-		{Id: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
-		{Id: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
-		{Id: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
+		{ID: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
+		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
+		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
 	}
 
 	t.Run("should call repository create method and return result in domain's type", func(t *testing.T) {
@@ -50,30 +50,30 @@ func TestService_CreateSubscription(t *testing.T) {
 		expectedID := uint64(1)
 		expectedSubscription := new(subscription.Subscription)
 		*expectedSubscription = *input
-		expectedSubscription.Id = expectedID
+		expectedSubscription.ID = expectedID
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
 			expectedSubscription,
 			{
-				Id: 2, Urn: "bar", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 2, Configuration: make(map[string]string)}},
+				ID: 2, URN: "bar", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 2, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 			{
-				Id: 3, Urn: "baz", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 3, Configuration: make(map[string]string)}},
+				ID: 3, URN: "baz", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 3, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 		}
 
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Run(func(ctx context.Context, s *subscription.Subscription) {
-			s.Id = expectedID
+			s.ID = expectedID
 		}).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
-		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
+		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, urn string) {
 				assert.Len(t, c.Receivers, 3)
 				assert.Equal(t, "foo_receiverId_1_idx_0", c.Receivers[0].Receiver)
@@ -175,7 +175,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).
-			Return(&provider.Provider{Id: 1, Type: "prometheus"}, nil).Once()
+			Return(&provider.Provider{ID: 1, Type: "prometheus"}, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -218,7 +218,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
-		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{Id: 10}}, nil).Once()
+		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{ID: 10}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
@@ -238,7 +238,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		dummySubscription := &subscription.Subscription{
 			Namespace: input.Namespace,
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: map[string]string{"id": "1"}}},
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: map[string]string{"id": "1"}}},
 		}
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{dummySubscription}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
@@ -264,7 +264,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
-		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{Id: 1, Type: "email"}}, nil).Once()
+		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{ID: 1, Type: "email"}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
@@ -305,16 +305,16 @@ func TestService_GetSubscription(t *testing.T) {
 		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
-		subsc := &subscription.Subscription{Urn: "test", Id: 1, Namespace: 1, Match: make(map[string]string),
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: make(map[string]string)}},
+		subsc := &subscription.Subscription{URN: "test", ID: 1, Namespace: 1, Match: make(map[string]string),
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: make(map[string]string)}},
 			CreatedAt: timeNow, UpdatedAt: timeNow}
 		repositoryMock.EXPECT().Get(ctx, uint64(1)).Return(subsc, nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
 		result, err := dummyService.GetSubscription(context.Background(), 1)
-		assert.Equal(t, uint64(1), result.Id)
-		assert.Equal(t, "test", result.Urn)
+		assert.Equal(t, uint64(1), result.ID)
+		assert.Equal(t, "test", result.URN)
 		assert.Equal(t, 0, len(result.Receivers[0].Configuration))
 		assert.Nil(t, err)
 	})
@@ -351,16 +351,16 @@ func TestService_ListSubscription(t *testing.T) {
 		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
-		subsc := &subscription.Subscription{Urn: "test", Id: 1, Namespace: 1, Match: make(map[string]string),
-			Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: make(map[string]string)}},
+		subsc := &subscription.Subscription{URN: "test", ID: 1, Namespace: 1, Match: make(map[string]string),
+			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: make(map[string]string)}},
 			CreatedAt: timeNow, UpdatedAt: timeNow}
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{subsc}, nil).Once()
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
 		result, err := dummyService.ListSubscriptions(context.Background())
 		assert.Equal(t, 1, len(result))
-		assert.Equal(t, uint64(1), result[0].Id)
-		assert.Equal(t, "test", result[0].Urn)
+		assert.Equal(t, uint64(1), result[0].ID)
+		assert.Equal(t, "test", result[0].URN)
 		assert.Equal(t, 0, len(result[0].Receivers[0].Configuration))
 		assert.Nil(t, err)
 	})
@@ -383,22 +383,22 @@ func TestService_UpdateSubscription(t *testing.T) {
 	match["foo"] = "bar"
 	timeNow := time.Now()
 	input := &subscription.Subscription{
-		Id:        1,
-		Urn:       "test",
+		ID:        1,
+		URN:       "test",
 		Namespace: 1,
 		Receivers: []subscription.ReceiverMetadata{
-			{Id: 1, Configuration: map[string]string{"channel_name": "updated_channel"}},
+			{ID: 1, Configuration: map[string]string{"channel_name": "updated_channel"}},
 		},
 		Match:     match,
 		CreatedAt: timeNow,
 		UpdatedAt: timeNow,
 	}
-	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
-	dummyProvider := &provider.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
+	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
+	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*receiver.Receiver{
-		{Id: 1, Type: "slack", Configurations: map[string]interface{}{}},
-		{Id: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
-		{Id: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
+		{ID: 1, Type: "slack", Configurations: map[string]interface{}{}},
+		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
+		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
 	}
 
 	t.Run("should call repository update method and return result in domain's type", func(t *testing.T) {
@@ -410,30 +410,30 @@ func TestService_UpdateSubscription(t *testing.T) {
 		ctx := context.Background()
 
 		expectedSubscription := &subscription.Subscription{
-			Id:        1,
-			Urn:       "test",
+			ID:        1,
+			URN:       "test",
 			Namespace: 1,
 			Match:     match,
 			Receivers: []subscription.ReceiverMetadata{
-				{Id: 1, Configuration: map[string]string{"channel_name": "updated_channel"}},
+				{ID: 1, Configuration: map[string]string{"channel_name": "updated_channel"}},
 			},
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
 			{
-				Id: input.Id, Urn: input.Urn, Namespace: input.Namespace,
+				ID: input.ID, URN: input.URN, Namespace: input.Namespace,
 				Receivers: input.Receivers,
 				Match:     input.Match,
 			},
 			{
-				Id: 2, Urn: "bar", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 2, Configuration: make(map[string]string)}},
+				ID: 2, URN: "bar", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 2, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 			{
-				Id: 3, Urn: "baz", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 3, Configuration: make(map[string]string)}},
+				ID: 3, URN: "baz", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 3, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 		}
@@ -444,7 +444,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
-		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
+		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, _a1 string) {
 				assert.Len(t, c.Receivers, 3)
 				assert.Equal(t, "test_receiverId_1_idx_0", c.Receivers[0].Receiver)
@@ -487,18 +487,18 @@ func TestService_UpdateSubscription(t *testing.T) {
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
 			{
-				Id: input.Id, Urn: input.Urn, Namespace: input.Namespace,
+				ID: input.ID, URN: input.URN, Namespace: input.Namespace,
 				Receivers: input.Receivers,
 				Match:     input.Match,
 			},
 			{
-				Id: 2, Urn: "bar", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 2, Configuration: make(map[string]string)}},
+				ID: 2, URN: "bar", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 2, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 			{
-				Id: 3, Urn: "baz", Namespace: input.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 3, Configuration: make(map[string]string)}},
+				ID: 3, URN: "baz", Namespace: input.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 3, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 		}
@@ -509,7 +509,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
-		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
+		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Return(errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -523,15 +523,15 @@ func TestService_UpdateSubscription(t *testing.T) {
 func TestService_DeleteSubscription(t *testing.T) {
 	match := map[string]string{"foo": "bar"}
 	subsc := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
 	}
-	dummyNamespace := &namespace.Namespace{Id: 1, Provider: 1, Urn: "dummy"}
-	dummyProvider := &provider.Provider{Id: 1, Urn: "test", Type: "cortex", Host: "http://localhost:8080"}
+	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
+	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
 	dummyReceivers := []*receiver.Receiver{
-		{Id: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
-		{Id: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
-		{Id: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
+		{ID: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
+		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
+		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
 	}
 
 	t.Run("should call repository delete method and return result in domain's type", func(t *testing.T) {
@@ -544,13 +544,13 @@ func TestService_DeleteSubscription(t *testing.T) {
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
 			{
-				Id: 2, Urn: "bar", Namespace: subsc.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 2, Configuration: make(map[string]string)}},
+				ID: 2, URN: "bar", Namespace: subsc.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 2, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 			{
-				Id: 3, Urn: "baz", Namespace: subsc.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 3, Configuration: make(map[string]string)}},
+				ID: 3, URN: "baz", Namespace: subsc.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 3, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 		}
@@ -561,7 +561,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 		namespaceServiceMock.EXPECT().GetNamespace(subsc.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
-		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
+		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, _ string) {
 				assert.Len(t, c.Receivers, 2)
 				assert.Equal(t, "bar_receiverId_2_idx_0", c.Receivers[0].Receiver)
@@ -609,13 +609,13 @@ func TestService_DeleteSubscription(t *testing.T) {
 
 		expectedSubscriptionsInNamespace := []*subscription.Subscription{
 			{
-				Id: 2, Urn: "bar", Namespace: subsc.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 2, Configuration: make(map[string]string)}},
+				ID: 2, URN: "bar", Namespace: subsc.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 2, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 			{
-				Id: 3, Urn: "baz", Namespace: subsc.Namespace,
-				Receivers: []subscription.ReceiverMetadata{{Id: 3, Configuration: make(map[string]string)}},
+				ID: 3, URN: "baz", Namespace: subsc.Namespace,
+				Receivers: []subscription.ReceiverMetadata{{ID: 3, Configuration: make(map[string]string)}},
 				Match:     match,
 			},
 		}
@@ -626,7 +626,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 		namespaceServiceMock.EXPECT().GetNamespace(subsc.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
-		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.Urn).
+		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Return(errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 

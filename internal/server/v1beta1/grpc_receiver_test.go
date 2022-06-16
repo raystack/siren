@@ -27,7 +27,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	labels["foo"] = "bar"
 	dummyResult := []*receiver.Receiver{
 		{
-			Id:             1,
+			ID:             1,
 			Name:           "foo",
 			Type:           "bar",
 			Labels:         labels,
@@ -79,7 +79,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		configurations["foo"] = string([]byte{0xff})
 		dummyResult := []*receiver.Receiver{
 			{
-				Id:             1,
+				ID:             1,
 				Name:           "foo",
 				Type:           "bar",
 				Labels:         labels,
@@ -751,7 +751,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 	labels["foo"] = "bar"
 
 	receiverResult := &receiver.Receiver{
-		Id:             1,
+		ID:             1,
 		Name:           "foo",
 		Type:           "slack",
 		Labels:         labels,
@@ -956,7 +956,7 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		}
 
 		receiverResult := &receiver.Receiver{
-			Id:             1,
+			ID:             1,
 			Name:           "foo",
 			Type:           "random",
 			Labels:         labels,

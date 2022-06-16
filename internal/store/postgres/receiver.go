@@ -65,14 +65,14 @@ func (r ReceiverRepository) Get(id uint64) (*receiver.Receiver, error) {
 func (r ReceiverRepository) Update(receiver *receiver.Receiver) error {
 	var m model.Receiver
 	m.FromDomain(receiver)
-	result := r.db.Where("id = ?", m.Id).Updates(m)
+	result := r.db.Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		return result.Error
 	} else if result.RowsAffected == 0 {
 		return errors.New("receiver doesn't exist")
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", m.Id)).Find(&m)
+	result = r.db.Where(fmt.Sprintf("id = %d", m.ID)).Find(&m)
 	if result.Error != nil {
 		return result.Error
 	}

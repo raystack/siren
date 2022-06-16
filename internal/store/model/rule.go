@@ -8,7 +8,7 @@ import (
 )
 
 type Rule struct {
-	Id                    uint64 `gorm:"primarykey"`
+	ID                    uint64 `gorm:"primarykey"`
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
 	Name                  string `gorm:"index:idx_rule_name,unique"`
@@ -22,7 +22,7 @@ type Rule struct {
 }
 
 func (rl *Rule) FromDomain(r *rule.Rule) error {
-	rl.Id = r.Id
+	rl.ID = r.ID
 	rl.Name = r.Name
 	rl.Enabled = &r.Enabled
 	rl.GroupName = r.GroupName
@@ -49,7 +49,7 @@ func (rl *Rule) ToDomain() (*rule.Rule, error) {
 		return nil, err
 	}
 	return &rule.Rule{
-		Id:                rl.Id,
+		ID:                rl.ID,
 		Name:              rl.Name,
 		Enabled:           *rl.Enabled,
 		GroupName:         rl.GroupName,

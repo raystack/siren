@@ -7,10 +7,10 @@ import (
 )
 
 type Namespace struct {
-	Id          uint64 `gorm:"primarykey"`
+	ID          uint64 `gorm:"primarykey"`
 	Provider    *Provider
-	ProviderId  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
-	Urn         string `gorm:"uniqueIndex:urn_provider_id_unique"`
+	ProviderID  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
+	URN         string `gorm:"uniqueIndex:urn_provider_id_unique"`
 	Name        string
 	Credentials string
 	Labels      StringStringMap `gorm:"type:jsonb" sql:"type:jsonb" `
@@ -23,10 +23,10 @@ func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
 		return nil
 	}
 
-	ns.Id = n.Id
-	ns.Urn = n.Urn
+	ns.ID = n.ID
+	ns.URN = n.URN
 	ns.Name = n.Name
-	ns.ProviderId = n.Provider
+	ns.ProviderID = n.Provider
 	ns.Credentials = n.Credentials
 	ns.Labels = StringStringMap(n.Labels)
 	ns.CreatedAt = n.CreatedAt
@@ -41,10 +41,10 @@ func (ns *Namespace) ToDomain() (*namespace.EncryptedNamespace, error) {
 
 	return &namespace.EncryptedNamespace{
 		Namespace: &namespace.Namespace{
-			Id:        ns.Id,
-			Urn:       ns.Urn,
+			ID:        ns.ID,
+			URN:       ns.URN,
 			Name:      ns.Name,
-			Provider:  ns.ProviderId,
+			Provider:  ns.ProviderID,
 			Labels:    ns.Labels,
 			CreatedAt: ns.CreatedAt,
 			UpdatedAt: ns.UpdatedAt,

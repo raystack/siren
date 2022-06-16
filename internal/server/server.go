@@ -29,7 +29,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-//go:embed siren.swagger.json
+//go:embed siren.swagger.yaml
 var swaggerFile embed.FS
 
 type Config struct {

@@ -16,8 +16,8 @@ type Alerts struct {
 }
 
 type Alert struct {
-	Id           uint64    `json:"id"`
-	ProviderId   uint64    `json:"provider_id"`
+	ID           uint64    `json:"id"`
+	ProviderID   uint64    `json:"provider_id"`
 	ResourceName string    `json:"resource_name"`
 	MetricName   string    `json:"metric_name"`
 	MetricValue  string    `json:"metric_value"`

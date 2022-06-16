@@ -173,7 +173,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 			}
 
 			receiver := &receiver.Receiver{
-				Id:             res.GetId(),
+				ID:             res.GetId(),
 				Name:           res.GetName(),
 				Type:           res.GetType(),
 				Configurations: res.GetConfigurations().AsMap(),

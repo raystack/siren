@@ -31,7 +31,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		}
 		dummyResult := []*namespace.Namespace{
 			{
-				Id:          1,
+				ID:          1,
 				Provider:    2,
 				Name:        "foo",
 				Credentials: credentials,
@@ -73,7 +73,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []*namespace.Namespace{
 			{
-				Id:          1,
+				ID:          1,
 				Provider:    2,
 				Name:        "foo",
 				Credentials: credentials,
@@ -181,7 +181,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 			logger:           log.NewNoop(),
 		}
 		dummyResult := &namespace.Namespace{
-			Id:          1,
+			ID:          1,
 			Provider:    2,
 			Name:        "foo",
 			Credentials: credentials,
@@ -235,7 +235,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		}
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &namespace.Namespace{
-			Id:          1,
+			ID:          1,
 			Provider:    2,
 			Name:        "foo",
 			Credentials: credentials,
@@ -260,7 +260,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
-		Id:          1,
+		ID:          1,
 		Provider:    2,
 		Name:        "foo",
 		Credentials: credentials,

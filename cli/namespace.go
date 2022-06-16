@@ -113,7 +113,7 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 
 			res, err := client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
 				Provider:    namespaceConfig.Provider,
-				Urn:         namespaceConfig.Urn,
+				Urn:         namespaceConfig.URN,
 				Name:        namespaceConfig.Name,
 				Credentials: grpcCredentials,
 				Labels:      namespaceConfig.Labels,
@@ -173,8 +173,8 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 			}
 
 			namespace := &namespace.Namespace{
-				Id:          res.GetId(),
-				Urn:         res.GetUrn(),
+				ID:          res.GetId(),
+				URN:         res.GetUrn(),
 				Name:        res.GetName(),
 				Credentials: res.GetCredentials().AsMap(),
 				Labels:      res.GetLabels(),

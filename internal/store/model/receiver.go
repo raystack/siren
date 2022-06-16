@@ -7,7 +7,7 @@ import (
 )
 
 type Receiver struct {
-	Id             uint64 `gorm:"primarykey"`
+	ID             uint64 `gorm:"primarykey"`
 	Name           string
 	Type           string
 	Labels         StringStringMap    `gorm:"type:jsonb" sql:"type:jsonb" `
@@ -21,7 +21,7 @@ func (rcv *Receiver) FromDomain(t *receiver.Receiver) {
 	if t == nil {
 		return
 	}
-	rcv.Id = t.Id
+	rcv.ID = t.ID
 	rcv.Name = t.Name
 	rcv.Type = t.Type
 	rcv.Labels = t.Labels
@@ -36,7 +36,7 @@ func (rcv *Receiver) ToDomain() *receiver.Receiver {
 		return nil
 	}
 	return &receiver.Receiver{
-		Id:             rcv.Id,
+		ID:             rcv.ID,
 		Name:           rcv.Name,
 		Type:           rcv.Type,
 		Labels:         rcv.Labels,

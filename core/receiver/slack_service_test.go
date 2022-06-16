@@ -45,7 +45,7 @@ func TestSlackService_Encrypt(t *testing.T) {
 					e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
 				},
 				Rcv: &receiver.Receiver{
-					Id:   10,
+					ID:   10,
 					Name: "foo",
 					Type: "slack",
 					Labels: map[string]string{
@@ -119,7 +119,7 @@ func TestSlackService_Decrypt(t *testing.T) {
 					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
 				},
 				Rcv: &receiver.Receiver{
-					Id:   10,
+					ID:   10,
 					Name: "foo",
 					Type: "slack",
 					Labels: map[string]string{

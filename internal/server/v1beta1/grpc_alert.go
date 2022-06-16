@@ -33,8 +33,8 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 	}
 	for _, alert := range alerts {
 		item := &sirenv1beta1.Alert{
-			Id:           alert.Id,
-			ProviderId:   alert.ProviderId,
+			Id:           alert.ID,
+			ProviderId:   alert.ProviderID,
 			ResourceName: alert.ResourceName,
 			MetricName:   alert.MetricName,
 			MetricValue:  alert.MetricValue,
@@ -58,7 +58,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 		}
 
 		alert := alert.Alert{
-			ProviderId:   req.GetProviderId(),
+			ProviderID:   req.GetProviderId(),
 			ResourceName: item.GetAnnotations().GetResource(),
 			MetricName:   item.GetAnnotations().GetMetricName(),
 			MetricValue:  item.GetAnnotations().GetMetricValue(),
@@ -80,8 +80,8 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 	result := &sirenv1beta1.Alerts{Alerts: make([]*sirenv1beta1.Alert, 0)}
 	for _, item := range createdAlerts {
 		alertHistoryItem := &sirenv1beta1.Alert{
-			Id:           item.Id,
-			ProviderId:   item.ProviderId,
+			Id:           item.ID,
+			ProviderId:   item.ProviderID,
 			ResourceName: item.ResourceName,
 			MetricName:   item.MetricName,
 			MetricValue:  item.MetricValue,

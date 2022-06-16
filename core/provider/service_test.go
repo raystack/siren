@@ -22,7 +22,7 @@ func TestListProviders(t *testing.T) {
 		dummyService := provider.NewService(repositoryMock)
 		dummyProviders := []*provider.Provider{
 			{
-				Id:          10,
+				ID:          10,
 				Host:        "foo",
 				Type:        "bar",
 				Name:        "foo",
@@ -59,7 +59,7 @@ func TestCreateProvider(t *testing.T) {
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProvider := &provider.Provider{
-		Id:          10,
+		ID:          10,
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -99,7 +99,7 @@ func TestGetProvider(t *testing.T) {
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProvider := &provider.Provider{
-		Id:          10,
+		ID:          10,
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -138,7 +138,7 @@ func TestUpdateProvider(t *testing.T) {
 	labels := make(model.StringStringMap)
 	labels["foo"] = "bar"
 	dummyProvider := &provider.Provider{
-		Id:          10,
+		ID:          10,
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
