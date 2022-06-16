@@ -36,6 +36,14 @@ func TestMessage_Validate(t *testing.T) {
 			ExpectedErrString: "error value \"random\" for key \"receiver_type\" not recognized, only support \"user channel\"",
 		},
 		{
+			Description: "should return multiple validation errors",
+			Message: slack.Message{
+				Message:      "a message",
+				ReceiverType: "random",
+			},
+			ExpectedErrString: "field \"receiver_name\" is required and error value \"random\" for key \"receiver_type\" not recognized, only support \"user channel\"",
+		},
+		{
 			Description: "should return nil error if slack message is valid",
 			Message: slack.Message{
 				Message:      "a message",

@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/core/template/mocks"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -145,6 +146,7 @@ func TestService_GetTemplate(t *testing.T) {
 		})
 	}
 }
+
 func TestService_Render(t *testing.T) {
 	type testCase struct {
 		Description          string
@@ -243,4 +245,49 @@ func TestService_Render(t *testing.T) {
 			repositoryMock.AssertExpectations(t)
 		})
 	}
+}
+
+func TestService_List(t *testing.T) {
+	ctx := context.TODO()
+
+	t.Run("should call repository List method and return no error if repository return nil error", func(t *testing.T) {
+		repositoryMock := &mocks.TemplateRepository{}
+		dummyService := template.NewService(repositoryMock)
+		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), template.Filter{}).Return([]template.Template{}, nil).Once()
+		_, err := dummyService.List(ctx, template.Filter{})
+		assert.Nil(t, err)
+		repositoryMock.AssertExpectations(t)
+	})
+
+	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
+		repositoryMock := &mocks.TemplateRepository{}
+		dummyService := template.NewService(repositoryMock)
+		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), template.Filter{}).Return(nil, errors.New("random error")).Once()
+		_, err := dummyService.List(ctx, template.Filter{})
+		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertExpectations(t)
+	})
+}
+
+func TestService_Delete(t *testing.T) {
+	ctx := context.TODO()
+	templateName := "template-name"
+
+	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
+		repositoryMock := &mocks.TemplateRepository{}
+		dummyService := template.NewService(repositoryMock)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), templateName).Return(nil).Once()
+		err := dummyService.Delete(ctx, templateName)
+		assert.Nil(t, err)
+		repositoryMock.AssertExpectations(t)
+	})
+
+	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
+		repositoryMock := &mocks.TemplateRepository{}
+		dummyService := template.NewService(repositoryMock)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), templateName).Return(errors.New("random error")).Once()
+		err := dummyService.Delete(ctx, templateName)
+		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertExpectations(t)
+	})
 }

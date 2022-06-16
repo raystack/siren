@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/receiver/mocks"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -38,7 +39,7 @@ func TestService_ListReceivers(t *testing.T) {
 						{
 							ID:   10,
 							Name: "foo",
-							Type: "slack",
+							Type: receiver.TypeSlack,
 							Labels: map[string]string{
 								"foo": "bar",
 							},
@@ -52,7 +53,7 @@ func TestService_ListReceivers(t *testing.T) {
 					ss.EXPECT().Decrypt(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -66,13 +67,24 @@ func TestService_ListReceivers(t *testing.T) {
 				Err: errors.New("decrypt error"),
 			},
 			{
+				Description: "should return error if type unknown",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
+						{
+							Type: "random",
+						},
+					}, nil)
+				},
+				Err: errors.New("unsupported receiver type: \"random\""),
+			},
+			{
 				Description: "should success if list repository and decrypt success",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
 						{
 							ID:   10,
 							Name: "foo",
-							Type: "slack",
+							Type: receiver.TypeSlack,
 							Labels: map[string]string{
 								"foo": "bar",
 							},
@@ -86,7 +98,7 @@ func TestService_ListReceivers(t *testing.T) {
 					ss.EXPECT().Decrypt(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -101,7 +113,7 @@ func TestService_ListReceivers(t *testing.T) {
 					{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -162,7 +174,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -170,7 +182,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -182,7 +194,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -191,7 +203,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -211,7 +223,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -219,7 +231,7 @@ func TestService_CreateReceiver(t *testing.T) {
 					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
@@ -227,7 +239,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -239,7 +251,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -247,7 +259,7 @@ func TestService_CreateReceiver(t *testing.T) {
 					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
@@ -255,7 +267,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -334,7 +346,7 @@ func TestService_GetReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -347,7 +359,7 @@ func TestService_GetReceiver(t *testing.T) {
 					ss.EXPECT().Decrypt(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -366,7 +378,7 @@ func TestService_GetReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -379,7 +391,7 @@ func TestService_GetReceiver(t *testing.T) {
 					ss.EXPECT().Decrypt(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -392,7 +404,7 @@ func TestService_GetReceiver(t *testing.T) {
 					ss.EXPECT().PopulateReceiver(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -404,7 +416,7 @@ func TestService_GetReceiver(t *testing.T) {
 					}).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Labels: map[string]string{
 							"foo": "bar",
 						},
@@ -421,7 +433,7 @@ func TestService_GetReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   10,
 					Name: "foo",
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Labels: map[string]string{
 						"foo": "bar",
 					},
@@ -480,11 +492,11 @@ func TestService_UpdateReceiver(t *testing.T) {
 		ctx       = context.TODO()
 		testCases = []testCase{
 			{
-				Description: "should return error if encrypt return error",
+				Description: "should return error if validate configuration return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -492,7 +504,28 @@ func TestService_UpdateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
+					Configurations: map[string]interface{}{
+						"token": "key",
+					},
+				},
+				Err: errors.New("some error"),
+			},
+			{
+				Description: "should return error if encrypt return error",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
+					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Configurations: receiver.Configurations{
+							"token": "key",
+						},
+					}).Return(nil)
+					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
+				},
+				Rcv: &receiver.Receiver{
+					ID:   123,
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -512,7 +545,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -520,7 +553,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
@@ -528,7 +561,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -540,7 +573,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -548,7 +581,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
@@ -556,7 +589,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -567,7 +600,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					ss.EXPECT().ValidateConfiguration(&receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: receiver.Configurations{
 							"token": "key",
 						},
@@ -575,7 +608,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
-						Type: "slack",
+						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
@@ -583,7 +616,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
-					Type: "slack",
+					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
 						"token": "key",
 					},
@@ -620,6 +653,126 @@ func TestService_UpdateReceiver(t *testing.T) {
 	}
 }
 
+func TestDeleteReceiver(t *testing.T) {
+	ctx := context.TODO()
+	receiverID := uint64(10)
+
+	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
+		repositoryMock := &mocks.ReceiverRepository{}
+		dummyService := receiver.NewService(repositoryMock, nil)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(nil).Once()
+		err := dummyService.Delete(ctx, receiverID)
+		assert.Nil(t, err)
+		repositoryMock.AssertExpectations(t)
+	})
+
+	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
+		repositoryMock := &mocks.ReceiverRepository{}
+		dummyService := receiver.NewService(repositoryMock, nil)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(errors.New("random error")).Once()
+		err := dummyService.Delete(ctx, receiverID)
+		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertExpectations(t)
+	})
+}
+
+func TestService_Notify(t *testing.T) {
+	type testCase struct {
+		Description string
+		Setup       func(*mocks.ReceiverRepository, *mocks.TypeService)
+		Receiver    *receiver.Receiver
+		ErrString   string
+	}
+	var (
+		receiverID = uint64(50)
+		testCases  = []testCase{
+			{
+				Description: "should return error if get repository return error",
+				Setup: func(rr *mocks.ReceiverRepository, ts *mocks.TypeService) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(nil, errors.New("some error"))
+				},
+				ErrString: "error getting receiver with id 50",
+			},
+			{
+				Description: "should return error if type from get repository unknown",
+				Setup: func(rr *mocks.ReceiverRepository, ts *mocks.TypeService) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
+						Type: "random",
+					}, nil)
+				},
+				ErrString: "error getting receiver with id 50",
+			},
+			{
+				Description: "should return error if type from get service unknown",
+				Setup: func(rr *mocks.ReceiverRepository, ts *mocks.TypeService) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
+						Type: receiver.TypeSlack,
+					}, nil)
+					ts.EXPECT().Decrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
+					ts.EXPECT().PopulateReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*receiver.Receiver")).Return(&receiver.Receiver{
+						Type: "random",
+					}, nil)
+				},
+				ErrString: "unsupported receiver type: \"random\"",
+			},
+			{
+				Description: "should return error if type service notify return error",
+				Setup: func(rr *mocks.ReceiverRepository, ts *mocks.TypeService) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
+						Type: receiver.TypeSlack,
+					}, nil)
+					ts.EXPECT().Decrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
+					ts.EXPECT().PopulateReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*receiver.Receiver")).Return(&receiver.Receiver{
+						Type: receiver.TypeSlack,
+					}, nil)
+					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*receiver.Receiver"), mock.AnythingOfType("receiver.NotificationMessage")).Return(errors.New("some error"))
+				},
+				ErrString: "some error",
+			},
+			{
+				Description: "should return no error if type service notify return nil error",
+				Setup: func(rr *mocks.ReceiverRepository, ts *mocks.TypeService) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
+						Type: receiver.TypeSlack,
+					}, nil)
+					ts.EXPECT().Decrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
+					ts.EXPECT().PopulateReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*receiver.Receiver")).Return(&receiver.Receiver{
+						Type: receiver.TypeSlack,
+					}, nil)
+					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*receiver.Receiver"), mock.AnythingOfType("receiver.NotificationMessage")).Return(nil)
+				},
+			},
+		}
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock  = new(mocks.ReceiverRepository)
+				typeServiceMock = new(mocks.TypeService)
+			)
+
+			registry := map[string]receiver.TypeService{
+				receiver.TypeSlack: typeServiceMock,
+			}
+
+			svc := receiver.NewService(repositoryMock, registry)
+
+			tc.Setup(repositoryMock, typeServiceMock)
+
+			err := svc.Notify(context.TODO(), receiverID, receiver.NotificationMessage{})
+			if tc.ErrString != "" {
+				if tc.ErrString != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+
+			repositoryMock.AssertExpectations(t)
+			typeServiceMock.AssertExpectations(t)
+		})
+	}
+}
+
 func TestService_GetSubscriptionConfig(t *testing.T) {
 	type testCase struct {
 		Description string
@@ -648,7 +801,7 @@ func TestService_GetSubscriptionConfig(t *testing.T) {
 					ts.EXPECT().GetSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("receiver.Configurations")).Return(nil, errors.New("some error"))
 				},
 				Receiver: &receiver.Receiver{
-					Type: "slack",
+					Type: receiver.TypeSlack,
 				},
 				ErrString: "some error",
 			},
@@ -658,7 +811,7 @@ func TestService_GetSubscriptionConfig(t *testing.T) {
 					ts.EXPECT().GetSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("receiver.Configurations")).Return(map[string]string{}, nil)
 				},
 				Receiver: &receiver.Receiver{
-					Type: "slack",
+					Type: receiver.TypeSlack,
 				},
 			},
 		}

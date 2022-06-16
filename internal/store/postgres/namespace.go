@@ -27,21 +27,19 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 
 	var result []namespace.EncryptedNamespace
 	for _, m := range namespaceModels {
-		n, err := m.ToDomain()
-		if err != nil {
-			// log error here
-			continue
-		}
+		n := m.ToDomain()
 		result = append(result, *n)
 	}
 	return result, nil
 }
 
 func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.EncryptedNamespace) error {
-	nsModel := new(model.Namespace)
-	if err := nsModel.FromDomain(ns); err != nil {
-		return err
+	if ns == nil {
+		return errors.New("nil encrypted namespace domain when converting to namespace model")
 	}
+
+	nsModel := new(model.Namespace)
+	nsModel.FromDomain(ns)
 
 	if err := r.client.db.WithContext(ctx).Create(nsModel).Error; err != nil {
 		err = checkPostgresError(err)
@@ -66,18 +64,17 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 	if result.RowsAffected == 0 {
 		return nil, namespace.NotFoundError{ID: id}
 	}
-	ns, err := nsModel.ToDomain()
-	if err != nil {
-		return nil, err
-	}
+	ns := nsModel.ToDomain()
 	return ns, nil
 }
 
 func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.EncryptedNamespace) error {
-	m := new(model.Namespace)
-	if err := m.FromDomain(ns); err != nil {
-		return err
+	if ns == nil {
+		return errors.New("nil encrypted namespace domain when converting to namespace model")
 	}
+
+	m := new(model.Namespace)
+	m.FromDomain(ns)
 
 	result := r.client.db.Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {

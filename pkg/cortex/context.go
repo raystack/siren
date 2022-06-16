@@ -19,9 +19,6 @@ func NewContext(ctx context.Context, tenantId string) context.Context {
 // FromContext returns the tenant ID from the context if present, and empty
 // otherwise.
 func FromContext(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
 	if t, ok := ctx.Value(tenantContextKey).(string); ok {
 		return t
 	}

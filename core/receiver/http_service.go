@@ -14,7 +14,7 @@ func NewHTTPService() *HTTPService {
 }
 
 func (s *HTTPService) Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error {
-	return nil
+	return ErrNotImplemented
 }
 
 func (s *HTTPService) Encrypt(r *Receiver) error {

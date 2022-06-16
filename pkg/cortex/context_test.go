@@ -26,4 +26,11 @@ func TestContext(t *testing.T) {
 			t.Fatalf("actual is \"%+v\" but expected was \"%+v\"", actual, "")
 		}
 	})
+
+	t.Run("should return empty tenant id if context is nil", func(t *testing.T) {
+		actual := cortex.FromContext(context.TODO())
+		if actual != "" {
+			t.Fatalf("actual is \"%+v\" but expected was \"%+v\"", actual, "")
+		}
+	})
 }

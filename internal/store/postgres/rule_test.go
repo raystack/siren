@@ -149,7 +149,9 @@ func (s *RuleRepositoryTestSuite) TestList() {
 		{
 			Description: "should get filtered rules",
 			Filter: rule.Filter{
-				Namespace: "namespace-urn-2",
+				Namespace:    "namespace-urn-2",
+				Name:         "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",
+				TemplateName: "template-name-1",
 			},
 			ExpectedRules: []rule.Rule{
 				{
@@ -237,13 +239,41 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 		{
 			Description: "should conflict if all unique components are same and name different",
 			RuleToUpsert: &rule.Rule{
-				Name:              "the-new-conflict",
+				ID:                500,
+				Name:              "prefix_provider-urn-1_namespace-urn-1_namespace-1_group-name-1_template-name-1",
 				GroupName:         "group-name-1",
 				Namespace:         "namespace-urn-2",
 				Template:          "template-name-1",
 				ProviderNamespace: 2,
 			},
 			ErrString: "rule conflicted with existing",
+		},
+		{
+			Description: "should return foreign key violation if provider namespace does not exist when update",
+			RuleToUpsert: &rule.Rule{
+				ID:                2,
+				Name:              "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",
+				Enabled:           true,
+				GroupName:         "group-name-1",
+				Namespace:         "namespace-urn-2",
+				Template:          "template-name-1",
+				Variables:         []rule.RuleVariable{},
+				ProviderNamespace: 2000,
+			},
+			ErrString: "provider's namespace does not exist",
+		},
+		{
+			Description: "should return foreign key violation if provider namespace does not exist when insert",
+			RuleToUpsert: &rule.Rule{
+				Name:              "new-rule-name-2",
+				Enabled:           true,
+				GroupName:         "foo",
+				Namespace:         "bar",
+				Template:          "template-name-1",
+				Variables:         []rule.RuleVariable{},
+				ProviderNamespace: 1000,
+			},
+			ErrString: "provider's namespace does not exist",
 		},
 		{
 			Description: "should return foreign key violation if provider namespace does not exist when update",

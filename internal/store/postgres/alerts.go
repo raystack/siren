@@ -20,10 +20,12 @@ func NewAlertRepository(client *Client) *AlertRepository {
 }
 
 func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) (*alert.Alert, error) {
-	var alertModel model.Alert
-	if err := alertModel.FromDomain(alrt); err != nil {
-		return nil, err
+	if alrt == nil {
+		return nil, errors.New("alert domain is nil")
 	}
+
+	var alertModel model.Alert
+	alertModel.FromDomain(alrt)
 
 	result := r.client.db.WithContext(ctx).Create(&alertModel)
 	if result.Error != nil {
@@ -34,11 +36,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) (*alert.
 		return nil, result.Error
 	}
 
-	newAlert, err := alertModel.ToDomain()
-	if err != nil {
-		return nil, err
-	}
-	return newAlert, nil
+	return alertModel.ToDomain(), nil
 }
 
 func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {
@@ -52,12 +50,7 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 
 	var alerts []alert.Alert
 	for _, am := range alertsModel {
-		ad, err := am.ToDomain()
-		if err != nil {
-			// TODO log here
-			continue
-		}
-		alerts = append(alerts, *ad)
+		alerts = append(alerts, *am.ToDomain())
 	}
 
 	return alerts, nil

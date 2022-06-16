@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"testing"
 	"time"
 
 	"github.com/odpf/salt/log"
@@ -19,6 +20,7 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"go.uber.org/zap"
 )
 
 const logLevelDebug = "debug"
@@ -30,7 +32,6 @@ var (
 		Password: "test_pass",
 		Name:     "test_db",
 		SSLMode:  "disable",
-		LogLevel: "debug",
 	}
 )
 
@@ -169,20 +170,14 @@ func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 	var insertedData []provider.Provider
 	for _, d := range data {
 		var mdl model.Provider
-		if err := mdl.FromDomain(&d); err != nil {
-			return nil, err
-		}
+		mdl.FromDomain(&d)
 
 		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		insertedData = append(insertedData, *dmn)
+		insertedData = append(insertedData, *mdl.ToDomain())
 	}
 
 	return insertedData, nil
@@ -203,23 +198,17 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 	var insertedData []namespace.EncryptedNamespace
 	for _, d := range data {
 		var mdl model.Namespace
-		if err := mdl.FromDomain(&namespace.EncryptedNamespace{
+		mdl.FromDomain(&namespace.EncryptedNamespace{
 			Namespace:   &d,
 			Credentials: fmt.Sprintf("%+v", &d.Credentials),
-		}); err != nil {
-			return nil, err
-		}
+		})
 
 		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		insertedData = append(insertedData, *dmn)
+		insertedData = append(insertedData, *mdl.ToDomain())
 	}
 
 	return insertedData, nil
@@ -240,20 +229,14 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 	var insertedData []receiver.Receiver
 	for _, d := range data {
 		var mdl model.Receiver
-		if err := mdl.FromDomain(&d); err != nil {
-			return nil, err
-		}
+		mdl.FromDomain(&d)
 
 		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		insertedData = append(insertedData, *dmn)
+		insertedData = append(insertedData, *mdl.ToDomain())
 	}
 
 	return insertedData, nil
@@ -274,19 +257,14 @@ func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 	var insertedData []alert.Alert
 	for _, d := range data {
 		var mdl model.Alert
-		if err := mdl.FromDomain(&d); err != nil {
-			return nil, err
-		}
+		mdl.FromDomain(&d)
 
 		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
+		dmn := mdl.ToDomain()
 		insertedData = append(insertedData, *dmn)
 	}
 
@@ -387,4 +365,88 @@ func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription
 	}
 
 	return insertedData, nil
+}
+
+func TestMigration(t *testing.T) {
+	t.Run("successfully migrate if there is no problem", func(t *testing.T) {
+		logger := log.NewZap()
+		client, pool, resource, err := newTestClient(logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if err = client.Migrate(); err != nil {
+			t.Fatal(err)
+		}
+
+		if err = purgeDocker(pool, resource); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+}
+
+func TestLogs(t *testing.T) {
+	wrongPGConfig := postgres.Config{
+		Host:     "localhost",
+		User:     "test_user",
+		Password: "test_pass",
+		Name:     "test_db",
+		SSLMode:  "disable",
+	}
+
+	t.Run("failed migrate if there is a problem with log level error", func(t *testing.T) {
+		zapConfig := zap.NewProductionConfig()
+		zapConfig.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
+		logger := log.NewZap(log.ZapWithConfig(zapConfig))
+
+		_, err := postgres.NewClient(logger, wrongPGConfig)
+		if err == nil {
+			t.Fatal("should throw error")
+		}
+	})
+
+	t.Run("failed migrate if there is a problem with log level warn", func(t *testing.T) {
+		zapConfig := zap.NewProductionConfig()
+		zapConfig.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+		logger := log.NewZap(log.ZapWithConfig(zapConfig))
+
+		_, err := postgres.NewClient(logger, wrongPGConfig)
+		if err == nil {
+			t.Fatal("should throw error")
+		}
+	})
+
+	t.Run("failed migrate if there is a problem with log level info", func(t *testing.T) {
+		zapConfig := zap.NewProductionConfig()
+		zapConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+		logger := log.NewZap(log.ZapWithConfig(zapConfig))
+
+		_, err := postgres.NewClient(logger, wrongPGConfig)
+		if err == nil {
+			t.Fatal("should throw error")
+		}
+	})
+
+	t.Run("failed migrate if there is a problem with log level debug", func(t *testing.T) {
+		zapConfig := zap.NewProductionConfig()
+		zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+		logger := log.NewZap(log.ZapWithConfig(zapConfig))
+
+		_, err := postgres.NewClient(logger, wrongPGConfig)
+		if err == nil {
+			t.Fatal("should throw error")
+		}
+	})
+
+	t.Run("failed migrate if there is a problem with other log level", func(t *testing.T) {
+		zapConfig := zap.NewProductionConfig()
+		zapConfig.Level = zap.NewAtomicLevelAt(zap.DPanicLevel)
+		logger := log.NewZap(log.ZapWithConfig(zapConfig))
+
+		_, err := postgres.NewClient(logger, wrongPGConfig)
+		if err == nil {
+			t.Fatal("should throw error")
+		}
+	})
 }

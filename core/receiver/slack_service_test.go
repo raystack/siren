@@ -231,6 +231,100 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 	}
 }
 
+func TestSlackService_Notify(t *testing.T) {
+	type testCase struct {
+		Description string
+		Setup       func(*mocks.SlackClient)
+		Receiver    *receiver.Receiver
+		Message     receiver.NotificationMessage
+		ErrString   string
+	}
+	var (
+		testCases = []testCase{
+			{
+				Description: "should return error if cannot cast token to string",
+				Setup:       func(sc *mocks.SlackClient) {},
+				Receiver:    &receiver.Receiver{},
+				ErrString:   "no token in configurations found",
+			},
+			{
+				Description: "should return error if message cannot be converted to slack message",
+				Setup:       func(sc *mocks.SlackClient) {},
+				Receiver: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"token": "123123",
+					},
+				},
+				ErrString: "non empty message or non zero length block is required",
+			},
+			{
+				Description: "should return error if slack client return error",
+				Setup: func(sc *mocks.SlackClient) {
+					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.Message"), mock.AnythingOfType("slack.ClientCallOption")).Return(errors.New("some error"))
+				},
+				Receiver: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"token": "123123",
+					},
+				},
+				Message: receiver.NotificationMessage{
+					"receiver_name": "receiver_name",
+					"receiver_type": "channel",
+					"message":       "message",
+					"blocks": []map[string]interface{}{
+						{
+							"type": "section",
+						},
+					},
+				},
+				ErrString: "error calling slack notify: some error",
+			},
+			{
+				Description: "should return nil error if slack client return nil error",
+				Setup: func(sc *mocks.SlackClient) {
+					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.Message"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil)
+				},
+				Receiver: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"token": "123123",
+					},
+				},
+				Message: receiver.NotificationMessage{
+					"receiver_name": "receiver_name",
+					"receiver_type": "channel",
+					"message":       "message",
+					"blocks": []map[string]interface{}{
+						{
+							"type": "section",
+						},
+					},
+				},
+			},
+		}
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				clientMock = new(mocks.SlackClient)
+			)
+
+			svc := receiver.NewSlackService(clientMock, nil)
+
+			tc.Setup(clientMock)
+
+			err := svc.Notify(context.TODO(), tc.Receiver, tc.Message)
+			if tc.ErrString != "" {
+				if tc.ErrString != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+
+			clientMock.AssertExpectations(t)
+		})
+	}
+}
+
 func TestSlackService_ValidateConfiguration(t *testing.T) {
 	type testCase struct {
 		Description string
@@ -273,6 +367,17 @@ func TestSlackService_ValidateConfiguration(t *testing.T) {
 						"auth_code":     "auth_code",
 					},
 				},
+			},
+			{
+				Description: "should return nil error if a configuration is not in string",
+				Rcv: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"client_id":     123,
+						"client_secret": "client_secret",
+						"auth_code":     "auth_code",
+					},
+				},
+				ErrString: "wrong type for configurations map key \"client_id\": expected type string, got value 123 of type int",
 			},
 			{
 				Description: "should return error if receiver is nil",
@@ -330,7 +435,7 @@ func TestSlackService_GetSubscriptionConfig(t *testing.T) {
 				},
 			},
 			{
-				Description: "should return configs with token if receiver 'token'exist in string",
+				Description: "should return configs with token if receiver 'token' exist in string",
 				SubscriptionConfigs: map[string]string{
 					"channel_name": "odpf_warning",
 				},
