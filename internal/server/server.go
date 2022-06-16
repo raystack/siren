@@ -33,7 +33,7 @@ import (
 var swaggerFile embed.FS
 
 type Config struct {
-	Host string `mapstructure:"host" default:"http://localhost:3000"`
+	Host string `mapstructure:"host" default:"localhost"`
 	Port int    `mapstructure:"port" default:"8080"`
 }
 
@@ -103,7 +103,7 @@ func RunServer(
 			},
 		}),
 	)
-	address := fmt.Sprintf(":%d", c.Port)
+	address := fmt.Sprintf("%s:%d", c.Host, c.Port)
 	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func RunServer(
 		IdleTimeout:  120 * time.Second,
 	}
 
-	logger.Info("server is running", "port", c.Port)
+	logger.Info("server is running", "host", c.Host, "port", c.Port)
 	if err := server.ListenAndServe(); err != nil {
 		if err != http.ErrServerClosed {
 			return err

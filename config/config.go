@@ -33,6 +33,7 @@ func LoadConfig(configFile string) (Config, error) {
 	}
 	cfg.Cortex.PrometheusAlertManagerConfigYaml = promAMConfigYamlString
 	cfg.Cortex.PrometheusAlertManagerHelperTemplate = promAMHelperTemplateString
+	cfg.SirenService.Port = cfg.Port
 	return cfg, nil
 }
 
@@ -47,6 +48,7 @@ type SlackApp struct {
 
 // Config contains the application configuration
 type Config struct {
+	Port          int                      `mapstructure:"port" default:"8080"`
 	DB            postgres.Config          `mapstructure:"db"`
 	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
