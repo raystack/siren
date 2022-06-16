@@ -75,7 +75,7 @@ func runServer(cfg config.Config) error {
 	alertHistoryService := alert.NewService(repositories.AlertRepository)
 
 	providerService := provider.NewService(repositories.ProviderRepository)
-	namespaceService := namespace.NewSecureService(encryptor, repositories.NamespaceRepository)
+	namespaceService := namespace.NewService(encryptor, repositories.NamespaceRepository)
 
 	if cfg.Cortex.PrometheusAlertManagerConfigYaml == "" || cfg.Cortex.PrometheusAlertManagerHelperTemplate == "" {
 		return errors.New("empty prometheus alert manager config template")
@@ -97,8 +97,7 @@ func runServer(cfg config.Config) error {
 	)
 
 	slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
-	receiverSecureService := receiver.NewSecureService(encryptor, repositories.ReceiverRepository)
-	receiverService := receiver.NewService(receiverSecureService, slackClient)
+	receiverService := receiver.NewService(repositories.ReceiverRepository, slackClient, encryptor)
 
 	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 

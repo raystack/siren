@@ -16,61 +16,110 @@ func TestService_ListReceivers_Slack(t *testing.T) {
 	type testCase struct {
 		Description string
 		Receivers   []*receiver.Receiver
-		Setup       func(*mocks.SecureServiceProxy, testCase)
+		Setup       func(*mocks.ReceiverRepository, *mocks.SlackClient, *mocks.Encryptor, testCase)
 		Err         error
 	}
-	var testCases = []testCase{
-		{
-			Description: "should call service List method and return result in domain's type",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().ListReceivers().Return(tc.Receivers, nil)
-			},
-			Receivers: []*receiver.Receiver{
-				{
-					Id:   10,
-					Name: "foo",
-					Type: "slack",
-					Labels: map[string]string{
-						"foo": "bar",
-					},
-					Configurations: map[string]interface{}{
-						"token": "key",
-					},
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+
+	var (
+		timeNow   = time.Now()
+		testCases = []testCase{
+			{
+				Description: "should return error if List repository error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return(nil, errors.New("some error"))
 				},
+				Err: errors.New("secureService.repository.List: some error"),
 			},
-			Err: nil,
-		},
-		{
-			Description: "should call service List method and return error if any",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().ListReceivers().Return(tc.Receivers, tc.Err)
+			{
+				Description: "should return error if List repository success and no token in configurations field in decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*receiver.Receiver{
+						{
+							Id:   10,
+							Name: "foo",
+							Type: "slack",
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
+						},
+					}, nil)
+				},
+				Err: errors.New("no token field found"),
 			},
-			Err: errors.New("some error"),
-		},
-	}
+			{
+				Description: "should return error if List repository success and decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*receiver.Receiver{
+						{
+							Id:   10,
+							Name: "foo",
+							Type: "slack",
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							Configurations: map[string]interface{}{
+								"token": "key",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
+				},
+				Err: errors.New("post transform decrypt failed: decrypt error"),
+			},
+			{
+				Description: "should success if list repository and decrypt success",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return(tc.Receivers, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+				},
+				Receivers: []*receiver.Receiver{
+					{
+						Id:   10,
+						Name: "foo",
+						Type: "slack",
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+					},
+				},
+				Err: nil,
+			},
+		}
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				secureServiceMock = new(mocks.SecureServiceProxy)
-				slackClientMock   = new(mocks.SlackClient)
+				repositoryMock  = new(mocks.ReceiverRepository)
+				slackClientMock = new(mocks.SlackClient)
+				encryptorMock   = new(mocks.Encryptor)
 			)
 
-			svc := receiver.NewService(secureServiceMock, slackClientMock)
+			svc := receiver.NewService(repositoryMock, slackClientMock, encryptorMock)
 
-			tc.Setup(secureServiceMock, tc)
+			tc.Setup(repositoryMock, slackClientMock, encryptorMock, tc)
 
 			got, err := svc.ListReceivers()
 			if tc.Err != err {
-				t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
 			}
 			if !cmp.Equal(got, tc.Receivers) {
 				t.Fatalf("got result %+v, expected was %+v", got, tc.Receivers)
 			}
-			secureServiceMock.AssertExpectations(t)
+			repositoryMock.AssertExpectations(t)
 			slackClientMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
 		})
 	}
 }
@@ -78,150 +127,233 @@ func TestService_ListReceivers_Slack(t *testing.T) {
 func TestService_CreateReceiver_Slack(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.SecureServiceProxy, testCase)
+		Setup       func(*mocks.ReceiverRepository, *mocks.SlackClient, *mocks.Encryptor, testCase)
 		Rcv         *receiver.Receiver
 		Err         error
 	}
 	var testCases = []testCase{
 		{
-			Description: "should call repository Create method and return nil error",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().CreateReceiver(tc.Rcv).Return(nil)
-			},
+			Description: "should return error if no token in configuration field in encrypt return error",
+			Setup:       func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {},
 			Rcv: &receiver.Receiver{
 				Id:   123,
 				Type: "slack",
 			},
-			Err: nil,
+			Err: errors.New("no token field found"),
 		},
 		{
-			Description: "should call repository Create method and return error",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().CreateReceiver(tc.Rcv).Return(tc.Err)
+			Description: "should return error if encrypt return error",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
 				Id:   123,
 				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
 			},
-			Err: errors.New("some error"),
+			Err: errors.New("pre transform encrypt failed: some error"),
+		},
+		{
+			Description: "should return error if Create repository return error",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
+				rr.EXPECT().Create(tc.Rcv).Return(errors.New("some error"))
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("secureService.repository.Create: some error"),
+		},
+		{
+			Description: "should return error if decrypt return error",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
+				rr.EXPECT().Create(tc.Rcv).Return(nil)
+				e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("some error"))
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("post transform decrypt failed: some error"),
+		},
+		{
+			Description: "should return nil error if no error returned",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
+				rr.EXPECT().Create(tc.Rcv).Return(nil)
+				e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				secureServiceMock = new(mocks.SecureServiceProxy)
-				slackClientMock   = new(mocks.SlackClient)
+				repositoryMock  = new(mocks.ReceiverRepository)
+				slackClientMock = new(mocks.SlackClient)
+				encryptorMock   = new(mocks.Encryptor)
 			)
-			svc := receiver.NewService(secureServiceMock, slackClientMock)
-			tc.Setup(secureServiceMock, tc)
+
+			svc := receiver.NewService(repositoryMock, slackClientMock, encryptorMock)
+
+			tc.Setup(repositoryMock, slackClientMock, encryptorMock, tc)
 
 			err := svc.CreateReceiver(tc.Rcv)
 			if tc.Err != err {
-				t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
 			}
-
-			secureServiceMock.AssertExpectations(t)
+			repositoryMock.AssertExpectations(t)
 			slackClientMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
 		})
 	}
 }
 
 func TestService_GetReceiver_Slack(t *testing.T) {
-	var (
-		timeNow    = time.Now()
-		validToken = "xxxxxx"
-	)
 
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.SecureServiceProxy, *mocks.SlackClient, testCase)
-		ID          uint64
+		Setup       func(*mocks.ReceiverRepository, *mocks.SlackClient, *mocks.Encryptor, testCase)
 		Rcv         *receiver.Receiver
 		Err         error
 	}
-	var testCases = []testCase{
-		{
-			Description: "should call repository Get method and return result in domain's type",
-			Setup: func(ss *mocks.SecureServiceProxy, sc *mocks.SlackClient, tc testCase) {
-				ss.EXPECT().GetReceiver(tc.ID).Return(tc.Rcv, nil)
-				sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
-					{ID: "1", Name: "foo"},
-				}, nil)
-			},
-			ID: 10,
-			Rcv: &receiver.Receiver{
-				Id:   10,
-				Name: "foo",
-				Type: "slack",
-				Labels: map[string]string{
-					"foo": "bar",
+	var (
+		testID     = uint64(10)
+		timeNow    = time.Now()
+		validToken = "xxxxxx"
+		testCases  = []testCase{
+			{
+				Description: "should return error if Get repository error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(nil, errors.New("some error"))
 				},
-				Configurations: map[string]interface{}{
-					"token": validToken,
-				},
-				Data: map[string]interface{}{
-					"channels": "[{\"id\":\"1\",\"name\":\"foo\"}]",
-				},
-				CreatedAt: timeNow,
-				UpdatedAt: timeNow,
+				Err: errors.New("secureService.repository.Get: some error"),
 			},
-			Err: nil,
-		},
-		{
-			Description: "should call secure service Get method and return error if error",
-			Setup: func(ss *mocks.SecureServiceProxy, sc *mocks.SlackClient, tc testCase) {
-				ss.EXPECT().GetReceiver(tc.ID).Return(nil, tc.Err)
+			{
+				Description: "should return error if Get repository success and no token field in configurations in decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&receiver.Receiver{
+						Id:   testID,
+						Name: "foo",
+						Type: "slack",
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+					}, nil)
+				},
+				Err: errors.New("no token field found"),
 			},
-			Err: errors.New("some error"),
-		},
-		{
-			Description: "should return error if no token field in configurations",
-			Setup: func(ss *mocks.SecureServiceProxy, sc *mocks.SlackClient, tc testCase) {
-				ss.EXPECT().GetReceiver(tc.ID).Return(&receiver.Receiver{
-					Id:   123,
+			{
+				Description: "should return error if Get repository success and decrypt error",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&receiver.Receiver{
+						Id:   testID,
+						Name: "foo",
+						Type: "slack",
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
+				},
+				Err: errors.New("post transform decrypt failed: decrypt error"),
+			},
+			{
+				Description: "should call repository Get method and return result in domain's type",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(tc.Rcv, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
+						{ID: "1", Name: "foo"},
+					}, nil)
+				},
+				Rcv: &receiver.Receiver{
+					Id:   testID,
+					Name: "foo",
 					Type: "slack",
-				}, nil)
-			},
-			Err: errors.New("no token found in configurations"),
-		},
-		{
-			Description: "should return error if failed to get workspace channels with slack client",
-			Setup: func(ss *mocks.SecureServiceProxy, sc *mocks.SlackClient, tc testCase) {
-				ss.EXPECT().GetReceiver(tc.ID).Return(&receiver.Receiver{
-					Id:   123,
-					Type: "slack",
+					Labels: map[string]string{
+						"foo": "bar",
+					},
 					Configurations: map[string]interface{}{
 						"token": validToken,
 					},
-				}, nil)
-				sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
+					Data: map[string]interface{}{
+						"channels": "[{\"id\":\"1\",\"name\":\"foo\"}]",
+					},
+					CreatedAt: timeNow,
+					UpdatedAt: timeNow,
+				},
+				Err: nil,
 			},
-			Err: errors.New("could not get channels: some error"),
-		},
-	}
+			{
+				Description: "should return error if failed to get workspace channels with slack client",
+				Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&receiver.Receiver{
+						Id:   123,
+						Type: "slack",
+						Configurations: map[string]interface{}{
+							"token": validToken,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
+				},
+				Err: errors.New("could not get channels: some error"),
+			},
+		}
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				secureServiceMock = new(mocks.SecureServiceProxy)
-				slackClientMock   = new(mocks.SlackClient)
+				repositoryMock  = new(mocks.ReceiverRepository)
+				slackClientMock = new(mocks.SlackClient)
+				encryptorMock   = new(mocks.Encryptor)
 			)
-			svc := receiver.NewService(secureServiceMock, slackClientMock)
-			tc.Setup(secureServiceMock, slackClientMock, tc)
 
-			got, err := svc.GetReceiver(tc.ID)
+			svc := receiver.NewService(repositoryMock, slackClientMock, encryptorMock)
+
+			tc.Setup(repositoryMock, slackClientMock, encryptorMock, tc)
+
+			got, err := svc.GetReceiver(testID)
 			if tc.Err != err {
-				if tc.Err != nil && tc.Err.Error() != err.Error() {
-					t.Fatalf("error %+v expected was %+v", err, tc.Err)
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
 				}
 			}
 			if !cmp.Equal(got, tc.Rcv) {
-				t.Fatalf("got result %+v expected was %+v", got, tc.Rcv)
+				t.Fatalf("got result %+v, expected was %+v", got, tc.Rcv)
 			}
-
-			secureServiceMock.AssertExpectations(t)
+			repositoryMock.AssertExpectations(t)
 			slackClientMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
 		})
 	}
 }
@@ -229,52 +361,85 @@ func TestService_GetReceiver_Slack(t *testing.T) {
 func TestService_UpdateReceiver_Slack(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.SecureServiceProxy, testCase)
+		Setup       func(*mocks.ReceiverRepository, *mocks.SlackClient, *mocks.Encryptor, testCase)
 		Rcv         *receiver.Receiver
 		Err         error
 	}
 	var testCases = []testCase{
 		{
-			Description: "should call service Update method and return nil error",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().UpdateReceiver(tc.Rcv).Return(nil)
-			},
-			Rcv: &receiver.Receiver{
-				Id: 123,
-			},
-			Err: nil,
-		},
-		{
-			Description: "should call service update method and return error if error",
-			Setup: func(ss *mocks.SecureServiceProxy, tc testCase) {
-				ss.EXPECT().UpdateReceiver(tc.Rcv).Return(errors.New("some error"))
-			},
+			Description: "should return error if no token in configurations field in encrypt return error",
+			Setup:       func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {},
 			Rcv: &receiver.Receiver{
 				Id:   123,
 				Type: "slack",
 			},
-			Err: errors.New("some error"),
+			Err: errors.New("no token field found"),
+		},
+		{
+			Description: "should return error if encrypt return error",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", errors.New("some error"))
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("pre transform encrypt failed: some error"),
+		},
+		{
+			Description: "should return error if Update repository return error",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
+				rr.EXPECT().Update(tc.Rcv).Return(errors.New("some error"))
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("secureService.repository.Update: some error"),
+		},
+		{
+			Description: "should return nil error if no error returned",
+			Setup: func(rr *mocks.ReceiverRepository, sc *mocks.SlackClient, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", nil)
+				rr.EXPECT().Update(tc.Rcv).Return(nil)
+			},
+			Rcv: &receiver.Receiver{
+				Id:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		var (
-			secureServiceMock = new(mocks.SecureServiceProxy)
-			slackClientMock   = new(mocks.SlackClient)
+			repositoryMock  = new(mocks.ReceiverRepository)
+			slackClientMock = new(mocks.SlackClient)
+			encryptorMock   = new(mocks.Encryptor)
 		)
-		svc := receiver.NewService(secureServiceMock, slackClientMock)
 
-		tc.Setup(secureServiceMock, tc)
+		svc := receiver.NewService(repositoryMock, slackClientMock, encryptorMock)
+
+		tc.Setup(repositoryMock, slackClientMock, encryptorMock, tc)
 
 		err := svc.UpdateReceiver(tc.Rcv)
-
 		if tc.Err != err {
-			if tc.Err != nil && tc.Err.Error() != err.Error() {
-				t.Fatalf("error %+v expected was %+v", err, tc.Err)
+			if tc.Err.Error() != err.Error() {
+				t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
 			}
 		}
-
-		secureServiceMock.AssertExpectations(t)
+		repositoryMock.AssertExpectations(t)
 		slackClientMock.AssertExpectations(t)
+		encryptorMock.AssertExpectations(t)
 	}
 }

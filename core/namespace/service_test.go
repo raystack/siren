@@ -11,7 +11,7 @@ import (
 	mock "github.com/stretchr/testify/mock"
 )
 
-func TestSecureService_ListNamespaces(t *testing.T) {
+func TestService_ListNamespaces(t *testing.T) {
 	type testCase struct {
 		Description        string
 		ExpectedNamespaces []*namespace.Namespace
@@ -155,7 +155,7 @@ func TestSecureService_ListNamespaces(t *testing.T) {
 				repositoryMock = new(mocks.NamespaceRepository)
 				encryptorMock  = new(mocks.Encryptor)
 			)
-			svc := namespace.NewSecureService(encryptorMock, repositoryMock)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
@@ -174,7 +174,7 @@ func TestSecureService_ListNamespaces(t *testing.T) {
 	}
 }
 
-func TestSecureService_CreateNamespace(t *testing.T) {
+func TestService_CreateNamespace(t *testing.T) {
 	type testCase struct {
 		Description string
 		NSpace      *namespace.Namespace
@@ -244,7 +244,7 @@ func TestSecureService_CreateNamespace(t *testing.T) {
 				repositoryMock = new(mocks.NamespaceRepository)
 				encryptorMock  = new(mocks.Encryptor)
 			)
-			svc := namespace.NewSecureService(encryptorMock, repositoryMock)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
@@ -261,7 +261,7 @@ func TestSecureService_CreateNamespace(t *testing.T) {
 	}
 }
 
-func TestSecureService_GetNamespace(t *testing.T) {
+func TestService_GetNamespace(t *testing.T) {
 	type testCase struct {
 		Description string
 		NSpace      *namespace.Namespace
@@ -325,7 +325,7 @@ func TestSecureService_GetNamespace(t *testing.T) {
 				repositoryMock = new(mocks.NamespaceRepository)
 				encryptorMock  = new(mocks.Encryptor)
 			)
-			svc := namespace.NewSecureService(encryptorMock, repositoryMock)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
@@ -344,7 +344,7 @@ func TestSecureService_GetNamespace(t *testing.T) {
 	}
 }
 
-func TestSecureService_UpdateNamespace(t *testing.T) {
+func TestService_UpdateNamespace(t *testing.T) {
 	type testCase struct {
 		Description string
 		NSpace      *namespace.Namespace
@@ -414,7 +414,7 @@ func TestSecureService_UpdateNamespace(t *testing.T) {
 				repositoryMock = new(mocks.NamespaceRepository)
 				encryptorMock  = new(mocks.Encryptor)
 			)
-			svc := namespace.NewSecureService(encryptorMock, repositoryMock)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
