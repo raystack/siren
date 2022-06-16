@@ -14,17 +14,6 @@ const (
 	Slack string = "slack"
 )
 
-//go:generate mockery --name=SecureServiceProxy -r --case underscore --with-expecter --structname SecureServiceProxy --filename secure_service.go --output=./mocks
-type SecureServiceProxy interface {
-	ListReceivers() ([]*Receiver, error)
-	CreateReceiver(*Receiver) error
-	GetReceiver(uint64) (*Receiver, error)
-	UpdateReceiver(*Receiver) error
-	DeleteReceiver(uint64) error
-	NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
-	Migrate() error
-}
-
 // Service handles business logic
 type Service struct {
 	repository   Repository
