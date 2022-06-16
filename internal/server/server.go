@@ -5,29 +5,33 @@ import (
 	"embed"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/encoding/protojson"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1"
-	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/odpf/salt/log"
-	"golang.org/x/net/http2/h2c"
 )
 
 //go:embed siren.swagger.yaml
@@ -38,9 +42,12 @@ type Config struct {
 	Port int    `mapstructure:"port" default:"8080"`
 }
 
+func (cfg Config) addr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
+
 // RunServer runs the application server
 func RunServer(
-	c Config, logger log.Logger,
+	c Config,
+	logger log.Logger,
 	nr *newrelic.Application,
 	templateService v1beta1.TemplateService,
 	ruleService v1beta1.RuleService,
@@ -70,7 +77,7 @@ func RunServer(
 	}
 
 	// init grpc server
-	opts := []grpc.ServerOption{
+	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
@@ -85,13 +92,22 @@ func RunServer(
 			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zapper),
 		)),
-	}
-	grpcServer := grpc.NewServer(opts...)
+	)
+
 	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1beta1Server)
+	grpc_health_v1.RegisterHealthServer(grpcServer, v1beta1Server)
 
 	// init http proxy
-	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
+	grpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer grpcDialCancel()
+
+	grpcConn, err := grpc.DialContext(grpcDialCtx, c.addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+
+	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
+	defer runtimeCancel()
 
 	gwmux := runtime.NewServeMux(
 		runtime.WithErrorHandler(runtime.DefaultHTTPErrorHandler),
@@ -105,44 +121,68 @@ func RunServer(
 				},
 			},
 		}),
+		runtime.WithHealthEndpointAt(grpc_health_v1.NewHealthClient(grpcConn), "/ping"),
 	)
-	address := fmt.Sprintf("%s:%d", c.Host, c.Port)
-	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-
-	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
-	defer runtimeCancel()
 
 	if err := sirenv1beta1.RegisterSirenServiceHandler(runtimeCtx, gwmux, grpcConn); err != nil {
 		return err
 	}
 
 	baseMux := http.NewServeMux()
-	baseMux.HandleFunc("/siren.swagger.json", func(w http.ResponseWriter, r *http.Request) {
+	baseMux.HandleFunc("/siren.swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.FileServer(http.FS(swaggerFile)).ServeHTTP(w, r)
 	})
 	baseMux.Handle("/documentation", middleware.SwaggerUI(middleware.SwaggerUIOpts{
-		SpecURL: "/siren.swagger.json",
+		SpecURL: "/siren.swagger.yaml",
 		Path:    "documentation",
 	}, http.NotFoundHandler()))
 	baseMux.Handle("/", gwmux)
 
-	server := &http.Server{
+	httpServer := &http.Server{
 		Handler:      grpcHandlerFunc(grpcServer, baseMux),
-		Addr:         address,
+		Addr:         c.addr(),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
 	logger.Info("server is running", "host", c.Host, "port", c.Port)
-	if err := server.ListenAndServe(); err != nil {
-		if err != http.ErrServerClosed {
-			return err
+	idleConnsClosed := make(chan struct{})
+	interrupt := make(chan os.Signal, 1)
+	go func() {
+		signal.Notify(interrupt, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+		<-interrupt
+
+		if httpServer != nil {
+			// We received an interrupt signal, shut down.
+			logger.Warn("stopping http server...")
+			if err := httpServer.Shutdown(context.Background()); err != nil {
+				logger.Error("HTTP server Shutdown", "err", err)
+			}
 		}
-	}
+
+		if grpcServer != nil {
+			logger.Warn("stopping grpc server...")
+			grpcServer.GracefulStop()
+		}
+
+		// Close DB here if any
+
+		close(idleConnsClosed)
+	}()
+
+	go func() {
+		defer func() { interrupt <- syscall.SIGTERM }()
+		if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Error("HTTP server ListenAndServe", "err", err)
+		}
+	}()
+
+	logger.Info("server started")
+
+	<-idleConnsClosed
+
+	logger.Info("server stopped")
 
 	return nil
 }
