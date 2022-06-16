@@ -77,7 +77,13 @@ func migrateCmd() *cobra.Command {
 			)
 
 			slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
-			receiverService := receiver.NewService(repositories.ReceiverRepository, slackClient, encryptor)
+			slackReceiverService := receiver.NewSlackService(slackClient, encryptor)
+			receiverService := receiver.NewService(
+				repositories.ReceiverRepository,
+				map[string]receiver.StrategyService{
+					receiver.TypeSlack: slackReceiverService,
+				},
+			)
 
 			subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 

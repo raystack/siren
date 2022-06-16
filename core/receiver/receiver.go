@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+const (
+	TypeSlack     string = "slack"
+	TypeHTTP      string = "http"
+	TypePagerDuty string = "pagerduty"
+)
+
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ReceiverRepository --filename receiver_repository.go --output=./mocks
 type Repository interface {
 	Migrate() error
