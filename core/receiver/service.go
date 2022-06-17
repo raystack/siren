@@ -1,7 +1,6 @@
 package receiver
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -18,8 +17,12 @@ func NewService(repository Repository, registry map[string]StrategyService) *Ser
 	}
 }
 
-func (s *Service) getStrategy(receiverType string) StrategyService {
-	return s.registry[receiverType]
+func (s *Service) getStrategy(receiverType string) (StrategyService, error) {
+	strategyService, exist := s.registry[receiverType]
+	if !exist {
+		return nil, fmt.Errorf("%w: unsupported receiver type", ErrInvalid)
+	}
+	return strategyService, nil
 }
 
 func (s *Service) ListReceivers() ([]*Receiver, error) {
@@ -32,10 +35,9 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
 
-		strategyService := s.getStrategy(rcv.Type)
-		if strategyService == nil {
-			//TODO log here
-			continue
+		strategyService, err := s.getStrategy(rcv.Type)
+		if err != nil {
+			return nil, err
 		}
 		if err = strategyService.Decrypt(rcv); err != nil {
 			return nil, err
@@ -47,10 +49,9 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 }
 
 func (s *Service) CreateReceiver(rcv *Receiver) error {
-	strategyService := s.getStrategy(rcv.Type)
-	if strategyService == nil {
-		//TODO log here, adjust error
-		return errors.New("unsupported receiver type")
+	strategyService, err := s.getStrategy(rcv.Type)
+	if err != nil {
+		return err
 	}
 
 	if err := strategyService.Encrypt(rcv); err != nil {
@@ -73,10 +74,9 @@ func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
 		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
 	}
 
-	strategyService := s.getStrategy(rcv.Type)
-	if strategyService == nil {
-		//TODO log here, adjust error
-		return nil, errors.New("unsupported receiver type")
+	strategyService, err := s.getStrategy(rcv.Type)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := strategyService.Decrypt(rcv); err != nil {
@@ -87,10 +87,9 @@ func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
 }
 
 func (s *Service) UpdateReceiver(rcv *Receiver) error {
-	strategyService := s.getStrategy(rcv.Type)
-	if strategyService == nil {
-		//TODO log here, adjust error
-		return errors.New("unsupported receiver type")
+	strategyService, err := s.getStrategy(rcv.Type)
+	if err != nil {
+		return err
 	}
 
 	if err := strategyService.Encrypt(rcv); err != nil {
@@ -103,14 +102,13 @@ func (s *Service) UpdateReceiver(rcv *Receiver) error {
 	return nil
 }
 
-func (s *Service) NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
-	strategyService := s.getStrategy(rcv.Type)
-	if strategyService == nil {
-		//TODO log here, adjust error
-		return errors.New("unsupported receiver type")
+func (s *Service) NotifyReceiver(rcv *Receiver, payloadMessage NotificationMessage) error {
+	strategyService, err := s.getStrategy(rcv.Type)
+	if err != nil {
+		return err
 	}
 
-	return strategyService.Notify(rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)
+	return strategyService.Notify(rcv, payloadMessage)
 }
 
 func (s *Service) DeleteReceiver(id uint64) error {

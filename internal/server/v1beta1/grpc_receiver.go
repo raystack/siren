@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/odpf/siren/core/receiver"
@@ -29,7 +28,7 @@ type ReceiverService interface {
 	GetReceiver(uint64) (*receiver.Receiver, error)
 	UpdateReceiver(*receiver.Receiver) error
 	DeleteReceiver(uint64) error
-	NotifyReceiver(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
+	NotifyReceiver(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error
 	Migrate() error
 }
 
@@ -221,12 +220,12 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 	case Slack:
 		slackPayload := req.GetSlack()
 
-		b, err := json.Marshal(slackPayload.GetBlocks())
-		if err != nil {
-			s.logger.Error("failed to encode the payload JSON", "error", err)
-			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
-		}
-		if err := s.receiverService.NotifyReceiver(rcv, slackPayload.GetMessage(), slackPayload.GetReceiverName(), slackPayload.GetReceiverType(), b); err != nil {
+		if err := s.receiverService.NotifyReceiver(rcv, receiver.NotificationMessage{
+			"receiver_name": slackPayload.GetReceiverName(),
+			"receiver_type": slackPayload.GetReceiverType(),
+			"message":       slackPayload.GetMessage(),
+			"blocks":        slackPayload.GetBlocks(),
+		}); err != nil {
 			if errors.Is(err, receiver.ErrInvalid) {
 				return nil, status.Errorf(codes.InvalidArgument, err.Error())
 			}

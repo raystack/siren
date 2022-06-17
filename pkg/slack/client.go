@@ -142,7 +142,7 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 
 	var channelID string
 	switch message.ReceiverType {
-	case "channel":
+	case TypeReceiverChannel:
 		joinedChannelList, err := c.getJoinedChannelsList(gsc)
 		if err != nil {
 			return fmt.Errorf("failed to fetch joined channel list: %w", err)
@@ -151,7 +151,7 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 		if channelID == "" {
 			return fmt.Errorf("app is not part of the channel %s", message.ReceiverName)
 		}
-	case "user":
+	case TypeReceiverUser:
 		user, err := gsc.GetUserByEmail(message.ReceiverName)
 		if err != nil {
 			if err.Error() == "users_not_found" {

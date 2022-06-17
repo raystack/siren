@@ -227,5 +227,3 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 		})
 	}
 }
-
-//TODO add Notify test

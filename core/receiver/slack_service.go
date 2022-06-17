@@ -7,7 +7,6 @@ import (
 
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
-	goslack "github.com/slack-go/slack"
 )
 
 // SlackService handles business logic
@@ -24,25 +23,18 @@ func NewSlackService(slackClient SlackClient, cryptoClient Encryptor) *SlackServ
 	}
 }
 
-func (s *SlackService) Notify(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
-	blocks := goslack.Blocks{}
-	if err := json.Unmarshal(payloadBlock, &blocks); err != nil {
-		return fmt.Errorf("unable to parse slack block: %w", ErrInvalid)
-	}
-
+func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage) error {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
-		return fmt.Errorf("no token found in configuration: %w", ErrInvalid)
+		return errors.New("no token in receiver configurations found")
 	}
 
-	slackMessage := &slack.Message{
-		ReceiverName: payloadReceiverName,
-		ReceiverType: payloadReceiverType,
-		Token:        rcv.Configurations["token"].(string),
-		Message:      payloadMessage,
-		Blocks:       blocks,
+	sm, err := payloadMessage.ToSlackMessage()
+	if err != nil {
+		return err
 	}
-	if err := s.slackClient.Notify(slackMessage, slack.CallWithToken(token)); err != nil {
+
+	if err := s.slackClient.Notify(sm, slack.CallWithToken(token)); err != nil {
 		return fmt.Errorf("failed to notify: %w", err)
 	}
 

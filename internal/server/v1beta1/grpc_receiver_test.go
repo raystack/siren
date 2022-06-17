@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,7 +13,6 @@ import (
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -807,14 +805,14 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		}
 
 		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
-		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
-		require.NoError(t, err)
 		mockedReceiverService.EXPECT().NotifyReceiver(
 			receiverResult,
-			dummyReq.GetSlack().GetMessage(),
-			dummyReq.GetSlack().GetReceiverName(),
-			dummyReq.GetSlack().GetReceiverType(),
-			blocksByte,
+			receiver.NotificationMessage{
+				"receiver_name": dummyReq.GetSlack().GetReceiverName(),
+				"receiver_type": dummyReq.GetSlack().GetReceiverType(),
+				"message":       dummyReq.GetSlack().GetMessage(),
+				"blocks":        dummyReq.GetSlack().GetBlocks(),
+			},
 		).Return(nil)
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -843,14 +841,14 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		}
 
 		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
-		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
-		require.NoError(t, err)
 		mockedReceiverService.EXPECT().NotifyReceiver(
 			receiverResult,
-			dummyReq.GetSlack().GetMessage(),
-			dummyReq.GetSlack().GetReceiverName(),
-			dummyReq.GetSlack().GetReceiverType(),
-			blocksByte,
+			receiver.NotificationMessage{
+				"receiver_name": dummyReq.GetSlack().GetReceiverName(),
+				"receiver_type": dummyReq.GetSlack().GetReceiverType(),
+				"message":       dummyReq.GetSlack().GetMessage(),
+				"blocks":        dummyReq.GetSlack().GetBlocks(),
+			},
 		).Return(errors.New("some error"))
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some error")
@@ -878,14 +876,14 @@ func TestGRPCServer_SendReceiverNotification(t *testing.T) {
 		}
 
 		mockedReceiverService.EXPECT().GetReceiver(uint64(1)).Return(receiverResult, nil).Once()
-		blocksByte, err := json.Marshal(dummyReq.GetSlack().GetBlocks())
-		require.NoError(t, err)
 		mockedReceiverService.EXPECT().NotifyReceiver(
 			receiverResult,
-			dummyReq.GetSlack().GetMessage(),
-			dummyReq.GetSlack().GetReceiverName(),
-			dummyReq.GetSlack().GetReceiverType(),
-			blocksByte,
+			receiver.NotificationMessage{
+				"receiver_name": dummyReq.GetSlack().GetReceiverName(),
+				"receiver_type": dummyReq.GetSlack().GetReceiverType(),
+				"message":       dummyReq.GetSlack().GetMessage(),
+				"blocks":        dummyReq.GetSlack().GetBlocks(),
+			},
 		).Return(fmt.Errorf("some error: %w", receiver.ErrInvalid))
 		res, err := dummyGRPCServer.SendReceiverNotification(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = some error: bad_request")

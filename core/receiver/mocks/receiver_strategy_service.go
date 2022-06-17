@@ -96,13 +96,13 @@ func (_c *StrategyService_Encrypt_Call) Return(_a0 error) *StrategyService_Encry
 	return _c
 }
 
-// Notify provides a mock function with given fields: rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock
-func (_m *StrategyService) Notify(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
-	ret := _m.Called(rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)
+// Notify provides a mock function with given fields: rcv, payloadMessage
+func (_m *StrategyService) Notify(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error {
+	ret := _m.Called(rcv, payloadMessage)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver, string, string, string, []byte) error); ok {
-		r0 = rf(rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)
+	if rf, ok := ret.Get(0).(func(*receiver.Receiver, receiver.NotificationMessage) error); ok {
+		r0 = rf(rcv, payloadMessage)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -117,17 +117,14 @@ type StrategyService_Notify_Call struct {
 
 // Notify is a helper method to define mock.On call
 //  - rcv *receiver.Receiver
-//  - payloadMessage string
-//  - payloadReceiverName string
-//  - payloadReceiverType string
-//  - payloadBlock []byte
-func (_e *StrategyService_Expecter) Notify(rcv interface{}, payloadMessage interface{}, payloadReceiverName interface{}, payloadReceiverType interface{}, payloadBlock interface{}) *StrategyService_Notify_Call {
-	return &StrategyService_Notify_Call{Call: _e.mock.On("Notify", rcv, payloadMessage, payloadReceiverName, payloadReceiverType, payloadBlock)}
+//  - payloadMessage receiver.NotificationMessage
+func (_e *StrategyService_Expecter) Notify(rcv interface{}, payloadMessage interface{}) *StrategyService_Notify_Call {
+	return &StrategyService_Notify_Call{Call: _e.mock.On("Notify", rcv, payloadMessage)}
 }
 
-func (_c *StrategyService_Notify_Call) Run(run func(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte)) *StrategyService_Notify_Call {
+func (_c *StrategyService_Notify_Call) Run(run func(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage)) *StrategyService_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver), args[1].(string), args[2].(string), args[3].(string), args[4].([]byte))
+		run(args[0].(*receiver.Receiver), args[1].(receiver.NotificationMessage))
 	})
 	return _c
 }

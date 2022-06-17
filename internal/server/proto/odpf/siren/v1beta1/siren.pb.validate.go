@@ -7621,16 +7621,7 @@ func (m *SendReceiverNotificationRequest_SlackPayload) validate(all bool) error 
 
 	// no validation rules for Message
 
-	if !_SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern.MatchString(m.GetReceiverName()) {
-		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
-			field:  "ReceiverName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ReceiverName
 
 	if _, ok := _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup[m.GetReceiverType()]; !ok {
 		err := SendReceiverNotificationRequest_SlackPayloadValidationError{
@@ -7759,8 +7750,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SendReceiverNotificationRequest_SlackPayloadValidationError{}
-
-var _SendReceiverNotificationRequest_SlackPayload_ReceiverName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _SendReceiverNotificationRequest_SlackPayload_ReceiverType_InLookup = map[string]struct{}{
 	"channel": {},

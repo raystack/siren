@@ -5,5 +5,5 @@ type StrategyService interface {
 	Encrypt(r *Receiver) error
 	Decrypt(r *Receiver) error
 	PopulateReceiver(rcv *Receiver) (*Receiver, error)
-	Notify(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
+	Notify(rcv *Receiver, payloadMessage NotificationMessage) error
 }

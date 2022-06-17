@@ -13,7 +13,7 @@ import (
 )
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
-type NamespaceService interface { //TODO to be refactored, for temporary only
+type NamespaceService interface {
 	ListNamespaces() ([]*namespace.Namespace, error)
 	CreateNamespace(*namespace.Namespace) error
 	GetNamespace(uint64) (*namespace.Namespace, error)
@@ -23,7 +23,7 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
-type ReceiverService interface { //TODO to be refactored, for temporary only
+type ReceiverService interface {
 	CreateReceiver(*receiver.Receiver) error
 	GetReceiver(uint64) (*receiver.Receiver, error)
 	UpdateReceiver(*receiver.Receiver) error
@@ -33,7 +33,7 @@ type ReceiverService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface { //TODO to be refactored, for temporary only
+type ProviderService interface {
 	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
 	CreateProvider(*provider.Provider) (*provider.Provider, error)
 	GetProvider(uint64) (*provider.Provider, error)
@@ -190,6 +190,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	return nil
 }
 
+//TODO this can use repository filter by namespace id
 func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {

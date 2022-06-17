@@ -173,7 +173,7 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 			Rcv: &receiver.Receiver{
 				Type: "random",
 			},
-			Err: errors.New("unsupported receiver type"),
+			Err: errors.New("bad_request: unsupported receiver type"),
 		},
 		{
 			Description: "should return error if Create repository return error",
@@ -295,7 +295,7 @@ func TestService_GetReceiver(t *testing.T) {
 						Type: "random",
 					}, nil)
 				},
-				Err: errors.New("unsupported receiver type"),
+				Err: errors.New("bad_request: unsupported receiver type"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypt error",
@@ -466,7 +466,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			Rcv: &receiver.Receiver{
 				Type: "random",
 			},
-			Err: errors.New("unsupported receiver type"),
+			Err: errors.New("bad_request: unsupported receiver type"),
 		},
 		{
 			Description: "should return error if Update repository return error",
