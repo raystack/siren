@@ -1,0 +1,13 @@
+FROM golang:1.16-stretch as base
+WORKDIR /build
+COPY . .
+RUN ["make"]
+
+FROM alpine:3.13
+COPY --from=base /build/siren /usr/bin/siren
+RUN apk update
+RUN apk add ca-certificates
+# glibc compatibility library, since go binaries 
+# don't work well with musl libc that alpine uses
+RUN apk add libc6-compat
+CMD ["siren", "serve"]
