@@ -5,20 +5,12 @@ import (
 	"errors"
 
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/slack"
-	"github.com/odpf/siren/utils"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-)
-
-const (
-	Slack     string = "slack"
-	Pagerduty string = "pagerduty"
-	Http      string = "http"
 )
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
@@ -28,32 +20,23 @@ type ReceiverService interface {
 	GetReceiver(uint64) (*receiver.Receiver, error)
 	UpdateReceiver(*receiver.Receiver) error
 	DeleteReceiver(uint64) error
-	NotifyReceiver(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error
+	NotifyReceiver(id uint64, payloadMessage receiver.NotificationMessage) error
 	Migrate() error
-}
-
-type NotifierServices struct { //TODO to be refactored, temporary only
-	Slack SlackNotifierService
-}
-
-//go:generate mockery --name=SlackNotifierService -r --case underscore --with-expecter --structname SlackNotifierService --filename slack_notifier_service.go --output=./mocks
-type SlackNotifierService interface { //TODO to be refactored, temporary only
-	Notify(*slack.Message, ...slack.ClientCallOption) error
 }
 
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.receiverService.ListReceivers()
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListReceiversResponse{
-		Receivers: make([]*sirenv1beta1.Receiver, 0),
+		Data: make([]*sirenv1beta1.Receiver, 0),
 	}
 	for _, rcv := range receivers {
 		configurations, err := structpb.NewStruct(rcv.Configurations)
 		if err != nil {
-			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+			return nil, gRPCLogError(s.logger, codes.Internal, err)
 		}
 
 		item := &sirenv1beta1.Receiver{
@@ -65,211 +48,106 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 			CreatedAt:      timestamppb.New(rcv.CreatedAt),
 			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
 		}
-		res.Receivers = append(res.Receivers, item)
+		res.Data = append(res.Data, item)
 	}
 	return res, nil
 }
 
-func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.Receiver, error) {
+func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.CreateReceiverResponse, error) {
 	configurations := req.GetConfigurations().AsMap()
 
-	switch receiverType := req.GetType(); receiverType {
-	case Slack:
-		err := validateSlackConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	case Pagerduty:
-		err := validatePagerdutyConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	case Http:
-		err := validateHttpConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
-	}
-
-	receiver := &receiver.Receiver{
+	rcv := &receiver.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.receiverService.CreateReceiver(receiver); err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+
+	if err := s.receiverService.CreateReceiver(rcv); err != nil {
+		//TODO add test
+		if errors.Is(err, receiver.ErrInvalid) {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	c, err := structpb.NewStruct(receiver.Configurations)
-	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
-	}
-
-	return &sirenv1beta1.Receiver{
-		Id:             receiver.ID,
-		Name:           receiver.Name,
-		Type:           receiver.Type,
-		Labels:         receiver.Labels,
-		Configurations: c,
-		CreatedAt:      timestamppb.New(receiver.CreatedAt),
-		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
+	return &sirenv1beta1.CreateReceiverResponse{
+		Id: rcv.ID,
 	}, nil
 }
 
-func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.Receiver, error) {
-	receiver, err := s.receiverService.GetReceiver(req.GetId())
-	if receiver == nil {
+func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.GetReceiverResponse, error) {
+	rcv, err := s.receiverService.GetReceiver(req.GetId())
+	if rcv == nil {
 		return nil, status.Errorf(codes.NotFound, "receiver not found")
 	}
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	data, err := structpb.NewStruct(receiver.Data)
+	data, err := structpb.NewStruct(rcv.Data)
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	configuration, err := structpb.NewStruct(receiver.Configurations)
+	configuration, err := structpb.NewStruct(rcv.Configurations)
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	return &sirenv1beta1.Receiver{
-		Id:             receiver.ID,
-		Name:           receiver.Name,
-		Type:           receiver.Type,
-		Labels:         receiver.Labels,
-		Configurations: configuration,
-		Data:           data,
-		CreatedAt:      timestamppb.New(receiver.CreatedAt),
-		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
+	return &sirenv1beta1.GetReceiverResponse{
+		Data: &sirenv1beta1.Receiver{
+			Id:             rcv.ID,
+			Name:           rcv.Name,
+			Type:           rcv.Type,
+			Labels:         rcv.Labels,
+			Configurations: configuration,
+			Data:           data,
+			CreatedAt:      timestamppb.New(rcv.CreatedAt),
+			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
+		},
 	}, nil
 }
 
-func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateReceiverRequest) (*sirenv1beta1.Receiver, error) {
+func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateReceiverRequest) (*sirenv1beta1.UpdateReceiverResponse, error) {
 	configurations := req.GetConfigurations().AsMap()
 
-	switch receiverType := req.GetType(); receiverType {
-	case Slack:
-		err := validateSlackConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	case Pagerduty:
-		err := validatePagerdutyConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	case Http:
-		err := validateHttpConfigurations(configurations)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
-	}
-
-	receiver := &receiver.Receiver{
+	rcv := &receiver.Receiver{
 		ID:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.receiverService.UpdateReceiver(receiver); err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+	if err := s.receiverService.UpdateReceiver(rcv); err != nil {
+		//TODO add test
+		if errors.Is(err, receiver.ErrInvalid) {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
+		}
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	configuration, err := structpb.NewStruct(receiver.Configurations)
-	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
-	}
-
-	return &sirenv1beta1.Receiver{
-		Id:             receiver.ID,
-		Name:           receiver.Name,
-		Type:           receiver.Type,
-		Labels:         receiver.Labels,
-		Configurations: configuration,
-		CreatedAt:      timestamppb.New(receiver.CreatedAt),
-		UpdatedAt:      timestamppb.New(receiver.UpdatedAt),
+	return &sirenv1beta1.UpdateReceiverResponse{
+		Id: rcv.ID,
 	}, nil
 }
 
-func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*emptypb.Empty, error) {
+func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*sirenv1beta1.DeleteReceiverResponse, error) {
 	err := s.receiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	return &emptypb.Empty{}, nil
+	return &sirenv1beta1.DeleteReceiverResponse{}, nil
 }
 
-func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1beta1.SendReceiverNotificationRequest) (*sirenv1beta1.SendReceiverNotificationResponse, error) {
-	var res *sirenv1beta1.SendReceiverNotificationResponse
-	rcv, err := s.receiverService.GetReceiver(req.GetId())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, err.Error())
-	}
-
-	switch rcv.Type {
-	case Slack:
-		slackPayload := req.GetSlack()
-
-		if err := s.receiverService.NotifyReceiver(rcv, receiver.NotificationMessage{
-			"receiver_name": slackPayload.GetReceiverName(),
-			"receiver_type": slackPayload.GetReceiverType(),
-			"message":       slackPayload.GetMessage(),
-			"blocks":        slackPayload.GetBlocks(),
-		}); err != nil {
-			if errors.Is(err, receiver.ErrInvalid) {
-				return nil, status.Errorf(codes.InvalidArgument, err.Error())
-			}
-			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+func (s *GRPCServer) NotifyReceiver(_ context.Context, req *sirenv1beta1.NotifyReceiverRequest) (*sirenv1beta1.NotifyReceiverResponse, error) {
+	if err := s.receiverService.NotifyReceiver(req.GetId(), req.GetPayload().AsMap()); err != nil {
+		if errors.Is(err, receiver.ErrInvalid) {
+			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
-		res = &sirenv1beta1.SendReceiverNotificationResponse{
-			Ok: true,
-		}
-	default:
-		return nil, status.Errorf(codes.NotFound, "Send notification not registered for this receiver")
-	}
-	return res, nil
-}
-
-func validateSlackConfigurations(configurations map[string]interface{}) error {
-	_, err := utils.GetMapString(configurations, "configurations", "client_id")
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
-	_, err = utils.GetMapString(configurations, "configurations", "client_secret")
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
-	}
-
-	_, err = utils.GetMapString(configurations, "configurations", "auth_code")
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
-	}
-	return nil
-}
-
-func validatePagerdutyConfigurations(configurations map[string]interface{}) error {
-	_, err := utils.GetMapString(configurations, "configurations", "service_key")
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
-	}
-	return nil
-}
-
-func validateHttpConfigurations(configurations map[string]interface{}) error {
-	_, err := utils.GetMapString(configurations, "configurations", "url")
-	if err != nil {
-		return status.Errorf(codes.InvalidArgument, err.Error())
-	}
-	return nil
+	return &sirenv1beta1.NotifyReceiverResponse{}, nil
 }

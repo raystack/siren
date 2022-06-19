@@ -121,7 +121,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Namespace'
+            $ref: '#/definitions/CreateNamespaceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -142,7 +142,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Namespace'
+            $ref: '#/definitions/GetNamespaceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -162,7 +162,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            properties: {}
+            $ref: '#/definitions/DeleteNamespaceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -182,7 +182,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Namespace'
+            $ref: '#/definitions/UpdateNamespaceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -357,7 +357,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Receiver'
+            $ref: '#/definitions/CreateReceiverResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -378,7 +378,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Receiver'
+            $ref: '#/definitions/GetReceiverResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -398,7 +398,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            properties: {}
+            $ref: '#/definitions/DeleteReceiverResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -418,7 +418,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Receiver'
+            $ref: '#/definitions/UpdateReceiverResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -450,12 +450,12 @@ paths:
   /v1beta1/receivers/{id}/send:
     post:
       summary: send notification to receiver
-      operationId: SirenService_SendReceiverNotification
+      operationId: SirenService_NotifyReceiver
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/SendReceiverNotificationResponse'
+            $ref: '#/definitions/NotifyReceiverResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -472,8 +472,8 @@ paths:
         schema:
           type: object
           properties:
-            slack:
-              $ref: '#/definitions/SlackPayload'
+            payload:
+              type: object
       tags:
       - Receiver
   /v1beta1/rules:
@@ -838,6 +838,12 @@ definitions:
       updated_at:
         type: string
         format: date-time
+  CreateNamespaceResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   CreateProviderRequest:
     type: object
     properties:
@@ -868,6 +874,12 @@ definitions:
           type: string
       configurations:
         type: object
+  CreateReceiverResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   CreateSubscriptionRequest:
     type: object
     properties:
@@ -884,8 +896,22 @@ definitions:
         type: object
         additionalProperties:
           type: string
+  DeleteNamespaceResponse:
+    type: object
+  DeleteReceiverResponse:
+    type: object
   DeleteTemplateResponse:
     type: object
+  GetNamespaceResponse:
+    type: object
+    properties:
+      data:
+        $ref: '#/definitions/Namespace'
+  GetReceiverResponse:
+    type: object
+    properties:
+      data:
+        $ref: '#/definitions/Receiver'
   Labels:
     type: object
     properties:
@@ -894,7 +920,7 @@ definitions:
   ListNamespacesResponse:
     type: object
     properties:
-      namespaces:
+      data:
         type: array
         items:
           $ref: '#/definitions/Namespace'
@@ -908,7 +934,7 @@ definitions:
   ListReceiversResponse:
     type: object
     properties:
-      receivers:
+      data:
         type: array
         items:
           $ref: '#/definitions/Receiver'
@@ -958,6 +984,8 @@ definitions:
       updated_at:
         type: string
         format: date-time
+  NotifyReceiverResponse:
+    type: object
   NullValue:
     type: string
     enum:
@@ -1069,24 +1097,6 @@ definitions:
       provider_namespace:
         type: string
         format: uint64
-  SendReceiverNotificationResponse:
-    type: object
-    properties:
-      ok:
-        type: boolean
-  SlackPayload:
-    type: object
-    properties:
-      message:
-        type: string
-      receiver_name:
-        type: string
-      receiver_type:
-        type: string
-      blocks:
-        type: array
-        items:
-          type: object
   Status:
     type: object
     properties:
@@ -1164,6 +1174,18 @@ definitions:
         type: string
       description:
         type: string
+  UpdateNamespaceResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  UpdateReceiverResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   UpdateRuleRequest:
     type: object
     properties:

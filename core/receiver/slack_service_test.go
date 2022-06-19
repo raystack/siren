@@ -227,3 +227,56 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 		})
 	}
 }
+
+func TestSlackService_ValidateConfiguration(t *testing.T) {
+	type testCase struct {
+		Description  string
+		InputConfigs receiver.Configurations
+		ErrString    string
+	}
+
+	var (
+		testCases = []testCase{
+			{
+				Description: "should return error if 'client_id' is empty",
+				ErrString:   "no value supplied for required configurations map key \"client_id\"",
+			},
+			{
+				Description: "should return error if 'client_secret' is empty",
+				InputConfigs: receiver.Configurations{
+					"client_id": "client_id",
+				},
+				ErrString: "no value supplied for required configurations map key \"client_secret\"",
+			},
+			{
+				Description: "should return error if 'auth_code' is empty",
+				InputConfigs: receiver.Configurations{
+					"client_id":     "client_id",
+					"client_secret": "client_secret",
+				},
+				ErrString: "no value supplied for required configurations map key \"auth_code\"",
+			},
+			{
+				Description: "should return nil error if all configurations are valid",
+				InputConfigs: receiver.Configurations{
+					"client_id":     "client_id",
+					"client_secret": "client_secret",
+					"auth_code":     "auth_code",
+				},
+			},
+		}
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			svc := receiver.NewSlackService(nil, nil)
+
+			err := svc.ValidateConfiguration(tc.InputConfigs)
+			if err != nil {
+				if tc.ErrString != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
+}

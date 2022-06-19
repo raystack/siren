@@ -54,6 +54,10 @@ func (s *Service) CreateReceiver(rcv *Receiver) error {
 		return err
 	}
 
+	if err := strategyService.ValidateConfiguration(rcv.Configurations); err != nil {
+		return fmt.Errorf("%w: invalid receiver configurations", ErrInvalid)
+	}
+
 	if err := strategyService.Encrypt(rcv); err != nil {
 		return err
 	}
@@ -92,6 +96,10 @@ func (s *Service) UpdateReceiver(rcv *Receiver) error {
 		return err
 	}
 
+	if err := strategyService.ValidateConfiguration(rcv.Configurations); err != nil {
+		return fmt.Errorf("%w: invalid receiver configurations", ErrInvalid)
+	}
+
 	if err := strategyService.Encrypt(rcv); err != nil {
 		return err
 	}
@@ -102,7 +110,12 @@ func (s *Service) UpdateReceiver(rcv *Receiver) error {
 	return nil
 }
 
-func (s *Service) NotifyReceiver(rcv *Receiver, payloadMessage NotificationMessage) error {
+func (s *Service) NotifyReceiver(id uint64, payloadMessage NotificationMessage) error {
+	rcv, err := s.GetReceiver(id)
+	if err != nil {
+		return fmt.Errorf("%w: error getting receiver with id %d", ErrInvalid, id)
+	}
+
 	strategyService, err := s.getStrategy(rcv.Type)
 	if err != nil {
 		return err

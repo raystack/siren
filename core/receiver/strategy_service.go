@@ -6,4 +6,5 @@ type StrategyService interface {
 	Decrypt(r *Receiver) error
 	PopulateReceiver(rcv *Receiver) (*Receiver, error)
 	Notify(rcv *Receiver, payloadMessage NotificationMessage) error
+	ValidateConfiguration(configurations Configurations) error
 }

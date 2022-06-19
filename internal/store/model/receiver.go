@@ -25,7 +25,7 @@ func (rcv *Receiver) FromDomain(t *receiver.Receiver) {
 	rcv.Name = t.Name
 	rcv.Type = t.Type
 	rcv.Labels = t.Labels
-	rcv.Configurations = t.Configurations
+	rcv.Configurations = StringInterfaceMap(t.Configurations)
 	rcv.Data = t.Data
 	rcv.CreatedAt = t.CreatedAt
 	rcv.UpdatedAt = t.UpdatedAt
@@ -40,7 +40,7 @@ func (rcv *Receiver) ToDomain() *receiver.Receiver {
 		Name:           rcv.Name,
 		Type:           rcv.Type,
 		Labels:         rcv.Labels,
-		Configurations: rcv.Configurations,
+		Configurations: receiver.Configurations(rcv.Configurations),
 		Data:           rcv.Data,
 		CreatedAt:      rcv.CreatedAt,
 		UpdatedAt:      rcv.UpdatedAt,

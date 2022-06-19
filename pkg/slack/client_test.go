@@ -94,7 +94,7 @@ func TestClient_Notify(t *testing.T) {
 					ReceiverType: "random",
 				}, slack.CallWithGoSlackClient(gsc))
 			},
-			Err: errors.New("unknown receiver type 'random'"),
+			Err: errors.New("unknown receiver type \"random\""),
 		},
 		{
 			Description: "(channels) return error when goslack client creation error",
@@ -108,7 +108,7 @@ func TestClient_Notify(t *testing.T) {
 			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
 				gsc.EXPECT().GetConversationsForUser(mock.Anything).Return(nil, "", errors.New("some error"))
 				return c.Notify(&slack.Message{
-					ReceiverType: "channel", //TODO make it const
+					ReceiverType: slack.TypeReceiverChannel,
 				}, slack.CallWithGoSlackClient(gsc))
 			},
 			Err: errors.New("failed to fetch joined channel list: some error"),
@@ -131,11 +131,11 @@ func TestClient_Notify(t *testing.T) {
 					},
 				}, "", nil)
 				return c.Notify(&slack.Message{
-					ReceiverName: "unknwon",
-					ReceiverType: "channel", //TODO make it const
+					ReceiverName: "unknown",
+					ReceiverType: slack.TypeReceiverChannel,
 				}, slack.CallWithGoSlackClient(gsc))
 			},
-			Err: errors.New("app is not part of the channel unknwon"),
+			Err: errors.New("app is not part of the channel \"unknown\""),
 		},
 		{
 			Description: "(user) return error when failed to get user for an email",
@@ -143,10 +143,10 @@ func TestClient_Notify(t *testing.T) {
 				gsc.EXPECT().GetUserByEmail("email@email.com").Return(nil, errors.New("users_not_found"))
 				return c.Notify(&slack.Message{
 					ReceiverName: "email@email.com",
-					ReceiverType: "user", //TODO make it const
+					ReceiverType: slack.TypeReceiverUser,
 				}, slack.CallWithGoSlackClient(gsc))
 			},
-			Err: errors.New("failed to get id for email@email.com"),
+			Err: errors.New("failed to get id for \"email@email.com\""),
 		},
 		{
 			Description: "return nil error when notify is succeed",
@@ -168,7 +168,7 @@ func TestClient_Notify(t *testing.T) {
 				gsc.EXPECT().SendMessage("123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil)
 				return c.Notify(&slack.Message{
 					ReceiverName: "unknown",
-					ReceiverType: "channel", //TODO make it const
+					ReceiverType: slack.TypeReceiverChannel,
 				}, slack.CallWithGoSlackClient(gsc))
 			},
 			Err: nil,

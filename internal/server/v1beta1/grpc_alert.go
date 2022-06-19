@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/utils"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -26,7 +25,7 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 
 	alerts, err := s.alertService.Get(resourceName, providerId, startTime, endTime)
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 	res := &sirenv1beta1.Alerts{
 		Alerts: make([]*sirenv1beta1.Alert, 0),

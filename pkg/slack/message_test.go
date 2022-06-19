@@ -24,7 +24,7 @@ func TestMessage_Validate(t *testing.T) {
 			Message: slack.Message{
 				Message: "a message",
 			},
-			ExpectedErrString: "field 'receiver_name' is required and field 'receiver_type' is required",
+			ExpectedErrString: "field \"receiver_name\" is required and field \"receiver_type\" is required",
 		},
 		{
 			Description: "should return error type not supported if slack receiver type not match",
@@ -33,7 +33,7 @@ func TestMessage_Validate(t *testing.T) {
 				ReceiverName: "receiver name",
 				ReceiverType: "random",
 			},
-			ExpectedErrString: "error value 'random' for key 'receiver_type' not recognized, only support 'user channel'",
+			ExpectedErrString: "error value \"random\" for key \"receiver_type\" not recognized, only support \"user channel\"",
 		},
 		{
 			Description: "should return nil error if slack message is valid",
@@ -50,7 +50,7 @@ func TestMessage_Validate(t *testing.T) {
 			err := tc.Message.Validate()
 			if err != nil {
 				if err.Error() != tc.ExpectedErrString {
-					t.Fatalf("got error '%s', expected was '%s'", err.Error(), tc.ExpectedErrString)
+					t.Fatalf("got error %q, expected was %q", err.Error(), tc.ExpectedErrString)
 				}
 			}
 		})

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,9 +10,9 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/namespace"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+
 	"github.com/spf13/cobra"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -56,12 +57,16 @@ func listNamespacesCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListNamespaces(ctx, &emptypb.Empty{})
+			res, err := client.ListNamespaces(ctx, &sirenv1beta1.ListNamespacesRequest{})
 			if err != nil {
 				return err
 			}
 
-			namespaces := res.Namespaces
+			if res.GetData() == nil {
+				return errors.New("no response from server")
+			}
+
+			namespaces := res.GetData()
 			report := [][]string{}
 
 			fmt.Printf(" \nShowing %d of %d namespaces\n \n", len(namespaces), len(namespaces))
@@ -172,17 +177,21 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			namespace := &namespace.Namespace{
-				ID:          res.GetId(),
-				URN:         res.GetUrn(),
-				Name:        res.GetName(),
-				Credentials: res.GetCredentials().AsMap(),
-				Labels:      res.GetLabels(),
-				CreatedAt:   res.CreatedAt.AsTime(),
-				UpdatedAt:   res.UpdatedAt.AsTime(),
+			if res.GetData() == nil {
+				return errors.New("no response from server")
 			}
 
-			if err := printer.Text(namespace, format); err != nil {
+			nspace := &namespace.Namespace{
+				ID:          res.GetData().GetId(),
+				URN:         res.GetData().GetUrn(),
+				Name:        res.GetData().GetName(),
+				Credentials: res.GetData().GetCredentials().AsMap(),
+				Labels:      res.GetData().GetLabels(),
+				CreatedAt:   res.GetData().GetCreatedAt().AsTime(),
+				UpdatedAt:   res.GetData().GetUpdatedAt().AsTime(),
+			}
+
+			if err := printer.Text(nspace, format); err != nil {
 				return fmt.Errorf("failed to format namespace: %v", err)
 			}
 			return nil
@@ -224,7 +233,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			_, err = client.UpdateNamespace(ctx, &sirenv1beta1.UpdateNamespaceRequest{
+			res, err := client.UpdateNamespace(ctx, &sirenv1beta1.UpdateNamespaceRequest{
 				Id:          id,
 				Provider:    namespaceConfig.Provider,
 				Name:        namespaceConfig.Name,
@@ -235,7 +244,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully updated namespace")
+			fmt.Printf("Successfully updated namespace with id %q", res.GetId())
 
 			return nil
 		},

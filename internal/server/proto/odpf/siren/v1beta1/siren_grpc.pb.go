@@ -29,22 +29,22 @@ type SirenServiceClient interface {
 	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
 	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error)
-	ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
-	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
-	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
-	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
-	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error)
+	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
+	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
+	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*GetNamespaceResponse, error)
+	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
+	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*DeleteNamespaceResponse, error)
 	ListSubscriptions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error)
 	CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
 	GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
 	UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
 	DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListReceivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReceiversResponse, error)
-	CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
-	GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
-	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error)
-	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*CreateReceiverResponse, error)
+	GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*GetReceiverResponse, error)
+	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*UpdateReceiverResponse, error)
+	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error)
 	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
 	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
 	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
@@ -118,16 +118,16 @@ func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProvi
 	return out, nil
 }
 
-func (c *sirenServiceClient) SendReceiverNotification(ctx context.Context, in *SendReceiverNotificationRequest, opts ...grpc.CallOption) (*SendReceiverNotificationResponse, error) {
-	out := new(SendReceiverNotificationResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/SendReceiverNotification", in, out, opts...)
+func (c *sirenServiceClient) NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error) {
+	out := new(NotifyReceiverResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/NotifyReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListNamespaces(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
+func (c *sirenServiceClient) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
 	out := new(ListNamespacesResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListNamespaces", in, out, opts...)
 	if err != nil {
@@ -136,8 +136,8 @@ func (c *sirenServiceClient) ListNamespaces(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error) {
-	out := new(Namespace)
+func (c *sirenServiceClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
+	out := new(CreateNamespaceResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -145,8 +145,8 @@ func (c *sirenServiceClient) CreateNamespace(ctx context.Context, in *CreateName
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error) {
-	out := new(Namespace)
+func (c *sirenServiceClient) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*GetNamespaceResponse, error) {
+	out := new(GetNamespaceResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -154,8 +154,8 @@ func (c *sirenServiceClient) GetNamespace(ctx context.Context, in *GetNamespaceR
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error) {
-	out := new(Namespace)
+func (c *sirenServiceClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error) {
+	out := new(UpdateNamespaceResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -163,8 +163,8 @@ func (c *sirenServiceClient) UpdateNamespace(ctx context.Context, in *UpdateName
 	return out, nil
 }
 
-func (c *sirenServiceClient) DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *sirenServiceClient) DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*DeleteNamespaceResponse, error) {
+	out := new(DeleteNamespaceResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -226,8 +226,8 @@ func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *emptypb.Empt
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
-	out := new(Receiver)
+func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*CreateReceiverResponse, error) {
+	out := new(CreateReceiverResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -235,8 +235,8 @@ func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateRecei
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
-	out := new(Receiver)
+func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*GetReceiverResponse, error) {
+	out := new(GetReceiverResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -244,8 +244,8 @@ func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverReq
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*Receiver, error) {
-	out := new(Receiver)
+func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*UpdateReceiverResponse, error) {
+	out := new(UpdateReceiverResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -253,8 +253,8 @@ func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateRecei
 	return out, nil
 }
 
-func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error) {
+	out := new(DeleteReceiverResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -353,22 +353,22 @@ type SirenServiceServer interface {
 	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
 	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
 	DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error)
-	SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error)
-	ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error)
-	CreateNamespace(context.Context, *CreateNamespaceRequest) (*Namespace, error)
-	GetNamespace(context.Context, *GetNamespaceRequest) (*Namespace, error)
-	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*Namespace, error)
-	DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*emptypb.Empty, error)
+	NotifyReceiver(context.Context, *NotifyReceiverRequest) (*NotifyReceiverResponse, error)
+	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
+	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
+	GetNamespace(context.Context, *GetNamespaceRequest) (*GetNamespaceResponse, error)
+	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
+	DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error)
 	ListSubscriptions(context.Context, *emptypb.Empty) (*ListSubscriptionsResponse, error)
 	CreateSubscription(context.Context, *CreateSubscriptionRequest) (*Subscription, error)
 	GetSubscription(context.Context, *GetSubscriptionRequest) (*Subscription, error)
 	UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*Subscription, error)
 	DeleteSubscription(context.Context, *DeleteSubscriptionRequest) (*emptypb.Empty, error)
 	ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error)
-	CreateReceiver(context.Context, *CreateReceiverRequest) (*Receiver, error)
-	GetReceiver(context.Context, *GetReceiverRequest) (*Receiver, error)
-	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error)
-	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error)
+	CreateReceiver(context.Context, *CreateReceiverRequest) (*CreateReceiverResponse, error)
+	GetReceiver(context.Context, *GetReceiverRequest) (*GetReceiverResponse, error)
+	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*UpdateReceiverResponse, error)
+	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error)
 	ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error)
 	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error)
 	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
@@ -403,22 +403,22 @@ func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdatePr
 func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) SendReceiverNotification(context.Context, *SendReceiverNotificationRequest) (*SendReceiverNotificationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendReceiverNotification not implemented")
+func (UnimplementedSirenServiceServer) NotifyReceiver(context.Context, *NotifyReceiverRequest) (*NotifyReceiverResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NotifyReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) ListNamespaces(context.Context, *emptypb.Empty) (*ListNamespacesResponse, error) {
+func (UnimplementedSirenServiceServer) ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaces not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*Namespace, error) {
+func (UnimplementedSirenServiceServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespace not implemented")
 }
-func (UnimplementedSirenServiceServer) GetNamespace(context.Context, *GetNamespaceRequest) (*Namespace, error) {
+func (UnimplementedSirenServiceServer) GetNamespace(context.Context, *GetNamespaceRequest) (*GetNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNamespace not implemented")
 }
-func (UnimplementedSirenServiceServer) UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*Namespace, error) {
+func (UnimplementedSirenServiceServer) UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNamespace not implemented")
 }
-func (UnimplementedSirenServiceServer) DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*emptypb.Empty, error) {
+func (UnimplementedSirenServiceServer) DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNamespace not implemented")
 }
 func (UnimplementedSirenServiceServer) ListSubscriptions(context.Context, *emptypb.Empty) (*ListSubscriptionsResponse, error) {
@@ -439,16 +439,16 @@ func (UnimplementedSirenServiceServer) DeleteSubscription(context.Context, *Dele
 func (UnimplementedSirenServiceServer) ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReceivers not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateReceiver(context.Context, *CreateReceiverRequest) (*Receiver, error) {
+func (UnimplementedSirenServiceServer) CreateReceiver(context.Context, *CreateReceiverRequest) (*CreateReceiverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) GetReceiver(context.Context, *GetReceiverRequest) (*Receiver, error) {
+func (UnimplementedSirenServiceServer) GetReceiver(context.Context, *GetReceiverRequest) (*GetReceiverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) UpdateReceiver(context.Context, *UpdateReceiverRequest) (*Receiver, error) {
+func (UnimplementedSirenServiceServer) UpdateReceiver(context.Context, *UpdateReceiverRequest) (*UpdateReceiverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteReceiverRequest) (*emptypb.Empty, error) {
+func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteReceiver not implemented")
 }
 func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error) {
@@ -599,26 +599,26 @@ func _SirenService_DeleteProvider_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_SendReceiverNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendReceiverNotificationRequest)
+func _SirenService_NotifyReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotifyReceiverRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).SendReceiverNotification(ctx, in)
+		return srv.(SirenServiceServer).NotifyReceiver(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/SendReceiverNotification",
+		FullMethod: "/odpf.siren.v1beta1.SirenService/NotifyReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).SendReceiverNotification(ctx, req.(*SendReceiverNotificationRequest))
+		return srv.(SirenServiceServer).NotifyReceiver(ctx, req.(*NotifyReceiverRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _SirenService_ListNamespaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListNamespacesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -630,7 +630,7 @@ func _SirenService_ListNamespaces_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/odpf.siren.v1beta1.SirenService/ListNamespaces",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListNamespaces(ctx, req.(*emptypb.Empty))
+		return srv.(SirenServiceServer).ListNamespaces(ctx, req.(*ListNamespacesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1081,8 +1081,8 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_DeleteProvider_Handler,
 		},
 		{
-			MethodName: "SendReceiverNotification",
-			Handler:    _SirenService_SendReceiverNotification_Handler,
+			MethodName: "NotifyReceiver",
+			Handler:    _SirenService_NotifyReceiver_Handler,
 		},
 		{
 			MethodName: "ListNamespaces",

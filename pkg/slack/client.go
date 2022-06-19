@@ -149,23 +149,23 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 		}
 		channelID = searchChannelId(joinedChannelList, message.ReceiverName)
 		if channelID == "" {
-			return fmt.Errorf("app is not part of the channel %s", message.ReceiverName)
+			return fmt.Errorf("app is not part of the channel %q", message.ReceiverName)
 		}
 	case TypeReceiverUser:
 		user, err := gsc.GetUserByEmail(message.ReceiverName)
 		if err != nil {
 			if err.Error() == "users_not_found" {
-				return fmt.Errorf("failed to get id for %s", message.ReceiverName)
+				return fmt.Errorf("failed to get id for %q", message.ReceiverName)
 			}
 			return err
 		}
 		channelID = user.ID
 	default:
-		return fmt.Errorf("unknown receiver type '%s'", message.ReceiverType)
+		return fmt.Errorf("unknown receiver type %q", message.ReceiverType)
 	}
 	_, _, _, err = gsc.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
 	if err != nil {
-		return fmt.Errorf("failed to send message to %s", message.ReceiverName)
+		return fmt.Errorf("failed to send message to %q", message.ReceiverName)
 	}
 	return nil
 }

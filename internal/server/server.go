@@ -18,8 +18,8 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 

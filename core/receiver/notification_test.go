@@ -32,14 +32,13 @@ func TestNotification_ToSlackMessage(t *testing.T) {
 					},
 				},
 			},
-			ExpectedErrString: `field 'receiver_name' is required and field 'receiver_type' is required`,
+			ExpectedErrString: "field \"receiver_name\" is required and field \"receiver_type\" is required",
 		},
 		{
 			Description: "should return slack message if notification message is valid",
 			Message: receiver.NotificationMessage{
 				"receiver_name": "receiver_name",
 				"receiver_type": "channel",
-				"token":         "token",
 				"message":       "message",
 				"blocks": []map[string]interface{}{
 					{

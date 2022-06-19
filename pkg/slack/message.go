@@ -45,17 +45,17 @@ func (sm *Message) checkError(err error) error {
 		errStrs := []string{}
 		for _, e := range errs {
 			if e.Tag() == "oneof" {
-				errStrValue := fmt.Sprintf("error value '%s'", e.Value())
+				errStrValue := fmt.Sprintf("error value %q", e.Value())
 				if e.Field() != "" {
-					errStrValue = errStrValue + fmt.Sprintf(" for key '%s'", e.Field())
+					errStrValue = errStrValue + fmt.Sprintf(" for key %q", e.Field())
 				}
-				errStrValue = errStrValue + fmt.Sprintf(" not recognized, only support '%s'", e.Param())
+				errStrValue = errStrValue + fmt.Sprintf(" not recognized, only support %q", e.Param())
 				errStrs = append(errStrs, errStrValue)
 				continue
 			}
 
 			if e.Tag() == "required" {
-				errStrs = append(errStrs, fmt.Sprintf("field '%s' is required", e.Field()))
+				errStrs = append(errStrs, fmt.Sprintf("field %q is required", e.Field()))
 				continue
 			}
 

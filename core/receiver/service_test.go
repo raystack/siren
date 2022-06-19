@@ -145,7 +145,7 @@ func TestService_ListReceivers(t *testing.T) {
 	}
 }
 
-func TestService_CreateReceiver_Slack(t *testing.T) {
+func TestService_CreateReceiver(t *testing.T) {
 	type testCase struct {
 		Description string
 		Setup       func(*mocks.ReceiverRepository, *mocks.StrategyService)
@@ -154,8 +154,27 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 	}
 	var testCases = []testCase{
 		{
+			Description: "should return error if configuration is not valid",
+			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(errors.New("some error"))
+			},
+			Rcv: &receiver.Receiver{
+				ID:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("bad_request: invalid receiver configurations"),
+		},
+		{
 			Description: "should return error if encrypt return error",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
@@ -178,6 +197,9 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 		{
 			Description: "should return error if Create repository return error",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
 					ID:   123,
@@ -199,6 +221,9 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 		{
 			Description: "should return error if decrypt return error",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
 					ID:   123,
@@ -221,6 +246,9 @@ func TestService_CreateReceiver_Slack(t *testing.T) {
 		{
 			Description: "should return nil error if no error returned",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Create(&receiver.Receiver{
 					ID:   123,
@@ -449,7 +477,9 @@ func TestService_UpdateReceiver(t *testing.T) {
 		{
 			Description: "should return error if encrypt return error",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
-				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(errors.New("some error"))
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(errors.New("some error"))
 			},
 			Rcv: &receiver.Receiver{
 				ID:   123,
@@ -458,7 +488,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("some error"),
+			Err: errors.New("bad_request: invalid receiver configurations"),
 		},
 		{
 			Description: "should return error if type unknown",
@@ -471,6 +501,9 @@ func TestService_UpdateReceiver(t *testing.T) {
 		{
 			Description: "should return error if Update repository return error",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Update(&receiver.Receiver{
 					ID:   123,
@@ -492,6 +525,9 @@ func TestService_UpdateReceiver(t *testing.T) {
 		{
 			Description: "should return nil error if no error returned",
 			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.StrategyService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
 				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
 				rr.EXPECT().Update(&receiver.Receiver{
 					ID:   123,

@@ -8,12 +8,10 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -42,16 +40,16 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		}
 
 		mockedNamespaceService.EXPECT().ListNamespaces().Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, err)
-		assert.Equal(t, 1, len(res.GetNamespaces()))
-		assert.Equal(t, "foo", res.GetNamespaces()[0].GetName())
-		assert.Equal(t, uint64(1), res.GetNamespaces()[0].GetId())
-		assert.Equal(t, uint64(2), res.GetNamespaces()[0].GetProvider())
-		assert.Equal(t, "bar", res.GetNamespaces()[0].GetCredentials().GetFields()["foo"].GetStringValue())
+		assert.Equal(t, 1, len(res.GetData()))
+		assert.Equal(t, "foo", res.GetData()[0].GetName())
+		assert.Equal(t, uint64(1), res.GetData()[0].GetId())
+		assert.Equal(t, uint64(2), res.GetData()[0].GetProvider())
+		assert.Equal(t, "bar", res.GetData()[0].GetCredentials().GetFields()["foo"].GetStringValue())
 	})
 
-	t.Run("should return code 13 if getting namespaces failed", func(t *testing.T) {
+	t.Run("should return Internal if getting namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -59,12 +57,12 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		}
 		mockedNamespaceService.EXPECT().ListNamespaces().
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
-	t.Run("should return code 13 if NewStruct conversion failed", func(t *testing.T) {
+	t.Run("should return Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -83,7 +81,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			},
 		}
 		mockedNamespaceService.EXPECT().ListNamespaces().Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
 		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
 			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
@@ -95,6 +93,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
+	generatedID := uint64(77)
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
@@ -116,13 +115,15 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().CreateNamespace(payload).Return(nil).Once()
+		mockedNamespaceService.EXPECT().CreateNamespace(payload).Run(func(ns *namespace.Namespace) {
+			ns.ID = generatedID
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetName())
+		assert.Equal(t, generatedID, res.GetId())
 	})
 
-	t.Run("should return error code 13 if creating namespaces failed", func(t *testing.T) {
+	t.Run("should return error Internal if creating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -135,7 +136,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
-	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
+	t.Run("should return error Invalid Argument if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -148,23 +149,6 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
 			"rpc error: code = InvalidArgument desc = urn and provider pair already exist")
-	})
-
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
-		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := GRPCServer{
-			namespaceService: mockedNamespaceService,
-			logger:           log.NewNoop(),
-		}
-		mockedNamespaceService.EXPECT().CreateNamespace(mock.AnythingOfType("*namespace.Namespace")).Return(nil).
-			Run(func(n *namespace.Namespace) {
-				credentials["bar"] = string([]byte{0xff})
-				n.Credentials = credentials
-			}).Once()
-		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
-		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -194,13 +178,13 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, uint64(1), res.GetId())
-		assert.Equal(t, uint64(2), res.GetProvider())
-		assert.Equal(t, "bar", res.GetCredentials().GetFields()["foo"].GetStringValue())
+		assert.Equal(t, "foo", res.GetData().GetName())
+		assert.Equal(t, uint64(1), res.GetData().GetId())
+		assert.Equal(t, uint64(2), res.GetData().GetProvider())
+		assert.Equal(t, "bar", res.GetData().GetCredentials().GetFields()["foo"].GetStringValue())
 	})
 
-	t.Run("should return error code 5 if no namespace found", func(t *testing.T) {
+	t.Run("should return error Invalid Argument if no namespace found", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -213,7 +197,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = namespace not found")
 	})
 
-	t.Run("should return error code 13 if getting namespace fails", func(t *testing.T) {
+	t.Run("should return error Internal if getting namespace fails", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -227,7 +211,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		assert.EqualError(t, err, `rpc error: code = Internal desc = random error`)
 	})
 
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -283,11 +267,11 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 		mockedNamespaceService.EXPECT().UpdateNamespace(payload).Return(nil).Once()
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetName())
+		assert.Equal(t, payload.ID, res.GetId())
 		mockedNamespaceService.AssertExpectations(t)
 	})
 
-	t.Run("should return error code 5 if namespace urn conflict within a provider", func(t *testing.T) {
+	t.Run("should return error Invalid Argument if namespace urn conflict within a provider", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -302,7 +286,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			"rpc error: code = InvalidArgument desc = urn and provider pair already exist")
 	})
 
-	t.Run("should return error code 13 if updating namespaces failed", func(t *testing.T) {
+	t.Run("should return error Internal if updating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,
@@ -313,24 +297,6 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
-		mockedNamespaceService.AssertExpectations(t)
-	})
-
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
-		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := GRPCServer{
-			namespaceService: mockedNamespaceService,
-			logger:           log.NewNoop(),
-		}
-		mockedNamespaceService.EXPECT().UpdateNamespace(mock.AnythingOfType("*namespace.Namespace")).Return(nil).
-			Run(func(n *namespace.Namespace) {
-				credentials["foo"] = string([]byte{0xff})
-				n.Credentials = credentials
-			}).Once()
-		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
-		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
 		mockedNamespaceService.AssertExpectations(t)
 	})
 }
@@ -354,7 +320,7 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 		mockedNamespaceService.AssertExpectations(t)
 	})
 
-	t.Run("should return error code 13 if deleting namespace failed", func(t *testing.T) {
+	t.Run("should return error Internal if deleting namespace failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := GRPCServer{
 			namespaceService: mockedNamespaceService,

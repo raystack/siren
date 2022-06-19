@@ -223,13 +223,13 @@ func (_c *ReceiverService_Migrate_Call) Return(_a0 error) *ReceiverService_Migra
 	return _c
 }
 
-// NotifyReceiver provides a mock function with given fields: rcv, payloadMessage
-func (_m *ReceiverService) NotifyReceiver(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error {
-	ret := _m.Called(rcv, payloadMessage)
+// NotifyReceiver provides a mock function with given fields: id, payloadMessage
+func (_m *ReceiverService) NotifyReceiver(id uint64, payloadMessage receiver.NotificationMessage) error {
+	ret := _m.Called(id, payloadMessage)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver, receiver.NotificationMessage) error); ok {
-		r0 = rf(rcv, payloadMessage)
+	if rf, ok := ret.Get(0).(func(uint64, receiver.NotificationMessage) error); ok {
+		r0 = rf(id, payloadMessage)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -243,15 +243,15 @@ type ReceiverService_NotifyReceiver_Call struct {
 }
 
 // NotifyReceiver is a helper method to define mock.On call
-//  - rcv *receiver.Receiver
+//  - id uint64
 //  - payloadMessage receiver.NotificationMessage
-func (_e *ReceiverService_Expecter) NotifyReceiver(rcv interface{}, payloadMessage interface{}) *ReceiverService_NotifyReceiver_Call {
-	return &ReceiverService_NotifyReceiver_Call{Call: _e.mock.On("NotifyReceiver", rcv, payloadMessage)}
+func (_e *ReceiverService_Expecter) NotifyReceiver(id interface{}, payloadMessage interface{}) *ReceiverService_NotifyReceiver_Call {
+	return &ReceiverService_NotifyReceiver_Call{Call: _e.mock.On("NotifyReceiver", id, payloadMessage)}
 }
 
-func (_c *ReceiverService_NotifyReceiver_Call) Run(run func(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage)) *ReceiverService_NotifyReceiver_Call {
+func (_c *ReceiverService_NotifyReceiver_Call) Run(run func(id uint64, payloadMessage receiver.NotificationMessage)) *ReceiverService_NotifyReceiver_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver), args[1].(receiver.NotificationMessage))
+		run(args[0].(uint64), args[1].(receiver.NotificationMessage))
 	})
 	return _c
 }

@@ -9,13 +9,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SlackService handles business logic
 type SlackService struct {
 	slackClient  SlackClient
 	cryptoClient Encryptor
 }
 
-// NewService returns service struct
+// NewService returns slack service struct
 func NewSlackService(slackClient SlackClient, cryptoClient Encryptor) *SlackService {
 	return &SlackService{
 		slackClient:  slackClient,
@@ -94,4 +93,23 @@ func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 	rcv.Data["channels"] = string(data)
 
 	return rcv, nil
+}
+
+func (s *SlackService) ValidateConfiguration(configurations Configurations) error {
+	_, err := configurations.GetString("client_id")
+	if err != nil {
+		return err
+	}
+
+	_, err = configurations.GetString("client_secret")
+	if err != nil {
+		return err
+	}
+
+	_, err = configurations.GetString("auth_code")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

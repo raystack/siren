@@ -180,6 +180,43 @@ func (_c *StrategyService_PopulateReceiver_Call) Return(_a0 *receiver.Receiver, 
 	return _c
 }
 
+// ValidateConfiguration provides a mock function with given fields: configurations
+func (_m *StrategyService) ValidateConfiguration(configurations receiver.Configurations) error {
+	ret := _m.Called(configurations)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(receiver.Configurations) error); ok {
+		r0 = rf(configurations)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StrategyService_ValidateConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateConfiguration'
+type StrategyService_ValidateConfiguration_Call struct {
+	*mock.Call
+}
+
+// ValidateConfiguration is a helper method to define mock.On call
+//  - configurations receiver.Configurations
+func (_e *StrategyService_Expecter) ValidateConfiguration(configurations interface{}) *StrategyService_ValidateConfiguration_Call {
+	return &StrategyService_ValidateConfiguration_Call{Call: _e.mock.On("ValidateConfiguration", configurations)}
+}
+
+func (_c *StrategyService_ValidateConfiguration_Call) Run(run func(configurations receiver.Configurations)) *StrategyService_ValidateConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(receiver.Configurations))
+	})
+	return _c
+}
+
+func (_c *StrategyService_ValidateConfiguration_Call) Return(_a0 error) *StrategyService_ValidateConfiguration_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // NewStrategyService creates a new instance of StrategyService. It also registers the testing.TB interface on the mock and a cleanup function to assert the mocks expectations.
 func NewStrategyService(t testing.TB) *StrategyService {
 	mock := &StrategyService{}
