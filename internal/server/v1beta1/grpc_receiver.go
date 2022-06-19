@@ -64,7 +64,6 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 	}
 
 	if err := s.receiverService.CreateReceiver(rcv); err != nil {
-		//TODO add test
 		if errors.Is(err, receiver.ErrInvalid) {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}
@@ -120,7 +119,6 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		Configurations: configurations,
 	}
 	if err := s.receiverService.UpdateReceiver(rcv); err != nil {
-		//TODO add test
 		if errors.Is(err, receiver.ErrInvalid) {
 			return nil, status.Errorf(codes.InvalidArgument, err.Error())
 		}

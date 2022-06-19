@@ -19,7 +19,7 @@ const (
 )
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
-type NamespaceService interface { //TODO to be refactored, for temporary only
+type NamespaceService interface {
 	ListNamespaces() ([]*namespace.Namespace, error)
 	CreateNamespace(*namespace.Namespace) error
 	GetNamespace(uint64) (*namespace.Namespace, error)
@@ -29,7 +29,7 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface { //TODO to be refactored, for temporary only
+type ProviderService interface {
 	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
 	CreateProvider(*provider.Provider) (*provider.Provider, error)
 	GetProvider(uint64) (*provider.Provider, error)

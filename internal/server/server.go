@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -104,7 +105,7 @@ func RunServer(
 		}),
 	)
 	address := fmt.Sprintf("%s:%d", c.Host, c.Port)
-	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithInsecure())
+	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
