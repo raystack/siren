@@ -6,18 +6,18 @@ import (
 
 // Service handles business logic
 type Service struct {
-	registry   map[string]StrategyService
+	registry   map[string]TypeService
 	repository Repository
 }
 
-func NewService(repository Repository, registry map[string]StrategyService) *Service {
+func NewService(repository Repository, registry map[string]TypeService) *Service {
 	return &Service{
 		repository: repository,
 		registry:   registry,
 	}
 }
 
-func (s *Service) getStrategy(receiverType string) (StrategyService, error) {
+func (s *Service) getTypeService(receiverType string) (TypeService, error) {
 	strategyService, exist := s.registry[receiverType]
 	if !exist {
 		return nil, fmt.Errorf("%w: unsupported receiver type", ErrInvalid)
@@ -35,7 +35,7 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
 
-		strategyService, err := s.getStrategy(rcv.Type)
+		strategyService, err := s.getTypeService(rcv.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 }
 
 func (s *Service) CreateReceiver(rcv *Receiver) error {
-	strategyService, err := s.getStrategy(rcv.Type)
+	strategyService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
 		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
 	}
 
-	strategyService, err := s.getStrategy(rcv.Type)
+	strategyService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
 }
 
 func (s *Service) UpdateReceiver(rcv *Receiver) error {
-	strategyService, err := s.getStrategy(rcv.Type)
+	strategyService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (s *Service) NotifyReceiver(id uint64, payloadMessage NotificationMessage) 
 		return fmt.Errorf("%w: error getting receiver with id %d", ErrInvalid, id)
 	}
 
-	strategyService, err := s.getStrategy(rcv.Type)
+	strategyService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return err
 	}

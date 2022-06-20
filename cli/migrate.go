@@ -82,7 +82,7 @@ func migrateCmd() *cobra.Command {
 			pagerDutyReceiverService := receiver.NewPagerDutyService()
 			receiverService := receiver.NewService(
 				repositories.ReceiverRepository,
-				map[string]receiver.StrategyService{
+				map[string]receiver.TypeService{
 					receiver.TypeSlack:     slackReceiverService,
 					receiver.TypeHTTP:      httpReceiverService,
 					receiver.TypePagerDuty: pagerDutyReceiverService,
