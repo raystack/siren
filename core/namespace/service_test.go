@@ -1,498 +1,432 @@
-package namespace
+package namespace_test
 
 import (
-	"strings"
-	"testing"
+	"errors"
+	testing "testing"
 	"time"
 
-	"github.com/odpf/siren/domain"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/namespace/mocks"
+	mock "github.com/stretchr/testify/mock"
 )
 
 func TestService_ListNamespaces(t *testing.T) {
-	labels := map[string]string{"foo": "bar"}
+	type testCase struct {
+		Description        string
+		ExpectedNamespaces []*namespace.Namespace
+		Setup              func(*mocks.NamespaceRepository, *mocks.Encryptor, testCase)
+		Err                error
+	}
+	var (
+		timeNow   = time.Now()
+		testCases = []testCase{
 
-	t.Run("should call repository List method and return result in decrypted format", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*domain.EncryptedNamespace{
 			{
-				Namespace: &domain.Namespace{
-					Id:        1,
-					Provider:  1,
-					Name:      "foo",
-					Labels:    labels,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+				Description: "should return error if List repository error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return(nil, errors.New("some error"))
 				},
-				Credentials: `encrypted-text-1`,
+				Err: errors.New("secureService.repository.List: some error"),
 			},
 			{
-				Namespace: &domain.Namespace{
-					Id:        2,
-					Provider:  1,
-					Name:      "foo",
-					Labels:    labels,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+				Description: "should return error if List repository success and decrypt error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
+						{
+							Namespace: &namespace.Namespace{
+								Id:        1,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-1`,
+						},
+						{
+							Namespace: &namespace.Namespace{
+								Id:        2,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-2`,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
 				},
-				Credentials: `encrypted-text-2`,
+				Err: errors.New("secureService.cryptoClient.Decrypt: decrypt error"),
+			},
+			{
+				Description: "should return error if list repository success and decrypted object is not json",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
+						{
+							Namespace: &namespace.Namespace{
+								Id:        1,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-1`,
+						},
+						{
+							Namespace: &namespace.Namespace{
+								Id:        2,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-2`,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
+				},
+				Err: errors.New("json.Unmarshal: unexpected end of JSON input"),
+			},
+			{
+				Description: "should success if list repository and decrypt success",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
+						{
+							Namespace: &namespace.Namespace{
+								Id:        1,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-1`,
+						},
+						{
+							Namespace: &namespace.Namespace{
+								Id:        2,
+								Provider:  1,
+								Name:      "foo",
+								Labels:    map[string]string{"foo": "bar"},
+								CreatedAt: timeNow,
+								UpdatedAt: timeNow,
+							},
+							Credentials: `encrypted-text-2`,
+						},
+					}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("{\"name\": \"a\"}", nil)
+				},
+				ExpectedNamespaces: []*namespace.Namespace{
+					{
+						Id:       1,
+						Provider: 1,
+						Name:     "foo",
+						Labels:   map[string]string{"foo": "bar"},
+						Credentials: map[string]interface{}{
+							"name": "a",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+					},
+					{
+						Id:       2,
+						Provider: 1,
+						Name:     "foo",
+						Labels:   map[string]string{"foo": "bar"},
+						Credentials: map[string]interface{}{
+							"name": "a",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+					},
+				},
+				Err: nil,
 			},
 		}
-		repositoryMock.On("List").Return(dummyNamespaces, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-1").
-			Return(`{"foo":"bar"}`, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-2").
-			Return(`{"bar":"baz"}`, nil).Once()
-		result, err := dummyService.ListNamespaces()
-		assert.Nil(t, err)
-		assert.Equal(t, len(dummyNamespaces), len(result))
-		assert.Equal(t, `bar`, result[0].Credentials["foo"])
-		assert.Equal(t, `baz`, result[1].Credentials["bar"])
-		repositoryMock.AssertCalled(t, "List")
-		transformerMock.AssertExpectations(t)
-	})
+	)
 
-	t.Run("should call repository List method and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("List").Return(nil, errors.New("random error")).Once()
-		result, err := dummyService.ListNamespaces()
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "s.repository.List: random error")
-		repositoryMock.AssertCalled(t, "List")
-		transformerMock.AssertExpectations(t)
-	})
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock = new(mocks.NamespaceRepository)
+				encryptorMock  = new(mocks.Encryptor)
+			)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
-	t.Run("should decrypt the repository response and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*domain.EncryptedNamespace{
-			{
-				Namespace: &domain.Namespace{
-					Id:        1,
-					Provider:  1,
-					Name:      "foo",
-					Labels:    labels,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				Credentials: `encrypted-text-1`,
-			},
-		}
-		repositoryMock.On("List").Return(dummyNamespaces, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-1").
-			Return(`{"bar":"baz"}`, errors.New("random error")).Once()
-		result, err := dummyService.ListNamespaces()
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "s.transformer.Decrypt: random error")
-		repositoryMock.AssertCalled(t, "List")
-		transformerMock.AssertExpectations(t)
-	})
+			tc.Setup(repositoryMock, encryptorMock, tc)
 
-	t.Run("should unmarshal decrypted response and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespaces := []*domain.EncryptedNamespace{
-			{
-				Namespace: &domain.Namespace{
-					Id:        1,
-					Provider:  1,
-					Name:      "foo",
-					Labels:    labels,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
-				},
-				Credentials: `encrypted-text-1`,
-			},
-		}
-		repositoryMock.On("List").Return(dummyNamespaces, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-1").
-			Return(`abcd`, nil).Once()
-		result, err := dummyService.ListNamespaces()
-		assert.Nil(t, result)
-		assert.True(t, strings.Contains(err.Error(), `json.Unmarshal: invalid character`))
-		repositoryMock.AssertCalled(t, "List")
-		transformerMock.AssertExpectations(t)
-	})
+			got, err := svc.ListNamespaces()
+			if tc.Err != err {
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedNamespaces) {
+				t.Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespaces)
+			}
+			repositoryMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
+		})
+	}
 }
 
-func TestService_CreateNamespaces(t *testing.T) {
-	credentials := make(map[string]interface{})
-	credentials["foo"] = "bar"
-	labels := map[string]string{"foo": "bar"}
-	timeNow := time.Now()
-	input := &domain.Namespace{
-		Provider:    1,
-		Name:        "foo",
-		Credentials: credentials,
-		Labels:      labels,
-		CreatedAt:   timeNow,
-		UpdatedAt:   timeNow,
+func TestService_CreateNamespace(t *testing.T) {
+	type testCase struct {
+		Description string
+		NSpace      *namespace.Namespace
+		Setup       func(*mocks.NamespaceRepository, *mocks.Encryptor, testCase)
+		Err         error
+	}
+	var testCases = []testCase{
+		{
+			Description: "should return error if encrypt return error caused credential is not in json",
+			Setup:       func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"invalid": make(chan int),
+				},
+			},
+			Err: errors.New("json.Marshal: json: unsupported type: chan int"),
+		},
+		{
+			Description: "should return error if encrypt return error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", errors.New("some error"))
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("secureService.cryptoClient.Encrypt: some error"),
+		},
+		{
+			Description: "should return error if encrypt success and create repository error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Create(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(errors.New("some error"))
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("secureService.repository.Create: some error"),
+		},
+		{
+			Description: "should return nil error if encrypt success and create repository success",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Create(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(nil)
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: nil,
+		},
 	}
 
-	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		expectedID := uint64(2)
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Run(func(args mock.Arguments) {
-				rarg := args.Get(0)
-				r := rarg.(*domain.EncryptedNamespace)
-				assert.Equal(t, uint64(0), r.Namespace.Id)
-				r.Namespace.Id = expectedID // simulate ID creation from repository
-				assert.Equal(t, "foo", r.Name)
-				assert.Equal(t, uint64(1), r.Provider)
-			}).Return(nil).Once()
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", nil).Once()
-		err := dummyService.CreateNamespace(input)
-		assert.Nil(t, err)
-		assert.Equal(t, expectedID, input.Id)
-		repositoryMock.AssertExpectations(t)
-		transformerMock.AssertExpectations(t)
-	})
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock = new(mocks.NamespaceRepository)
+				encryptorMock  = new(mocks.Encryptor)
+			)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
-	t.Run("should encrypt credentials before passing to repository and return decrypted creds", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		dummyTransformer, _ := NewTransformer("abcdefghijklmnopqrstuvwxyzabcdef")
-		dummyService := Service{repository: repositoryMock, transformer: dummyTransformer}
+			tc.Setup(repositoryMock, encryptorMock, tc)
 
-		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Run(func(args mock.Arguments) {
-				param := args.Get(0).(*domain.EncryptedNamespace)
-				assert.NotEmpty(t, param.Credentials)
-				assert.NotEqual(t, input.Credentials, param.Credentials)
-			}).Return(nil).Once()
+			err := svc.CreateNamespace(tc.NSpace)
+			if tc.Err != err {
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
+			}
 
-		err := dummyService.CreateNamespace(input)
-		assert.Nil(t, err)
-		assert.Equal(t, credentials, input.Credentials)
-		repositoryMock.AssertExpectations(t)
-	})
-
-	t.Run("should call repository Create method and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Create", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Return(errors.New("random error")).Once()
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", nil).Once()
-		err := dummyService.CreateNamespace(input)
-		assert.EqualError(t, err, "s.repository.Create: random error")
-		repositoryMock.AssertExpectations(t)
-	})
-
-	t.Run("should encrypt credentials and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", errors.New("random error")).Once()
-		err := dummyService.CreateNamespace(input)
-		assert.EqualError(t, err, "s.transformer.Encrypt: random error")
-		transformerMock.AssertExpectations(t)
-	})
-
-	t.Run("should marshal credentials and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		badNamespace := &domain.Namespace{
-			Id:       2,
-			Provider: 1,
-			Name:     "foo",
-			Credentials: map[string]interface{}{
-				"foo": make(chan int),
-			},
-			Labels:    labels,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-		}
-		err := dummyService.CreateNamespace(badNamespace)
-		assert.True(t, strings.Contains(err.Error(), `json.Marshal: json: unsupported type: chan int`))
-	})
+			repositoryMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
+		})
+	}
 }
 
 func TestService_GetNamespace(t *testing.T) {
-	labels := map[string]string{"foo": "bar"}
-
-	t.Run("should call repository Get method and return result in decrypted format", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespace := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
-				Id:        1,
-				Provider:  1,
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+	type testCase struct {
+		Description string
+		NSpace      *namespace.Namespace
+		Setup       func(*mocks.NamespaceRepository, *mocks.Encryptor, testCase)
+		Err         error
+	}
+	var (
+		testID    = uint64(10)
+		testCases = []testCase{
+			{
+				Description: "should return error if Get repository error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(nil, errors.New("some error"))
+				},
+				Err: errors.New("secureService.repository.Get: some error"),
 			},
-			Credentials: `encrypted-text-1`,
-		}
-		repositoryMock.On("Get", uint64(1)).Return(dummyNamespace, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-1").
-			Return(`{"foo":"bar"}`, nil).Once()
-		result, err := dummyService.GetNamespace(uint64(1))
-		assert.Nil(t, err)
-		assert.Equal(t, `bar`, result.Credentials["foo"])
-		repositoryMock.AssertCalled(t, "Get", uint64(1))
-		transformerMock.AssertExpectations(t)
-	})
-
-	t.Run("should return decrypted namespace credentials", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		dummyTransformer, _ := NewTransformer("abcdefghijklmnopqrstuvwxyzabcdef")
-		dummyService := Service{repository: repositoryMock, transformer: dummyTransformer}
-
-		expectedCredentialsStr := `{"foo":"bar"}`
-		expectedCredentials := map[string]interface{}{"foo": "bar"}
-		expectedEncryptedCredentials, _ := dummyTransformer.Encrypt(expectedCredentialsStr)
-		expectedEncruptedNamespace := &domain.EncryptedNamespace{
-			Namespace:   &domain.Namespace{},
-			Credentials: expectedEncryptedCredentials,
-		}
-		repositoryMock.On("Get", mock.AnythingOfType("uint64")).Return(expectedEncruptedNamespace, nil).Once()
-
-		result, err := dummyService.GetNamespace(uint64(1))
-		assert.Nil(t, err)
-		assert.Equal(t, expectedCredentials, result.Credentials)
-	})
-
-	t.Run("should call repository Get method and return nil if namespace does not exist", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Get", uint64(1)).Return(nil, nil).Once()
-		result, err := dummyService.GetNamespace(uint64(1))
-		assert.Nil(t, err)
-		assert.Nil(t, result)
-	})
-
-	t.Run("should call repository Get method and handle error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Get", uint64(1)).
-			Return(nil, errors.New("random error")).Once()
-		result, err := dummyService.GetNamespace(uint64(1))
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "s.repository.Get: random error")
-		repositoryMock.AssertCalled(t, "Get", uint64(1))
-	})
-
-	t.Run("should decrypt credentials and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		dummyNamespace := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
-				Id:        1,
-				Provider:  1,
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+			{
+				Description: "should return error if Get repository success and decrypt return error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&namespace.EncryptedNamespace{
+						Namespace:   tc.NSpace,
+						Credentials: "some-ciphertext",
+					}, nil)
+					e.EXPECT().Decrypt("some-ciphertext").Return("", errors.New("some error"))
+				},
+				Err: errors.New("secureService.cryptoClient.Decrypt: some error"),
 			},
-			Credentials: `encrypted-text-1`,
+			{
+				Description: "should return error if Get repository success and decrypted credentials is not json marshallable",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&namespace.EncryptedNamespace{
+						Namespace:   tc.NSpace,
+						Credentials: "some-ciphertext",
+					}, nil)
+					e.EXPECT().Decrypt("some-ciphertext").Return("", nil)
+				},
+				Err: errors.New("json.Unmarshal: unexpected end of JSON input"),
+			},
+			{
+				Description: "should return nil error if Get repository success and decrypt success",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(&namespace.EncryptedNamespace{
+						Namespace:   tc.NSpace,
+						Credentials: "some-ciphertext",
+					}, nil)
+					e.EXPECT().Decrypt("some-ciphertext").Return("{ \"key\": \"value\" }", nil)
+				},
+				NSpace: &namespace.Namespace{
+					Credentials: map[string]interface{}{
+						"key": "value",
+					},
+				},
+				Err: nil,
+			},
 		}
-		repositoryMock.On("Get", uint64(1)).Return(dummyNamespace, nil).Once()
-		transformerMock.On("Decrypt", "encrypted-text-1").
-			Return(`{"foo":"bar"}`, errors.New("random error")).Once()
-		result, err := dummyService.GetNamespace(uint64(1))
-		assert.Nil(t, result)
-		assert.EqualError(t, err, "s.transformer.Decrypt: random error")
-		repositoryMock.AssertCalled(t, "Get", uint64(1))
-		transformerMock.AssertCalled(t, "Decrypt", "encrypted-text-1")
-	})
-	//t.Run("should call repository List method and return error if any", func(t *testing.T) {
-	//	repositoryMock := &NamespaceRepositoryMock{}
-	//	transformerMock := &EncryptorDecryptorMock{}
-	//	dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-	//	repositoryMock.On("List").Return(nil, errors.New("random error")).Once()
-	//	result, err := dummyService.ListNamespaces()
-	//	assert.Nil(t, result)
-	//	assert.EqualError(t, err, "s.repository.List: random error")
-	//	repositoryMock.AssertCalled(t, "List")
-	//	transformerMock.AssertExpectations(t)
-	//})
-	//
-	//t.Run("should decrypt the repository response and return error if any", func(t *testing.T) {
-	//	repositoryMock := &NamespaceRepositoryMock{}
-	//	transformerMock := &EncryptorDecryptorMock{}
-	//	dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-	//	dummyNamespaces := []*Namespace{
-	//		{
-	//			Id:          1,
-	//			ProviderId:  1,
-	//			Name:        "foo",
-	//			Credentials: `encrypted-text-1`,
-	//			Labels:      labels,
-	//			CreatedAt:   time.Now(),
-	//			UpdatedAt:   time.Now(),
-	//		},
-	//	}
-	//	repositoryMock.On("List").Return(dummyNamespaces, nil).Once()
-	//	transformerMock.On("Decrypt", "encrypted-text-1").
-	//		Return(`{"bar":"baz"}`, errors.New("random error")).Once()
-	//	result, err := dummyService.ListNamespaces()
-	//	assert.Nil(t, result)
-	//	assert.EqualError(t, err, "s.transformer.Decrypt: random error")
-	//	repositoryMock.AssertCalled(t, "List")
-	//	transformerMock.AssertExpectations(t)
-	//})
-	//
-	//t.Run("should unmarshal decrypted response and return error if any", func(t *testing.T) {
-	//	repositoryMock := &NamespaceRepositoryMock{}
-	//	transformerMock := &EncryptorDecryptorMock{}
-	//	dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-	//	dummyNamespaces := []*Namespace{
-	//		{
-	//			Id:          1,
-	//			ProviderId:  1,
-	//			Name:        "foo",
-	//			Credentials: `encrypted-text-1`,
-	//			Labels:      labels,
-	//			CreatedAt:   time.Now(),
-	//			UpdatedAt:   time.Now(),
-	//		},
-	//	}
-	//	repositoryMock.On("List").Return(dummyNamespaces, nil).Once()
-	//	transformerMock.On("Decrypt", "encrypted-text-1").
-	//		Return(`abcd`, nil).Once()
-	//	result, err := dummyService.ListNamespaces()
-	//	assert.Nil(t, result)
-	//	assert.True(t, strings.Contains(err.Error(), `json.Unmarshal: invalid character`))
-	//	repositoryMock.AssertCalled(t, "List")
-	//	transformerMock.AssertExpectations(t)
-	//})
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock = new(mocks.NamespaceRepository)
+				encryptorMock  = new(mocks.Encryptor)
+			)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
+
+			tc.Setup(repositoryMock, encryptorMock, tc)
+
+			got, err := svc.GetNamespace(testID)
+			if tc.Err != err {
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
+			}
+			if !cmp.Equal(got, tc.NSpace) {
+				t.Fatalf("got result %+v, expected was %+v", got, tc.NSpace)
+			}
+			repositoryMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
+		})
+	}
 }
 
-func TestService_UpdateNamespaces(t *testing.T) {
-	credentials := make(map[string]interface{})
-	credentials["foo"] = "bar"
-	labels := map[string]string{"foo": "bar"}
-	timeNow := time.Now()
-	dummyNamespace := &domain.Namespace{
-		Id:          2,
-		Provider:    1,
-		Name:        "foo",
-		Credentials: credentials,
-		Labels:      labels,
-		CreatedAt:   timeNow,
-		UpdatedAt:   timeNow,
+func TestService_UpdateNamespace(t *testing.T) {
+	type testCase struct {
+		Description string
+		NSpace      *namespace.Namespace
+		Setup       func(*mocks.NamespaceRepository, *mocks.Encryptor, testCase)
+		Err         error
+	}
+	var testCases = []testCase{
+		{
+			Description: "should return error if encrypt return error caused credential is not in json",
+			Setup:       func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"invalid": make(chan int),
+				},
+			},
+			Err: errors.New("json.Marshal: json: unsupported type: chan int"),
+		},
+		{
+			Description: "should return error if encrypt return error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("", errors.New("some error"))
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("secureService.cryptoClient.Encrypt: some error"),
+		},
+		{
+			Description: "should return error if encrypt success and update repository error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Update(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(errors.New("some error"))
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("secureService.repository.Update: some error"),
+		},
+		{
+			Description: "should return nil error if encrypt success and update repository success",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Update(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(nil)
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: nil,
+		},
 	}
 
-	t.Run("should call repository Update method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Update", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Run(func(args mock.Arguments) {
-				rarg := args.Get(0)
-				r := rarg.(*domain.EncryptedNamespace)
-				assert.Equal(t, "foo", r.Name)
-				assert.Equal(t, uint64(2), r.Id)
-				assert.Equal(t, uint64(1), r.Provider)
-			}).Return(nil).Once()
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", nil).Once()
-		err := dummyService.UpdateNamespace(dummyNamespace)
-		assert.Nil(t, err)
-		repositoryMock.AssertExpectations(t)
-		transformerMock.AssertExpectations(t)
-	})
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock = new(mocks.NamespaceRepository)
+				encryptorMock  = new(mocks.Encryptor)
+			)
+			svc := namespace.NewService(encryptorMock, repositoryMock)
 
-	t.Run("should call repository Update method and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		repositoryMock.On("Update", mock.AnythingOfType("*domain.EncryptedNamespace")).
-			Return(errors.New("random error")).Once()
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", nil).Once()
-		err := dummyService.UpdateNamespace(dummyNamespace)
-		assert.EqualError(t, err, "s.repository.Update: random error")
-		repositoryMock.AssertExpectations(t)
-	})
+			tc.Setup(repositoryMock, encryptorMock, tc)
 
-	t.Run("should encrypt credentials and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		transformerMock.On("Encrypt", `{"foo":"bar"}`).
-			Return("encrypted-text-1", errors.New("random error")).Once()
-		err := dummyService.UpdateNamespace(dummyNamespace)
-		assert.EqualError(t, err, "s.transformer.Encrypt: random error")
-		transformerMock.AssertExpectations(t)
-	})
+			err := svc.UpdateNamespace(tc.NSpace)
+			if tc.Err != err {
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
+			}
 
-	t.Run("should marshal credentials and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		transformerMock := &EncryptorDecryptorMock{}
-		dummyService := Service{repository: repositoryMock, transformer: transformerMock}
-		badNamespace := &domain.Namespace{
-			Id:       2,
-			Provider: 1,
-			Name:     "foo",
-			Credentials: map[string]interface{}{
-				"foo": make(chan int),
-			},
-			Labels:    labels,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-		}
-		err := dummyService.UpdateNamespace(badNamespace)
-		assert.True(t, strings.Contains(err.Error(), `json.Marshal: json: unsupported type: chan int`))
-	})
-}
-
-func TestService_DeleteNamespace(t *testing.T) {
-	credentials := make(map[string]interface{})
-	credentials["foo"] = "bar"
-
-	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		dummyService := Service{repository: repositoryMock}
-		repositoryMock.On("Delete", uint64(1)).Return(nil).Once()
-		err := dummyService.DeleteNamespace(1)
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Delete", uint64(1))
-	})
-
-	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		dummyService := Service{repository: repositoryMock}
-		repositoryMock.On("Delete", uint64(1)).Return(errors.New("random error")).Once()
-		err := dummyService.DeleteNamespace(1)
-		assert.EqualError(t, err, "random error")
-		repositoryMock.AssertCalled(t, "Delete", uint64(1))
-	})
-}
-
-func TestService_Migrate(t *testing.T) {
-	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := &NamespaceRepositoryMock{}
-		dummyService := Service{repository: repositoryMock}
-		repositoryMock.On("Migrate").Return(nil).Once()
-		err := dummyService.Migrate()
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Migrate")
-	})
-}
-
-func TestTransformer_Encrypt(t *testing.T) {
-	t.Run("should ", func(t *testing.T) {
-
-	})
+			repositoryMock.AssertExpectations(t)
+			encryptorMock.AssertExpectations(t)
+		})
+	}
 }

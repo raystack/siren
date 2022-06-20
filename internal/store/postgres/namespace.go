@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
@@ -19,14 +19,14 @@ func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
 	return &NamespaceRepository{db}
 }
 
-func (r NamespaceRepository) List() ([]*domain.EncryptedNamespace, error) {
+func (r NamespaceRepository) List() ([]*namespace.EncryptedNamespace, error) {
 	var namespaceModels []*model.Namespace
 	selectQuery := "select * from namespaces"
 	if err := r.db.Raw(selectQuery).Find(&namespaceModels).Error; err != nil {
 		return nil, err
 	}
 
-	var result []*domain.EncryptedNamespace
+	var result []*namespace.EncryptedNamespace
 	for _, m := range namespaceModels {
 		n, err := m.ToDomain()
 		if err != nil {
@@ -37,7 +37,7 @@ func (r NamespaceRepository) List() ([]*domain.EncryptedNamespace, error) {
 	return result, nil
 }
 
-func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) error {
+func (r NamespaceRepository) Create(namespace *namespace.EncryptedNamespace) error {
 	nsModel := new(model.Namespace)
 	if err := nsModel.FromDomain(namespace); err != nil {
 		return err
@@ -58,7 +58,7 @@ func (r NamespaceRepository) Create(namespace *domain.EncryptedNamespace) error 
 	})
 }
 
-func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) {
+func (r NamespaceRepository) Get(id uint64) (*namespace.EncryptedNamespace, error) {
 	var namespace model.Namespace
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&namespace)
 	if result.Error != nil {
@@ -71,7 +71,7 @@ func (r NamespaceRepository) Get(id uint64) (*domain.EncryptedNamespace, error) 
 	return namespace.ToDomain()
 }
 
-func (r NamespaceRepository) Update(namespace *domain.EncryptedNamespace) error {
+func (r NamespaceRepository) Update(namespace *namespace.EncryptedNamespace) error {
 	m := new(model.Namespace)
 	if err := m.FromDomain(namespace); err != nil {
 		return err

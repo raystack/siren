@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/internal/store/postgres/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -20,7 +19,7 @@ type ReceiverRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.ReceiverRepository
+	repository *postgres.ReceiverRepository
 }
 
 func (s *ReceiverRepositoryTestSuite) SetupTest() {
@@ -43,7 +42,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 		labels := make(map[string]string)
 		labels["foo"] = "bar"
 
-		receiver := &domain.Receiver{
+		rcv := &receiver.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -52,12 +51,12 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		}
-		expectedReceivers := []*domain.Receiver{receiver}
+		expectedReceivers := []*receiver.Receiver{rcv}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "name", "type", "labels", "configurations", "created_at", "updated_at"}).
-			AddRow(receiver.Id, receiver.Name, receiver.Type, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), receiver.CreatedAt, receiver.UpdatedAt)
+			AddRow(rcv.Id, rcv.Name, rcv.Type, json.RawMessage(`{"foo": "bar"}`),
+				json.RawMessage(`{"foo": "bar"}`), rcv.CreatedAt, rcv.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
 		actualReceivers, err := s.repository.List()
@@ -85,7 +84,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -108,7 +107,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
 											("name","type","labels","configurations","created_at","updated_at","id")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -136,7 +135,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 
 	s.Run("should get receiver by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             1,
 			Name:           "foo",
 			Type:           "slack",
@@ -192,7 +191,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should update a receiver", func() {
 		timeNow := time.Now()
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             10,
 			Name:           "foo",
 			Type:           "slack",
@@ -201,7 +200,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &domain.Receiver{
+		input := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -229,7 +228,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error if receiver does not exist", func() {
 		timeNow := time.Now()
-		input := &domain.Receiver{
+		input := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -250,7 +249,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error updating the receiver", func() {
 		timeNow := time.Now()
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -260,7 +259,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 		}
-		input := &domain.Receiver{
+		input := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -281,7 +280,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error in finding the updated receiver", func() {
 		timeNow := time.Now()
-		expectedReceiver := &domain.Receiver{
+		expectedReceiver := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",
@@ -290,7 +289,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			CreatedAt:      timeNow,
 			UpdatedAt:      timeNow,
 		}
-		input := &domain.Receiver{
+		input := &receiver.Receiver{
 			Id:             10,
 			Name:           "baz",
 			Type:           "slack",

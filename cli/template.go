@@ -12,7 +12,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/template"
 	"github.com/spf13/cobra"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 )
@@ -26,13 +26,13 @@ type templatedRule struct {
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
-type template struct {
-	Name       string            `yaml:"name"`
-	ApiVersion string            `yaml:"apiVersion"`
-	Type       string            `yaml:"type"`
-	Body       []templatedRule   `yaml:"body"`
-	Tags       []string          `yaml:"tags"`
-	Variables  []domain.Variable `yaml:"variables"`
+type templateStruct struct {
+	Name       string              `yaml:"name"`
+	ApiVersion string              `yaml:"apiVersion"`
+	Type       string              `yaml:"type"`
+	Body       []templatedRule     `yaml:"body"`
+	Tags       []string            `yaml:"tags"`
+	Variables  []template.Variable `yaml:"variables"`
 }
 
 func templatesCmd(c *configuration) *cobra.Command {
@@ -123,7 +123,7 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var templateConfig domain.Template
+			var templateConfig template.Template
 			if err := parseFile(filePath, &templateConfig); err != nil {
 				return err
 			}
@@ -203,9 +203,9 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 
 			templateData := res.Template
 
-			variables := make([]domain.Variable, 0)
+			variables := make([]template.Variable, 0)
 			for _, variable := range templateData.GetVariables() {
-				variables = append(variables, domain.Variable{
+				variables = append(variables, template.Variable{
 					Name:        variable.Name,
 					Type:        variable.Type,
 					Default:     variable.Default,
@@ -213,7 +213,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 				})
 			}
 
-			template := &domain.Template{
+			template := &template.Template{
 				ID:        uint(templateData.GetId()),
 				Name:      templateData.GetName(),
 				Body:      templateData.GetBody(),
@@ -367,7 +367,7 @@ func uploadTemplateCmd(c *configuration) *cobra.Command {
 }
 
 func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*sirenv1beta1.Template, error) {
-	var t template
+	var t templateStruct
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
 		return nil, err

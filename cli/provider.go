@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/provider"
 	"github.com/spf13/cobra"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -94,7 +94,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var providerConfig domain.Provider
+			var providerConfig provider.Provider
 			if err := parseFile(filePath, &providerConfig); err != nil {
 				return err
 			}
@@ -173,7 +173,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			provider := &domain.Provider{
+			provider := &provider.Provider{
 				Id:          res.GetId(),
 				Host:        res.GetHost(),
 				Urn:         res.GetUrn(),
@@ -210,7 +210,7 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var providerConfig domain.Provider
+			var providerConfig provider.Provider
 			if err := parseFile(filePath, &providerConfig); err != nil {
 				return err
 			}

@@ -1,0 +1,56 @@
+templates:
+  - 'helper.tmpl'
+global:
+  pagerduty_url: https://events.pagerduty.com/v2/enqueue
+  resolve_timeout: 5m
+  slack_api_url: https://slack.com/api/chat.postMessage
+receivers:
+  - name: default
+  - name: slack_config1
+    slack_configs:
+      - channel: 'test'
+        http_config:
+          bearer_token: 'xoxb'
+        icon_emoji: ':eagle:'
+        link_names: false
+        send_resolved: true
+        color: '{{ template "slack.color" . }}'
+        title: ''
+        pretext: '{{template "slack.pretext" . }}'
+        text: '{{ template "slack.body" . }}'
+        actions:
+          - type: button
+            text: 'Runbook :books:'
+            url: '{{template "slack.runbook" . }}'
+          - type: button
+            text: 'Dashboard :bar_chart:'
+            url: '{{template "slack.dashboard" . }}'
+  - name: pagerduty_config2
+    pagerduty_configs:
+      - service_key: '1234'
+  - name: http_config3
+    webhook_configs:
+      - url: 'http://localhost:3000'
+route:
+  group_by:
+    - alertname
+    - severity
+    - owner
+    - service_name
+    - time_stamp
+    - identifier
+  group_wait: 30s
+  group_interval: 30m
+  repeat_interval: 4h
+  receiver: default
+  routes:
+    - receiver: slack_config1
+      match:
+        foo: bar
+      continue: true
+    - receiver: pagerduty_config2
+      match:
+        bar: baz
+      continue: true
+    - receiver: http_config3
+      continue: true

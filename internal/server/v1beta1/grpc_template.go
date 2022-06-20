@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/utils"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -11,16 +11,26 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
+type TemplateService interface {
+	Upsert(*template.Template) error
+	Index(string) ([]template.Template, error)
+	GetByName(string) (*template.Template, error)
+	Delete(string) error
+	Render(string, map[string]string) (string, error)
+	Migrate() error
+}
+
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
-	templates, err := s.container.TemplatesService.Index(req.GetTag())
+	templates, err := s.templateService.Index(req.GetTag())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListTemplatesResponse{Templates: make([]*sirenv1beta1.Template, 0)}
-	for _, template := range templates {
+	for _, tmpl := range templates {
 		variables := make([]*sirenv1beta1.TemplateVariables, 0)
-		for _, variable := range template.Variables {
+		for _, variable := range tmpl.Variables {
 			variables = append(variables, &sirenv1beta1.TemplateVariables{
 				Name:        variable.Name,
 				Type:        variable.Type,
@@ -29,12 +39,12 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 			})
 		}
 		res.Templates = append(res.Templates, &sirenv1beta1.Template{
-			Id:        uint64(template.ID),
-			Name:      template.Name,
-			Body:      template.Body,
-			Tags:      template.Tags,
-			CreatedAt: timestamppb.New(template.CreatedAt),
-			UpdatedAt: timestamppb.New(template.UpdatedAt),
+			Id:        uint64(tmpl.ID),
+			Name:      tmpl.Name,
+			Body:      tmpl.Body,
+			Tags:      tmpl.Tags,
+			CreatedAt: timestamppb.New(tmpl.CreatedAt),
+			UpdatedAt: timestamppb.New(tmpl.UpdatedAt),
 			Variables: variables,
 		})
 	}
@@ -43,7 +53,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 }
 
 func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetTemplateByNameRequest) (*sirenv1beta1.TemplateResponse, error) {
-	template, err := s.container.TemplatesService.GetByName(req.GetName())
+	template, err := s.templateService.GetByName(req.GetName())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -74,23 +84,23 @@ func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetT
 }
 
 func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertTemplateRequest) (*sirenv1beta1.TemplateResponse, error) {
-	variables := make([]domain.Variable, 0)
+	variables := make([]template.Variable, 0)
 	for _, variable := range req.GetVariables() {
-		variables = append(variables, domain.Variable{
+		variables = append(variables, template.Variable{
 			Name:        variable.Name,
 			Type:        variable.Type,
 			Default:     variable.Default,
 			Description: variable.Description,
 		})
 	}
-	template := &domain.Template{
+	template := &template.Template{
 		ID:        uint(req.GetId()),
 		Name:      req.GetName(),
 		Body:      req.GetBody(),
 		Tags:      req.GetTags(),
 		Variables: variables,
 	}
-	err := s.container.TemplatesService.Upsert(template)
+	err := s.templateService.Upsert(template)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -119,7 +129,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 }
 
 func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
-	err := s.container.TemplatesService.Delete(req.GetName())
+	err := s.templateService.Delete(req.GetName())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -127,7 +137,7 @@ func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteT
 }
 
 func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
-	body, err := s.container.TemplatesService.Render(req.GetName(), req.GetVariables())
+	body, err := s.templateService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}

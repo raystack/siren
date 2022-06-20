@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/internal/store/postgres/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -20,7 +19,7 @@ type TemplateRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.TemplatesRepository
+	repository *postgres.TemplateRepository
 }
 
 func (s *TemplateRepositoryTestSuite) SetupTest() {
@@ -174,14 +173,14 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "templates" ("created_at","updated_at","name","body","tags","variables","id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &domain.Template{
+		expectedTemplate := &template.Template{
 			ID:        10,
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"baz"},
-			Variables: []domain.Variable{{Name: "foo", Type: "string", Default: "bar", Description: "baz"}},
+			Variables: []template.Variable{{Name: "foo", Type: "string", Default: "bar", Description: "baz"}},
 		}
 		modelTemplate := &model.Template{
 			ID:        10,
@@ -208,14 +207,14 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 		updateQuery := regexp.QuoteMeta(`UPDATE "templates" SET "created_at"=$1,"updated_at"=$2,"name"=$3,"body"=$4,"tags"=$5,"variables"=$6 WHERE id = $7`)
 		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
 		timeNow := time.Now()
-		expectedTemplate := &domain.Template{
+		expectedTemplate := &template.Template{
 			ID:        10,
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"updated-baz"},
-			Variables: []domain.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
+			Variables: []template.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
 		}
 		modelTemplate := &model.Template{
 			ID:        10,
@@ -235,13 +234,13 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			Tags:      []string{"updated-baz"},
 			Variables: `[{"name":"updated-foo","type":"string","default":"bar","description":"baz"}]`,
 		}
-		input := &domain.Template{
+		input := &template.Template{
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"updated-baz"},
-			Variables: []domain.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
+			Variables: []template.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
 		}
 
 		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
@@ -269,13 +268,13 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnError(errors.New("random error"))
 		timeNow := time.Now()
-		input := &domain.Template{
+		input := &template.Template{
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"baz"},
-			Variables: []domain.Variable{{Name: "foo"}},
+			Variables: []template.Variable{{Name: "foo"}},
 		}
 		err := s.repository.Upsert(input)
 		s.Equal(err.Error(), expectedErrorMessage)
@@ -295,14 +294,14 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			Tags:      []string{"baz"},
 			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
 		}
-		input := &domain.Template{
+		input := &template.Template{
 			ID:        10,
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"baz"},
-			Variables: []domain.Variable{{Name: "foo"}},
+			Variables: []template.Variable{{Name: "foo"}},
 		}
 		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
 		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedTemplate.CreatedAt,
@@ -328,13 +327,13 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			Tags:      []string{"baz"},
 			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
 		}
-		input := &domain.Template{
+		input := &template.Template{
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"baz"},
-			Variables: []domain.Variable{{Name: "foo"}},
+			Variables: []template.Variable{{Name: "foo"}},
 		}
 
 		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
@@ -369,13 +368,13 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			Tags:      []string{"baz"},
 			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
 		}
-		input := &domain.Template{
+		input := &template.Template{
 			CreatedAt: timeNow,
 			UpdatedAt: timeNow,
 			Name:      "foo",
 			Body:      "bar",
 			Tags:      []string{"baz"},
-			Variables: []domain.Variable{{Name: "foo"}},
+			Variables: []template.Variable{{Name: "foo"}},
 		}
 
 		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).

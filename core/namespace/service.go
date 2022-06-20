@@ -1,84 +1,31 @@
 package namespace
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/json"
-	"io"
-
-	"github.com/gtank/cryptopasta"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-	"github.com/pkg/errors"
+	"fmt"
 )
-
-type EncryptorDecryptor interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
-type Transformer struct {
-	encryptionKey *[32]byte
-}
-
-func NewTransformer(encryptionKey string) (*Transformer, error) {
-	secretKey := &[32]byte{}
-	if len(encryptionKey) < 32 {
-		return nil, errors.New("random hash should be 32 chars in length")
-	}
-	_, err := io.ReadFull(bytes.NewBufferString(encryptionKey), secretKey[:])
-	if err != nil {
-		return nil, err
-	}
-
-	return &Transformer{
-		encryptionKey: secretKey,
-	}, nil
-}
-
-func (t *Transformer) Encrypt(s string) (string, error) {
-	cipher, err := cryptopasta.Encrypt([]byte(s), t.encryptionKey)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(cipher), nil
-}
-
-func (t *Transformer) Decrypt(s string) (string, error) {
-	encrypted, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return "", err
-	}
-	decryptedToken, err := cryptopasta.Decrypt(encrypted, t.encryptionKey)
-	if err != nil {
-		return "", err
-	}
-	return string(decryptedToken), nil
-}
 
 // Service handles business logic
 type Service struct {
-	repository  store.NamespaceRepository
-	transformer EncryptorDecryptor
+	repository   Repository
+	cryptoClient Encryptor
 }
 
-// NewService returns service struct
-func NewService(repository store.NamespaceRepository, encryptionKey string) (domain.NamespaceService, error) {
-	transformer, err := NewTransformer(encryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create transformer")
+// NewService returns secure service struct
+func NewService(cryptoClient Encryptor, repository Repository) *Service {
+	return &Service{
+		repository:   repository,
+		cryptoClient: cryptoClient,
 	}
-
-	return &Service{repository, transformer}, nil
 }
 
-func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
+func (s *Service) ListNamespaces() ([]*Namespace, error) {
 	encrytpedNamespaces, err := s.repository.List()
 	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.List")
+		return nil, fmt.Errorf("secureService.repository.List: %w", err)
 	}
 
-	namespaces := make([]*domain.Namespace, 0, len(encrytpedNamespaces))
+	namespaces := make([]*Namespace, 0, len(encrytpedNamespaces))
 	for _, en := range encrytpedNamespaces {
 		ns, err := s.decrypt(en)
 		if err != nil {
@@ -89,14 +36,15 @@ func (s Service) ListNamespaces() ([]*domain.Namespace, error) {
 	return namespaces, nil
 }
 
-func (s Service) CreateNamespace(namespace *domain.Namespace) error {
+func (s *Service) CreateNamespace(namespace *Namespace) error {
+	//TODO check if namespace is nil
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return err
 	}
 
 	if err := s.repository.Create(encryptedNamespace); err != nil {
-		return errors.Wrap(err, "s.repository.Create")
+		return fmt.Errorf("secureService.repository.Create: %w", err)
 	}
 
 	encryptedNamespace.Namespace.Credentials = namespace.Credentials
@@ -105,10 +53,10 @@ func (s Service) CreateNamespace(namespace *domain.Namespace) error {
 	return nil
 }
 
-func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
+func (s *Service) GetNamespace(id uint64) (*Namespace, error) {
 	encryptedNamespace, err := s.repository.Get(id)
 	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.Get")
+		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
 	}
 	if encryptedNamespace == nil {
 		return nil, nil
@@ -117,14 +65,14 @@ func (s Service) GetNamespace(id uint64) (*domain.Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s Service) UpdateNamespace(namespace *domain.Namespace) error {
+func (s *Service) UpdateNamespace(namespace *Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return err
 	}
 
 	if err := s.repository.Update(encryptedNamespace); err != nil {
-		return errors.Wrap(err, "s.repository.Update")
+		return fmt.Errorf("secureService.repository.Update: %w", err)
 	}
 
 	encryptedNamespace.Namespace.Credentials = namespace.Credentials
@@ -132,39 +80,41 @@ func (s Service) UpdateNamespace(namespace *domain.Namespace) error {
 	return nil
 }
 
-func (s Service) DeleteNamespace(id uint64) error {
+func (s *Service) DeleteNamespace(id uint64) error {
 	return s.repository.Delete(id)
 }
 
-func (s Service) Migrate() error {
+func (s *Service) Migrate() error {
 	return s.repository.Migrate()
 }
 
-func (s Service) encrypt(ns *domain.Namespace) (*domain.EncryptedNamespace, error) {
+func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 	plainTextCredentials, err := json.Marshal(ns.Credentials)
 	if err != nil {
-		return nil, errors.Wrap(err, "json.Marshal")
-	}
-	encryptedCredentials, err := s.transformer.Encrypt(string(plainTextCredentials))
-	if err != nil {
-		return nil, errors.Wrap(err, "s.transformer.Encrypt")
+		return nil, fmt.Errorf("json.Marshal: %w", err)
 	}
 
-	return &domain.EncryptedNamespace{
+	encryptedCredentials, err := s.cryptoClient.Encrypt(string(plainTextCredentials))
+	if err != nil {
+		return nil, fmt.Errorf("secureService.cryptoClient.Encrypt: %w", err)
+	}
+
+	return &EncryptedNamespace{
 		Namespace:   ns,
 		Credentials: encryptedCredentials,
 	}, nil
 }
 
-func (s Service) decrypt(ens *domain.EncryptedNamespace) (*domain.Namespace, error) {
-	decryptedCredentialsStr, err := s.transformer.Decrypt(ens.Credentials)
+func (s *Service) decrypt(ens *EncryptedNamespace) (*Namespace, error) {
+	decryptedCredentialsStr, err := s.cryptoClient.Decrypt(ens.Credentials)
 	if err != nil {
-		return nil, errors.Wrap(err, "s.transformer.Decrypt")
+		return nil, fmt.Errorf("secureService.cryptoClient.Decrypt: %w", err)
 	}
 
 	var decryptedCredentials map[string]interface{}
 	if err := json.Unmarshal([]byte(decryptedCredentialsStr), &decryptedCredentials); err != nil {
-		return nil, errors.Wrap(err, "json.Unmarshal")
+		return nil, fmt.Errorf("json.Unmarshal: %w", err)
+
 	}
 
 	ens.Namespace.Credentials = decryptedCredentials

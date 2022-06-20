@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/spf13/cobra"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -94,7 +94,7 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var namespaceConfig domain.Namespace
+			var namespaceConfig namespace.Namespace
 			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
 			}
@@ -172,7 +172,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			namespace := &domain.Namespace{
+			namespace := &namespace.Namespace{
 				Id:          res.GetId(),
 				Urn:         res.GetUrn(),
 				Name:        res.GetName(),
@@ -207,7 +207,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var namespaceConfig domain.Namespace
+			var namespaceConfig namespace.Namespace
 			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
 			}

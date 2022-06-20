@@ -14,10 +14,16 @@ build: ## Build the siren binary
 	@echo " - build complete"
 
 test: ## Run the tests
-	go test ./... -coverprofile=coverage.out
+	go test ./... -race -covermode=atomic -coverprofile=coverage.out
 
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
+
+generate: ## run all go generate in the code base (including generating mock files)
+	go generate ./...
+
+lint: ## lint checker
+	golangci-lint run
 
 proto: ## Generate the protobuf files
 	@echo " > generating protobuf from odpf/proton"
@@ -31,6 +37,7 @@ clean: ## Clean the build artifacts
 install: ## install required dependencies
 	@echo "> installing dependencies"
 	go mod tidy
+	go install github.com/vektra/mockery/v2@v2.12.2
 	go get -d google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
 	go get github.com/golang/protobuf/proto@v1.5.2
 	go get -d github.com/golang/protobuf/protoc-gen-go@v1.5.2

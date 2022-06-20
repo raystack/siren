@@ -2,9 +2,10 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/lib/pq"
-	"github.com/odpf/siren/domain"
 	"time"
+
+	"github.com/lib/pq"
+	"github.com/odpf/siren/core/template"
 )
 
 type Template struct {
@@ -17,35 +18,35 @@ type Template struct {
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
 }
 
-func (template *Template) FromDomain(t *domain.Template) error {
-	template.ID = t.ID
-	template.CreatedAt = t.CreatedAt
-	template.UpdatedAt = t.UpdatedAt
-	template.Name = t.Name
-	template.Tags = t.Tags
-	template.Body = t.Body
+func (tmp *Template) FromDomain(t *template.Template) error {
+	tmp.ID = t.ID
+	tmp.CreatedAt = t.CreatedAt
+	tmp.UpdatedAt = t.UpdatedAt
+	tmp.Name = t.Name
+	tmp.Tags = t.Tags
+	tmp.Body = t.Body
 	jsonString, err := json.Marshal(t.Variables)
 	if err != nil {
 		return err
 	}
-	template.Variables = string(jsonString)
+	tmp.Variables = string(jsonString)
 	return nil
 }
 
-func (template *Template) ToDomain() (*domain.Template, error) {
-	var variables []domain.Variable
-	jsonBlob := []byte(template.Variables)
+func (tmp *Template) ToDomain() (*template.Template, error) {
+	var variables []template.Variable
+	jsonBlob := []byte(tmp.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.Template{
-		ID:        template.ID,
-		Name:      template.Name,
-		Body:      template.Body,
-		Tags:      template.Tags,
-		CreatedAt: template.CreatedAt,
-		UpdatedAt: template.UpdatedAt,
+	return &template.Template{
+		ID:        tmp.ID,
+		Name:      tmp.Name,
+		Body:      tmp.Body,
+		Tags:      tmp.Tags,
+		CreatedAt: tmp.CreatedAt,
+		UpdatedAt: tmp.UpdatedAt,
 		Variables: variables,
 	}, nil
 }

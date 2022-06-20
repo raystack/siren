@@ -1,138 +1,187 @@
 package receiver
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-	"github.com/odpf/siren/plugins/receivers/http"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/pkg/errors"
+	goslack "github.com/slack-go/slack"
 )
 
 const (
 	Slack string = "slack"
 )
 
-var (
-	jsonMarshal = json.Marshal
-)
-
-type slackService interface {
-	GetWorkspaceChannels(string) ([]slack.Channel, error)
-}
-
 // Service handles business logic
 type Service struct {
-	repository   store.ReceiverRepository
-	slackService slackService
-	slackHelper  SlackHelper
+	repository   Repository
+	slackClient  SlackClient
+	cryptoClient Encryptor
 }
 
 // NewService returns service struct
-func NewService(repository store.ReceiverRepository, httpClient http.Doer, encryptionKey string) (domain.ReceiverService, error) {
-	slackHelper, err := NewSlackHelper(httpClient, encryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create slack helper")
-	}
-
+func NewService(repository Repository, slackClient SlackClient, cryptoClient Encryptor) *Service {
 	return &Service{
 		repository:   repository,
-		slackHelper:  slackHelper,
-		slackService: slack.NewService(),
-	}, nil
+		slackClient:  slackClient,
+		cryptoClient: cryptoClient,
+	}
 }
 
-func (service Service) ListReceivers() ([]*domain.Receiver, error) {
-	receivers, err := service.repository.List()
+func (s *Service) ListReceivers() ([]*Receiver, error) {
+	receivers, err := s.repository.List()
 	if err != nil {
-		return nil, errors.Wrap(err, "service.repository.List")
+		return nil, fmt.Errorf("secureService.repository.List: %w", err)
 	}
 
-	domainReceivers := make([]*domain.Receiver, 0, len(receivers))
+	domainReceivers := make([]*Receiver, 0, len(receivers))
 	for i := 0; i < len(receivers); i++ {
-		receiver := receivers[i]
+		rcv := receivers[i]
 
-		if receiver.Type == Slack {
-			if err = service.slackHelper.PostTransform(receiver); err != nil {
-				return nil, errors.Wrap(err, "slackHelper.PostTransform")
+		if rcv.Type == Slack {
+			if err = s.postTransform(rcv); err != nil {
+				return nil, err
 			}
 		}
 
-		domainReceivers = append(domainReceivers, receiver)
+		domainReceivers = append(domainReceivers, rcv)
 	}
-
 	return domainReceivers, nil
-
 }
 
-func (service Service) CreateReceiver(receiver *domain.Receiver) error {
-	if receiver.Type == Slack {
-		if err := service.slackHelper.PreTransform(receiver); err != nil {
-			return errors.Wrap(err, "slackHelper.PreTransform")
+func (s *Service) CreateReceiver(rcv *Receiver) error {
+	if rcv.Type == Slack {
+		if err := s.preTransform(rcv); err != nil {
+			return err
 		}
 	}
 
-	if err := service.repository.Create(receiver); err != nil {
-		return errors.Wrap(err, "service.repository.Create")
+	if err := s.repository.Create(rcv); err != nil {
+		return fmt.Errorf("secureService.repository.Create: %w", err)
 	}
 
-	if receiver.Type == Slack {
-		if err := service.slackHelper.PostTransform(receiver); err != nil {
-			return errors.Wrap(err, "slackHelper.PostTransform")
+	if rcv.Type == Slack {
+		if err := s.postTransform(rcv); err != nil {
+			return err
 		}
 	}
-
 	return nil
 }
 
-func (service Service) GetReceiver(id uint64) (*domain.Receiver, error) {
-	receiver, err := service.repository.Get(id)
+func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
+	rcv, err := s.repository.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
 	}
 
-	if receiver.Type == Slack {
-		if err := service.slackHelper.PostTransform(receiver); err != nil {
-			return nil, errors.Wrap(err, "slackHelper.PostTransform")
+	if rcv.Type == Slack {
+		if err := s.postTransform(rcv); err != nil {
+			return nil, err
 		}
 
-		token := receiver.Configurations["token"].(string)
-		channels, err := service.slackService.GetWorkspaceChannels(token)
+		token, ok := rcv.Configurations["token"].(string)
+		if !ok {
+			return nil, errors.New("no token found in configurations")
+		}
+
+		channels, err := s.slackClient.GetWorkspaceChannels(
+			slack.CallWithContext(context.Background()),
+			slack.CallWithToken(token),
+		)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not get channels")
+			return nil, fmt.Errorf("could not get channels: %w", err)
 		}
 
-		data, err := jsonMarshal(channels)
+		data, err := json.Marshal(channels)
 		if err != nil {
-			return nil, errors.Wrap(err, "invalid channels")
+			// this is very unlikely to return error since we have an explicitly defined type of channels
+			return nil, fmt.Errorf("invalid channels: %w", err)
 		}
 
-		receiver.Data = make(map[string]interface{})
-		receiver.Data["channels"] = string(data)
+		rcv.Data = make(map[string]interface{})
+		rcv.Data["channels"] = string(data)
 	}
-
-	return receiver, nil
+	return rcv, nil
 }
 
-func (service Service) UpdateReceiver(receiver *domain.Receiver) error {
-	if receiver.Type == Slack {
-		if err := service.slackHelper.PreTransform(receiver); err != nil {
-			return errors.Wrap(err, "slackHelper.PreTransform")
+func (s *Service) UpdateReceiver(rcv *Receiver) error {
+	if rcv.Type == Slack {
+		if err := s.preTransform(rcv); err != nil {
+			return err
 		}
 	}
 
-	if err := service.repository.Update(receiver); err != nil {
-		return err
+	if err := s.repository.Update(rcv); err != nil {
+		return fmt.Errorf("secureService.repository.Update: %w", err)
 	}
+	return nil
+}
+
+func (s *Service) DeleteReceiver(id uint64) error {
+	return s.repository.Delete(id)
+}
+
+func (s *Service) Migrate() error {
+	return s.repository.Migrate()
+}
+
+func (s *Service) NotifyReceiver(rcv *Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error {
+	switch rcv.Type {
+	case Slack:
+		blocks := goslack.Blocks{}
+		if err := json.Unmarshal(payloadBlock, &blocks); err != nil {
+			return fmt.Errorf("unable to parse slack block: %w", ErrInvalid)
+		}
+
+		token, ok := rcv.Configurations["token"].(string)
+		if !ok {
+			return fmt.Errorf("no token found in configuration: %w", ErrInvalid)
+		}
+
+		payloadMessage := &slack.Message{
+			ReceiverName: payloadReceiverName,
+			ReceiverType: payloadReceiverType,
+			Token:        rcv.Configurations["token"].(string),
+			Message:      payloadMessage,
+			Blocks:       blocks,
+		}
+		if err := s.slackClient.Notify(payloadMessage, slack.CallWithToken(token)); err != nil {
+			return fmt.Errorf("failed to notify: %w", err)
+		}
+
+	default:
+		return errors.New("type not recognized")
+	}
+	return nil
+}
+
+func (s *Service) preTransform(r *Receiver) error {
+	var token string
+	var ok bool
+	if token, ok = r.Configurations["token"].(string); !ok {
+		return errors.New("no token field found")
+	}
+	chiperText, err := s.cryptoClient.Encrypt(token)
+	if err != nil {
+		return fmt.Errorf("pre transform encrypt failed: %w", err)
+	}
+	r.Configurations["token"] = chiperText
 
 	return nil
 }
 
-func (service Service) DeleteReceiver(id uint64) error {
-	return service.repository.Delete(id)
-}
-
-func (service Service) Migrate() error {
-	return service.repository.Migrate()
+func (s *Service) postTransform(r *Receiver) error {
+	var cipherText string
+	var ok bool
+	if cipherText, ok = r.Configurations["token"].(string); !ok {
+		return errors.New("no token field found")
+	}
+	token, err := s.cryptoClient.Decrypt(cipherText)
+	if err != nil {
+		return fmt.Errorf("post transform decrypt failed: %w", err)
+	}
+	r.Configurations["token"] = token
+	return nil
 }

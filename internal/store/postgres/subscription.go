@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -20,7 +20,7 @@ func NewSubscriptionRepository(db *gorm.DB) *SubscriptionRepository {
 	return &SubscriptionRepository{&transaction{db}}
 }
 
-func (r *SubscriptionRepository) List(ctx context.Context) ([]*domain.Subscription, error) {
+func (r *SubscriptionRepository) List(ctx context.Context) ([]*subscription.Subscription, error) {
 	var subscriptionModels []*model.Subscription
 	selectQuery := "select * from subscriptions"
 	result := r.getDb(ctx).Raw(selectQuery).Find(&subscriptionModels)
@@ -28,7 +28,7 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]*domain.Subscripti
 		return nil, result.Error
 	}
 
-	var subscriptions []*domain.Subscription
+	var subscriptions []*subscription.Subscription
 	for _, s := range subscriptionModels {
 		subscriptions = append(subscriptions, s.ToDomain())
 	}
@@ -36,7 +36,7 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]*domain.Subscripti
 	return subscriptions, nil
 }
 
-func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscription) error {
+func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.Subscription) error {
 	m := new(model.Subscription)
 	m.FromDomain(sub)
 	if err := r.getDb(ctx).Create(m).Error; err != nil {
@@ -48,7 +48,7 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *domain.Subscri
 	return nil
 }
 
-func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*domain.Subscription, error) {
+func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscription.Subscription, error) {
 	m := new(model.Subscription)
 	result := r.getDb(ctx).Where(fmt.Sprintf("id = %d", id)).Find(m)
 	if result.Error != nil {
@@ -61,7 +61,7 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*domain.Su
 	return m.ToDomain(), nil
 }
 
-func (r *SubscriptionRepository) Update(ctx context.Context, sub *domain.Subscription) error {
+func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.Subscription) error {
 	m := new(model.Subscription)
 	m.FromDomain(sub)
 	result := r.getDb(ctx).Where("id = ?", m.Id).Updates(m)

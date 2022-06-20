@@ -9,17 +9,37 @@ import (
 )
 
 type GRPCServer struct {
-	container *Container
-	newrelic  *newrelic.Application
-	logger    log.Logger
+	newrelic *newrelic.Application
+	logger   log.Logger
 	sirenv1beta1.UnimplementedSirenServiceServer
+	templateService     TemplateService
+	ruleService         RuleService
+	alertService        AlertService
+	providerService     ProviderService
+	namespaceService    NamespaceService
+	receiverService     ReceiverService
+	subscriptionService SubscriptionService
 }
 
-func NewGRPCServer(container *Container, nr *newrelic.Application, logger log.Logger) *GRPCServer {
+func NewGRPCServer(
+	nr *newrelic.Application, logger log.Logger,
+	templateService TemplateService,
+	ruleService RuleService,
+	alertService AlertService,
+	providerService ProviderService,
+	namespaceService NamespaceService,
+	receiverService ReceiverService,
+	subscriptionService SubscriptionService) *GRPCServer {
 	return &GRPCServer{
-		container: container,
-		newrelic:  nr,
-		logger:    logger,
+		newrelic:            nr,
+		logger:              logger,
+		templateService:     templateService,
+		ruleService:         ruleService,
+		alertService:        alertService,
+		providerService:     providerService,
+		namespaceService:    namespaceService,
+		receiverService:     receiverService,
+		subscriptionService: subscriptionService,
 	}
 }
 

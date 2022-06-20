@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
@@ -19,7 +19,7 @@ func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
 	return &ReceiverRepository{db}
 }
 
-func (r ReceiverRepository) List() ([]*domain.Receiver, error) {
+func (r ReceiverRepository) List() ([]*receiver.Receiver, error) {
 	var models []*model.Receiver
 	selectQuery := "select * from receivers"
 	result := r.db.Raw(selectQuery).Find(&models)
@@ -27,7 +27,7 @@ func (r ReceiverRepository) List() ([]*domain.Receiver, error) {
 		return nil, result.Error
 	}
 
-	var receivers []*domain.Receiver
+	var receivers []*receiver.Receiver
 	for _, r := range models {
 		receivers = append(receivers, r.ToDomain())
 	}
@@ -35,7 +35,7 @@ func (r ReceiverRepository) List() ([]*domain.Receiver, error) {
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(receiver *domain.Receiver) error {
+func (r ReceiverRepository) Create(receiver *receiver.Receiver) error {
 	m := new(model.Receiver)
 	m.FromDomain(receiver)
 
@@ -49,7 +49,7 @@ func (r ReceiverRepository) Create(receiver *domain.Receiver) error {
 	return nil
 }
 
-func (r ReceiverRepository) Get(id uint64) (*domain.Receiver, error) {
+func (r ReceiverRepository) Get(id uint64) (*receiver.Receiver, error) {
 	receiver := new(model.Receiver)
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(receiver)
 	if result.Error != nil {
@@ -62,7 +62,7 @@ func (r ReceiverRepository) Get(id uint64) (*domain.Receiver, error) {
 	return receiver.ToDomain(), nil
 }
 
-func (r ReceiverRepository) Update(receiver *domain.Receiver) error {
+func (r ReceiverRepository) Update(receiver *receiver.Receiver) error {
 	var m model.Receiver
 	m.FromDomain(receiver)
 	result := r.db.Where("id = ?", m.Id).Updates(m)

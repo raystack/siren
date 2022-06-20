@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/utils"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -11,13 +11,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
+type AlertService interface {
+	Create(*alert.Alerts) ([]alert.Alert, error)
+	Get(string, uint64, uint64, uint64) ([]alert.Alert, error)
+	Migrate() error
+}
+
 func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.Alerts, error) {
 	resourceName := req.GetResourceName()
 	providerId := req.GetProviderId()
 	startTime := req.GetStartTime()
 	endTime := req.GetEndTime()
 
-	alerts, err := s.container.AlertService.Get(resourceName, providerId, startTime, endTime)
+	alerts, err := s.alertService.Get(resourceName, providerId, startTime, endTime)
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -41,7 +48,7 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 }
 
 func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.Alerts, error) {
-	alerts := domain.Alerts{Alerts: make([]domain.Alert, 0)}
+	alerts := alert.Alerts{Alerts: make([]alert.Alert, 0)}
 
 	badAlertCount := 0
 	for _, item := range req.GetAlerts() {
@@ -50,7 +57,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 			severity = item.GetStatus()
 		}
 
-		alert := domain.Alert{
+		alert := alert.Alert{
 			ProviderId:   req.GetProviderId(),
 			ResourceName: item.GetAnnotations().GetResource(),
 			MetricName:   item.GetAnnotations().GetMetricName(),
@@ -65,7 +72,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 		}
 		alerts.Alerts = append(alerts.Alerts, alert)
 	}
-	createdAlerts, err := s.container.AlertService.Create(&alerts)
+	createdAlerts, err := s.alertService.Create(&alerts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -92,7 +99,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 	return result, nil
 }
 
-func isValidCortexAlert(alert domain.Alert) bool {
+func isValidCortexAlert(alert alert.Alert) bool {
 	return !(alert.ResourceName == "" || alert.Rule == "" ||
 		alert.MetricValue == "" || alert.MetricName == "" ||
 		alert.Severity == "")

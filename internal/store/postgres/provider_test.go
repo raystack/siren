@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/internal/store/postgres/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -31,7 +30,7 @@ type ProviderRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.ProviderRepository
+	repository *postgres.ProviderRepository
 }
 
 func (s *ProviderRepositoryTestSuite) SetupTest() {
@@ -53,7 +52,7 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		provider := &domain.Provider{
+		prv := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -64,12 +63,12 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProviders := []*domain.Provider{provider}
+		expectedProviders := []*provider.Provider{prv}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(provider.Id, provider.Host, provider.Type, provider.Urn, provider.Name, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), provider.CreatedAt, provider.UpdatedAt)
+			AddRow(prv.Id, prv.Host, prv.Type, prv.Urn, prv.Name, json.RawMessage(`{"foo": "bar"}`),
+				json.RawMessage(`{"foo": "bar"}`), prv.CreatedAt, prv.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
 		actualProviders, err := s.repository.List(map[string]interface{}{})
@@ -84,7 +83,7 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		provider := &domain.Provider{
+		prv := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -95,12 +94,12 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProviders := []*domain.Provider{provider}
+		expectedProviders := []*provider.Provider{prv}
 
 		expectedRows := sqlmock.
 			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(provider.Id, provider.Host, provider.Type, provider.Urn, provider.Name, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), provider.CreatedAt, provider.UpdatedAt)
+			AddRow(prv.Id, prv.Host, prv.Type, prv.Urn, prv.Name, json.RawMessage(`{"foo": "bar"}`),
+				json.RawMessage(`{"foo": "bar"}`), prv.CreatedAt, prv.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
 		actualProviders, err := s.repository.List(map[string]interface{}{
@@ -144,7 +143,7 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -188,7 +187,7 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -227,7 +226,7 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -259,7 +258,7 @@ func (s *ProviderRepositoryTestSuite) TestGet() {
 
 	s.Run("should get provider by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          1,
 			Host:        "foo",
 			Type:        "bar",
@@ -338,7 +337,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &domain.Provider{
+		input := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -374,7 +373,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 	s.Run("should return error if provider does not exist", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &domain.Provider{
+		input := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -396,7 +395,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 	s.Run("should return error in finding the provider", func() {
 		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
 		timeNow := time.Now()
-		input := &domain.Provider{
+		input := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -431,7 +430,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -442,7 +441,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &domain.Provider{
+		input := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -486,7 +485,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		expectedProvider := &domain.Provider{
+		expectedProvider := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",
@@ -497,7 +496,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			CreatedAt:   timeNow,
 			UpdatedAt:   timeNow,
 		}
-		input := &domain.Provider{
+		input := &provider.Provider{
 			Id:          10,
 			Host:        "foo",
 			Type:        "bar",

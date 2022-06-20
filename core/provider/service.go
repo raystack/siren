@@ -1,33 +1,28 @@
 package provider
 
-import (
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
-)
-
 // Service handles business logic
 type Service struct {
-	repository store.ProviderRepository
+	repository Repository
 }
 
 // NewService returns repository struct
-func NewService(repository store.ProviderRepository) domain.ProviderService {
+func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) ListProviders(filters map[string]interface{}) ([]*domain.Provider, error) {
+func (service Service) ListProviders(filters map[string]interface{}) ([]*Provider, error) {
 	return service.repository.List(filters)
 }
 
-func (service Service) CreateProvider(provider *domain.Provider) (*domain.Provider, error) {
+func (service Service) CreateProvider(provider *Provider) (*Provider, error) {
 	return service.repository.Create(provider)
 }
 
-func (service Service) GetProvider(id uint64) (*domain.Provider, error) {
+func (service Service) GetProvider(id uint64) (*Provider, error) {
 	return service.repository.Get(id)
 }
 
-func (service Service) UpdateProvider(provider *domain.Provider) (*domain.Provider, error) {
+func (service Service) UpdateProvider(provider *Provider) (*Provider, error) {
 	return service.repository.Update(provider)
 }
 

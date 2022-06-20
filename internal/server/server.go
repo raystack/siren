@@ -10,9 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
-	"github.com/odpf/salt/log"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -21,71 +19,53 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/odpf/siren/internal/server/v1beta1"
-	"github.com/odpf/siren/pkg/telemetry"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/odpf/salt/log"
 	"golang.org/x/net/http2/h2c"
 )
 
 //go:embed siren.swagger.json
 var swaggerFile embed.FS
 
-// getZapLogLevelFromString helps to set logLevel from string
-func getZapLogLevelFromString(level string) zapcore.Level {
-	switch level {
-	case "debug":
-		return zap.DebugLevel
-	case "info":
-		return zap.InfoLevel
-	case "warn":
-		return zap.WarnLevel
-	case "error":
-		return zap.ErrorLevel
-	case "dpanic":
-		return zap.DPanicLevel
-	case "panic":
-		return zap.PanicLevel
-	case "fatal":
-		return zap.FatalLevel
-	default:
-		return zap.InfoLevel
-	}
+type Config struct {
+	Host string `mapstructure:"host" default:"localhost"`
+	Port int    `mapstructure:"port" default:"8080"`
 }
 
 // RunServer runs the application server
-func RunServer(c *domain.Config) error {
-	nr, err := telemetry.New(&c.NewRelic)
-	if err != nil {
-		return err
-	}
+func RunServer(
+	c Config, logger log.Logger,
+	nr *newrelic.Application,
+	templateService v1beta1.TemplateService,
+	ruleService v1beta1.RuleService,
+	alertService v1beta1.AlertService,
+	providerService v1beta1.ProviderService,
+	namespaceService v1beta1.NamespaceService,
+	receiverService v1beta1.ReceiverService,
+	subscriptionService v1beta1.SubscriptionService) error {
 
-	defaultConfig := zap.NewProductionConfig()
-	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(c.Log.Level))
-	logger := log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
+	v1beta1Server := v1beta1.NewGRPCServer(
+		nr,
+		logger,
+		templateService,
+		ruleService,
+		alertService,
+		providerService,
+		namespaceService,
+		receiverService,
+		subscriptionService,
+	)
+
+	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
 	zapper, err := zap.NewProduction()
 	if err != nil {
 		return err
 	}
-
-	gormDB, err := store.New(&c.DB)
-	if err != nil {
-		return err
-	}
-
-	httpClient := &http.Client{}
-	repositories := store.NewRepositoryContainer(gormDB)
-	services, err := v1beta1.InitContainer(repositories, gormDB, c, httpClient)
-	if err != nil {
-		return err
-	}
-
-	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
-
 	// init grpc server
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
@@ -104,7 +84,7 @@ func RunServer(c *domain.Config) error {
 		)),
 	}
 	grpcServer := grpc.NewServer(opts...)
-	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1beta1.NewGRPCServer(services, nr, logger))
+	sirenv1beta1.RegisterSirenServiceServer(grpcServer, v1beta1Server)
 
 	// init http proxy
 	timeoutGrpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -123,7 +103,7 @@ func RunServer(c *domain.Config) error {
 			},
 		}),
 	)
-	address := fmt.Sprintf(":%d", c.Port)
+	address := fmt.Sprintf("%s:%d", c.Host, c.Port)
 	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -154,7 +134,7 @@ func RunServer(c *domain.Config) error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	logger.Info("server is running", "port", c.Port)
+	logger.Info("server is running", "host", c.Host, "port", c.Port)
 	if err := server.ListenAndServe(); err != nil {
 		if err != http.ErrServerClosed {
 			return err
@@ -164,23 +144,40 @@ func RunServer(c *domain.Config) error {
 	return nil
 }
 
-func RunMigrations(c *domain.Config) error {
-	gormDB, err := store.New(&c.DB)
+// TODO to be refactored
+func RunMigrations(
+	templateService v1beta1.TemplateService,
+	ruleService v1beta1.RuleService,
+	alertService v1beta1.AlertService,
+	providerService v1beta1.ProviderService,
+	namespaceService v1beta1.NamespaceService,
+	receiverService v1beta1.ReceiverService,
+	subscriptionService v1beta1.SubscriptionService) error {
+	err := templateService.Migrate()
 	if err != nil {
 		return err
 	}
-
-	if err != nil {
-		return nil
-	}
-	httpClient := &http.Client{}
-	repositories := store.NewRepositoryContainer(gormDB)
-	services, err := v1beta1.InitContainer(repositories, gormDB, c, httpClient)
+	err = ruleService.Migrate()
 	if err != nil {
 		return err
 	}
-
-	err = services.MigrateAll(gormDB)
+	err = alertService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = providerService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = namespaceService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = receiverService.Migrate()
+	if err != nil {
+		return err
+	}
+	err = subscriptionService.Migrate()
 	if err != nil {
 		return err
 	}
