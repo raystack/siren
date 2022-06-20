@@ -8,7 +8,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/spf13/cobra"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -95,7 +95,7 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var receiverConfig domain.Receiver
+			var receiverConfig receiver.Receiver
 			if err := parseFile(filePath, &receiverConfig); err != nil {
 				return err
 			}
@@ -172,7 +172,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			receiver := &domain.Receiver{
+			receiver := &receiver.Receiver{
 				Id:             res.GetId(),
 				Name:           res.GetName(),
 				Type:           res.GetType(),
@@ -208,7 +208,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var receiverConfig domain.Receiver
+			var receiverConfig receiver.Receiver
 			if err := parseFile(filePath, &receiverConfig); err != nil {
 				return err
 			}

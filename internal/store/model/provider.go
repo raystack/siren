@@ -4,8 +4,9 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"github.com/odpf/siren/domain"
 	"time"
+
+	"github.com/odpf/siren/core/provider"
 )
 
 type StringInterfaceMap map[string]interface{}
@@ -54,36 +55,35 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (provider *Provider) FromDomain(t *domain.Provider) *Provider {
+func (p *Provider) FromDomain(t *provider.Provider) *Provider {
 	if t == nil {
 		return nil
 	}
-	provider.Id = t.Id
-	provider.Host = t.Host
-	provider.Urn = t.Urn
-	provider.Name = t.Name
-	provider.Type = t.Type
-	provider.Credentials = t.Credentials
-	provider.Labels = t.Labels
-	provider.CreatedAt = t.CreatedAt
-	provider.UpdatedAt = t.UpdatedAt
-	return provider
+	p.Id = t.Id
+	p.Host = t.Host
+	p.Urn = t.Urn
+	p.Name = t.Name
+	p.Type = t.Type
+	p.Credentials = t.Credentials
+	p.Labels = t.Labels
+	p.CreatedAt = t.CreatedAt
+	p.UpdatedAt = t.UpdatedAt
+	return p
 }
 
-func (provider *Provider) ToDomain() *domain.Provider {
-	if provider == nil {
+func (p *Provider) ToDomain() *provider.Provider {
+	if p == nil {
 		return nil
 	}
-	return &domain.Provider{
-		Id:          provider.Id,
-		Host:        provider.Host,
-		Name:        provider.Name,
-		Urn:         provider.Urn,
-		Type:        provider.Type,
-		Credentials: provider.Credentials,
-		Labels:      provider.Labels,
-		CreatedAt:   provider.CreatedAt,
-		UpdatedAt:   provider.UpdatedAt,
+	return &provider.Provider{
+		Id:          p.Id,
+		Host:        p.Host,
+		Name:        p.Name,
+		Urn:         p.Urn,
+		Type:        p.Type,
+		Credentials: p.Credentials,
+		Labels:      p.Labels,
+		CreatedAt:   p.CreatedAt,
+		UpdatedAt:   p.UpdatedAt,
 	}
 }
-

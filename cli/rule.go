@@ -15,7 +15,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/rule"
 	"github.com/spf13/cobra"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 )
@@ -24,20 +24,19 @@ type variables struct {
 	Name  string `yaml:"name"`
 	Value string `yaml:"value"`
 }
-type rule struct {
-	Template  string      `yaml:"template"`
-	Enabled   bool        `yaml:"enabled"`
-	Variables []variables `yaml:"variables"`
-}
 
 type ruleYaml struct {
-	ApiVersion        string          `yaml:"apiVersion"`
-	Entity            string          `yaml:"entity"`
-	Type              string          `yaml:"type"`
-	Namespace         string          `yaml:"namespace"`
-	Provider          string          `yaml:"provider"`
-	ProviderNamespace string          `yaml:"providerNamespace"`
-	Rules             map[string]rule `yaml:"rules"`
+	ApiVersion        string `yaml:"apiVersion"`
+	Entity            string `yaml:"entity"`
+	Type              string `yaml:"type"`
+	Namespace         string `yaml:"namespace"`
+	Provider          string `yaml:"provider"`
+	ProviderNamespace string `yaml:"providerNamespace"`
+	Rules             map[string]struct {
+		Template  string      `yaml:"template"`
+		Enabled   bool        `yaml:"enabled"`
+		Variables []variables `yaml:"variables"`
+	} `yaml:"rules"`
 }
 
 func rulesCmd(c *configuration) *cobra.Command {
@@ -139,7 +138,7 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var ruleConfig domain.Rule
+			var ruleConfig rule.Rule
 			if err := parseFile(filePath, &ruleConfig); err != nil {
 				return err
 			}

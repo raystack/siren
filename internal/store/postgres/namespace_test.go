@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/internal/store/postgres/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
@@ -21,7 +20,7 @@ type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.NamespaceRepository
+	repository *postgres.NamespaceRepository
 }
 
 func (s *NamespaceRepositoryTestSuite) SetupTest() {
@@ -41,8 +40,8 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 		labels := make(model.StringStringMap)
 		labels["foo"] = "bar"
 
-		namespace := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		ns := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        1,
 				Provider:  1,
 				Urn:       "foo",
@@ -53,11 +52,11 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 			},
 			Credentials: `{"foo":"bar"}`,
 		}
-		expectedNamespaces := []*domain.EncryptedNamespace{namespace}
+		expectedNamespaces := []*namespace.EncryptedNamespace{ns}
 
 		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(namespace.Id, namespace.Provider, namespace.Urn, namespace.Name, namespace.Credentials,
-				json.RawMessage(`{"foo": "bar"}`), namespace.CreatedAt, namespace.UpdatedAt)
+			AddRow(ns.Id, ns.Provider, ns.Urn, ns.Name, ns.Credentials,
+				json.RawMessage(`{"foo": "bar"}`), ns.CreatedAt, ns.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
 		actualNamespaces, err := s.repository.List()
@@ -86,8 +85,8 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 
 	s.Run("should create a namespace", func() {
 		expectedID := uint64(1)
-		expectedNamespace := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		expectedNamespace := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        expectedID,
 				Provider:  1,
 				Urn:       "foo",
@@ -99,8 +98,8 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Credentials: `{"foo":"bar"}`,
 		}
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Provider:  1,
 				Urn:       "foo",
 				Name:      "foo",
@@ -135,8 +134,8 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 											("provider_id","urn","name","credentials","labels","created_at","updated_at")
 											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Provider:  1,
 				Urn:       "foo",
 				Name:      "foo",
@@ -173,8 +172,8 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 
 	s.Run("should get namespace by id", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		expectedNamespace := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        1,
 				Provider:  1,
 				Urn:       "foo",
@@ -229,8 +228,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			WHERE id = $7 AND "id" = $8`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        1,
 				Provider:  2,
 				Name:      "foo",
@@ -263,8 +262,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			SET "provider_id"=$1,"urn"=$2,"name"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7
 			WHERE id = $8 AND "id" = $9`)
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        99,
 				Provider:  2,
 				Urn:       "foo",
@@ -291,8 +290,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6
 			WHERE id = $7 AND "id" = $8`)
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        1,
 				Provider:  2,
 				Name:      "foo",
@@ -321,8 +320,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			WHERE id = $7 AND "id" = $8`)
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
 
-		input := &domain.EncryptedNamespace{
-			Namespace: &domain.Namespace{
+		input := &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
 				Id:        1,
 				Provider:  2,
 				Name:      "foo",

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/rule"
 )
 
 type Rule struct {
@@ -21,43 +21,43 @@ type Rule struct {
 	ProviderNamespaceInfo *Namespace `gorm:"foreignKey:ProviderNamespace"`
 }
 
-func (rule *Rule) FromDomain(r *domain.Rule) error {
-	rule.Id = r.Id
-	rule.Name = r.Name
-	rule.Enabled = &r.Enabled
-	rule.GroupName = r.GroupName
-	rule.Namespace = r.Namespace
-	rule.Template = r.Template
+func (rl *Rule) FromDomain(r *rule.Rule) error {
+	rl.Id = r.Id
+	rl.Name = r.Name
+	rl.Enabled = &r.Enabled
+	rl.GroupName = r.GroupName
+	rl.Namespace = r.Namespace
+	rl.Template = r.Template
 
 	jsonString, err := json.Marshal(r.Variables)
 	if err != nil {
 		return err
 	}
 
-	rule.Variables = string(jsonString)
-	rule.ProviderNamespace = r.ProviderNamespace
-	rule.CreatedAt = r.CreatedAt
-	rule.UpdatedAt = r.UpdatedAt
+	rl.Variables = string(jsonString)
+	rl.ProviderNamespace = r.ProviderNamespace
+	rl.CreatedAt = r.CreatedAt
+	rl.UpdatedAt = r.UpdatedAt
 	return nil
 }
 
-func (rule *Rule) ToDomain() (*domain.Rule, error) {
-	var variables []domain.RuleVariable
-	jsonBlob := []byte(rule.Variables)
+func (rl *Rule) ToDomain() (*rule.Rule, error) {
+	var variables []rule.RuleVariable
+	jsonBlob := []byte(rl.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.Rule{
-		Id:                rule.Id,
-		Name:              rule.Name,
-		Enabled:           *rule.Enabled,
-		GroupName:         rule.GroupName,
-		Namespace:         rule.Namespace,
-		Template:          rule.Template,
+	return &rule.Rule{
+		Id:                rl.Id,
+		Name:              rl.Name,
+		Enabled:           *rl.Enabled,
+		GroupName:         rl.GroupName,
+		Namespace:         rl.Namespace,
+		Template:          rl.Template,
 		Variables:         variables,
-		ProviderNamespace: rule.ProviderNamespace,
-		CreatedAt:         rule.CreatedAt,
-		UpdatedAt:         rule.UpdatedAt,
+		ProviderNamespace: rl.ProviderNamespace,
+		CreatedAt:         rl.CreatedAt,
+		UpdatedAt:         rl.UpdatedAt,
 	}, nil
 }

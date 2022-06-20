@@ -3,69 +3,16 @@ package store
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/core/rule"
+	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/postgres"
 	"gorm.io/gorm"
 )
-
-type NamespaceRepository interface {
-	Migrate() error
-	List() ([]*domain.EncryptedNamespace, error)
-	Create(*domain.EncryptedNamespace) error
-	Get(uint64) (*domain.EncryptedNamespace, error)
-	Update(*domain.EncryptedNamespace) error
-	Delete(uint64) error
-}
-
-type ProviderRepository interface {
-	Migrate() error
-	List(map[string]interface{}) ([]*domain.Provider, error)
-	Create(*domain.Provider) (*domain.Provider, error)
-	Get(uint64) (*domain.Provider, error)
-	Update(*domain.Provider) (*domain.Provider, error)
-	Delete(uint64) error
-}
-
-type ReceiverRepository interface {
-	Migrate() error
-	List() ([]*domain.Receiver, error)
-	Create(*domain.Receiver) error
-	Get(uint64) (*domain.Receiver, error)
-	Update(*domain.Receiver) error
-	Delete(uint64) error
-}
-
-type TemplatesRepository interface {
-	Upsert(*domain.Template) error
-	Index(string) ([]domain.Template, error)
-	GetByName(string) (*domain.Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
-	Migrate() error
-}
-
-type SubscriptionRepository interface {
-	Transactor
-	Migrate() error
-	List(context.Context) ([]*domain.Subscription, error)
-	Create(context.Context, *domain.Subscription) error
-	Get(context.Context, uint64) (*domain.Subscription, error)
-	Update(context.Context, *domain.Subscription) error
-	Delete(context.Context, uint64) error
-}
-
-type AlertRepository interface {
-	Create(*domain.Alert) error
-	Get(string, uint64, uint64, uint64) ([]domain.Alert, error)
-	Migrate() error
-}
-
-type RuleRepository interface {
-	Transactor
-	Upsert(context.Context, *domain.Rule) error
-	Get(context.Context, string, string, string, string, uint64) ([]domain.Rule, error)
-	Migrate() error
-}
 
 type Transactor interface {
 	WithTransaction(ctx context.Context) context.Context
@@ -74,13 +21,13 @@ type Transactor interface {
 }
 
 type RepositoryContainer struct {
-	ProviderRepository     ProviderRepository
-	NamespaceRepository    NamespaceRepository
-	TemplatesRepository    TemplatesRepository
-	ReceiverRepository     ReceiverRepository
-	SubscriptionRepository SubscriptionRepository
-	AlertRepository        AlertRepository
-	RuleRepository         RuleRepository
+	ProviderRepository     provider.Repository
+	NamespaceRepository    namespace.Repository
+	TemplatesRepository    template.Repository
+	ReceiverRepository     receiver.Repository
+	SubscriptionRepository subscription.Repository
+	AlertRepository        alert.Repository
+	RuleRepository         rule.Repository
 }
 
 func NewRepositoryContainer(db *gorm.DB) *RepositoryContainer {

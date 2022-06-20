@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"text/template"
 
-	"github.com/odpf/siren/domain"
+	texttemplate "text/template"
+
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
@@ -34,10 +35,10 @@ func (r TemplateRepository) Migrate() error {
 	return nil
 }
 
-func (r TemplateRepository) Upsert(template *domain.Template) error {
+func (r TemplateRepository) Upsert(tmpl *template.Template) error {
 	var newTemplate, existingTemplate model.Template
 	modelTemplate := &model.Template{}
-	err := modelTemplate.FromDomain(template)
+	err := modelTemplate.FromDomain(tmpl)
 	if err != nil {
 		return err
 	}
@@ -58,11 +59,11 @@ func (r TemplateRepository) Upsert(template *domain.Template) error {
 		return result.Error
 	}
 	res, err := newTemplate.ToDomain()
-	*template = *res
+	*tmpl = *res
 	return err
 }
 
-func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {
+func (r TemplateRepository) Index(tag string) ([]template.Template, error) {
 	var templates []model.Template
 	var result *gorm.DB
 	if tag == "" {
@@ -73,7 +74,7 @@ func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	domainTemplates := make([]domain.Template, 0, len(templates))
+	domainTemplates := make([]template.Template, 0, len(templates))
 	for i := 0; i < len(templates); i++ {
 		t, err := templates[i].ToDomain()
 		if err != nil {
@@ -84,7 +85,7 @@ func (r TemplateRepository) Index(tag string) ([]domain.Template, error) {
 	return domainTemplates, nil
 }
 
-func (r TemplateRepository) GetByName(name string) (*domain.Template, error) {
+func (r TemplateRepository) GetByName(name string) (*template.Template, error) {
 	var template model.Template
 	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
 	if result.Error != nil {
@@ -102,7 +103,7 @@ func (r TemplateRepository) Delete(name string) error {
 	return result.Error
 }
 
-func enrichWithDefaults(variables []domain.Variable, requestVariables map[string]string) map[string]string {
+func enrichWithDefaults(variables []template.Variable, requestVariables map[string]string) map[string]string {
 	result := make(map[string]string)
 	for i := 0; i < len(variables); i++ {
 		name := variables[i].Name
@@ -117,7 +118,7 @@ func enrichWithDefaults(variables []domain.Variable, requestVariables map[string
 	return result
 }
 
-var templateParser = template.New("parser").Delims(leftDelim, rightDelim).Parse
+var templateParser = texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse
 
 func (r TemplateRepository) Render(name string, requestVariables map[string]string) (string, error) {
 	templateFromDB, err := r.GetByName(name)

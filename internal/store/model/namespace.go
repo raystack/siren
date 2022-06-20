@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/namespace"
 )
 
 type Namespace struct {
@@ -18,37 +18,37 @@ type Namespace struct {
 	UpdatedAt   time.Time
 }
 
-func (namespace *Namespace) FromDomain(n *domain.EncryptedNamespace) error {
+func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
 	if n == nil {
 		return nil
 	}
 
-	namespace.Id = n.Id
-	namespace.Urn = n.Urn
-	namespace.Name = n.Name
-	namespace.ProviderId = n.Provider
-	namespace.Credentials = n.Credentials
-	namespace.Labels = StringStringMap(n.Labels)
-	namespace.CreatedAt = n.CreatedAt
-	namespace.UpdatedAt = n.UpdatedAt
+	ns.Id = n.Id
+	ns.Urn = n.Urn
+	ns.Name = n.Name
+	ns.ProviderId = n.Provider
+	ns.Credentials = n.Credentials
+	ns.Labels = StringStringMap(n.Labels)
+	ns.CreatedAt = n.CreatedAt
+	ns.UpdatedAt = n.UpdatedAt
 	return nil
 }
 
-func (namespace *Namespace) ToDomain() (*domain.EncryptedNamespace, error) {
-	if namespace == nil {
+func (ns *Namespace) ToDomain() (*namespace.EncryptedNamespace, error) {
+	if ns == nil {
 		return nil, nil
 	}
 
-	return &domain.EncryptedNamespace{
-		Namespace: &domain.Namespace{
-			Id:        namespace.Id,
-			Urn:       namespace.Urn,
-			Name:      namespace.Name,
-			Provider:  namespace.ProviderId,
-			Labels:    namespace.Labels,
-			CreatedAt: namespace.CreatedAt,
-			UpdatedAt: namespace.UpdatedAt,
+	return &namespace.EncryptedNamespace{
+		Namespace: &namespace.Namespace{
+			Id:        ns.Id,
+			Urn:       ns.Urn,
+			Name:      ns.Name,
+			Provider:  ns.ProviderId,
+			Labels:    ns.Labels,
+			CreatedAt: ns.CreatedAt,
+			UpdatedAt: ns.UpdatedAt,
 		},
-		Credentials: namespace.Credentials,
+		Credentials: ns.Credentials,
 	}, nil
 }

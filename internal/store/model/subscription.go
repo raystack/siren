@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/subscription"
 )
 
 type ReceiverMetadata struct {
@@ -35,7 +35,7 @@ type Subscription struct {
 	UpdatedAt   time.Time
 }
 
-func (s *Subscription) FromDomain(sub *domain.Subscription) {
+func (s *Subscription) FromDomain(sub *subscription.Subscription) {
 	if s == nil {
 		return
 	}
@@ -55,19 +55,19 @@ func (s *Subscription) FromDomain(sub *domain.Subscription) {
 	s.UpdatedAt = sub.UpdatedAt
 }
 
-func (s *Subscription) ToDomain() *domain.Subscription {
+func (s *Subscription) ToDomain() *subscription.Subscription {
 	if s == nil {
 		return nil
 	}
-	receivers := make([]domain.ReceiverMetadata, 0)
+	receivers := make([]subscription.ReceiverMetadata, 0)
 	for _, item := range s.Receiver {
-		receiver := domain.ReceiverMetadata{
+		receiver := subscription.ReceiverMetadata{
 			Id:            item.Id,
 			Configuration: item.Configuration,
 		}
 		receivers = append(receivers, receiver)
 	}
-	subscription := &domain.Subscription{
+	subscription := &subscription.Subscription{
 		Id:        s.Id,
 		Urn:       s.Urn,
 		Match:     s.Match,

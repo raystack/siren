@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/odpf/siren/domain"
-	"github.com/odpf/siren/internal/store"
+	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/mocks"
+	"github.com/odpf/siren/internal/store/postgres/mocks"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -19,7 +18,7 @@ type AlertsRepositoryTestSuite struct {
 	suite.Suite
 	sqldb      *sql.DB
 	dbmock     sqlmock.Sqlmock
-	repository store.AlertRepository
+	repository *postgres.AlertRepository
 }
 
 func (s *AlertsRepositoryTestSuite) SetupTest() {
@@ -37,11 +36,11 @@ func (s *AlertsRepositoryTestSuite) TestGet() {
 	timenow := time.Now()
 	s.Run("should fetch matching alert history objects", func() {
 		expectedQuery := regexp.QuoteMeta(`select * from alerts where resource_name = 'foo' AND provider_id = '1' AND triggered_at BETWEEN to_timestamp('0') AND to_timestamp('1000')`)
-		expectedAlert := domain.Alert{
+		expectedAlert := alert.Alert{
 			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}
-		expectedAlerts := []domain.Alert{expectedAlert}
+		expectedAlerts := []alert.Alert{expectedAlert}
 		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "resource_name", "provider_id",
 			"severity", "metric_name", "metric_value", "rule", "triggered_at"}).
 			AddRow(expectedAlert.Id, expectedAlert.CreatedAt,
@@ -67,7 +66,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 	timenow := time.Now()
 	s.Run("should create alert object", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
-		expectedAlerts := &domain.Alert{
+		expectedAlerts := &alert.Alert{
 			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}
@@ -82,7 +81,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 
 	s.Run("should return error in alert history creation", func() {
 		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
-		expectedAlerts := &domain.Alert{
+		expectedAlerts := &alert.Alert{
 			Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
 		}

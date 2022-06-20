@@ -3,10 +3,11 @@ package v1beta1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/utils"
-	"github.com/slack-go/slack"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,8 +22,28 @@ const (
 	Http      string = "http"
 )
 
+//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
+type ReceiverService interface {
+	ListReceivers() ([]*receiver.Receiver, error)
+	CreateReceiver(*receiver.Receiver) error
+	GetReceiver(uint64) (*receiver.Receiver, error)
+	UpdateReceiver(*receiver.Receiver) error
+	DeleteReceiver(uint64) error
+	NotifyReceiver(rcv *receiver.Receiver, payloadMessage string, payloadReceiverName string, payloadReceiverType string, payloadBlock []byte) error
+	Migrate() error
+}
+
+type NotifierServices struct { //TODO to be refactored, temporary only
+	Slack SlackNotifierService
+}
+
+//go:generate mockery --name=SlackNotifierService -r --case underscore --with-expecter --structname SlackNotifierService --filename slack_notifier_service.go --output=./mocks
+type SlackNotifierService interface { //TODO to be refactored, temporary only
+	Notify(*slack.Message, ...slack.ClientCallOption) error
+}
+
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
-	receivers, err := s.container.ReceiverService.ListReceivers()
+	receivers, err := s.receiverService.ListReceivers()
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -73,13 +94,13 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver := &domain.Receiver{
+	receiver := &receiver.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.container.ReceiverService.CreateReceiver(receiver); err != nil {
+	if err := s.receiverService.CreateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
@@ -100,7 +121,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 }
 
 func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.Receiver, error) {
-	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	receiver, err := s.receiverService.GetReceiver(req.GetId())
 	if receiver == nil {
 		return nil, status.Errorf(codes.NotFound, "receiver not found")
 	}
@@ -153,14 +174,14 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		return nil, status.Errorf(codes.InvalidArgument, "receiver not supported")
 	}
 
-	receiver := &domain.Receiver{
+	receiver := &receiver.Receiver{
 		Id:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	if err := s.container.ReceiverService.UpdateReceiver(receiver); err != nil {
+	if err := s.receiverService.UpdateReceiver(receiver); err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
 
@@ -181,7 +202,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 }
 
 func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*emptypb.Empty, error) {
-	err := s.container.ReceiverService.DeleteReceiver(uint64(req.GetId()))
+	err := s.receiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
@@ -191,12 +212,12 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteR
 
 func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1beta1.SendReceiverNotificationRequest) (*sirenv1beta1.SendReceiverNotificationResponse, error) {
 	var res *sirenv1beta1.SendReceiverNotificationResponse
-	receiver, err := s.container.ReceiverService.GetReceiver(req.GetId())
+	rcv, err := s.receiverService.GetReceiver(req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 
-	switch receiver.Type {
+	switch rcv.Type {
 	case Slack:
 		slackPayload := req.GetSlack()
 
@@ -205,27 +226,14 @@ func (s *GRPCServer) SendReceiverNotification(_ context.Context, req *sirenv1bet
 			s.logger.Error("failed to encode the payload JSON", "error", err)
 			return nil, status.Errorf(codes.InvalidArgument, "Invalid block")
 		}
-
-		blocks := slack.Blocks{}
-		err = json.Unmarshal(b, &blocks)
-		if err != nil {
-			s.logger.Error("failed to parse blocks", "error", err)
-			return nil, status.Errorf(codes.InvalidArgument, "unable to parse block")
-		}
-
-		payload := &domain.SlackMessage{
-			ReceiverName: slackPayload.GetReceiverName(),
-			ReceiverType: slackPayload.GetReceiverType(),
-			Token:        receiver.Configurations["token"].(string),
-			Message:      slackPayload.GetMessage(),
-			Blocks:       blocks,
-		}
-		result, err := s.container.NotifierServices.Slack.Notify(payload)
-		if err != nil {
+		if err := s.receiverService.NotifyReceiver(rcv, slackPayload.GetMessage(), slackPayload.GetReceiverName(), slackPayload.GetReceiverType(), b); err != nil {
+			if errors.Is(err, receiver.ErrInvalid) {
+				return nil, status.Errorf(codes.InvalidArgument, err.Error())
+			}
 			return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 		}
 		res = &sirenv1beta1.SendReceiverNotificationResponse{
-			Ok: result.OK,
+			Ok: true,
 		}
 	default:
 		return nil, status.Errorf(codes.NotFound, "Send notification not registered for this receiver")

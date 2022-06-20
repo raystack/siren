@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/domain"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/utils"
 	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -13,8 +13,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
+type ProviderService interface {
+	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
+	CreateProvider(*provider.Provider) (*provider.Provider, error)
+	GetProvider(uint64) (*provider.Provider, error)
+	UpdateProvider(*provider.Provider) (*provider.Provider, error)
+	DeleteProvider(uint64) error
+	Migrate() error
+}
+
 func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
-	providers, err := s.container.ProviderService.ListProviders(map[string]interface{}{
+	providers, err := s.providerService.ListProviders(map[string]interface{}{
 		"urn":  req.GetUrn(),
 		"type": req.GetType(),
 	})
@@ -49,7 +59,7 @@ func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProv
 }
 
 func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1beta1.CreateProviderRequest) (*sirenv1beta1.Provider, error) {
-	provider, err := s.container.ProviderService.CreateProvider(&domain.Provider{
+	provider, err := s.providerService.CreateProvider(&provider.Provider{
 		Host:        req.GetHost(),
 		Urn:         req.GetUrn(),
 		Name:        req.GetName(),
@@ -80,7 +90,7 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1beta1.CreateP
 }
 
 func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1beta1.GetProviderRequest) (*sirenv1beta1.Provider, error) {
-	provider, err := s.container.ProviderService.GetProvider(req.GetId())
+	provider, err := s.providerService.GetProvider(req.GetId())
 	if provider == nil {
 		return nil, status.Errorf(codes.NotFound, "provider not found")
 	}
@@ -107,7 +117,7 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1beta1.GetProvide
 }
 
 func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateProviderRequest) (*sirenv1beta1.Provider, error) {
-	provider, err := s.container.ProviderService.UpdateProvider(&domain.Provider{
+	provider, err := s.providerService.UpdateProvider(&provider.Provider{
 		Id:          req.GetId(),
 		Host:        req.GetHost(),
 		Name:        req.GetName(),
@@ -138,7 +148,7 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateP
 }
 
 func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1beta1.DeleteProviderRequest) (*emptypb.Empty, error) {
-	err := s.container.ProviderService.DeleteProvider(uint64(req.GetId()))
+	err := s.providerService.DeleteProvider(uint64(req.GetId()))
 	if err != nil {
 		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
 	}
