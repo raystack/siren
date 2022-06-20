@@ -33,6 +33,7 @@ func LoadConfig(configFile string) (Config, error) {
 	}
 	cfg.Cortex.PrometheusAlertManagerConfigYaml = promAMConfigYamlString
 	cfg.Cortex.PrometheusAlertManagerHelperTemplate = promAMHelperTemplateString
+	//TODO for backward compatibility purpose, need to move top level PORT config to SIREN_SERVICE config
 	cfg.SirenService.Port = cfg.Port
 	return cfg, nil
 }
