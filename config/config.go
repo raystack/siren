@@ -49,6 +49,7 @@ type SlackApp struct {
 
 // Config contains the application configuration
 type Config struct {
+	// Deprecated: use port inside `siren_service` config instead
 	Port          int                      `mapstructure:"port" default:"8080"`
 	DB            postgres.Config          `mapstructure:"db"`
 	Cortex        cortex.Config            `mapstructure:"cortex"`
