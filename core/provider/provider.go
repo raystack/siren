@@ -15,8 +15,8 @@ type Repository interface {
 }
 
 type Provider struct {
-	Id          uint64                 `json:"id"`
-	Urn         string                 `json:"urn"`
+	ID          uint64                 `json:"id"`
+	URN         string                 `json:"urn"`
 	Host        string                 `json:"host"`
 	Name        string                 `json:"name"`
 	Type        string                 `json:"type"`

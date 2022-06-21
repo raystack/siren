@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,8 +10,8 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/receiver"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -35,7 +36,7 @@ func receiversCmd(c *configuration) *cobra.Command {
 	cmd.AddCommand(getReceiverCmd(c))
 	cmd.AddCommand(updateReceiverCmd(c))
 	cmd.AddCommand(deleteReceiverCmd(c))
-	cmd.AddCommand(sendReceiverNotificationCmd(c))
+	cmd.AddCommand(notifyReceiverCmd(c))
 	return cmd
 }
 
@@ -62,7 +63,11 @@ func listReceiversCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			receivers := res.Receivers
+			if res.GetData() == nil {
+				return errors.New("no response from server")
+			}
+
+			receivers := res.GetData()
 			report := [][]string{}
 
 			fmt.Printf(" \nShowing %d of %d receivers\n \n", len(receivers), len(receivers))
@@ -172,15 +177,19 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
+			if res.GetData() == nil {
+				return errors.New("no response from server")
+			}
+
 			receiver := &receiver.Receiver{
-				Id:             res.GetId(),
-				Name:           res.GetName(),
-				Type:           res.GetType(),
-				Configurations: res.GetConfigurations().AsMap(),
-				Labels:         res.GetLabels(),
-				Data:           res.GetData().AsMap(),
-				CreatedAt:      res.CreatedAt.AsTime(),
-				UpdatedAt:      res.UpdatedAt.AsTime(),
+				ID:             res.GetData().GetId(),
+				Name:           res.GetData().GetName(),
+				Type:           res.GetData().GetType(),
+				Configurations: res.GetData().GetConfigurations().AsMap(),
+				Labels:         res.GetData().GetLabels(),
+				Data:           res.GetData().GetData().AsMap(),
+				CreatedAt:      res.GetData().GetCreatedAt().AsTime(),
+				UpdatedAt:      res.GetData().GetUpdatedAt().AsTime(),
 			}
 
 			if err := printer.Text(receiver, format); err != nil {
@@ -236,7 +245,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully updated receiver")
+			fmt.Printf("Successfully updated receiver with id %q", id)
 
 			return nil
 		},
@@ -289,7 +298,7 @@ func deleteReceiverCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
+func notifyReceiverCmd(c *configuration) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -302,8 +311,6 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var notificationConfig sirenv1beta1.SendReceiverNotificationRequest
-
 			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
@@ -311,25 +318,30 @@ func sendReceiverNotificationCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			receiver, err := client.GetReceiver(ctx, &sirenv1beta1.GetReceiverRequest{
+			rcv, err := client.GetReceiver(ctx, &sirenv1beta1.GetReceiverRequest{
 				Id: id,
 			})
 			if err != nil {
 				return err
 			}
 
-			notificationConfig.Id = id
-			switch receiver.Type {
+			if rcv.GetData() == nil {
+				return errors.New("no response from server")
+			}
+
+			notifyReceiverReq := &sirenv1beta1.NotifyReceiverRequest{}
+			notifyReceiverReq.Id = rcv.GetData().GetId()
+			switch rcv.GetData().GetType() {
 			case "slack":
-				var slackConfig *sirenv1beta1.SendReceiverNotificationRequest_Slack
+				var slackConfig *structpb.Struct
 				if err := parseFile(filePath, &slackConfig); err != nil {
 					return err
 				}
 
-				notificationConfig.Data = slackConfig
+				notifyReceiverReq.Payload = slackConfig
 			}
 
-			_, err = client.SendReceiverNotification(ctx, &notificationConfig)
+			_, err = client.NotifyReceiver(ctx, notifyReceiverReq)
 			if err != nil {
 				return err
 			}

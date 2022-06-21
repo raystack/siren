@@ -9,7 +9,7 @@ import (
 )
 
 type ReceiverMetadata struct {
-	Id            uint64            `json:"id"`
+	ID            uint64            `json:"id"`
 	Configuration map[string]string `json:"configuration"`
 }
 
@@ -25,10 +25,10 @@ func (list ReceiverMetadataList) Value() (driver.Value, error) {
 }
 
 type Subscription struct {
-	Id          uint64 `gorm:"primarykey"`
+	ID          uint64 `gorm:"primarykey"`
 	Namespace   *Namespace
 	NamespaceId uint64
-	Urn         string               `gorm:"unique"`
+	URN         string               `gorm:"unique"`
 	Receiver    ReceiverMetadataList `gorm:"type:jsonb" sql:"type:jsonb" `
 	Match       StringStringMap      `gorm:"type:jsonb" sql:"type:jsonb" `
 	CreatedAt   time.Time
@@ -39,14 +39,14 @@ func (s *Subscription) FromDomain(sub *subscription.Subscription) {
 	if s == nil {
 		return
 	}
-	s.Id = sub.Id
-	s.Urn = sub.Urn
+	s.ID = sub.ID
+	s.URN = sub.URN
 	s.NamespaceId = sub.Namespace
 	s.Match = sub.Match
 	s.Receiver = make([]ReceiverMetadata, 0)
 	for _, item := range sub.Receivers {
 		receiver := ReceiverMetadata{
-			Id:            item.Id,
+			ID:            item.ID,
 			Configuration: item.Configuration,
 		}
 		s.Receiver = append(s.Receiver, receiver)
@@ -62,14 +62,14 @@ func (s *Subscription) ToDomain() *subscription.Subscription {
 	receivers := make([]subscription.ReceiverMetadata, 0)
 	for _, item := range s.Receiver {
 		receiver := subscription.ReceiverMetadata{
-			Id:            item.Id,
+			ID:            item.ID,
 			Configuration: item.Configuration,
 		}
 		receivers = append(receivers, receiver)
 	}
 	subscription := &subscription.Subscription{
-		Id:        s.Id,
-		Urn:       s.Urn,
+		ID:        s.ID,
+		URN:       s.URN,
 		Match:     s.Match,
 		Namespace: s.NamespaceId,
 		Receivers: receivers,

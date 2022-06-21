@@ -78,14 +78,14 @@ func (r NamespaceRepository) Update(namespace *namespace.EncryptedNamespace) err
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		result := r.db.Where("id = ?", m.Id).Updates(m)
+		result := r.db.Where("id = ?", m.ID).Updates(m)
 		if result.Error != nil {
 			return result.Error
 		}
 		if result.RowsAffected == 0 {
 			return errors.New("namespace doesn't exist")
 		}
-		if err := r.db.Where(fmt.Sprintf("id = %d", m.Id)).Find(m).Error; err != nil {
+		if err := r.db.Where(fmt.Sprintf("id = %d", m.ID)).Find(m).Error; err != nil {
 			return err
 		}
 

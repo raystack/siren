@@ -64,7 +64,7 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.Subscription) error {
 	m := new(model.Subscription)
 	m.FromDomain(sub)
-	result := r.getDb(ctx).Where("id = ?", m.Id).Updates(m)
+	result := r.getDb(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -72,7 +72,7 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 		return errors.New("subscription doesn't exist")
 	}
 
-	if err := r.getDb(ctx).Where(fmt.Sprintf("id = %d", m.Id)).Find(m).Error; err != nil {
+	if err := r.getDb(ctx).Where(fmt.Sprintf("id = %d", m.ID)).Find(m).Error; err != nil {
 		return err
 	}
 

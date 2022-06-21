@@ -28,8 +28,8 @@ type Transactor interface {
 }
 
 type Subscription struct {
-	Id        uint64             `json:"id"`
-	Urn       string             `json:"urn"`
+	ID        uint64             `json:"id"`
+	URN       string             `json:"urn"`
 	Namespace uint64             `json:"namespace"`
 	Receivers []ReceiverMetadata `json:"receivers"`
 	Match     map[string]string  `json:"match"`
@@ -55,12 +55,12 @@ func (a StringStringMap) Value() (driver.Value, error) {
 }
 
 type ReceiverMetadata struct {
-	Id            uint64            `json:"id"`
+	ID            uint64            `json:"id"`
 	Configuration map[string]string `json:"configuration"`
 }
 
 type EnrichedReceiverMetadata struct {
-	Id            uint64            `json:"id"`
+	ID            uint64            `json:"id"`
 	Type          string            `json:"type"`
 	Configuration map[string]string `json:"configuration"`
 }
@@ -68,10 +68,10 @@ type EnrichedReceiverMetadata struct {
 type EnrichedReceiverMetadataList []EnrichedReceiverMetadata
 
 type SubscriptionEnrichedWithReceivers struct {
-	Id          uint64
+	ID          uint64
 	Namespace   *namespace.Namespace
 	NamespaceId uint64
-	Urn         string
+	URN         string
 	Receiver    EnrichedReceiverMetadataList
 	Match       StringStringMap
 	CreatedAt   time.Time

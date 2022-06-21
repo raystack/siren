@@ -45,12 +45,12 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 	randomSlackReceiverConfig["token"] = "xoxb"
 	randomPagerdutyReceiverConfig["service_key"] = "abcd"
 	randomHTTPReceiverConfig["url"] = "http://localhost:3000"
-	receiver1 := subscription.ReceiverMetadata{Id: 1, Configuration: inputRandomConfig}
-	receiver2 := subscription.ReceiverMetadata{Id: 2, Configuration: make(map[string]string)}
+	receiver1 := subscription.ReceiverMetadata{ID: 1, Configuration: inputRandomConfig}
+	receiver2 := subscription.ReceiverMetadata{ID: 2, Configuration: make(map[string]string)}
 	input := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
-		Urn:       "foo",
+		URN:       "foo",
 		Match:     match,
 		Receivers: []subscription.ReceiverMetadata{receiver2, receiver1},
 		CreatedAt: time.Now(),
@@ -63,23 +63,23 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 	s.Run("should create a subscription", func() {
 		expectedID := uint64(1)
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(input.Namespace, input.Urn,
+			WithArgs(input.Namespace, input.URN,
 				rawReceivers, json.RawMessage(`{"foo":"bar"}`), input.CreatedAt,
-				input.UpdatedAt, input.Id).
+				input.UpdatedAt, input.ID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
 
 		err := s.repository.Create(context.Background(), input)
 		s.Nil(err)
-		s.Equal(expectedID, input.Id)
+		s.Equal(expectedID, input.ID)
 	})
 
 	s.Run("should create a subscription with transaction", func() {
 		expectedID := uint64(1)
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(input.Namespace, input.Urn,
+			WithArgs(input.Namespace, input.URN,
 				rawReceivers, json.RawMessage(`{"foo":"bar"}`), input.CreatedAt,
-				input.UpdatedAt, input.Id).
+				input.UpdatedAt, input.ID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
 		s.dbmock.ExpectCommit()
 
@@ -88,16 +88,16 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 		commitErr := s.repository.Commit(ctx)
 		s.Nil(commitErr)
 		s.Nil(err)
-		s.Equal(expectedID, input.Id)
+		s.Equal(expectedID, input.ID)
 	})
 
 	s.Run("should rollback transaction", func() {
 		expectedID := uint64(1)
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(input.Namespace, input.Urn,
+			WithArgs(input.Namespace, input.URN,
 				rawReceivers, json.RawMessage(`{"foo":"bar"}`), input.CreatedAt,
-				input.UpdatedAt, input.Id).
+				input.UpdatedAt, input.ID).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
 		s.dbmock.ExpectRollback()
 
@@ -106,14 +106,14 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 		commitErr := s.repository.Rollback(ctx)
 		s.Nil(commitErr)
 		s.Nil(err)
-		s.Equal(expectedID, input.Id)
+		s.Equal(expectedID, input.ID)
 	})
 
 	s.Run("should return error from creation", func() {
 		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(input.Namespace, input.Urn,
+			WithArgs(input.Namespace, input.URN,
 				rawReceivers, json.RawMessage(`{"foo":"bar"}`), input.CreatedAt,
-				input.UpdatedAt, input.Id).
+				input.UpdatedAt, input.ID).
 			WillReturnError(errors.New("random error"))
 
 		err := s.repository.Create(context.Background(), input)
@@ -123,11 +123,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 
 func (s *SubscriptionRepositoryTestSuite) TestGet() {
 	expectedSubscription := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
-		Urn:       "foo",
+		URN:       "foo",
 		Match:     make(map[string]string),
-		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: make(map[string]string)}},
+		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: make(map[string]string)}},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -136,9 +136,9 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "subscriptions" WHERE id = 1`)
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 
 		actualSubscription, err := s.repository.Get(context.Background(), 1)
@@ -153,9 +153,9 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 		s.dbmock.ExpectBegin()
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 		s.dbmock.ExpectCommit()
 
@@ -174,9 +174,9 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 		s.dbmock.ExpectBegin()
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 		s.dbmock.ExpectRollback()
 
@@ -212,11 +212,11 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 
 func (s *SubscriptionRepositoryTestSuite) TestList() {
 	expectedSubscription := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
-		Urn:       "foo",
+		URN:       "foo",
 		Match:     make(map[string]string),
-		Receivers: []subscription.ReceiverMetadata{{Id: 1, Configuration: make(map[string]string)}},
+		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: make(map[string]string)}},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -225,16 +225,16 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 		selectQuery := regexp.QuoteMeta(`select * from subscriptions`)
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1 ,"configuration": {}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 		actualSubscriptions, err := s.repository.List(context.Background())
 
 		s.Equal(1, len(actualSubscriptions))
-		s.Equal(expectedSubscription.Id, actualSubscriptions[0].Id)
+		s.Equal(expectedSubscription.ID, actualSubscriptions[0].ID)
 		s.Equal(expectedSubscription.Namespace, actualSubscriptions[0].Namespace)
-		s.Equal(expectedSubscription.Urn, actualSubscriptions[0].Urn)
+		s.Equal(expectedSubscription.URN, actualSubscriptions[0].URN)
 		s.Equal(expectedSubscription.Match, actualSubscriptions[0].Match)
 		s.Nil(err)
 	})
@@ -243,9 +243,9 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 		selectQuery := regexp.QuoteMeta(`select * from subscriptions`)
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1 ,"configuration": {}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 		s.dbmock.ExpectCommit()
@@ -264,9 +264,9 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 		selectQuery := regexp.QuoteMeta(`select * from subscriptions`)
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(expectedSubscription.Urn, expectedSubscription.Namespace,
+			AddRow(expectedSubscription.URN, expectedSubscription.Namespace,
 				json.RawMessage(`[{"id":1 ,"configuration": {}}]`), json.RawMessage(`{}`),
-				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.Id)
+				expectedSubscription.CreatedAt, expectedSubscription.UpdatedAt, expectedSubscription.ID)
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
 		s.dbmock.ExpectRollback()
@@ -303,11 +303,11 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	randomSlackReceiverConfig["token"] = "xoxb"
 	randomPagerdutyReceiverConfig["service_key"] = "abcd"
 	randomHTTPReceiverConfig["url"] = "http://localhost:3000"
-	receiver := subscription.ReceiverMetadata{Id: 1, Configuration: inputRandomConfig}
+	receiver := subscription.ReceiverMetadata{ID: 1, Configuration: inputRandomConfig}
 	subsc := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
-		Urn:       "foo",
+		URN:       "foo",
 		Match:     match,
 		Receivers: []subscription.ReceiverMetadata{receiver},
 		CreatedAt: timeNow,
@@ -316,9 +316,9 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	inputRandomConfig["channel_name"] = "updated_channel"
 
 	input := &subscription.Subscription{
-		Id:        1,
+		ID:        1,
 		Namespace: 1,
-		Urn:       "foo",
+		URN:       "foo",
 		Match:     match,
 		Receivers: []subscription.ReceiverMetadata{receiver},
 		CreatedAt: timeNow,
@@ -331,15 +331,15 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should update a subscription", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(input.Namespace, input.Urn, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
-				AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WithArgs(input.Namespace, input.URN, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
+				AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(subsc.Urn, subsc.Namespace,
+			AddRow(subsc.URN, subsc.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{"channel_name":"updated_channel"}}]`), json.RawMessage(`{"foo":"bar"}`),
-				subsc.CreatedAt, subsc.UpdatedAt, subsc.Id)
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).
+				subsc.CreatedAt, subsc.UpdatedAt, subsc.ID)
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).
 			WillReturnRows(expectedRows)
 
 		err := s.repository.Update(context.Background(), input)
@@ -350,15 +350,15 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	s.Run("should update a subscription with transaction", func() {
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(input.Namespace, input.Urn, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
-				AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WithArgs(input.Namespace, input.URN, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
+				AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(subsc.Urn, subsc.Namespace,
+			AddRow(subsc.URN, subsc.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{"channel_name":"updated_channel"}}]`), json.RawMessage(`{"foo":"bar"}`),
-				subsc.CreatedAt, subsc.UpdatedAt, subsc.Id)
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).
+				subsc.CreatedAt, subsc.UpdatedAt, subsc.ID)
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).
 			WillReturnRows(expectedRows)
 		s.dbmock.ExpectCommit()
 
@@ -374,15 +374,15 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	s.Run("should rollback transaction", func() {
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(input.Namespace, input.Urn, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
-				AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WithArgs(input.Namespace, input.URN, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
+				AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"}).
-			AddRow(subsc.Urn, subsc.Namespace,
+			AddRow(subsc.URN, subsc.Namespace,
 				json.RawMessage(`[{"id":1,"configuration":{"channel_name":"updated_channel"}}]`), json.RawMessage(`{"foo":"bar"}`),
-				subsc.CreatedAt, subsc.UpdatedAt, subsc.Id)
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).
+				subsc.CreatedAt, subsc.UpdatedAt, subsc.ID)
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).
 			WillReturnRows(expectedRows)
 		s.dbmock.ExpectRollback()
 
@@ -397,8 +397,8 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error if subscription does not exist", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(input.Namespace, input.Urn, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
-				AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WithArgs(input.Namespace, input.URN, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
+				AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := s.repository.Update(context.Background(), input)
@@ -407,10 +407,10 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 	s.Run("should return error if got error fetching updated subscription", func() {
 		s.dbmock.ExpectExec(updateQuery).
-			WithArgs(input.Namespace, input.Urn, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
-				AnyTime{}, AnyTime{}, input.Id, input.Id).
+			WithArgs(input.Namespace, input.URN, rawReceivers, json.RawMessage(`{"foo":"bar"}`),
+				AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).
 			WillReturnError(errors.New("random error"))
 
 		err := s.repository.Update(context.Background(), input)

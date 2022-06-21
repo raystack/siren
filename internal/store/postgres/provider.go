@@ -11,7 +11,7 @@ import (
 )
 
 type Filters struct {
-	Urn  string `mapstructure:"urn" validate:"omitempty"`
+	URN  string `mapstructure:"urn" validate:"omitempty"`
 	Type string `mapstructure:"type" validate:"omitempty"`
 }
 
@@ -33,8 +33,8 @@ func (r ProviderRepository) List(filters map[string]interface{}) ([]*provider.Pr
 	}
 
 	db := r.db
-	if conditions.Urn != "" {
-		db = db.Where(`"urn" = ?`, conditions.Urn)
+	if conditions.URN != "" {
+		db = db.Where(`"urn" = ?`, conditions.URN)
 	}
 	if conditions.Type != "" {
 		db = db.Where(`"type" = ?`, conditions.Type)
@@ -59,7 +59,7 @@ func (r ProviderRepository) Create(provider *provider.Provider) (*provider.Provi
 		return nil, result.Error
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", provider.Id)).Find(&newProvider)
+	result = r.db.Where(fmt.Sprintf("id = %d", provider.ID)).Find(&newProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -84,20 +84,20 @@ func (r ProviderRepository) Update(provider *provider.Provider) (*provider.Provi
 	inputProvider := model.Provider{}
 	inputProvider.FromDomain(provider)
 	var newProvider, existingProvider model.Provider
-	result := r.db.Where(fmt.Sprintf("id = %d", inputProvider.Id)).Find(&existingProvider)
+	result := r.db.Where(fmt.Sprintf("id = %d", inputProvider.ID)).Find(&existingProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
 		return nil, errors.New("provider doesn't exist")
 	} else {
-		result = r.db.Where("id = ?", inputProvider.Id).Updates(inputProvider)
+		result = r.db.Where("id = ?", inputProvider.ID).Updates(inputProvider)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", inputProvider.Id)).Find(&newProvider)
+	result = r.db.Where(fmt.Sprintf("id = %d", inputProvider.ID)).Find(&newProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}

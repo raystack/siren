@@ -27,7 +27,7 @@ type RuleVariable struct {
 }
 
 type Rule struct {
-	Id                uint64         `json:"id"`
+	ID                uint64         `json:"id"`
 	Name              string         `json:"name"`
 	Enabled           bool           `json:"enabled" validate:"required"`
 	GroupName         string         `json:"group_name" validate:"required"`

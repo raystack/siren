@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -18,8 +19,8 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 
@@ -29,7 +30,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-//go:embed siren.swagger.json
+//go:embed siren.swagger.yaml
 var swaggerFile embed.FS
 
 type Config struct {
@@ -104,7 +105,7 @@ func RunServer(
 		}),
 	)
 	address := fmt.Sprintf("%s:%d", c.Host, c.Port)
-	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithInsecure())
+	grpcConn, err := grpc.DialContext(timeoutGrpcDialCtx, address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}

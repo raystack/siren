@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/utils"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -24,7 +23,7 @@ type TemplateService interface {
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
 	templates, err := s.templateService.Index(req.GetTag())
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListTemplatesResponse{Templates: make([]*sirenv1beta1.Template, 0)}
@@ -38,6 +37,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 				Description: variable.Description,
 			})
 		}
+
 		res.Templates = append(res.Templates, &sirenv1beta1.Template{
 			Id:        uint64(tmpl.ID),
 			Name:      tmpl.Name,
@@ -55,7 +55,7 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 func (s *GRPCServer) GetTemplateByName(_ context.Context, req *sirenv1beta1.GetTemplateByNameRequest) (*sirenv1beta1.TemplateResponse, error) {
 	template, err := s.templateService.GetByName(req.GetName())
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 	if template == nil {
 		return nil, status.Errorf(codes.NotFound, "template not found")
@@ -102,7 +102,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 	}
 	err := s.templateService.Upsert(template)
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	templateVariables := make([]*sirenv1beta1.TemplateVariables, 0)
@@ -131,7 +131,7 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
 	err := s.templateService.Delete(req.GetName())
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1beta1.DeleteTemplateResponse{}, nil
 }
@@ -139,7 +139,7 @@ func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteT
 func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
 	body, err := s.templateService.Render(req.GetName(), req.GetVariables())
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 	return &sirenv1beta1.RenderTemplateResponse{
 		Body: body,
