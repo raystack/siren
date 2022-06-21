@@ -37,7 +37,6 @@ func (sm *Message) Validate() error {
 
 func (sm *Message) checkError(err error) error {
 	if err != nil {
-		var ok bool
 		errs, ok := err.(validator.ValidationErrors)
 		if !ok {
 			return err

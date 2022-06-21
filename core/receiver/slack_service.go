@@ -41,9 +41,8 @@ func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage)
 }
 
 func (s *SlackService) Encrypt(r *Receiver) error {
-	var token string
-	var ok bool
-	if token, ok = r.Configurations["token"].(string); !ok {
+	token, ok := r.Configurations["token"].(string)
+	if !ok {
 		return errors.New("no token field found")
 	}
 	chiperText, err := s.cryptoClient.Encrypt(token)
@@ -56,9 +55,8 @@ func (s *SlackService) Encrypt(r *Receiver) error {
 }
 
 func (s *SlackService) Decrypt(r *Receiver) error {
-	var cipherText string
-	var ok bool
-	if cipherText, ok = r.Configurations["token"].(string); !ok {
+	cipherText, ok := r.Configurations["token"].(string)
+	if !ok {
 		return errors.New("no token field found")
 	}
 	token, err := s.cryptoClient.Decrypt(cipherText)
