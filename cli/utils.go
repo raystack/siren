@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TODO need to test this
 func parseFile(filePath string, v interface{}) error {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {

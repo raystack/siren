@@ -13,7 +13,7 @@ import (
 )
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
-type NamespaceService interface { //TODO to be refactored, for temporary only
+type NamespaceService interface {
 	ListNamespaces() ([]*namespace.Namespace, error)
 	CreateNamespace(*namespace.Namespace) error
 	GetNamespace(uint64) (*namespace.Namespace, error)
@@ -23,7 +23,7 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
-type ReceiverService interface { //TODO to be refactored, for temporary only
+type ReceiverService interface {
 	CreateReceiver(*receiver.Receiver) error
 	GetReceiver(uint64) (*receiver.Receiver, error)
 	UpdateReceiver(*receiver.Receiver) error
@@ -33,7 +33,7 @@ type ReceiverService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface { //TODO to be refactored, for temporary only
+type ProviderService interface {
 	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
 	CreateProvider(*provider.Provider) (*provider.Provider, error)
 	GetProvider(uint64) (*provider.Provider, error)
@@ -180,7 +180,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	switch providerInfo.Type {
 	case "cortex":
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
-		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.Urn)
+		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.URN)
 		if err != nil {
 			return errors.Wrap(err, "s.amClient.CreateAlertmanagerConfig")
 		}
@@ -190,6 +190,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	return nil
 }
 
+//TODO this can use repository filter by namespace id
 func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
@@ -227,13 +228,13 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 		for _, receiverItem := range item.Receivers {
 			var receiverInfo *receiver.Receiver
 			for idx := range allReceivers {
-				if allReceivers[idx].Id == receiverItem.Id {
+				if allReceivers[idx].ID == receiverItem.ID {
 					receiverInfo = allReceivers[idx]
 					break
 				}
 			}
 			if receiverInfo == nil {
-				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.Id))
+				return nil, errors.New(fmt.Sprintf("receiver id %d does not exist", receiverItem.ID))
 			}
 			//initialize the nil map using the make function
 			//to avoid panics while adding elements in future
@@ -244,7 +245,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 			case "slack":
 				if _, ok := receiverItem.Configuration["channel_name"]; !ok {
 					return nil, errors.New(fmt.Sprintf(
-						"configuration.channel_name missing from receiver with id %d", receiverItem.Id))
+						"configuration.channel_name missing from receiver with id %d", receiverItem.ID))
 				}
 				if val, ok := receiverInfo.Configurations["token"]; ok {
 					receiverItem.Configuration["token"] = val.(string)
@@ -261,16 +262,16 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 				return nil, errors.New(fmt.Sprintf(`subscriptions for receiver type %s not supported via Siren inside Cortex`, receiverInfo.Type))
 			}
 			enrichedReceiver := EnrichedReceiverMetadata{
-				Id:            receiverItem.Id,
+				ID:            receiverItem.ID,
 				Configuration: receiverItem.Configuration,
 				Type:          receiverInfo.Type,
 			}
 			enrichedReceivers = append(enrichedReceivers, enrichedReceiver)
 		}
 		enrichedSubscription := SubscriptionEnrichedWithReceivers{
-			Id:          item.Id,
+			ID:          item.ID,
 			NamespaceId: item.Namespace,
-			Urn:         item.Urn,
+			URN:         item.URN,
 			Receiver:    enrichedReceivers,
 			Match:       item.Match,
 		}
@@ -281,16 +282,16 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 
 func sortReceivers(sub *Subscription) {
 	sort.Slice(sub.Receivers, func(i, j int) bool {
-		return sub.Receivers[i].Id < sub.Receivers[j].Id
+		return sub.Receivers[i].ID < sub.Receivers[j].ID
 	})
 }
 
-func getAMReceiverConfigPerSubscription(subscription SubscriptionEnrichedWithReceivers) []cortex.ReceiverConfig {
+func getAMReceiverConfigPerSubscription(sub SubscriptionEnrichedWithReceivers) []cortex.ReceiverConfig {
 	amReceiverConfig := make([]cortex.ReceiverConfig, 0)
-	for idx, item := range subscription.Receiver {
+	for idx, item := range sub.Receiver {
 		newAMReceiver := cortex.ReceiverConfig{
-			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", subscription.Urn, item.Id, idx),
-			Match:         subscription.Match,
+			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", sub.URN, item.ID, idx),
+			Match:         sub.Match,
 			Configuration: item.Configuration,
 			Type:          item.Type,
 		}

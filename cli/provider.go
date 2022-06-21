@@ -9,8 +9,8 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/provider"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -113,7 +113,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 
 			res, err := client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
 				Host:        providerConfig.Host,
-				Urn:         providerConfig.Urn,
+				Urn:         providerConfig.URN,
 				Name:        providerConfig.Name,
 				Type:        providerConfig.Type,
 				Credentials: grpcCredentials,
@@ -174,9 +174,9 @@ func getProviderCmd(c *configuration) *cobra.Command {
 			}
 
 			provider := &provider.Provider{
-				Id:          res.GetId(),
+				ID:          res.GetId(),
 				Host:        res.GetHost(),
-				Urn:         res.GetUrn(),
+				URN:         res.GetUrn(),
 				Name:        res.GetName(),
 				Type:        res.GetType(),
 				Credentials: res.GetCredentials().AsMap(),

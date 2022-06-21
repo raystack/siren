@@ -38,7 +38,7 @@ func TestService_Upsert(t *testing.T) {
 		},
 	}
 	theRule := &rule.Rule{
-		Id: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
+		ID: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
 		Variables: []rule.RuleVariable{
 			{
 				Name:        "test-name",
@@ -55,8 +55,8 @@ func TestService_Upsert(t *testing.T) {
 		},
 		ProviderNamespace: 1,
 	}
-	dummyNamespace := &namespace.Namespace{Id: 1, Urn: "foo", Provider: 1}
-	dummyProvider := &provider.Provider{Id: 1, Urn: "bar", Type: "cortex"}
+	dummyNamespace := &namespace.Namespace{ID: 1, URN: "foo", Provider: 1}
+	dummyProvider := &provider.Provider{ID: 1, URN: "bar", Type: "cortex"}
 
 	t.Run("should call repository Upsert method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.RuleRepository{}
@@ -103,7 +103,7 @@ func TestService_Upsert(t *testing.T) {
 		ctx := context.Background()
 
 		theRule := &rule.Rule{
-			Id: 1, Name: "bar", Enabled: false, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
+			ID: 1, Name: "bar", Enabled: false, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
 			Variables: []rule.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -140,7 +140,7 @@ func TestService_Upsert(t *testing.T) {
 		ctx := context.Background()
 
 		theRule := &rule.Rule{
-			Id: 1, Name: "bar", Enabled: false, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
+			ID: 1, Name: "bar", Enabled: false, GroupName: "test-group", Namespace: "foo", Template: "test-tmpl",
 			Variables: []rule.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",
@@ -556,7 +556,7 @@ func TestService_Get(t *testing.T) {
 		ctx := context.Background()
 
 		dummyRules := []rule.Rule{{
-			Id: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
+			ID: 1, Name: "bar", Enabled: true, GroupName: "test-group", Namespace: "baz", Template: "test-tmpl",
 			Variables: []rule.RuleVariable{{
 				Name:        "test-name",
 				Value:       "test-value",

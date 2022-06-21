@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/utils"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -26,13 +25,13 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 
 	rules, err := s.ruleService.Get(ctx, name, namespace, groupName, template, providerNamespace)
 	if err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	res := &sirenv1beta1.ListRulesResponse{Rules: make([]*sirenv1beta1.Rule, 0)}
-	for _, rule := range rules {
+	for _, rl := range rules {
 		variables := make([]*sirenv1beta1.Variables, 0)
-		for _, variable := range rule.Variables {
+		for _, variable := range rl.Variables {
 			variables = append(variables, &sirenv1beta1.Variables{
 				Name:        variable.Name,
 				Value:       variable.Value,
@@ -41,16 +40,16 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 			})
 		}
 		res.Rules = append(res.Rules, &sirenv1beta1.Rule{
-			Id:                rule.Id,
-			Name:              rule.Name,
-			Enabled:           rule.Enabled,
-			GroupName:         rule.GroupName,
-			Namespace:         rule.Namespace,
-			Template:          rule.Template,
+			Id:                rl.ID,
+			Name:              rl.Name,
+			Enabled:           rl.Enabled,
+			GroupName:         rl.GroupName,
+			Namespace:         rl.Namespace,
+			Template:          rl.Template,
 			Variables:         variables,
-			ProviderNamespace: rule.ProviderNamespace,
-			CreatedAt:         timestamppb.New(rule.CreatedAt),
-			UpdatedAt:         timestamppb.New(rule.UpdatedAt),
+			ProviderNamespace: rl.ProviderNamespace,
+			CreatedAt:         timestamppb.New(rl.CreatedAt),
+			UpdatedAt:         timestamppb.New(rl.UpdatedAt),
 		})
 	}
 
@@ -78,7 +77,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 	}
 
 	if err := s.ruleService.Upsert(ctx, rule); err != nil {
-		return nil, utils.GRPCLogError(s.logger, codes.Internal, err)
+		return nil, gRPCLogError(s.logger, codes.Internal, err)
 	}
 
 	responseVariables := make([]*sirenv1beta1.Variables, 0)
@@ -92,7 +91,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 	}
 	res := &sirenv1beta1.UpdateRuleResponse{
 		Rule: &sirenv1beta1.Rule{
-			Id:                rule.Id,
+			Id:                rule.ID,
 			Name:              rule.Name,
 			Enabled:           rule.Enabled,
 			GroupName:         rule.GroupName,

@@ -19,7 +19,7 @@ const (
 )
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
-type NamespaceService interface { //TODO to be refactored, for temporary only
+type NamespaceService interface {
 	ListNamespaces() ([]*namespace.Namespace, error)
 	CreateNamespace(*namespace.Namespace) error
 	GetNamespace(uint64) (*namespace.Namespace, error)
@@ -29,7 +29,7 @@ type NamespaceService interface { //TODO to be refactored, for temporary only
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface { //TODO to be refactored, for temporary only
+type ProviderService interface {
 	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
 	CreateProvider(*provider.Provider) (*provider.Provider, error)
 	GetProvider(uint64) (*provider.Provider, error)
@@ -118,8 +118,8 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 		return errors.New("provider not found")
 	}
 
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.Urn,
-		namespace.Urn, rule.Namespace, rule.GroupName, rule.Template)
+	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
+		namespace.URN, rule.Namespace, rule.GroupName, rule.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
 	if err := s.repository.Upsert(ctx, rule); err != nil {
@@ -138,7 +138,7 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 			return errors.Wrap(err, "s.repository.Get")
 		}
 
-		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.Urn); err != nil {
+		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return errors.Wrap(err, "s.repository.Rollback")
 			}

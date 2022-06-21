@@ -35,7 +35,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								Id:        1,
+								ID:        1,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -46,7 +46,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								Id:        2,
+								ID:        2,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -66,7 +66,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								Id:        1,
+								ID:        1,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -77,7 +77,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								Id:        2,
+								ID:        2,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -97,7 +97,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List().Return([]*namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								Id:        1,
+								ID:        1,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -108,7 +108,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								Id:        2,
+								ID:        2,
 								Provider:  1,
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
@@ -122,7 +122,7 @@ func TestService_ListNamespaces(t *testing.T) {
 				},
 				ExpectedNamespaces: []*namespace.Namespace{
 					{
-						Id:       1,
+						ID:       1,
 						Provider: 1,
 						Name:     "foo",
 						Labels:   map[string]string{"foo": "bar"},
@@ -133,7 +133,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						UpdatedAt: timeNow,
 					},
 					{
-						Id:       2,
+						ID:       2,
 						Provider: 1,
 						Name:     "foo",
 						Labels:   map[string]string{"foo": "bar"},

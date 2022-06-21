@@ -9,15 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	"google.golang.org/protobuf/types/known/emptypb"
-
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/rule"
+	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
-	sirenv1beta1 "go.buf.build/odpf/gw/odpf/proton/odpf/siren/v1beta1"
 )
 
 type variables struct {
@@ -272,15 +270,19 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			return nil, errors.New("provider not found")
 		}
 
-		data, err := client.ListNamespaces(context.Background(), &emptypb.Empty{})
+		res, err := client.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		if err != nil {
 			return nil, err
 		}
 
+		if res.GetData() == nil {
+			return nil, errors.New("no response of getting list of namespaces from server")
+		}
+
 		var providerNamespace *sirenv1beta1.Namespace
-		for _, namespace := range data.Namespaces {
-			if namespace.Urn == yamlBody.ProviderNamespace && namespace.Provider == provider.Id {
-				providerNamespace = namespace
+		for _, ns := range res.GetData() {
+			if ns.GetUrn() == yamlBody.ProviderNamespace && ns.Provider == provider.Id {
+				providerNamespace = ns
 				break
 			}
 		}

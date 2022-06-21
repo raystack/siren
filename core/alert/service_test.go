@@ -17,15 +17,15 @@ func TestService_Get(t *testing.T) {
 		dummyService := alert.NewService(repositoryMock)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
-			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
+			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
 		expectedAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
-			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
+			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
 		repositoryMock.EXPECT().Get("foo", uint64(1), uint64(0), uint64(100)).Return(dummyAlerts, nil)
@@ -40,15 +40,15 @@ func TestService_Get(t *testing.T) {
 		dummyService := alert.NewService(repositoryMock)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
-			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
+			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
 		expectedAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
-			{Id: 2, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
+			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
 				Rule: "bar", TriggeredAt: timenow},
 		}
 		repositoryMock.EXPECT().Get("foo", uint64(1), uint64(0), mock.Anything).
@@ -77,11 +77,11 @@ func TestService_Create(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
 		alertsToBeCreated := &alert.Alerts{Alerts: []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}}
 		expectedAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
 		repositoryMock.EXPECT().Create(mock.Anything).Return(nil)
@@ -95,11 +95,11 @@ func TestService_Create(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
 		alertsToBeCreated := &alert.Alerts{Alerts: []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}}
 		expectedAlerts := []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}
 		repositoryMock.EXPECT().Create(mock.Anything).Return(nil)
@@ -113,7 +113,7 @@ func TestService_Create(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
 		alertsToBeCreated := &alert.Alerts{Alerts: []alert.Alert{
-			{Id: 1, ProviderId: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 				Rule: "lagHigh", TriggeredAt: timenow},
 		}}
 		repositoryMock.EXPECT().Create(mock.Anything).Return(errors.New("random error"))

@@ -42,9 +42,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 
 		ns := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        1,
+				ID:        1,
 				Provider:  1,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: time.Now(),
@@ -55,7 +55,7 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 		expectedNamespaces := []*namespace.EncryptedNamespace{ns}
 
 		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(ns.Id, ns.Provider, ns.Urn, ns.Name, ns.Credentials,
+			AddRow(ns.ID, ns.Provider, ns.URN, ns.Name, ns.Credentials,
 				json.RawMessage(`{"foo": "bar"}`), ns.CreatedAt, ns.UpdatedAt)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
@@ -87,9 +87,9 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 		expectedID := uint64(1)
 		expectedNamespace := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        expectedID,
+				ID:        expectedID,
 				Provider:  1,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: timeNow,
@@ -101,7 +101,7 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
 				Provider:  1,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: timeNow,
@@ -113,7 +113,7 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 		s.dbmock.ExpectQuery(insertQuery).
 			WithArgs(
 				expectedNamespace.Provider,
-				expectedNamespace.Urn,
+				expectedNamespace.URN,
 				expectedNamespace.Name,
 				expectedNamespace.Credentials,
 				labels,
@@ -137,7 +137,7 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
 				Provider:  1,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: time.Now(),
@@ -150,7 +150,7 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 		s.dbmock.ExpectQuery(insertQuery).
 			WithArgs(
 				input.Provider,
-				input.Urn,
+				input.URN,
 				input.Name,
 				input.Credentials,
 				labels,
@@ -174,9 +174,9 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
 		expectedNamespace := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        1,
+				ID:        1,
 				Provider:  1,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: time.Now(),
@@ -187,9 +187,9 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.Urn, expectedNamespace.Name, expectedNamespace.Provider, json.RawMessage(`{"foo":"bar"}`),
+			AddRow(expectedNamespace.URN, expectedNamespace.Name, expectedNamespace.Provider, json.RawMessage(`{"foo":"bar"}`),
 				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
-				expectedNamespace.Id)
+				expectedNamespace.ID)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
 
 		actualNamespace, err := s.repository.Get(1)
@@ -230,7 +230,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        1,
+				ID:        1,
 				Provider:  2,
 				Name:      "foo",
 				Labels:    labels,
@@ -242,13 +242,13 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(1, 1))
+			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(input.Urn, input.Name, input.Provider, json.RawMessage(`{"foo":"bar"}`),
+			AddRow(input.URN, input.Name, input.Provider, json.RawMessage(`{"foo":"bar"}`),
 				json.RawMessage(`{"foo": "bar"}`), input.CreatedAt, input.UpdatedAt,
-				input.Id)
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).WillReturnRows(expectedRows)
+				input.ID)
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).WillReturnRows(expectedRows)
 		s.dbmock.ExpectCommit()
 
 		err := s.repository.Update(input)
@@ -264,9 +264,9 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        99,
+				ID:        99,
 				Provider:  2,
-				Urn:       "foo",
+				URN:       "foo",
 				Name:      "foo",
 				Labels:    labels,
 				CreatedAt: time.Now(),
@@ -276,8 +276,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 		}
 
 		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Urn, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(0, 0))
+		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.URN, input.Name, input.Credentials, labels,
+			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(0, 0))
 		s.dbmock.ExpectRollback()
 
 		err := s.repository.Update(input)
@@ -292,7 +292,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        1,
+				ID:        1,
 				Provider:  2,
 				Name:      "foo",
 				Labels:    labels,
@@ -304,7 +304,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.Id, input.Id).
+			AnyTime{}, AnyTime{}, input.ID, input.ID).
 			WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
 
@@ -322,7 +322,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		input := &namespace.EncryptedNamespace{
 			Namespace: &namespace.Namespace{
-				Id:        1,
+				ID:        1,
 				Provider:  2,
 				Name:      "foo",
 				Labels:    labels,
@@ -334,8 +334,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 		s.dbmock.ExpectBegin()
 		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.Id, input.Id).WillReturnResult(sqlmock.NewResult(1, 1))
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.Id).WillReturnError(errors.New("random error"))
+			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(1, 1))
+		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).WillReturnError(errors.New("random error"))
 		s.dbmock.ExpectRollback()
 
 		err := s.repository.Update(input)

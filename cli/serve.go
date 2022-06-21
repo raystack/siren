@@ -97,7 +97,17 @@ func runServer(cfg config.Config) error {
 	)
 
 	slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
-	receiverService := receiver.NewService(repositories.ReceiverRepository, slackClient, encryptor)
+	slackReceiverService := receiver.NewSlackService(slackClient, encryptor)
+	httpReceiverService := receiver.NewHTTPService()
+	pagerDutyReceiverService := receiver.NewPagerDutyService()
+	receiverService := receiver.NewService(
+		repositories.ReceiverRepository,
+		map[string]receiver.TypeService{
+			receiver.TypeSlack:     slackReceiverService,
+			receiver.TypeHTTP:      httpReceiverService,
+			receiver.TypePagerDuty: pagerDutyReceiverService,
+		},
+	)
 
 	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 
