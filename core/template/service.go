@@ -10,10 +10,6 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) Migrate() error {
-	return service.repository.Migrate()
-}
-
 func (service Service) Upsert(template *Template) error {
 	return service.repository.Upsert(template)
 }

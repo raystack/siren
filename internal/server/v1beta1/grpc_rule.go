@@ -13,7 +13,6 @@ import (
 type RuleService interface {
 	Upsert(context.Context, *rule.Rule) error
 	Get(context.Context, string, string, string, string, uint64) ([]rule.Rule, error)
-	Migrate() error
 }
 
 func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {

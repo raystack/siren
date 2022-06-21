@@ -88,11 +88,3 @@ func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
 	}
 	return nil
 }
-
-func (r *SubscriptionRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Subscription{})
-	if err != nil {
-		return err
-	}
-	return nil
-}

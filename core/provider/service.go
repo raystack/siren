@@ -29,7 +29,3 @@ func (service Service) UpdateProvider(provider *Provider) (*Provider, error) {
 func (service Service) DeleteProvider(id uint64) error {
 	return service.repository.Delete(id)
 }
-
-func (service Service) Migrate() error {
-	return service.repository.Migrate()
-}

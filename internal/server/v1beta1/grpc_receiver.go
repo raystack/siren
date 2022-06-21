@@ -21,7 +21,6 @@ type ReceiverService interface {
 	UpdateReceiver(*receiver.Receiver) error
 	DeleteReceiver(uint64) error
 	NotifyReceiver(id uint64, payloadMessage receiver.NotificationMessage) error
-	Migrate() error
 }
 
 func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {

@@ -14,7 +14,6 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/secret"
@@ -55,27 +54,30 @@ func runServer(cfg config.Config) error {
 		return err
 	}
 
-	defaultConfig := zap.NewProductionConfig()
-	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(cfg.Log.Level))
-	logger := log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
+	logger := initLogger(cfg.Log.Level)
 
-	gormDB, err := postgres.New(cfg.DB)
+	gormDB, err := postgres.New(logger, cfg.DB)
 	if err != nil {
 		return err
 	}
 
 	httpClient := &http.Client{}
-	repositories := store.NewRepositoryContainer(gormDB)
 	encryptor, err := secret.New(cfg.EncryptionKey)
 	if err != nil {
 		return fmt.Errorf("cannot initialize encryptor: %w", err)
 	}
 
-	templateService := template.NewService(repositories.TemplatesRepository)
-	alertHistoryService := alert.NewService(repositories.AlertRepository)
+	templateRepository := postgres.NewTemplateRepository(gormDB)
+	templateService := template.NewService(templateRepository)
 
-	providerService := provider.NewService(repositories.ProviderRepository)
-	namespaceService := namespace.NewService(encryptor, repositories.NamespaceRepository)
+	alertRepository := postgres.NewAlertRepository(gormDB)
+	alertHistoryService := alert.NewService(alertRepository)
+
+	providerRepository := postgres.NewProviderRepository(gormDB)
+	providerService := provider.NewService(providerRepository)
+
+	namespaceRepository := postgres.NewNamespaceRepository(gormDB)
+	namespaceService := namespace.NewService(encryptor, namespaceRepository)
 
 	if cfg.Cortex.PrometheusAlertManagerConfigYaml == "" || cfg.Cortex.PrometheusAlertManagerHelperTemplate == "" {
 		return errors.New("empty prometheus alert manager config template")
@@ -88,8 +90,9 @@ func runServer(cfg config.Config) error {
 		return errors.Wrap(err, "failed to init cortex client")
 	}
 
+	ruleRepository := postgres.NewRuleRepository(gormDB)
 	ruleService := rule.NewService(
-		repositories.RuleRepository,
+		ruleRepository,
 		templateService,
 		namespaceService,
 		providerService,
@@ -100,8 +103,9 @@ func runServer(cfg config.Config) error {
 	slackReceiverService := receiver.NewSlackService(slackClient, encryptor)
 	httpReceiverService := receiver.NewHTTPService()
 	pagerDutyReceiverService := receiver.NewPagerDutyService()
+	receiverRepository := postgres.NewReceiverRepository(gormDB)
 	receiverService := receiver.NewService(
-		repositories.ReceiverRepository,
+		receiverRepository,
 		map[string]receiver.TypeService{
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
@@ -109,7 +113,8 @@ func runServer(cfg config.Config) error {
 		},
 	)
 
-	subscriptionService := subscription.NewService(repositories.SubscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
+	subscriptionRepository := postgres.NewSubscriptionRepository(gormDB)
+	subscriptionService := subscription.NewService(subscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 
 	return server.RunServer(
 		cfg.SirenService,
@@ -122,6 +127,12 @@ func runServer(cfg config.Config) error {
 		namespaceService,
 		receiverService,
 		subscriptionService)
+}
+
+func initLogger(logLevel string) log.Logger {
+	defaultConfig := zap.NewProductionConfig()
+	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(logLevel))
+	return log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
 }
 
 // getZapLogLevelFromString helps to set logLevel from string

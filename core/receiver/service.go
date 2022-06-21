@@ -127,7 +127,3 @@ func (s *Service) NotifyReceiver(id uint64, payloadMessage NotificationMessage) 
 func (s *Service) DeleteReceiver(id uint64) error {
 	return s.repository.Delete(id)
 }
-
-func (s *Service) Migrate() error {
-	return s.repository.Migrate()
-}

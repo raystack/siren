@@ -197,42 +197,6 @@ func (_c *ProviderService_ListProviders_Call) Return(_a0 []*provider.Provider, _
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *ProviderService) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ProviderService_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type ProviderService_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *ProviderService_Expecter) Migrate() *ProviderService_Migrate_Call {
-	return &ProviderService_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *ProviderService_Migrate_Call) Run(run func()) *ProviderService_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *ProviderService_Migrate_Call) Return(_a0 error) *ProviderService_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // UpdateProvider provides a mock function with given fields: _a0
 func (_m *ProviderService) UpdateProvider(_a0 *provider.Provider) (*provider.Provider, error) {
 	ret := _m.Called(_a0)

@@ -122,14 +122,3 @@ func TestService_Create(t *testing.T) {
 		assert.Nil(t, actualAlerts)
 	})
 }
-
-func TestService_Migrate(t *testing.T) {
-	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
-		repositoryMock.EXPECT().Migrate().Return(nil).Once()
-		err := dummyService.Migrate()
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Migrate")
-	})
-}
