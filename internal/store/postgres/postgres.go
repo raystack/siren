@@ -46,38 +46,15 @@ func getLogLevelFromString(level string) gormlogger.LogLevel {
 }
 
 func Migrate(logger log.Logger, db *gorm.DB) error {
-	logger.Info("migrating alert table...")
-	err := db.AutoMigrate(&model.Alert{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating namespace table...")
-	err = db.AutoMigrate(&model.Namespace{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating provider table...")
-	err = db.AutoMigrate(&model.Provider{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating receiver table...")
-	err = db.AutoMigrate(&model.Receiver{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating rule table...")
-	err = db.AutoMigrate(&model.Rule{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating subscription table...")
-	err = db.AutoMigrate(&model.Subscription{})
-	if err != nil {
-		return err
-	}
-	logger.Info("migrating template table...")
-	err = db.AutoMigrate(&model.Template{})
+	logger.Info("migrating postgres...")
+	err := db.AutoMigrate(
+		&model.Alert{},
+		&model.Namespace{},
+		&model.Provider{},
+		&model.Receiver{},
+		&model.Rule{},
+		&model.Subscription{},
+		&model.Template{})
 	if err != nil {
 		return err
 	}

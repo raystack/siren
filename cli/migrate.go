@@ -40,8 +40,5 @@ func runPostgresMigrations(logger log.Logger, cfg config.Config) error {
 		return err
 	}
 
-	if err := postgres.Migrate(logger, gormDB); err != nil {
-		return err
-	}
-	return nil
+	return postgres.Migrate(logger, gormDB)
 }
