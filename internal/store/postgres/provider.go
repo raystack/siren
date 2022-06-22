@@ -1,12 +1,12 @@
 package postgres
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -45,63 +45,92 @@ func (r ProviderRepository) List(filters map[string]interface{}) ([]*provider.Pr
 		return nil, result.Error
 	}
 	domainProviders := make([]*provider.Provider, 0, len(providers))
-	for i := 0; i < len(providers); i++ {
-		prov := providers[i].ToDomain()
-		domainProviders = append(domainProviders, prov)
+	for _, provModel := range providers {
+		provDomain, err := provModel.ToDomain()
+		if err != nil {
+			// TODO log here
+			continue
+		}
+		domainProviders = append(domainProviders, provDomain)
 	}
 	return domainProviders, nil
 }
 
-func (r ProviderRepository) Create(provider *provider.Provider) (*provider.Provider, error) {
-	var newProvider model.Provider
-	result := r.db.Create(newProvider.FromDomain(provider))
+func (r ProviderRepository) Create(prov *provider.Provider) (*provider.Provider, error) {
+	var provModel model.Provider
+	if err := provModel.FromDomain(prov); err != nil {
+		return nil, err
+	}
+	result := r.db.Create(&provModel)
+	if result.Error != nil {
+		err := checkPostgresError(result.Error)
+		if errors.Is(err, errDuplicateKey) {
+			return nil, provider.ErrDuplicate
+		}
+		return nil, result.Error
+	}
+
+	//TODO need to check whether this is necessary or not
+	result = r.db.Where(fmt.Sprintf("id = %d", prov.ID)).Find(&provModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", provider.ID)).Find(&newProvider)
-	if result.Error != nil {
-		return nil, result.Error
+	newProvider, err := provModel.ToDomain()
+	if err != nil {
+		return nil, errors.New("failed to convert provider from model to domain")
 	}
-
-	return newProvider.ToDomain(), nil
+	return newProvider, nil
 }
 
 func (r ProviderRepository) Get(id uint64) (*provider.Provider, error) {
-	var provider model.Provider
-	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&provider)
+	var provModel model.Provider
+	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&provModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, nil
+		return nil, provider.NotFoundError{ID: id}
 	}
-
-	return provider.ToDomain(), nil
+	provDomain, err := provModel.ToDomain()
+	if err != nil {
+		return nil, errors.New("failed to convert provider from model to domain")
+	}
+	return provDomain, nil
 }
 
-func (r ProviderRepository) Update(provider *provider.Provider) (*provider.Provider, error) {
-	inputProvider := model.Provider{}
-	inputProvider.FromDomain(provider)
+func (r ProviderRepository) Update(provDomain *provider.Provider) (*provider.Provider, error) {
+	var provModel model.Provider
+	if err := provModel.FromDomain(provDomain); err != nil {
+		return nil, err
+	}
 	var newProvider, existingProvider model.Provider
-	result := r.db.Where(fmt.Sprintf("id = %d", inputProvider.ID)).Find(&existingProvider)
+	result := r.db.Where(fmt.Sprintf("id = %d", provModel.ID)).Find(&existingProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, errors.New("provider doesn't exist")
+		return nil, provider.NotFoundError{ID: provDomain.ID}
 	} else {
-		result = r.db.Where("id = ?", inputProvider.ID).Updates(inputProvider)
+		result = r.db.Where("id = ?", provModel.ID).Updates(provModel)
 		if result.Error != nil {
+			err := checkPostgresError(result.Error)
+			if errors.Is(err, errDuplicateKey) {
+				return nil, provider.ErrDuplicate
+			}
 			return nil, result.Error
 		}
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", inputProvider.ID)).Find(&newProvider)
+	result = r.db.Where(fmt.Sprintf("id = %d", provModel.ID)).Find(&newProvider)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return newProvider.ToDomain(), nil
+	provDomain, err := provModel.ToDomain()
+	if err != nil {
+		return nil, errors.New("failed to convert provider from model to domain")
+	}
+	return provDomain, nil
 }
 
 func (r ProviderRepository) Delete(id uint64) error {

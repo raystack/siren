@@ -5,7 +5,6 @@ import (
 
 	"github.com/odpf/siren/core/rule"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -24,10 +23,11 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 
 	rules, err := s.ruleService.Get(ctx, name, namespace, groupName, template, providerNamespace)
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
-	res := &sirenv1beta1.ListRulesResponse{Rules: make([]*sirenv1beta1.Rule, 0)}
+	rulesProto := []*sirenv1beta1.Rule{}
+
 	for _, rl := range rules {
 		variables := make([]*sirenv1beta1.Variables, 0)
 		for _, variable := range rl.Variables {
@@ -38,7 +38,7 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 				Description: variable.Description,
 			})
 		}
-		res.Rules = append(res.Rules, &sirenv1beta1.Rule{
+		rulesProto = append(rulesProto, &sirenv1beta1.Rule{
 			Id:                rl.ID,
 			Name:              rl.Name,
 			Enabled:           rl.Enabled,
@@ -52,7 +52,9 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 		})
 	}
 
-	return res, nil
+	return &sirenv1beta1.ListRulesResponse{
+		Rules: rulesProto,
+	}, nil
 }
 
 func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
@@ -66,7 +68,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		})
 	}
 
-	rule := &rule.Rule{
+	rl := &rule.Rule{
 		Enabled:           req.GetEnabled(),
 		GroupName:         req.GetGroupName(),
 		Namespace:         req.GetNamespace(),
@@ -75,32 +77,11 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		Variables:         variables,
 	}
 
-	if err := s.ruleService.Upsert(ctx, rule); err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+	if err := s.ruleService.Upsert(ctx, rl); err != nil {
+		return nil, s.generateRPCErr(err)
 	}
 
-	responseVariables := make([]*sirenv1beta1.Variables, 0)
-	for _, variable := range rule.Variables {
-		responseVariables = append(responseVariables, &sirenv1beta1.Variables{
-			Name:        variable.Name,
-			Type:        variable.Type,
-			Value:       variable.Value,
-			Description: variable.Description,
-		})
-	}
-	res := &sirenv1beta1.UpdateRuleResponse{
-		Rule: &sirenv1beta1.Rule{
-			Id:                rule.ID,
-			Name:              rule.Name,
-			Enabled:           rule.Enabled,
-			GroupName:         rule.GroupName,
-			Namespace:         rule.Namespace,
-			Template:          rule.Template,
-			Variables:         responseVariables,
-			ProviderNamespace: rule.ProviderNamespace,
-			CreatedAt:         timestamppb.New(rule.CreatedAt),
-			UpdatedAt:         timestamppb.New(rule.UpdatedAt),
-		},
-	}
-	return res, nil
+	return &sirenv1beta1.UpdateRuleResponse{
+		Id: rl.ID,
+	}, nil
 }

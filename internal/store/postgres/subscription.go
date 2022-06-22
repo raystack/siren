@@ -6,7 +6,7 @@ import (
 
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/model"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +30,12 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]*subscription.Subs
 
 	var subscriptions []*subscription.Subscription
 	for _, s := range subscriptionModels {
-		subscriptions = append(subscriptions, s.ToDomain())
+		subsDomain, err := s.ToDomain()
+		if err != nil {
+			// TODO log here
+			continue
+		}
+		subscriptions = append(subscriptions, subsDomain)
 	}
 
 	return subscriptions, nil
@@ -38,12 +43,21 @@ func (r *SubscriptionRepository) List(ctx context.Context) ([]*subscription.Subs
 
 func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.Subscription) error {
 	m := new(model.Subscription)
-	m.FromDomain(sub)
+	if err := m.FromDomain(sub); err != nil {
+		return err
+	}
 	if err := r.getDb(ctx).Create(m).Error; err != nil {
-		return errors.Wrap(err, "failed to insert subscription")
+		err = checkPostgresError(err)
+		if errors.Is(err, errDuplicateKey) {
+			return subscription.ErrDuplicate
+		}
+		return err
 	}
 
-	newSubcription := m.ToDomain()
+	newSubcription, err := m.ToDomain()
+	if err != nil {
+		return err
+	}
 	*sub = *newSubcription
 	return nil
 }
@@ -55,28 +69,42 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, nil
+		return nil, subscription.NotFoundError{ID: id}
 	}
 
-	return m.ToDomain(), nil
+	subs, err := m.ToDomain()
+	if err != nil {
+		return nil, err
+	}
+	return subs, nil
 }
 
 func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.Subscription) error {
 	m := new(model.Subscription)
-	m.FromDomain(sub)
+	if err := m.FromDomain(sub); err != nil {
+		return err
+	}
 	result := r.getDb(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
+		err := checkPostgresError(result.Error)
+		if errors.Is(err, errDuplicateKey) {
+			return subscription.ErrDuplicate
+		}
 		return result.Error
 	}
+
 	if result.RowsAffected == 0 {
-		return errors.New("subscription doesn't exist")
+		return subscription.NotFoundError{ID: sub.ID}
 	}
 
 	if err := r.getDb(ctx).Where(fmt.Sprintf("id = %d", m.ID)).Find(m).Error; err != nil {
 		return err
 	}
 
-	newSubcription := m.ToDomain()
+	newSubcription, err := m.ToDomain()
+	if err != nil {
+		return errors.New("failed to convert subscription from model to domain")
+	}
 	*sub = *newSubcription
 	return nil
 }

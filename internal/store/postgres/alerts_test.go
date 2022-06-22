@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"database/sql"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 

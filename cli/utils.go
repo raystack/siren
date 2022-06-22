@@ -2,11 +2,11 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/odpf/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 

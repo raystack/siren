@@ -1,5 +1,17 @@
 package receiver
 
-import "errors"
+import (
+	"fmt"
+)
 
-var ErrInvalid = errors.New("bad_request")
+type NotFoundError struct {
+	ID uint64
+}
+
+func (err NotFoundError) Error() string {
+	if err.ID != 0 {
+		return fmt.Sprintf("receiver with id %d not found", err.ID)
+	}
+
+	return "receiver not found"
+}

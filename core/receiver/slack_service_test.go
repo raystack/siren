@@ -1,12 +1,12 @@
 package receiver_test
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/receiver/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/stretchr/testify/mock"
 )
@@ -26,7 +26,7 @@ func TestSlackService_Encrypt(t *testing.T) {
 				Description: "should return error if no token in configurations field in encrypt error",
 				Setup:       func(sc *mocks.SlackClient, e *mocks.Encryptor) {},
 				Rcv:         &receiver.Receiver{},
-				Err:         errors.New("no token field found"),
+				Err:         errors.New("no token in configurations found"),
 			},
 			{
 				Description: "should return error if encrypt error",
@@ -100,7 +100,7 @@ func TestSlackService_Decrypt(t *testing.T) {
 				Description: "should return error if no token in configurations field in decrypt error",
 				Setup:       func(sc *mocks.SlackClient, e *mocks.Encryptor) {},
 				Rcv:         &receiver.Receiver{},
-				Err:         errors.New("no token field found"),
+				Err:         errors.New("no token in configurations found"),
 			},
 			{
 				Description: "should return error if decrypt error",
@@ -173,7 +173,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 				Description: "should return error if no token field in configurations",
 				Setup:       func(sc *mocks.SlackClient, e *mocks.Encryptor) {},
 				Rcv:         &receiver.Receiver{},
-				Err:         errors.New("no token found in configurations"),
+				Err:         errors.New("no token in configurations found"),
 			},
 			{
 				Description: "should return error if failed to get workspace channels with slack client",

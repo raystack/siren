@@ -2,8 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"testing"
 	"time"
 
@@ -11,8 +9,8 @@ import (
 	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -54,7 +52,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		assert.Equal(t, "foo", res.GetProviders()[0].GetName())
 	})
 
-	t.Run("should return error code 13 if getting providers failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -68,10 +66,10 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -99,8 +97,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListProviders(context.Background(), &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -110,9 +107,18 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
+	testID := uint64(88)
 	credentialsData, _ := structpb.NewStruct(credentials)
 
 	payload := &provider.Provider{
+		Host:        "foo",
+		Type:        "bar",
+		Name:        "foo",
+		Credentials: credentials,
+		Labels:      labels,
+	}
+	returnedPayload := &provider.Provider{
+		ID:          testID,
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -134,16 +140,41 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 
-		mockedProviderService.EXPECT().CreateProvider(payload).Return(payload, nil).Once()
+		mockedProviderService.EXPECT().CreateProvider(payload).Return(returnedPayload, nil).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetType())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetCredentials().GetFields()["foo"].GetStringValue())
+		assert.Equal(t, testID, res.GetId())
 	})
 
-	t.Run("should return error code 13 if creating providers failed", func(t *testing.T) {
+	t.Run("should return error Invalid Argument if provider return error invalid", func(t *testing.T) {
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			providerService: mockedProviderService,
+			logger:          log.NewNoop(),
+		}
+
+		mockedProviderService.EXPECT().CreateProvider(payload).
+			Return(nil, errors.ErrInvalid).Once()
+		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
+	})
+
+	t.Run("should return error AlreadyExist if provider return error conflict", func(t *testing.T) {
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			providerService: mockedProviderService,
+			logger:          log.NewNoop(),
+		}
+
+		mockedProviderService.EXPECT().CreateProvider(payload).
+			Return(nil, errors.ErrConflict).Once()
+		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
+	})
+
+	t.Run("should return error Internal if creating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -154,30 +185,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
-	})
-
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
-		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
-
-		credentials["bar"] = string([]byte{0xff})
-		newPayload := &provider.Provider{
-			Host:        "foo",
-			Type:        "bar",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-		}
-
-		mockedProviderService.EXPECT().CreateProvider(mock.Anything).Return(newPayload, nil).Once()
-		res, err := dummyGRPCServer.CreateProvider(context.Background(), dummyReq)
-		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -213,13 +221,13 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, err)
 
-		assert.Equal(t, "foo", res.GetHost())
-		assert.Equal(t, "bar", res.GetType())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetCredentials().GetFields()["foo"].GetStringValue())
+		assert.Equal(t, "foo", res.GetProvider().GetHost())
+		assert.Equal(t, "bar", res.GetProvider().GetType())
+		assert.Equal(t, "foo", res.GetProvider().GetName())
+		assert.Equal(t, "bar", res.GetProvider().GetCredentials().GetFields()["foo"].GetStringValue())
 	})
 
-	t.Run("should return error code 5 if no provider found", func(t *testing.T) {
+	t.Run("should return error Not Found if no provider found", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -234,7 +242,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = provider not found")
 	})
 
-	t.Run("should return error code 13 if getting provider failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting provider failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -256,10 +264,10 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
+	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -282,8 +290,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -293,9 +300,18 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
 
+	testID := uint64(88)
 	credentialsData, _ := structpb.NewStruct(credentials)
 
 	payload := &provider.Provider{
+		Host:        "foo",
+		Type:        "bar",
+		Name:        "foo",
+		Credentials: credentials,
+		Labels:      labels,
+	}
+	returnedPayload := &provider.Provider{
+		ID:          testID,
 		Host:        "foo",
 		Type:        "bar",
 		Name:        "foo",
@@ -317,16 +333,41 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 
-		mockedProviderService.EXPECT().UpdateProvider(payload).Return(payload, nil).Once()
+		mockedProviderService.EXPECT().UpdateProvider(payload).Return(returnedPayload, nil).Once()
 		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetType())
-		assert.Equal(t, "foo", res.GetName())
-		assert.Equal(t, "bar", res.GetCredentials().GetFields()["foo"].GetStringValue())
+		assert.Equal(t, testID, res.GetId())
 	})
 
-	t.Run("should return error code 13 if updating providers failed", func(t *testing.T) {
+	t.Run("should return error Invalid Argument if updating providers return err invalid", func(t *testing.T) {
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			providerService: mockedProviderService,
+			logger:          log.NewNoop(),
+		}
+
+		mockedProviderService.EXPECT().UpdateProvider(payload).
+			Return(nil, errors.ErrInvalid).Once()
+		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
+	})
+
+	t.Run("should return error AlreadyExist if updating providers return err conflict", func(t *testing.T) {
+		mockedProviderService := &mocks.ProviderService{}
+		dummyGRPCServer := GRPCServer{
+			providerService: mockedProviderService,
+			logger:          log.NewNoop(),
+		}
+
+		mockedProviderService.EXPECT().UpdateProvider(payload).
+			Return(nil, errors.ErrConflict).Once()
+		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
+	})
+
+	t.Run("should return error Internal if updating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -337,31 +378,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
-	})
-
-	t.Run("should return error code 13 if NewStruct conversion failed", func(t *testing.T) {
-		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
-
-		credentials["bar"] = string([]byte{0xff})
-		newPayload := &provider.Provider{
-			Host:        "foo",
-			Type:        "bar",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-		}
-
-		mockedProviderService.EXPECT().UpdateProvider(mock.Anything).
-			Return(newPayload, nil).Once()
-		res, err := dummyGRPCServer.UpdateProvider(context.Background(), dummyReq)
-		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -384,7 +401,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 		assert.Equal(t, "", res.String())
 	})
 
-	t.Run("should return error code 13 if deleting providers failed", func(t *testing.T) {
+	t.Run("should return error Internal if deleting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
 		dummyGRPCServer := GRPCServer{
 			providerService: mockedProviderService,
@@ -394,6 +411,6 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 		mockedProviderService.EXPECT().DeleteProvider(providerId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }

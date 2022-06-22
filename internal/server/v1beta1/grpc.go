@@ -6,6 +6,7 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -49,7 +50,23 @@ func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1beta1.PingRequest) (*s
 	return &sirenv1beta1.PingResponse{Message: "Pong"}, nil
 }
 
-func gRPCLogError(log log.Logger, codes codes.Code, err error) error {
-	log.Error("failed to handle alert", "error", err)
-	return status.Errorf(codes, err.Error())
+func (s *GRPCServer) generateRPCErr(e error) error {
+	s.logger.Error("grpc error", "err", errors.Verbose(e))
+	err := errors.E(e)
+
+	var code codes.Code
+	switch {
+	case errors.Is(err, errors.ErrNotFound):
+		code = codes.NotFound
+
+	case errors.Is(err, errors.ErrConflict):
+		code = codes.AlreadyExists
+
+	case errors.Is(err, errors.ErrInvalid):
+		code = codes.InvalidArgument
+
+	default:
+		code = codes.Internal
+	}
+	return status.Error(code, err.Error())
 }

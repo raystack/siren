@@ -5,8 +5,6 @@ import (
 
 	"github.com/odpf/siren/core/alert"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -16,7 +14,7 @@ type AlertService interface {
 	Get(string, uint64, uint64, uint64) ([]alert.Alert, error)
 }
 
-func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.Alerts, error) {
+func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.ListAlertsResponse, error) {
 	resourceName := req.GetResourceName()
 	providerId := req.GetProviderId()
 	startTime := req.GetStartTime()
@@ -24,11 +22,10 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 
 	alerts, err := s.alertService.Get(resourceName, providerId, startTime, endTime)
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
-	res := &sirenv1beta1.Alerts{
-		Alerts: make([]*sirenv1beta1.Alert, 0),
-	}
+
+	items := []*sirenv1beta1.Alert{}
 	for _, alert := range alerts {
 		item := &sirenv1beta1.Alert{
 			Id:           alert.ID,
@@ -40,12 +37,14 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 			Rule:         alert.Rule,
 			TriggeredAt:  timestamppb.New(alert.TriggeredAt),
 		}
-		res.Alerts = append(res.Alerts, item)
+		items = append(items, item)
 	}
-	return res, nil
+	return &sirenv1beta1.ListAlertsResponse{
+		Alerts: items,
+	}, nil
 }
 
-func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.Alerts, error) {
+func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.CreateCortexAlertsResponse, error) {
 	alerts := alert.Alerts{Alerts: make([]alert.Alert, 0)}
 
 	badAlertCount := 0
@@ -72,10 +71,10 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 	}
 	createdAlerts, err := s.alertService.Create(&alerts)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(err)
 	}
 
-	result := &sirenv1beta1.Alerts{Alerts: make([]*sirenv1beta1.Alert, 0)}
+	items := []*sirenv1beta1.Alert{}
 	for _, item := range createdAlerts {
 		alertHistoryItem := &sirenv1beta1.Alert{
 			Id:           item.ID,
@@ -87,7 +86,10 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 			Rule:         item.Rule,
 			TriggeredAt:  timestamppb.New(item.TriggeredAt),
 		}
-		result.Alerts = append(result.Alerts, alertHistoryItem)
+		items = append(items, alertHistoryItem)
+	}
+	result := &sirenv1beta1.CreateCortexAlertsResponse{
+		Alerts: items,
 	}
 
 	if badAlertCount > 0 {

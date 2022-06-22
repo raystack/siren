@@ -1,12 +1,12 @@
 package alert_test
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/alert/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

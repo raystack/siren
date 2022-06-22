@@ -16,10 +16,10 @@ import (
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/cortex"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -87,7 +87,7 @@ func runServer(cfg config.Config) error {
 		cortex.WithHelperTemplate(cfg.Cortex.PrometheusAlertManagerConfigYaml, cfg.Cortex.PrometheusAlertManagerHelperTemplate),
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to init cortex client")
+		return fmt.Errorf("failed to init cortex client: %w", err)
 	}
 
 	ruleRepository := postgres.NewRuleRepository(gormDB)

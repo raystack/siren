@@ -1,5 +1,7 @@
 package receiver
 
+import "github.com/odpf/siren/pkg/errors"
+
 type HTTPService struct{}
 
 // NewHTTPService returns slack service struct
@@ -26,7 +28,7 @@ func (s *HTTPService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 func (s *HTTPService) ValidateConfiguration(configurations Configurations) error {
 	_, err := configurations.GetString("url")
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 	return nil
 }

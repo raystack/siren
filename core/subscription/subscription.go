@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/namespace"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks

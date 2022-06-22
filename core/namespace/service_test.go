@@ -1,13 +1,13 @@
 package namespace_test
 
 import (
-	"errors"
 	testing "testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/namespace/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -27,7 +27,7 @@ func TestService_ListNamespaces(t *testing.T) {
 				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
 					rr.EXPECT().List().Return(nil, errors.New("some error"))
 				},
-				Err: errors.New("secureService.repository.List: some error"),
+				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if List repository success and decrypt error",
@@ -58,7 +58,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					}, nil)
 					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", errors.New("decrypt error"))
 				},
-				Err: errors.New("secureService.cryptoClient.Decrypt: decrypt error"),
+				Err: errors.New("decrypt error"),
 			},
 			{
 				Description: "should return error if list repository success and decrypted object is not json",
@@ -89,7 +89,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					}, nil)
 					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("", nil)
 				},
-				Err: errors.New("json.Unmarshal: unexpected end of JSON input"),
+				Err: errors.New("unexpected end of JSON input"),
 			},
 			{
 				Description: "should success if list repository and decrypt success",
@@ -190,7 +190,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					"invalid": make(chan int),
 				},
 			},
-			Err: errors.New("json.Marshal: json: unsupported type: chan int"),
+			Err: errors.New("json: unsupported type: chan int"),
 		},
 		{
 			Description: "should return error if encrypt return error",
@@ -202,7 +202,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					"credential": "value",
 				},
 			},
-			Err: errors.New("secureService.cryptoClient.Encrypt: some error"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error if encrypt success and create repository error",
@@ -218,7 +218,23 @@ func TestService_CreateNamespace(t *testing.T) {
 					"credential": "value",
 				},
 			},
-			Err: errors.New("secureService.repository.Create: some error"),
+			Err: errors.New("some error"),
+		},
+		{
+			Description: "should return error conflict if encrypt success and create repository return duplicate error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Create(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(namespace.ErrDuplicate)
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("urn and provider pair already exist"),
 		},
 		{
 			Description: "should return nil error if encrypt success and create repository success",
@@ -276,7 +292,14 @@ func TestService_GetNamespace(t *testing.T) {
 				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
 					rr.EXPECT().Get(testID).Return(nil, errors.New("some error"))
 				},
-				Err: errors.New("secureService.repository.Get: some error"),
+				Err: errors.New("some error"),
+			},
+			{
+				Description: "should return error not found if Get repository return not found error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+					rr.EXPECT().Get(testID).Return(nil, namespace.NotFoundError{})
+				},
+				Err: errors.New("namespace not found"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypt return error",
@@ -287,7 +310,7 @@ func TestService_GetNamespace(t *testing.T) {
 					}, nil)
 					e.EXPECT().Decrypt("some-ciphertext").Return("", errors.New("some error"))
 				},
-				Err: errors.New("secureService.cryptoClient.Decrypt: some error"),
+				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypted credentials is not json marshallable",
@@ -298,7 +321,7 @@ func TestService_GetNamespace(t *testing.T) {
 					}, nil)
 					e.EXPECT().Decrypt("some-ciphertext").Return("", nil)
 				},
-				Err: errors.New("json.Unmarshal: unexpected end of JSON input"),
+				Err: errors.New("unexpected end of JSON input"),
 			},
 			{
 				Description: "should return nil error if Get repository success and decrypt success",
@@ -360,7 +383,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					"invalid": make(chan int),
 				},
 			},
-			Err: errors.New("json.Marshal: json: unsupported type: chan int"),
+			Err: errors.New("json: unsupported type: chan int"),
 		},
 		{
 			Description: "should return error if encrypt return error",
@@ -372,7 +395,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					"credential": "value",
 				},
 			},
-			Err: errors.New("secureService.cryptoClient.Encrypt: some error"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error if encrypt success and update repository error",
@@ -388,7 +411,39 @@ func TestService_UpdateNamespace(t *testing.T) {
 					"credential": "value",
 				},
 			},
-			Err: errors.New("secureService.repository.Update: some error"),
+			Err: errors.New("some error"),
+		},
+		{
+			Description: "should return error not found if encrypt success and update repository return not found error",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Update(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(namespace.NotFoundError{})
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("namespace not found"),
+		},
+		{
+			Description: "should return error conflict if encrypt success and update repository return error duplicate",
+			Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("string")).Return("some-ciphertext", nil)
+				rr.EXPECT().Update(&namespace.EncryptedNamespace{
+					Namespace:   tc.NSpace,
+					Credentials: "some-ciphertext",
+				}).Return(namespace.ErrDuplicate)
+			},
+			NSpace: &namespace.Namespace{
+				Credentials: map[string]interface{}{
+					"credential": "value",
+				},
+			},
+			Err: errors.New("urn and provider pair already exist"),
 		},
 		{
 			Description: "should return nil error if encrypt success and update repository success",

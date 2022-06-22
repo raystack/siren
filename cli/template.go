@@ -2,12 +2,12 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
+	"github.com/odpf/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
@@ -86,7 +86,11 @@ func listTemplatesCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			templates := res.Templates
+			if res.GetTemplates() == nil {
+				return errors.New("no response from server")
+			}
+
+			templates := res.GetTemplates()
 			report := [][]string{}
 
 			fmt.Printf(" \nShowing %d of %d templates\n \n", len(templates), len(templates))
@@ -156,7 +160,7 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("template created with id: %v\n", res.GetTemplate().GetId())
+			fmt.Printf("template created with id: %v\n", res.GetId())
 
 			return nil
 		},
@@ -194,14 +198,18 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 			defer cancel()
 
 			name := args[0]
-			res, err := client.GetTemplateByName(ctx, &sirenv1beta1.GetTemplateByNameRequest{
+			res, err := client.GetTemplate(ctx, &sirenv1beta1.GetTemplateRequest{
 				Name: name,
 			})
 			if err != nil {
 				return err
 			}
 
-			templateData := res.Template
+			if res.GetTemplate() == nil {
+				return errors.New("no response from server")
+			}
+
+			templateData := res.GetTemplate()
 
 			variables := make([]template.Variable, 0)
 			for _, variable := range templateData.GetVariables() {
@@ -353,28 +361,28 @@ func uploadTemplateCmd(c *configuration) *cobra.Command {
 			}
 
 			if strings.ToLower(yamlObject.Type) == "template" {
-				result, err := uploadTemplate(client, yamlFile)
+				templateID, err := uploadTemplate(client, yamlFile)
 				if err != nil {
 					return err
 				}
-				printTemplate(result)
-			} else {
-				return errors.New("yaml is not rule type")
+				//TODO might need to log the actual template or log error here
+				printTemplateID(templateID)
+				return nil
 			}
-			return nil
+			return errors.New("yaml is not rule type")
 		},
 	}
 }
 
-func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*sirenv1beta1.Template, error) {
+func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (uint64, error) {
 	var t templateStruct
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	body, err := yaml.Marshal(t.Body)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	variables := make([]*sirenv1beta1.TemplateVariables, 0)
@@ -394,7 +402,7 @@ func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*s
 		Tags:      t.Tags,
 	})
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	//update associated rules for this template
@@ -402,10 +410,14 @@ func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*s
 		Template: t.Name,
 	})
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	associatedRules := data.Rules
+	if data.GetRules() == nil {
+		return 0, errors.New("no response from server")
+	}
+
+	associatedRules := data.GetRules()
 	for i := 0; i < len(associatedRules); i++ {
 		associatedRule := associatedRules[i]
 
@@ -431,23 +443,14 @@ func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (*s
 
 		if err != nil {
 			fmt.Println("failed to update rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
-			return nil, err
+			return 0, err
 		}
 		fmt.Println("successfully updated rule of ID: ", associatedRule.Id, "\tname: ", associatedRule.Name)
 	}
-	return template.Template, nil
+	return template.GetId(), nil
 }
 
-func printTemplate(template *sirenv1beta1.Template) {
-	if template == nil {
-		return
-	}
+func printTemplateID(templateID uint64) {
 	fmt.Println("Upserted Template")
-	fmt.Println("ID:", template.Id)
-	fmt.Println("Name:", template.Name)
-	fmt.Println("Tags:", template.Tags)
-	fmt.Println("Variables:", template.Variables)
-	fmt.Println("CreatedAt At:", template.CreatedAt)
-	fmt.Println("UpdatedAt At:", template.UpdatedAt)
-
+	fmt.Println("ID:", templateID)
 }
