@@ -6,7 +6,6 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ProviderRepository --filename provider_repository.go --output=./mocks
 type Repository interface {
-	Migrate() error
 	List(map[string]interface{}) ([]*Provider, error)
 	Create(*Provider) (*Provider, error)
 	Get(uint64) (*Provider, error)

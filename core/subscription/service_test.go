@@ -636,14 +636,3 @@ func TestService_DeleteSubscription(t *testing.T) {
 		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
 	})
 }
-
-func TestService_Migrate(t *testing.T) {
-	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := new(mocks.SubscriptionRepository)
-		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
-		repositoryMock.EXPECT().Migrate().Return(nil).Once()
-		err := dummyService.Migrate()
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Migrate")
-	})
-}

@@ -8,7 +8,6 @@ import (
 type Repository interface {
 	Create(*Alert) error
 	Get(string, uint64, uint64, uint64) ([]Alert, error)
-	Migrate() error
 }
 
 type Alerts struct {

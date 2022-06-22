@@ -104,11 +104,3 @@ func (r NamespaceRepository) Delete(id uint64) error {
 	result := r.db.Where("id = ?", id).Delete(&namespace)
 	return result.Error
 }
-
-func (r NamespaceRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Namespace{})
-	if err != nil {
-		return err
-	}
-	return nil
-}

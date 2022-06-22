@@ -17,7 +17,6 @@ type TemplateService interface {
 	GetByName(string) (*template.Template, error)
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
-	Migrate() error
 }
 
 func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {

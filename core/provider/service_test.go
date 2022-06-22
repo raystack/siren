@@ -196,14 +196,3 @@ func TestDeleteProvider(t *testing.T) {
 		repositoryMock.AssertCalled(t, "Delete", providerID)
 	})
 }
-
-func TestService_Migrate(t *testing.T) {
-	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Migrate().Return(nil).Once()
-		err := dummyService.Migrate()
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Migrate")
-	})
-}

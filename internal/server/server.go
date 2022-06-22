@@ -145,46 +145,6 @@ func RunServer(
 	return nil
 }
 
-// TODO to be refactored
-func RunMigrations(
-	templateService v1beta1.TemplateService,
-	ruleService v1beta1.RuleService,
-	alertService v1beta1.AlertService,
-	providerService v1beta1.ProviderService,
-	namespaceService v1beta1.NamespaceService,
-	receiverService v1beta1.ReceiverService,
-	subscriptionService v1beta1.SubscriptionService) error {
-	err := templateService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = ruleService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = alertService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = providerService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = namespaceService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = receiverService.Migrate()
-	if err != nil {
-		return err
-	}
-	err = subscriptionService.Migrate()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
 	return h2c.NewHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {

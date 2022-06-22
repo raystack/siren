@@ -19,7 +19,6 @@ type SubscriptionService interface {
 	GetSubscription(context.Context, uint64) (*subscription.Subscription, error)
 	UpdateSubscription(context.Context, *subscription.Subscription) error
 	DeleteSubscription(context.Context, uint64) error
-	Migrate() error
 }
 
 func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListSubscriptionsResponse, error) {

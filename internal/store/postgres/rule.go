@@ -25,14 +25,6 @@ func NewRuleRepository(db *gorm.DB) *RuleRepository {
 	return &RuleRepository{&transaction{db}}
 }
 
-func (r *RuleRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Rule{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *RuleRepository) Upsert(ctx context.Context, rule *rule.Rule) error {
 	m := new(model.Rule)
 	if err := m.FromDomain(rule); err != nil {

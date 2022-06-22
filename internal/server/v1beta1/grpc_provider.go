@@ -19,7 +19,6 @@ type ProviderService interface {
 	GetProvider(uint64) (*provider.Provider, error)
 	UpdateProvider(*provider.Provider) (*provider.Provider, error)
 	DeleteProvider(uint64) error
-	Migrate() error
 }
 
 func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
