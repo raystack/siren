@@ -14,7 +14,6 @@ import (
 type AlertService interface {
 	Create(*alert.Alerts) ([]alert.Alert, error)
 	Get(string, uint64, uint64, uint64) ([]alert.Alert, error)
-	Migrate() error
 }
 
 func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.Alerts, error) {

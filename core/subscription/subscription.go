@@ -13,7 +13,6 @@ import (
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks
 type Repository interface {
 	Transactor
-	Migrate() error
 	List(context.Context) ([]*Subscription, error)
 	Create(context.Context, *Subscription) error
 	Get(context.Context, uint64) (*Subscription, error)

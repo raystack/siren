@@ -109,11 +109,3 @@ func (r ProviderRepository) Delete(id uint64) error {
 	result := r.db.Where("id = ?", id).Delete(&provider)
 	return result.Error
 }
-
-func (r ProviderRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Provider{})
-	if err != nil {
-		return err
-	}
-	return nil
-}

@@ -10,7 +10,6 @@ type Repository interface {
 	Transactor
 	Upsert(context.Context, *Rule) error
 	Get(context.Context, string, string, string, string, uint64) ([]Rule, error)
-	Migrate() error
 }
 
 type Transactor interface {

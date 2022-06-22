@@ -75,42 +75,6 @@ func (_c *RuleService_Get_Call) Return(_a0 []rule.Rule, _a1 error) *RuleService_
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *RuleService) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RuleService_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type RuleService_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *RuleService_Expecter) Migrate() *RuleService_Migrate_Call {
-	return &RuleService_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *RuleService_Migrate_Call) Run(run func()) *RuleService_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *RuleService_Migrate_Call) Return(_a0 error) *RuleService_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Upsert provides a mock function with given fields: _a0, _a1
 func (_m *RuleService) Upsert(_a0 context.Context, _a1 *rule.Rule) error {
 	ret := _m.Called(_a0, _a1)

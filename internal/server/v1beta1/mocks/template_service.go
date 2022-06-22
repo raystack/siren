@@ -151,42 +151,6 @@ func (_c *TemplateService_Index_Call) Return(_a0 []template.Template, _a1 error)
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *TemplateService) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// TemplateService_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type TemplateService_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *TemplateService_Expecter) Migrate() *TemplateService_Migrate_Call {
-	return &TemplateService_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *TemplateService_Migrate_Call) Run(run func()) *TemplateService_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *TemplateService_Migrate_Call) Return(_a0 error) *TemplateService_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Render provides a mock function with given fields: _a0, _a1
 func (_m *TemplateService) Render(_a0 string, _a1 map[string]string) (string, error) {
 	ret := _m.Called(_a0, _a1)

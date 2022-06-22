@@ -14,10 +14,6 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) Migrate() error {
-	return service.repository.Migrate()
-}
-
 func (service Service) Create(alerts *Alerts) ([]Alert, error) {
 	result := make([]Alert, 0, len(alerts.Alerts))
 

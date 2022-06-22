@@ -19,7 +19,6 @@ type NamespaceService interface {
 	GetNamespace(uint64) (*namespace.Namespace, error)
 	UpdateNamespace(*namespace.Namespace) error
 	DeleteNamespace(uint64) error
-	Migrate() error
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
@@ -29,7 +28,6 @@ type ReceiverService interface {
 	UpdateReceiver(*receiver.Receiver) error
 	ListReceivers() ([]*receiver.Receiver, error)
 	DeleteReceiver(uint64) error
-	Migrate() error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
@@ -39,7 +37,6 @@ type ProviderService interface {
 	GetProvider(uint64) (*provider.Provider, error)
 	UpdateProvider(*provider.Provider) (*provider.Provider, error)
 	DeleteProvider(uint64) error
-	Migrate() error
 }
 
 // Service handles business logic
@@ -155,10 +152,6 @@ func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
 		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
 	}
 	return nil
-}
-
-func (s Service) Migrate() error {
-	return s.repository.Migrate()
 }
 
 func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Context, namespaceId uint64) error {

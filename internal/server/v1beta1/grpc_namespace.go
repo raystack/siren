@@ -19,7 +19,6 @@ type NamespaceService interface {
 	GetNamespace(uint64) (*namespace.Namespace, error)
 	UpdateNamespace(*namespace.Namespace) error
 	DeleteNamespace(uint64) error
-	Migrate() error
 }
 
 func (s *GRPCServer) ListNamespaces(_ context.Context, _ *sirenv1beta1.ListNamespacesRequest) (*sirenv1beta1.ListNamespacesResponse, error) {

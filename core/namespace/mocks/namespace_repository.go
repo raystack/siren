@@ -187,42 +187,6 @@ func (_c *NamespaceRepository_List_Call) Return(_a0 []*namespace.EncryptedNamesp
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *NamespaceRepository) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// NamespaceRepository_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type NamespaceRepository_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *NamespaceRepository_Expecter) Migrate() *NamespaceRepository_Migrate_Call {
-	return &NamespaceRepository_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *NamespaceRepository_Migrate_Call) Run(run func()) *NamespaceRepository_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *NamespaceRepository_Migrate_Call) Return(_a0 error) *NamespaceRepository_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Update provides a mock function with given fields: _a0
 func (_m *NamespaceRepository) Update(_a0 *namespace.EncryptedNamespace) error {
 	ret := _m.Called(_a0)

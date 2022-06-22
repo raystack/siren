@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/internal/store/model"
 	"gorm.io/gorm"
 )
 
@@ -16,14 +15,6 @@ type AlertRepository struct {
 // NewAlertRepository returns repository struct
 func NewAlertRepository(db *gorm.DB) *AlertRepository {
 	return &AlertRepository{db}
-}
-
-func (r AlertRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Alert{})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r AlertRepository) Create(alert *alert.Alert) error {

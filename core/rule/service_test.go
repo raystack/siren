@@ -590,14 +590,3 @@ func TestService_Get(t *testing.T) {
 		repositoryMock.AssertExpectations(t)
 	})
 }
-
-func TestService_Migrate(t *testing.T) {
-	t.Run("should call repository Migrate method and return result", func(t *testing.T) {
-		repositoryMock := &mocks.RuleRepository{}
-		dummyService := rule.NewService(repositoryMock, nil, nil, nil, nil)
-		repositoryMock.EXPECT().Migrate().Return(nil).Once()
-		err := dummyService.Migrate()
-		assert.Nil(t, err)
-		repositoryMock.AssertCalled(t, "Migrate")
-	})
-}

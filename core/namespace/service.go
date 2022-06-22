@@ -84,10 +84,6 @@ func (s *Service) DeleteNamespace(id uint64) error {
 	return s.repository.Delete(id)
 }
 
-func (s *Service) Migrate() error {
-	return s.repository.Migrate()
-}
-
 func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 	plainTextCredentials, err := json.Marshal(ns.Credentials)
 	if err != nil {

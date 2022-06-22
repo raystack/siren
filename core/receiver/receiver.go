@@ -13,7 +13,6 @@ const (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ReceiverRepository --filename receiver_repository.go --output=./mocks
 type Repository interface {
-	Migrate() error
 	List() ([]*Receiver, error)
 	Create(*Receiver) error
 	Get(uint64) (*Receiver, error)

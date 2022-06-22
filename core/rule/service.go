@@ -25,7 +25,6 @@ type NamespaceService interface {
 	GetNamespace(uint64) (*namespace.Namespace, error)
 	UpdateNamespace(*namespace.Namespace) error
 	DeleteNamespace(uint64) error
-	Migrate() error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
@@ -35,7 +34,6 @@ type ProviderService interface {
 	GetProvider(uint64) (*provider.Provider, error)
 	UpdateProvider(*provider.Provider) (*provider.Provider, error)
 	DeleteProvider(uint64) error
-	Migrate() error
 }
 
 //go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
@@ -45,7 +43,6 @@ type TemplatesService interface {
 	GetByName(string) (*template.Template, error)
 	Delete(string) error
 	Render(string, map[string]string) (string, error)
-	Migrate() error
 }
 
 type variable struct {
@@ -83,10 +80,6 @@ func NewService(
 		providerService:  providerService,
 		cortexClient:     cortexClient,
 	}
-}
-
-func (s *Service) Migrate() error {
-	return s.repository.Migrate()
 }
 
 func (s *Service) Upsert(ctx context.Context, rule *Rule) error {

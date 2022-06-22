@@ -27,14 +27,6 @@ func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
 	return &TemplateRepository{db}
 }
 
-func (r TemplateRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Template{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r TemplateRepository) Upsert(tmpl *template.Template) error {
 	var newTemplate, existingTemplate model.Template
 	modelTemplate := &model.Template{}

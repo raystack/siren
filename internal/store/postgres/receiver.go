@@ -87,11 +87,3 @@ func (r ReceiverRepository) Delete(id uint64) error {
 	result := r.db.Where("id = ?", id).Delete(&receiver)
 	return result.Error
 }
-
-func (r ReceiverRepository) Migrate() error {
-	err := r.db.AutoMigrate(&model.Receiver{})
-	if err != nil {
-		return err
-	}
-	return nil
-}

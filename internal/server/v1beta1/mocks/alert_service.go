@@ -117,42 +117,6 @@ func (_c *AlertService_Get_Call) Return(_a0 []alert.Alert, _a1 error) *AlertServ
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *AlertService) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// AlertService_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type AlertService_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *AlertService_Expecter) Migrate() *AlertService_Migrate_Call {
-	return &AlertService_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *AlertService_Migrate_Call) Run(run func()) *AlertService_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *AlertService_Migrate_Call) Return(_a0 error) *AlertService_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // NewAlertService creates a new instance of AlertService. It also registers the testing.TB interface on the mock and a cleanup function to assert the mocks expectations.
 func NewAlertService(t testing.TB) *AlertService {
 	mock := &AlertService{}

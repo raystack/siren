@@ -112,42 +112,6 @@ func (_c *RuleRepository_Get_Call) Return(_a0 []rule.Rule, _a1 error) *RuleRepos
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *RuleRepository) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// RuleRepository_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type RuleRepository_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *RuleRepository_Expecter) Migrate() *RuleRepository_Migrate_Call {
-	return &RuleRepository_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *RuleRepository_Migrate_Call) Run(run func()) *RuleRepository_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *RuleRepository_Migrate_Call) Return(_a0 error) *RuleRepository_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Rollback provides a mock function with given fields: ctx
 func (_m *RuleRepository) Rollback(ctx context.Context) error {
 	ret := _m.Called(ctx)

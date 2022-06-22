@@ -187,42 +187,6 @@ func (_c *ReceiverService_ListReceivers_Call) Return(_a0 []*receiver.Receiver, _
 	return _c
 }
 
-// Migrate provides a mock function with given fields:
-func (_m *ReceiverService) Migrate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ReceiverService_Migrate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Migrate'
-type ReceiverService_Migrate_Call struct {
-	*mock.Call
-}
-
-// Migrate is a helper method to define mock.On call
-func (_e *ReceiverService_Expecter) Migrate() *ReceiverService_Migrate_Call {
-	return &ReceiverService_Migrate_Call{Call: _e.mock.On("Migrate")}
-}
-
-func (_c *ReceiverService_Migrate_Call) Run(run func()) *ReceiverService_Migrate_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *ReceiverService_Migrate_Call) Return(_a0 error) *ReceiverService_Migrate_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // UpdateReceiver provides a mock function with given fields: _a0
 func (_m *ReceiverService) UpdateReceiver(_a0 *receiver.Receiver) error {
 	ret := _m.Called(_a0)
