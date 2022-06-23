@@ -29,11 +29,11 @@ type NamespaceService interface {
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
-	CreateProvider(*provider.Provider) (*provider.Provider, error)
-	GetProvider(uint64) (*provider.Provider, error)
-	UpdateProvider(*provider.Provider) (*provider.Provider, error)
-	DeleteProvider(uint64) error
+	List(context.Context, provider.Filter) ([]*provider.Provider, error)
+	Create(context.Context, *provider.Provider) (uint64, error)
+	Get(context.Context, uint64) (*provider.Provider, error)
+	Update(context.Context, *provider.Provider) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
@@ -99,7 +99,7 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 		return err
 	}
 
-	provider, err := s.providerService.GetProvider(namespace.Provider)
+	provider, err := s.providerService.Get(ctx, namespace.Provider)
 	if err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyRulesInGroup := []rule.Rule{*theRule}
 		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return(dummyRulesInGroup, nil).Once()
@@ -115,7 +115,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
@@ -152,7 +152,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(theRule.Template).Return(dummyTemplate, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(theRule.ProviderNamespace).Return(dummyNamespace, nil).Once()
-		mockProviderService.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, theRule).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", theRule.Namespace, theRule.GroupName, "", theRule.ProviderNamespace).Return([]rule.Rule{*theRule}, nil).Once()
@@ -232,7 +232,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, errors.New("random error")).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "random error")
@@ -251,7 +251,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, errors.ErrNotFound.WithMsgf("provider not found")).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, errors.ErrNotFound.WithMsgf("provider not found")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "provider not found")
@@ -271,7 +271,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
@@ -295,7 +295,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
@@ -319,7 +319,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(rule.ErrDuplicate).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
@@ -343,7 +343,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random error")).Once()
@@ -367,7 +367,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "not-supported-provider-type"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
@@ -391,7 +391,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
@@ -416,7 +416,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(nil, errors.New("random error")).Once()
@@ -442,7 +442,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyRulesInGroup := []rule.Rule{*theRule}
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
@@ -470,7 +470,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyRulesInGroup := []rule.Rule{*theRule}
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
@@ -500,7 +500,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyRulesInGroup := []rule.Rule{*theRule}
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()
@@ -527,7 +527,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(&provider.Provider{Type: "cortex"}, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return([]rule.Rule{}, nil).Once()
@@ -556,7 +556,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyRulesInGroup := []rule.Rule{*theRule}
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(dummyTemplate, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(dummyNamespace, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(dummyProvider, nil).Once()
+		mockProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(dummyProvider, nil).Once()
 		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
 		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(nil).Once()
 		repositoryMock.EXPECT().Get(ctx, "", mock.Anything, mock.Anything, "", mock.Anything).Return(dummyRulesInGroup, nil).Once()

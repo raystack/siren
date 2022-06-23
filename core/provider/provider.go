@@ -1,16 +1,17 @@
 package provider
 
 import (
+	"context"
 	"time"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ProviderRepository --filename provider_repository.go --output=./mocks
 type Repository interface {
-	List(map[string]interface{}) ([]*Provider, error)
-	Create(*Provider) (*Provider, error)
-	Get(uint64) (*Provider, error)
-	Update(*Provider) (*Provider, error)
-	Delete(uint64) error
+	List(context.Context, Filter) ([]*Provider, error)
+	Create(context.Context, *Provider) (uint64, error)
+	Get(context.Context, uint64) (*Provider, error)
+	Update(context.Context, *Provider) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 type Provider struct {

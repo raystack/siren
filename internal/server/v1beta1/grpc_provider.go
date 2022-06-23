@@ -14,17 +14,17 @@ import (
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
-	CreateProvider(*provider.Provider) (*provider.Provider, error)
-	GetProvider(uint64) (*provider.Provider, error)
-	UpdateProvider(*provider.Provider) (*provider.Provider, error)
-	DeleteProvider(uint64) error
+	List(context.Context, provider.Filter) ([]*provider.Provider, error)
+	Create(context.Context, *provider.Provider) (uint64, error)
+	Get(context.Context, uint64) (*provider.Provider, error)
+	Update(context.Context, *provider.Provider) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
-func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
-	providers, err := s.providerService.ListProviders(map[string]interface{}{
-		"urn":  req.GetUrn(),
-		"type": req.GetType(),
+func (s *GRPCServer) ListProviders(ctx context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
+	providers, err := s.providerService.List(ctx, provider.Filter{
+		URN:  req.GetUrn(),
+		Type: req.GetType(),
 	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
@@ -55,8 +55,8 @@ func (s *GRPCServer) ListProviders(_ context.Context, req *sirenv1beta1.ListProv
 	}, nil
 }
 
-func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1beta1.CreateProviderRequest) (*sirenv1beta1.CreateProviderResponse, error) {
-	prov, err := s.providerService.CreateProvider(&provider.Provider{
+func (s *GRPCServer) CreateProvider(ctx context.Context, req *sirenv1beta1.CreateProviderRequest) (*sirenv1beta1.CreateProviderResponse, error) {
+	id, err := s.providerService.Create(ctx, &provider.Provider{
 		Host:        req.GetHost(),
 		URN:         req.GetUrn(),
 		Name:        req.GetName(),
@@ -69,12 +69,12 @@ func (s *GRPCServer) CreateProvider(_ context.Context, req *sirenv1beta1.CreateP
 	}
 
 	return &sirenv1beta1.CreateProviderResponse{
-		Id: prov.ID,
+		Id: id,
 	}, nil
 }
 
-func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1beta1.GetProviderRequest) (*sirenv1beta1.GetProviderResponse, error) {
-	provider, err := s.providerService.GetProvider(req.GetId())
+func (s *GRPCServer) GetProvider(ctx context.Context, req *sirenv1beta1.GetProviderRequest) (*sirenv1beta1.GetProviderResponse, error) {
+	provider, err := s.providerService.Get(ctx, req.GetId())
 	if provider == nil {
 		return nil, status.Errorf(codes.NotFound, "provider not found")
 	}
@@ -102,8 +102,8 @@ func (s *GRPCServer) GetProvider(_ context.Context, req *sirenv1beta1.GetProvide
 	}, nil
 }
 
-func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateProviderRequest) (*sirenv1beta1.UpdateProviderResponse, error) {
-	provider, err := s.providerService.UpdateProvider(&provider.Provider{
+func (s *GRPCServer) UpdateProvider(ctx context.Context, req *sirenv1beta1.UpdateProviderRequest) (*sirenv1beta1.UpdateProviderResponse, error) {
+	id, err := s.providerService.Update(ctx, &provider.Provider{
 		ID:          req.GetId(),
 		Host:        req.GetHost(),
 		Name:        req.GetName(),
@@ -116,12 +116,12 @@ func (s *GRPCServer) UpdateProvider(_ context.Context, req *sirenv1beta1.UpdateP
 	}
 
 	return &sirenv1beta1.UpdateProviderResponse{
-		Id: provider.ID,
+		Id: id,
 	}, nil
 }
 
-func (s *GRPCServer) DeleteProvider(_ context.Context, req *sirenv1beta1.DeleteProviderRequest) (*sirenv1beta1.DeleteProviderResponse, error) {
-	err := s.providerService.DeleteProvider(uint64(req.GetId()))
+func (s *GRPCServer) DeleteProvider(ctx context.Context, req *sirenv1beta1.DeleteProviderRequest) (*sirenv1beta1.DeleteProviderResponse, error) {
+	err := s.providerService.Delete(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

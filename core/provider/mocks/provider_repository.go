@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	provider "github.com/odpf/siren/core/provider"
 	mock "github.com/stretchr/testify/mock"
 
@@ -22,22 +24,20 @@ func (_m *ProviderRepository) EXPECT() *ProviderRepository_Expecter {
 	return &ProviderRepository_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: _a0
-func (_m *ProviderRepository) Create(_a0 *provider.Provider) (*provider.Provider, error) {
-	ret := _m.Called(_a0)
+// Create provides a mock function with given fields: _a0, _a1
+func (_m *ProviderRepository) Create(_a0 context.Context, _a1 *provider.Provider) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 *provider.Provider
-	if rf, ok := ret.Get(0).(func(*provider.Provider) *provider.Provider); ok {
-		r0 = rf(_a0)
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *provider.Provider) uint64); ok {
+		r0 = rf(_a0, _a1)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*provider.Provider)
-		}
+		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*provider.Provider) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, *provider.Provider) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -51,30 +51,31 @@ type ProviderRepository_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//  - _a0 *provider.Provider
-func (_e *ProviderRepository_Expecter) Create(_a0 interface{}) *ProviderRepository_Create_Call {
-	return &ProviderRepository_Create_Call{Call: _e.mock.On("Create", _a0)}
+//  - _a0 context.Context
+//  - _a1 *provider.Provider
+func (_e *ProviderRepository_Expecter) Create(_a0 interface{}, _a1 interface{}) *ProviderRepository_Create_Call {
+	return &ProviderRepository_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
 }
 
-func (_c *ProviderRepository_Create_Call) Run(run func(_a0 *provider.Provider)) *ProviderRepository_Create_Call {
+func (_c *ProviderRepository_Create_Call) Run(run func(_a0 context.Context, _a1 *provider.Provider)) *ProviderRepository_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*provider.Provider))
+		run(args[0].(context.Context), args[1].(*provider.Provider))
 	})
 	return _c
 }
 
-func (_c *ProviderRepository_Create_Call) Return(_a0 *provider.Provider, _a1 error) *ProviderRepository_Create_Call {
+func (_c *ProviderRepository_Create_Call) Return(_a0 uint64, _a1 error) *ProviderRepository_Create_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// Delete provides a mock function with given fields: _a0
-func (_m *ProviderRepository) Delete(_a0 uint64) error {
-	ret := _m.Called(_a0)
+// Delete provides a mock function with given fields: _a0, _a1
+func (_m *ProviderRepository) Delete(_a0 context.Context, _a1 uint64) error {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(uint64) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -88,14 +89,15 @@ type ProviderRepository_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *ProviderRepository_Expecter) Delete(_a0 interface{}) *ProviderRepository_Delete_Call {
-	return &ProviderRepository_Delete_Call{Call: _e.mock.On("Delete", _a0)}
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *ProviderRepository_Expecter) Delete(_a0 interface{}, _a1 interface{}) *ProviderRepository_Delete_Call {
+	return &ProviderRepository_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
 
-func (_c *ProviderRepository_Delete_Call) Run(run func(_a0 uint64)) *ProviderRepository_Delete_Call {
+func (_c *ProviderRepository_Delete_Call) Run(run func(_a0 context.Context, _a1 uint64)) *ProviderRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
+		run(args[0].(context.Context), args[1].(uint64))
 	})
 	return _c
 }
@@ -105,13 +107,13 @@ func (_c *ProviderRepository_Delete_Call) Return(_a0 error) *ProviderRepository_
 	return _c
 }
 
-// Get provides a mock function with given fields: _a0
-func (_m *ProviderRepository) Get(_a0 uint64) (*provider.Provider, error) {
-	ret := _m.Called(_a0)
+// Get provides a mock function with given fields: _a0, _a1
+func (_m *ProviderRepository) Get(_a0 context.Context, _a1 uint64) (*provider.Provider, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *provider.Provider
-	if rf, ok := ret.Get(0).(func(uint64) *provider.Provider); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *provider.Provider); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*provider.Provider)
@@ -119,8 +121,8 @@ func (_m *ProviderRepository) Get(_a0 uint64) (*provider.Provider, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -134,14 +136,15 @@ type ProviderRepository_Get_Call struct {
 }
 
 // Get is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *ProviderRepository_Expecter) Get(_a0 interface{}) *ProviderRepository_Get_Call {
-	return &ProviderRepository_Get_Call{Call: _e.mock.On("Get", _a0)}
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *ProviderRepository_Expecter) Get(_a0 interface{}, _a1 interface{}) *ProviderRepository_Get_Call {
+	return &ProviderRepository_Get_Call{Call: _e.mock.On("Get", _a0, _a1)}
 }
 
-func (_c *ProviderRepository_Get_Call) Run(run func(_a0 uint64)) *ProviderRepository_Get_Call {
+func (_c *ProviderRepository_Get_Call) Run(run func(_a0 context.Context, _a1 uint64)) *ProviderRepository_Get_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
+		run(args[0].(context.Context), args[1].(uint64))
 	})
 	return _c
 }
@@ -151,13 +154,13 @@ func (_c *ProviderRepository_Get_Call) Return(_a0 *provider.Provider, _a1 error)
 	return _c
 }
 
-// List provides a mock function with given fields: _a0
-func (_m *ProviderRepository) List(_a0 map[string]interface{}) ([]*provider.Provider, error) {
-	ret := _m.Called(_a0)
+// List provides a mock function with given fields: _a0, _a1
+func (_m *ProviderRepository) List(_a0 context.Context, _a1 provider.Filter) ([]*provider.Provider, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 []*provider.Provider
-	if rf, ok := ret.Get(0).(func(map[string]interface{}) []*provider.Provider); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, provider.Filter) []*provider.Provider); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*provider.Provider)
@@ -165,8 +168,8 @@ func (_m *ProviderRepository) List(_a0 map[string]interface{}) ([]*provider.Prov
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]interface{}) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, provider.Filter) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -180,14 +183,15 @@ type ProviderRepository_List_Call struct {
 }
 
 // List is a helper method to define mock.On call
-//  - _a0 map[string]interface{}
-func (_e *ProviderRepository_Expecter) List(_a0 interface{}) *ProviderRepository_List_Call {
-	return &ProviderRepository_List_Call{Call: _e.mock.On("List", _a0)}
+//  - _a0 context.Context
+//  - _a1 provider.Filter
+func (_e *ProviderRepository_Expecter) List(_a0 interface{}, _a1 interface{}) *ProviderRepository_List_Call {
+	return &ProviderRepository_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
 
-func (_c *ProviderRepository_List_Call) Run(run func(_a0 map[string]interface{})) *ProviderRepository_List_Call {
+func (_c *ProviderRepository_List_Call) Run(run func(_a0 context.Context, _a1 provider.Filter)) *ProviderRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]interface{}))
+		run(args[0].(context.Context), args[1].(provider.Filter))
 	})
 	return _c
 }
@@ -197,22 +201,20 @@ func (_c *ProviderRepository_List_Call) Return(_a0 []*provider.Provider, _a1 err
 	return _c
 }
 
-// Update provides a mock function with given fields: _a0
-func (_m *ProviderRepository) Update(_a0 *provider.Provider) (*provider.Provider, error) {
-	ret := _m.Called(_a0)
+// Update provides a mock function with given fields: _a0, _a1
+func (_m *ProviderRepository) Update(_a0 context.Context, _a1 *provider.Provider) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 *provider.Provider
-	if rf, ok := ret.Get(0).(func(*provider.Provider) *provider.Provider); ok {
-		r0 = rf(_a0)
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *provider.Provider) uint64); ok {
+		r0 = rf(_a0, _a1)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*provider.Provider)
-		}
+		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*provider.Provider) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, *provider.Provider) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -226,19 +228,20 @@ type ProviderRepository_Update_Call struct {
 }
 
 // Update is a helper method to define mock.On call
-//  - _a0 *provider.Provider
-func (_e *ProviderRepository_Expecter) Update(_a0 interface{}) *ProviderRepository_Update_Call {
-	return &ProviderRepository_Update_Call{Call: _e.mock.On("Update", _a0)}
+//  - _a0 context.Context
+//  - _a1 *provider.Provider
+func (_e *ProviderRepository_Expecter) Update(_a0 interface{}, _a1 interface{}) *ProviderRepository_Update_Call {
+	return &ProviderRepository_Update_Call{Call: _e.mock.On("Update", _a0, _a1)}
 }
 
-func (_c *ProviderRepository_Update_Call) Run(run func(_a0 *provider.Provider)) *ProviderRepository_Update_Call {
+func (_c *ProviderRepository_Update_Call) Run(run func(_a0 context.Context, _a1 *provider.Provider)) *ProviderRepository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*provider.Provider))
+		run(args[0].(context.Context), args[1].(*provider.Provider))
 	})
 	return _c
 }
 
-func (_c *ProviderRepository_Update_Call) Return(_a0 *provider.Provider, _a1 error) *ProviderRepository_Update_Call {
+func (_c *ProviderRepository_Update_Call) Return(_a0 uint64, _a1 error) *ProviderRepository_Update_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

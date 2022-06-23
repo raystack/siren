@@ -33,7 +33,7 @@ func New(logger log.Logger, c Config) (*gorm.DB, error) {
 
 	db, err := gorm.Open(gormpg.Open(dsn), &gorm.Config{Logger: gormlogger.Default.LogMode(getLogLevelFromString(logger.Level()))})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return db, err

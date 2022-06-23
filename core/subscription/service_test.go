@@ -71,7 +71,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		}).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, urn string) {
@@ -171,7 +171,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(&namespace.Namespace{}, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(nil, errors.New("random error")).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
@@ -191,7 +191,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).
 			Return(&provider.Provider{ID: 1, Type: "prometheus"}, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
@@ -213,7 +213,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(&namespace.Namespace{}, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(nil, errors.New("random error")).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -234,7 +234,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{ID: 10}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -259,7 +259,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		}
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{dummySubscription}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -280,7 +280,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return([]*receiver.Receiver{{ID: 1, Type: "email"}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
@@ -302,7 +302,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Create(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), "dummy").
 			Return(errors.New("random error")).Once()
@@ -471,7 +471,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Update(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, _a1 string) {
@@ -570,7 +570,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Update(ctx, input).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(input.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Return(errors.New("random error")).Once()
@@ -622,7 +622,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Delete(ctx, uint64(1)).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(subsc.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Run(func(c cortex.AlertManagerConfig, _ string) {
@@ -687,7 +687,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 		repositoryMock.EXPECT().Delete(ctx, uint64(1)).Return(nil).Once()
 		repositoryMock.EXPECT().List(ctx).Return(expectedSubscriptionsInNamespace, nil).Once()
 		namespaceServiceMock.EXPECT().GetNamespace(subsc.Namespace).Return(dummyNamespace, nil).Once()
-		providerServiceMock.EXPECT().GetProvider(dummyNamespace.Provider).Return(dummyProvider, nil).Once()
+		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyNamespace.Provider).Return(dummyProvider, nil).Once()
 		receiverServiceMock.EXPECT().ListReceivers().Return(dummyReceivers, nil).Once()
 		cortexClientMock.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), dummyNamespace.URN).
 			Return(errors.New("random error")).Once()

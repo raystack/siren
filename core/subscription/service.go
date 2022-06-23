@@ -32,11 +32,11 @@ type ReceiverService interface {
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
-	CreateProvider(*provider.Provider) (*provider.Provider, error)
-	GetProvider(uint64) (*provider.Provider, error)
-	UpdateProvider(*provider.Provider) (*provider.Provider, error)
-	DeleteProvider(uint64) error
+	List(context.Context, provider.Filter) ([]*provider.Provider, error)
+	Create(context.Context, *provider.Provider) (uint64, error)
+	Get(context.Context, uint64) (*provider.Provider, error)
+	Update(context.Context, *provider.Provider) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 // Service handles business logic
@@ -168,7 +168,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 		return err
 	}
 	// check provider type of the namespace
-	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(namespaceId)
+	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(ctx, namespaceId)
 	if err != nil {
 		return err
 	}
@@ -205,12 +205,12 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 	return subscriptionsWithinNamespace, nil
 }
 
-func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*provider.Provider, *namespace.Namespace, error) {
+func (s Service) getProviderAndNamespaceInfoFromNamespaceId(ctx context.Context, id uint64) (*provider.Provider, *namespace.Namespace, error) {
 	namespaceInfo, err := s.namespaceService.GetNamespace(id)
 	if err != nil {
 		return nil, nil, err
 	}
-	providerInfo, err := s.providerService.GetProvider(namespaceInfo.Provider)
+	providerInfo, err := s.providerService.Get(ctx, namespaceInfo.Provider)
 	if err != nil {
 		return nil, nil, err
 	}

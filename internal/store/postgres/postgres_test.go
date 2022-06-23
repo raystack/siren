@@ -2,10 +2,14 @@ package postgres_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -20,6 +24,8 @@ var (
 		User:     "test_user",
 		Password: "test_pass",
 		Name:     "test_db",
+		SSLMode:  "disable",
+		LogLevel: "debug",
 	}
 )
 
@@ -93,7 +99,7 @@ func newTestClient(logger log.Logger) (*gorm.DB, *dockertest.Pool, *dockertest.R
 
 	var pgClient *gorm.DB
 	if err = pool.Retry(func() error {
-		pgClient, err = postgres.New(pgConfig)
+		pgClient, err = postgres.New(logger, pgConfig)
 		if err != nil {
 			return err
 		}
@@ -141,4 +147,38 @@ func execQueries(ctx context.Context, db *gorm.DB, queries []string) error {
 		}
 	}
 	return nil
+}
+
+func bootstrapProvider(db *gorm.DB) ([]provider.Provider, error) {
+	filePath := "./testdata/mock-provider.json"
+	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []provider.Provider
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []provider.Provider
+	for _, d := range data {
+		var providerModel model.Provider
+		if err := providerModel.FromDomain(&d); err != nil {
+			return nil, err
+		}
+
+		result := db.Create(&providerModel)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		insertedProvider, err := providerModel.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, *insertedProvider)
+	}
+
+	return insertedData, nil
 }

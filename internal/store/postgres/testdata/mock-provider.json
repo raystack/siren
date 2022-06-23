@@ -1,0 +1,16 @@
+[
+    {
+        "host": "http://cortex-ingress.odpf.io",
+        "urn": "odpf-cortex",
+        "name": "odpf-cortex",
+        "type": "cortex",
+        "credentials": {}
+    },
+    {
+        "host": "http://prometheus-ingress.odpf.io",
+        "urn": "odpf-prometheus",
+        "name": "odpf-prometheus",
+        "type": "prometheus",
+        "credentials": {}
+    }
+]
