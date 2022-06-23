@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	receiver "github.com/odpf/siren/core/receiver"
 	mock "github.com/stretchr/testify/mock"
 
@@ -22,13 +24,58 @@ func (_m *ReceiverService) EXPECT() *ReceiverService_Expecter {
 	return &ReceiverService_Expecter{mock: &_m.Mock}
 }
 
-// CreateReceiver provides a mock function with given fields: _a0
-func (_m *ReceiverService) CreateReceiver(_a0 *receiver.Receiver) error {
-	ret := _m.Called(_a0)
+// Create provides a mock function with given fields: _a0, _a1
+func (_m *ReceiverService) Create(_a0 context.Context, _a1 *receiver.Receiver) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *receiver.Receiver) uint64); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *receiver.Receiver) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReceiverService_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
+type ReceiverService_Create_Call struct {
+	*mock.Call
+}
+
+// Create is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 *receiver.Receiver
+func (_e *ReceiverService_Expecter) Create(_a0 interface{}, _a1 interface{}) *ReceiverService_Create_Call {
+	return &ReceiverService_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
+}
+
+func (_c *ReceiverService_Create_Call) Run(run func(_a0 context.Context, _a1 *receiver.Receiver)) *ReceiverService_Create_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*receiver.Receiver))
+	})
+	return _c
+}
+
+func (_c *ReceiverService_Create_Call) Return(_a0 uint64, _a1 error) *ReceiverService_Create_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// Delete provides a mock function with given fields: _a0, _a1
+func (_m *ReceiverService) Delete(_a0 context.Context, _a1 uint64) error {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -36,73 +83,37 @@ func (_m *ReceiverService) CreateReceiver(_a0 *receiver.Receiver) error {
 	return r0
 }
 
-// ReceiverService_CreateReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateReceiver'
-type ReceiverService_CreateReceiver_Call struct {
+// ReceiverService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type ReceiverService_Delete_Call struct {
 	*mock.Call
 }
 
-// CreateReceiver is a helper method to define mock.On call
-//  - _a0 *receiver.Receiver
-func (_e *ReceiverService_Expecter) CreateReceiver(_a0 interface{}) *ReceiverService_CreateReceiver_Call {
-	return &ReceiverService_CreateReceiver_Call{Call: _e.mock.On("CreateReceiver", _a0)}
+// Delete is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *ReceiverService_Expecter) Delete(_a0 interface{}, _a1 interface{}) *ReceiverService_Delete_Call {
+	return &ReceiverService_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
 
-func (_c *ReceiverService_CreateReceiver_Call) Run(run func(_a0 *receiver.Receiver)) *ReceiverService_CreateReceiver_Call {
+func (_c *ReceiverService_Delete_Call) Run(run func(_a0 context.Context, _a1 uint64)) *ReceiverService_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver))
+		run(args[0].(context.Context), args[1].(uint64))
 	})
 	return _c
 }
 
-func (_c *ReceiverService_CreateReceiver_Call) Return(_a0 error) *ReceiverService_CreateReceiver_Call {
+func (_c *ReceiverService_Delete_Call) Return(_a0 error) *ReceiverService_Delete_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-// DeleteReceiver provides a mock function with given fields: _a0
-func (_m *ReceiverService) DeleteReceiver(_a0 uint64) error {
-	ret := _m.Called(_a0)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(uint64) error); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ReceiverService_DeleteReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteReceiver'
-type ReceiverService_DeleteReceiver_Call struct {
-	*mock.Call
-}
-
-// DeleteReceiver is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *ReceiverService_Expecter) DeleteReceiver(_a0 interface{}) *ReceiverService_DeleteReceiver_Call {
-	return &ReceiverService_DeleteReceiver_Call{Call: _e.mock.On("DeleteReceiver", _a0)}
-}
-
-func (_c *ReceiverService_DeleteReceiver_Call) Run(run func(_a0 uint64)) *ReceiverService_DeleteReceiver_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_DeleteReceiver_Call) Return(_a0 error) *ReceiverService_DeleteReceiver_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-// GetReceiver provides a mock function with given fields: _a0
-func (_m *ReceiverService) GetReceiver(_a0 uint64) (*receiver.Receiver, error) {
-	ret := _m.Called(_a0)
+// Get provides a mock function with given fields: _a0, _a1
+func (_m *ReceiverService) Get(_a0 context.Context, _a1 uint64) (*receiver.Receiver, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *receiver.Receiver
-	if rf, ok := ret.Get(0).(func(uint64) *receiver.Receiver); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *receiver.Receiver); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*receiver.Receiver)
@@ -110,7 +121,54 @@ func (_m *ReceiverService) GetReceiver(_a0 uint64) (*receiver.Receiver, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReceiverService_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type ReceiverService_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *ReceiverService_Expecter) Get(_a0 interface{}, _a1 interface{}) *ReceiverService_Get_Call {
+	return &ReceiverService_Get_Call{Call: _e.mock.On("Get", _a0, _a1)}
+}
+
+func (_c *ReceiverService_Get_Call) Run(run func(_a0 context.Context, _a1 uint64)) *ReceiverService_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *ReceiverService_Get_Call) Return(_a0 *receiver.Receiver, _a1 error) *ReceiverService_Get_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// List provides a mock function with given fields: _a0
+func (_m *ReceiverService) List(_a0 context.Context) ([]*receiver.Receiver, error) {
+	ret := _m.Called(_a0)
+
+	var r0 []*receiver.Receiver
+	if rf, ok := ret.Get(0).(func(context.Context) []*receiver.Receiver); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*receiver.Receiver)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -119,45 +177,82 @@ func (_m *ReceiverService) GetReceiver(_a0 uint64) (*receiver.Receiver, error) {
 	return r0, r1
 }
 
-// ReceiverService_GetReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetReceiver'
-type ReceiverService_GetReceiver_Call struct {
+// ReceiverService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type ReceiverService_List_Call struct {
 	*mock.Call
 }
 
-// GetReceiver is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *ReceiverService_Expecter) GetReceiver(_a0 interface{}) *ReceiverService_GetReceiver_Call {
-	return &ReceiverService_GetReceiver_Call{Call: _e.mock.On("GetReceiver", _a0)}
+// List is a helper method to define mock.On call
+//  - _a0 context.Context
+func (_e *ReceiverService_Expecter) List(_a0 interface{}) *ReceiverService_List_Call {
+	return &ReceiverService_List_Call{Call: _e.mock.On("List", _a0)}
 }
 
-func (_c *ReceiverService_GetReceiver_Call) Run(run func(_a0 uint64)) *ReceiverService_GetReceiver_Call {
+func (_c *ReceiverService_List_Call) Run(run func(_a0 context.Context)) *ReceiverService_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *ReceiverService_GetReceiver_Call) Return(_a0 *receiver.Receiver, _a1 error) *ReceiverService_GetReceiver_Call {
+func (_c *ReceiverService_List_Call) Return(_a0 []*receiver.Receiver, _a1 error) *ReceiverService_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// ListReceivers provides a mock function with given fields:
-func (_m *ReceiverService) ListReceivers() ([]*receiver.Receiver, error) {
-	ret := _m.Called()
+// Notify provides a mock function with given fields: _a0, _a1, _a2
+func (_m *ReceiverService) Notify(_a0 context.Context, _a1 uint64, _a2 receiver.NotificationMessage) error {
+	ret := _m.Called(_a0, _a1, _a2)
 
-	var r0 []*receiver.Receiver
-	if rf, ok := ret.Get(0).(func() []*receiver.Receiver); ok {
-		r0 = rf()
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, receiver.NotificationMessage) error); ok {
+		r0 = rf(_a0, _a1, _a2)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*receiver.Receiver)
-		}
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ReceiverService_Notify_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Notify'
+type ReceiverService_Notify_Call struct {
+	*mock.Call
+}
+
+// Notify is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 uint64
+//  - _a2 receiver.NotificationMessage
+func (_e *ReceiverService_Expecter) Notify(_a0 interface{}, _a1 interface{}, _a2 interface{}) *ReceiverService_Notify_Call {
+	return &ReceiverService_Notify_Call{Call: _e.mock.On("Notify", _a0, _a1, _a2)}
+}
+
+func (_c *ReceiverService_Notify_Call) Run(run func(_a0 context.Context, _a1 uint64, _a2 receiver.NotificationMessage)) *ReceiverService_Notify_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(receiver.NotificationMessage))
+	})
+	return _c
+}
+
+func (_c *ReceiverService_Notify_Call) Return(_a0 error) *ReceiverService_Notify_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+// Update provides a mock function with given fields: _a0, _a1
+func (_m *ReceiverService) Update(_a0 context.Context, _a1 *receiver.Receiver) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *receiver.Receiver) uint64); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context, *receiver.Receiver) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -165,100 +260,27 @@ func (_m *ReceiverService) ListReceivers() ([]*receiver.Receiver, error) {
 	return r0, r1
 }
 
-// ReceiverService_ListReceivers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListReceivers'
-type ReceiverService_ListReceivers_Call struct {
+// ReceiverService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type ReceiverService_Update_Call struct {
 	*mock.Call
 }
 
-// ListReceivers is a helper method to define mock.On call
-func (_e *ReceiverService_Expecter) ListReceivers() *ReceiverService_ListReceivers_Call {
-	return &ReceiverService_ListReceivers_Call{Call: _e.mock.On("ListReceivers")}
+// Update is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 *receiver.Receiver
+func (_e *ReceiverService_Expecter) Update(_a0 interface{}, _a1 interface{}) *ReceiverService_Update_Call {
+	return &ReceiverService_Update_Call{Call: _e.mock.On("Update", _a0, _a1)}
 }
 
-func (_c *ReceiverService_ListReceivers_Call) Run(run func()) *ReceiverService_ListReceivers_Call {
+func (_c *ReceiverService_Update_Call) Run(run func(_a0 context.Context, _a1 *receiver.Receiver)) *ReceiverService_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context), args[1].(*receiver.Receiver))
 	})
 	return _c
 }
 
-func (_c *ReceiverService_ListReceivers_Call) Return(_a0 []*receiver.Receiver, _a1 error) *ReceiverService_ListReceivers_Call {
+func (_c *ReceiverService_Update_Call) Return(_a0 uint64, _a1 error) *ReceiverService_Update_Call {
 	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// NotifyReceiver provides a mock function with given fields: id, payloadMessage
-func (_m *ReceiverService) NotifyReceiver(id uint64, payloadMessage receiver.NotificationMessage) error {
-	ret := _m.Called(id, payloadMessage)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(uint64, receiver.NotificationMessage) error); ok {
-		r0 = rf(id, payloadMessage)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ReceiverService_NotifyReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NotifyReceiver'
-type ReceiverService_NotifyReceiver_Call struct {
-	*mock.Call
-}
-
-// NotifyReceiver is a helper method to define mock.On call
-//  - id uint64
-//  - payloadMessage receiver.NotificationMessage
-func (_e *ReceiverService_Expecter) NotifyReceiver(id interface{}, payloadMessage interface{}) *ReceiverService_NotifyReceiver_Call {
-	return &ReceiverService_NotifyReceiver_Call{Call: _e.mock.On("NotifyReceiver", id, payloadMessage)}
-}
-
-func (_c *ReceiverService_NotifyReceiver_Call) Run(run func(id uint64, payloadMessage receiver.NotificationMessage)) *ReceiverService_NotifyReceiver_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64), args[1].(receiver.NotificationMessage))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_NotifyReceiver_Call) Return(_a0 error) *ReceiverService_NotifyReceiver_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-// UpdateReceiver provides a mock function with given fields: _a0
-func (_m *ReceiverService) UpdateReceiver(_a0 *receiver.Receiver) error {
-	ret := _m.Called(_a0)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver) error); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ReceiverService_UpdateReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateReceiver'
-type ReceiverService_UpdateReceiver_Call struct {
-	*mock.Call
-}
-
-// UpdateReceiver is a helper method to define mock.On call
-//  - _a0 *receiver.Receiver
-func (_e *ReceiverService_Expecter) UpdateReceiver(_a0 interface{}) *ReceiverService_UpdateReceiver_Call {
-	return &ReceiverService_UpdateReceiver_Call{Call: _e.mock.On("UpdateReceiver", _a0)}
-}
-
-func (_c *ReceiverService_UpdateReceiver_Call) Run(run func(_a0 *receiver.Receiver)) *ReceiverService_UpdateReceiver_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_UpdateReceiver_Call) Return(_a0 error) *ReceiverService_UpdateReceiver_Call {
-	_c.Call.Return(_a0)
 	return _c
 }
 

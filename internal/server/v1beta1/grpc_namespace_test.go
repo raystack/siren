@@ -114,9 +114,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_ context.Context, ns *namespace.Namespace) {
-			ns.ID = generatedID
-		}).Return(generatedID, nil).Once()
+		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(generatedID, nil).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, err)
 		assert.Equal(t, generatedID, res.GetId())

@@ -1,6 +1,10 @@
 package receiver
 
-import "github.com/odpf/siren/pkg/errors"
+import (
+	"context"
+
+	"github.com/odpf/siren/pkg/errors"
+)
 
 type HTTPService struct{}
 
@@ -9,7 +13,7 @@ func NewHTTPService() *HTTPService {
 	return &HTTPService{}
 }
 
-func (s *HTTPService) Notify(rcv *Receiver, payloadMessage NotificationMessage) error {
+func (s *HTTPService) Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error {
 	return nil
 }
 
@@ -21,7 +25,7 @@ func (s *HTTPService) Decrypt(r *Receiver) error {
 	return nil
 }
 
-func (s *HTTPService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
+func (s *HTTPService) PopulateReceiver(ctx context.Context, rcv *Receiver) (*Receiver, error) {
 	return rcv, nil
 }
 

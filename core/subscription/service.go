@@ -23,11 +23,12 @@ type NamespaceService interface {
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
-	CreateReceiver(*receiver.Receiver) error
-	GetReceiver(uint64) (*receiver.Receiver, error)
-	UpdateReceiver(*receiver.Receiver) error
-	ListReceivers() ([]*receiver.Receiver, error)
-	DeleteReceiver(uint64) error
+	List(context.Context) ([]*receiver.Receiver, error)
+	Create(context.Context, *receiver.Receiver) (uint64, error)
+	Get(context.Context, uint64) (*receiver.Receiver, error)
+	Update(context.Context, *receiver.Receiver) (uint64, error)
+	Delete(context.Context, uint64) error
+	Notify(context.Context, uint64, receiver.NotificationMessage) error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
@@ -172,7 +173,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	if err != nil {
 		return err
 	}
-	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(subscriptionsInNamespace)
+	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(ctx, subscriptionsInNamespace)
 	if err != nil {
 		return err
 	}
@@ -217,9 +218,9 @@ func (s Service) getProviderAndNamespaceInfoFromNamespaceId(ctx context.Context,
 	return providerInfo, namespaceInfo, nil
 }
 
-func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]SubscriptionEnrichedWithReceivers, error) {
+func (s Service) addReceiversConfiguration(ctx context.Context, subscriptions []*Subscription) ([]SubscriptionEnrichedWithReceivers, error) {
 	res := make([]SubscriptionEnrichedWithReceivers, 0)
-	allReceivers, err := s.receiverService.ListReceivers()
+	allReceivers, err := s.receiverService.List(ctx)
 	if err != nil {
 		return nil, err
 	}

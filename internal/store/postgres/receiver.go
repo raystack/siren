@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/odpf/siren/core/receiver"
@@ -18,10 +19,9 @@ func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
 	return &ReceiverRepository{db}
 }
 
-func (r ReceiverRepository) List() ([]*receiver.Receiver, error) {
+func (r ReceiverRepository) List(ctx context.Context) ([]*receiver.Receiver, error) {
 	var models []*model.Receiver
-	selectQuery := "select * from receivers"
-	result := r.db.Raw(selectQuery).Find(&models)
+	result := r.db.WithContext(ctx).Raw("select * from receivers").Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -39,26 +39,21 @@ func (r ReceiverRepository) List() ([]*receiver.Receiver, error) {
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(receiver *receiver.Receiver) error {
+func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Receiver) (uint64, error) {
 	m := new(model.Receiver)
 	if err := m.FromDomain(receiver); err != nil {
-		return err
+		return 0, err
 	}
 
-	result := r.db.Create(m)
+	result := r.db.WithContext(ctx).Create(m)
 	if result.Error != nil {
-		return result.Error
+		return 0, result.Error
 	}
 
-	newReceiver, err := m.ToDomain()
-	if err != nil {
-		return err
-	}
-	*receiver = *newReceiver
-	return nil
+	return m.ID, nil
 }
 
-func (r ReceiverRepository) Get(id uint64) (*receiver.Receiver, error) {
+func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
 	rcvModel := new(model.Receiver)
 	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(rcvModel)
 	if result.Error != nil {
@@ -74,35 +69,25 @@ func (r ReceiverRepository) Get(id uint64) (*receiver.Receiver, error) {
 	return rcv, nil
 }
 
-func (r ReceiverRepository) Update(rcv *receiver.Receiver) error {
+func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) (uint64, error) {
 	var m model.Receiver
 	if err := m.FromDomain(rcv); err != nil {
-		return err
+		return 0, err
 	}
-	result := r.db.Where("id = ?", m.ID).Updates(m)
+	result := r.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
-		return result.Error
+		return 0, result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return receiver.NotFoundError{ID: rcv.ID}
+		return 0, receiver.NotFoundError{ID: rcv.ID}
 	}
 
-	result = r.db.Where(fmt.Sprintf("id = %d", m.ID)).Find(&m)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	newRcv, err := m.ToDomain()
-	if err != nil {
-		return err
-	}
-	*rcv = *newRcv
-	return nil
+	return rcv.ID, nil
 }
 
-func (r ReceiverRepository) Delete(id uint64) error {
+func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
 	var receiver model.Receiver
-	result := r.db.Where("id = ?", id).Delete(&receiver)
+	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&receiver)
 	return result.Error
 }

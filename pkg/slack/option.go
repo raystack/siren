@@ -1,7 +1,6 @@
 package slack
 
 import (
-	"context"
 	"net/http"
 )
 
@@ -32,11 +31,5 @@ func CallWithClientSecret(authCode string, clientID, clientSecret string) Client
 func CallWithToken(token string) ClientCallOption {
 	return func(c *clientData) {
 		c.token = token
-	}
-}
-
-func CallWithContext(ctx context.Context) ClientCallOption {
-	return func(c *clientData) {
-		c.ctx = ctx
 	}
 }

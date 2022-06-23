@@ -24,7 +24,6 @@ type clientData struct {
 	clientSecret  string
 	token         string
 	creds         Credential
-	ctx           context.Context
 	goslackClient GoSlackCaller
 }
 
@@ -46,14 +45,10 @@ func NewClient(opts ...ClientOption) *Client {
 // the order that took precedence
 // goslackClient - token - client secret
 // e.g. if user passes goslackClient, it will ignore the others
-func (c *Client) createGoSlackClient(opts ...ClientCallOption) (GoSlackCaller, error) {
+func (c *Client) createGoSlackClient(ctx context.Context, opts ...ClientCallOption) (GoSlackCaller, error) {
 	c.data = &clientData{}
 	for _, opt := range opts {
 		opt(c.data)
-	}
-	if c.data.ctx == nil {
-		// TODO use timeout instead and make it configurable
-		c.data.ctx = context.Background()
 	}
 
 	if c.data.goslackClient != nil {
@@ -69,7 +64,7 @@ func (c *Client) createGoSlackClient(opts ...ClientCallOption) (GoSlackCaller, e
 		return nil, errors.New("no client id/secret credential provided")
 	}
 
-	creds, err := c.auth(c.data.ctx)
+	creds, err := c.auth(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -113,13 +108,13 @@ func (c *Client) auth(ctx context.Context) (Credential, error) {
 	}, nil
 }
 
-func (c *Client) GetWorkspaceChannels(opts ...ClientCallOption) ([]Channel, error) {
-	gsc, err := c.createGoSlackClient(opts...)
+func (c *Client) GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOption) ([]Channel, error) {
+	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("goslack client creation failure: %w", err)
 	}
 
-	joinedChannelList, err := c.getJoinedChannelsList(gsc)
+	joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch joined channel list: %w", err)
 	}
@@ -134,8 +129,8 @@ func (c *Client) GetWorkspaceChannels(opts ...ClientCallOption) ([]Channel, erro
 	return result, nil
 }
 
-func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
-	gsc, err := c.createGoSlackClient(opts...)
+func (c *Client) Notify(ctx context.Context, message *Message, opts ...ClientCallOption) error {
+	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
 		return fmt.Errorf("goslack client creation failure: %w", err)
 	}
@@ -143,7 +138,7 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 	var channelID string
 	switch message.ReceiverType {
 	case TypeReceiverChannel:
-		joinedChannelList, err := c.getJoinedChannelsList(gsc)
+		joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 		if err != nil {
 			return fmt.Errorf("failed to fetch joined channel list: %w", err)
 		}
@@ -152,7 +147,7 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 			return fmt.Errorf("app is not part of the channel %q", message.ReceiverName)
 		}
 	case TypeReceiverUser:
-		user, err := gsc.GetUserByEmail(message.ReceiverName)
+		user, err := gsc.GetUserByEmailContext(ctx, message.ReceiverName)
 		if err != nil {
 			if err.Error() == "users_not_found" {
 				return fmt.Errorf("failed to get id for %q", message.ReceiverName)
@@ -163,18 +158,18 @@ func (c *Client) Notify(message *Message, opts ...ClientCallOption) error {
 	default:
 		return fmt.Errorf("unknown receiver type %q", message.ReceiverType)
 	}
-	_, _, _, err = gsc.SendMessage(channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
+	_, _, _, err = gsc.SendMessageContext(ctx, channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
 	if err != nil {
 		return fmt.Errorf("failed to send message to %q", message.ReceiverName)
 	}
 	return nil
 }
 
-func (c *Client) getJoinedChannelsList(gsc GoSlackCaller) ([]goslack.Channel, error) {
+func (c *Client) getJoinedChannelsList(ctx context.Context, gsc GoSlackCaller) ([]goslack.Channel, error) {
 	channelList := make([]goslack.Channel, 0)
 	curr := ""
 	for {
-		channels, nextCursor, err := gsc.GetConversationsForUser(&goslack.GetConversationsForUserParameters{
+		channels, nextCursor, err := gsc.GetConversationsForUserContext(ctx, &goslack.GetConversationsForUserParameters{
 			Types:  []string{"public_channel", "private_channel"},
 			Cursor: curr,
 			Limit:  1000})

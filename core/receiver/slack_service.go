@@ -22,7 +22,7 @@ func NewSlackService(slackClient SlackClient, cryptoClient Encryptor) *SlackServ
 	}
 }
 
-func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage) error {
+func (s *SlackService) Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
 		return errors.ErrInvalid.WithMsgf("no token in configurations found")
@@ -33,7 +33,7 @@ func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage)
 		return err
 	}
 
-	if err := s.slackClient.Notify(sm, slack.CallWithToken(token)); err != nil {
+	if err := s.slackClient.Notify(ctx, sm, slack.CallWithToken(token)); err != nil {
 		return fmt.Errorf("failed to notify: %w", err)
 	}
 
@@ -67,14 +67,14 @@ func (s *SlackService) Decrypt(r *Receiver) error {
 	return nil
 }
 
-func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
+func (s *SlackService) PopulateReceiver(ctx context.Context, rcv *Receiver) (*Receiver, error) {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
 		return nil, errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 
 	channels, err := s.slackClient.GetWorkspaceChannels(
-		slack.CallWithContext(context.Background()),
+		ctx,
 		slack.CallWithToken(token),
 	)
 	if err != nil {

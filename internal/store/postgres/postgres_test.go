@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
@@ -203,6 +204,40 @@ func bootstrapNamespace(db *gorm.DB) ([]namespace.EncryptedNamespace, error) {
 			Namespace:   &d,
 			Credentials: fmt.Sprintf("%+v", &d.Credentials),
 		}); err != nil {
+			return nil, err
+		}
+
+		result := db.Create(&mdl)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		dmn, err := mdl.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, *dmn)
+	}
+
+	return insertedData, nil
+}
+
+func bootstrapReceiver(db *gorm.DB) ([]receiver.Receiver, error) {
+	filePath := "./testdata/mock-receiver.json"
+	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []receiver.Receiver
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []receiver.Receiver
+	for _, d := range data {
+		var mdl model.Receiver
+		if err := mdl.FromDomain(&d); err != nil {
 			return nil, err
 		}
 

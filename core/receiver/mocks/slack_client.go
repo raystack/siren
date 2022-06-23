@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	mock "github.com/stretchr/testify/mock"
 
 	slack "github.com/odpf/siren/pkg/slack"
@@ -23,19 +25,20 @@ func (_m *SlackClient) EXPECT() *SlackClient_Expecter {
 	return &SlackClient_Expecter{mock: &_m.Mock}
 }
 
-// GetWorkspaceChannels provides a mock function with given fields: opts
-func (_m *SlackClient) GetWorkspaceChannels(opts ...slack.ClientCallOption) ([]slack.Channel, error) {
+// GetWorkspaceChannels provides a mock function with given fields: ctx, opts
+func (_m *SlackClient) GetWorkspaceChannels(ctx context.Context, opts ...slack.ClientCallOption) ([]slack.Channel, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
+	_ca = append(_ca, ctx)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 []slack.Channel
-	if rf, ok := ret.Get(0).(func(...slack.ClientCallOption) []slack.Channel); ok {
-		r0 = rf(opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, ...slack.ClientCallOption) []slack.Channel); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]slack.Channel)
@@ -43,8 +46,8 @@ func (_m *SlackClient) GetWorkspaceChannels(opts ...slack.ClientCallOption) ([]s
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(...slack.ClientCallOption) error); ok {
-		r1 = rf(opts...)
+	if rf, ok := ret.Get(1).(func(context.Context, ...slack.ClientCallOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,21 +61,22 @@ type SlackClient_GetWorkspaceChannels_Call struct {
 }
 
 // GetWorkspaceChannels is a helper method to define mock.On call
+//  - ctx context.Context
 //  - opts ...slack.ClientCallOption
-func (_e *SlackClient_Expecter) GetWorkspaceChannels(opts ...interface{}) *SlackClient_GetWorkspaceChannels_Call {
+func (_e *SlackClient_Expecter) GetWorkspaceChannels(ctx interface{}, opts ...interface{}) *SlackClient_GetWorkspaceChannels_Call {
 	return &SlackClient_GetWorkspaceChannels_Call{Call: _e.mock.On("GetWorkspaceChannels",
-		append([]interface{}{}, opts...)...)}
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *SlackClient_GetWorkspaceChannels_Call) Run(run func(opts ...slack.ClientCallOption)) *SlackClient_GetWorkspaceChannels_Call {
+func (_c *SlackClient_GetWorkspaceChannels_Call) Run(run func(ctx context.Context, opts ...slack.ClientCallOption)) *SlackClient_GetWorkspaceChannels_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]slack.ClientCallOption, len(args)-0)
-		for i, a := range args[0:] {
+		variadicArgs := make([]slack.ClientCallOption, len(args)-1)
+		for i, a := range args[1:] {
 			if a != nil {
 				variadicArgs[i] = a.(slack.ClientCallOption)
 			}
 		}
-		run(variadicArgs...)
+		run(args[0].(context.Context), variadicArgs...)
 	})
 	return _c
 }
@@ -82,20 +86,20 @@ func (_c *SlackClient_GetWorkspaceChannels_Call) Return(_a0 []slack.Channel, _a1
 	return _c
 }
 
-// Notify provides a mock function with given fields: message, opts
-func (_m *SlackClient) Notify(message *slack.Message, opts ...slack.ClientCallOption) error {
+// Notify provides a mock function with given fields: ctx, message, opts
+func (_m *SlackClient) Notify(ctx context.Context, message *slack.Message, opts ...slack.ClientCallOption) error {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, message)
+	_ca = append(_ca, ctx, message)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*slack.Message, ...slack.ClientCallOption) error); ok {
-		r0 = rf(message, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, *slack.Message, ...slack.ClientCallOption) error); ok {
+		r0 = rf(ctx, message, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -109,22 +113,23 @@ type SlackClient_Notify_Call struct {
 }
 
 // Notify is a helper method to define mock.On call
+//  - ctx context.Context
 //  - message *slack.Message
 //  - opts ...slack.ClientCallOption
-func (_e *SlackClient_Expecter) Notify(message interface{}, opts ...interface{}) *SlackClient_Notify_Call {
+func (_e *SlackClient_Expecter) Notify(ctx interface{}, message interface{}, opts ...interface{}) *SlackClient_Notify_Call {
 	return &SlackClient_Notify_Call{Call: _e.mock.On("Notify",
-		append([]interface{}{message}, opts...)...)}
+		append([]interface{}{ctx, message}, opts...)...)}
 }
 
-func (_c *SlackClient_Notify_Call) Run(run func(message *slack.Message, opts ...slack.ClientCallOption)) *SlackClient_Notify_Call {
+func (_c *SlackClient_Notify_Call) Run(run func(ctx context.Context, message *slack.Message, opts ...slack.ClientCallOption)) *SlackClient_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]slack.ClientCallOption, len(args)-1)
-		for i, a := range args[1:] {
+		variadicArgs := make([]slack.ClientCallOption, len(args)-2)
+		for i, a := range args[2:] {
 			if a != nil {
 				variadicArgs[i] = a.(slack.ClientCallOption)
 			}
 		}
-		run(args[0].(*slack.Message), variadicArgs...)
+		run(args[0].(context.Context), args[1].(*slack.Message), variadicArgs...)
 	})
 	return _c
 }

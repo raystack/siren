@@ -1,6 +1,8 @@
 package receiver
 
 import (
+	"context"
+
 	"github.com/odpf/siren/pkg/errors"
 )
 
@@ -18,15 +20,15 @@ func NewService(repository Repository, registry map[string]TypeService) *Service
 }
 
 func (s *Service) getTypeService(receiverType string) (TypeService, error) {
-	strategyService, exist := s.registry[receiverType]
+	typeService, exist := s.registry[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
 	}
-	return strategyService, nil
+	return typeService, nil
 }
 
-func (s *Service) ListReceivers() ([]*Receiver, error) {
-	receivers, err := s.repository.List()
+func (s *Service) List(ctx context.Context) ([]*Receiver, error) {
+	receivers, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,11 +37,11 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
 
-		strategyService, err := s.getTypeService(rcv.Type)
+		typeService, err := s.getTypeService(rcv.Type)
 		if err != nil {
 			return nil, err
 		}
-		if err = strategyService.Decrypt(rcv); err != nil {
+		if err = typeService.Decrypt(rcv); err != nil {
 			return nil, err
 		}
 
@@ -48,32 +50,30 @@ func (s *Service) ListReceivers() ([]*Receiver, error) {
 	return domainReceivers, nil
 }
 
-func (s *Service) CreateReceiver(rcv *Receiver) error {
-	strategyService, err := s.getTypeService(rcv.Type)
+func (s *Service) Create(ctx context.Context, rcv *Receiver) (uint64, error) {
+	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if err := strategyService.ValidateConfiguration(rcv.Configurations); err != nil {
-		return err
+	if err := typeService.ValidateConfiguration(rcv.Configurations); err != nil {
+		return 0, err
 	}
 
-	if err := strategyService.Encrypt(rcv); err != nil {
-		return err
+	if err := typeService.Encrypt(rcv); err != nil {
+		return 0, err
 	}
 
-	if err := s.repository.Create(rcv); err != nil {
-		return err
+	id, err := s.repository.Create(ctx, rcv)
+	if err != nil {
+		return 0, err
 	}
 
-	if err := strategyService.Decrypt(rcv); err != nil {
-		return err
-	}
-	return nil
+	return id, nil
 }
 
-func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
-	rcv, err := s.repository.Get(id)
+func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
+	rcv, err := s.repository.Get(ctx, id)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
@@ -81,55 +81,56 @@ func (s *Service) GetReceiver(id uint64) (*Receiver, error) {
 		return nil, err
 	}
 
-	strategyService, err := s.getTypeService(rcv.Type)
+	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := strategyService.Decrypt(rcv); err != nil {
+	if err := typeService.Decrypt(rcv); err != nil {
 		return nil, err
 	}
 
-	return strategyService.PopulateReceiver(rcv)
+	return typeService.PopulateReceiver(ctx, rcv)
 }
 
-func (s *Service) UpdateReceiver(rcv *Receiver) error {
-	strategyService, err := s.getTypeService(rcv.Type)
+func (s *Service) Update(ctx context.Context, rcv *Receiver) (uint64, error) {
+	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	if err := strategyService.ValidateConfiguration(rcv.Configurations); err != nil {
-		return err
+	if err := typeService.ValidateConfiguration(rcv.Configurations); err != nil {
+		return 0, err
 	}
 
-	if err := strategyService.Encrypt(rcv); err != nil {
-		return err
+	if err := typeService.Encrypt(rcv); err != nil {
+		return 0, err
 	}
 
-	if err := s.repository.Update(rcv); err != nil {
+	id, err := s.repository.Update(ctx, rcv)
+	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
-			return errors.ErrNotFound.WithMsgf(err.Error())
+			return 0, errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
-func (s *Service) NotifyReceiver(id uint64, payloadMessage NotificationMessage) error {
-	rcv, err := s.GetReceiver(id)
+func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage NotificationMessage) error {
+	rcv, err := s.Get(ctx, id)
 	if err != nil {
 		return errors.ErrInvalid.WithMsgf("error getting receiver with id %d", id).WithCausef(err.Error())
 	}
 
-	strategyService, err := s.getTypeService(rcv.Type)
+	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	return strategyService.Notify(rcv, payloadMessage)
+	return typeService.Notify(ctx, rcv, payloadMessage)
 }
 
-func (s *Service) DeleteReceiver(id uint64) error {
-	return s.repository.Delete(id)
+func (s *Service) Delete(ctx context.Context, id uint64) error {
+	return s.repository.Delete(ctx, id)
 }

@@ -1,6 +1,7 @@
 package receiver_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -168,6 +169,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 		Err         error
 	}
 	var (
+		ctx       = context.TODO()
 		testCases = []testCase{
 			{
 				Description: "should return error if no token field in configurations",
@@ -178,7 +180,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 			{
 				Description: "should return error if failed to get workspace channels with slack client",
 				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					Configurations: map[string]interface{}{
@@ -189,7 +191,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if success populating receiver.Receiver",
 				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
 						{
 							ID:   "id",
 							Name: "name",
@@ -215,7 +217,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 
 			tc.Setup(slackClientMock, encryptorMock)
 
-			_, err := svc.PopulateReceiver(tc.Rcv)
+			_, err := svc.PopulateReceiver(ctx, tc.Rcv)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())

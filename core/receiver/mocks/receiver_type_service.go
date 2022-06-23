@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	receiver "github.com/odpf/siren/core/receiver"
 	mock "github.com/stretchr/testify/mock"
 
@@ -96,13 +98,13 @@ func (_c *TypeService_Encrypt_Call) Return(_a0 error) *TypeService_Encrypt_Call 
 	return _c
 }
 
-// Notify provides a mock function with given fields: rcv, payloadMessage
-func (_m *TypeService) Notify(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error {
-	ret := _m.Called(rcv, payloadMessage)
+// Notify provides a mock function with given fields: ctx, rcv, payloadMessage
+func (_m *TypeService) Notify(ctx context.Context, rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error {
+	ret := _m.Called(ctx, rcv, payloadMessage)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver, receiver.NotificationMessage) error); ok {
-		r0 = rf(rcv, payloadMessage)
+	if rf, ok := ret.Get(0).(func(context.Context, *receiver.Receiver, receiver.NotificationMessage) error); ok {
+		r0 = rf(ctx, rcv, payloadMessage)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -116,15 +118,16 @@ type TypeService_Notify_Call struct {
 }
 
 // Notify is a helper method to define mock.On call
+//  - ctx context.Context
 //  - rcv *receiver.Receiver
 //  - payloadMessage receiver.NotificationMessage
-func (_e *TypeService_Expecter) Notify(rcv interface{}, payloadMessage interface{}) *TypeService_Notify_Call {
-	return &TypeService_Notify_Call{Call: _e.mock.On("Notify", rcv, payloadMessage)}
+func (_e *TypeService_Expecter) Notify(ctx interface{}, rcv interface{}, payloadMessage interface{}) *TypeService_Notify_Call {
+	return &TypeService_Notify_Call{Call: _e.mock.On("Notify", ctx, rcv, payloadMessage)}
 }
 
-func (_c *TypeService_Notify_Call) Run(run func(rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage)) *TypeService_Notify_Call {
+func (_c *TypeService_Notify_Call) Run(run func(ctx context.Context, rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage)) *TypeService_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver), args[1].(receiver.NotificationMessage))
+		run(args[0].(context.Context), args[1].(*receiver.Receiver), args[2].(receiver.NotificationMessage))
 	})
 	return _c
 }
@@ -134,13 +137,13 @@ func (_c *TypeService_Notify_Call) Return(_a0 error) *TypeService_Notify_Call {
 	return _c
 }
 
-// PopulateReceiver provides a mock function with given fields: rcv
-func (_m *TypeService) PopulateReceiver(rcv *receiver.Receiver) (*receiver.Receiver, error) {
-	ret := _m.Called(rcv)
+// PopulateReceiver provides a mock function with given fields: ctx, rcv
+func (_m *TypeService) PopulateReceiver(ctx context.Context, rcv *receiver.Receiver) (*receiver.Receiver, error) {
+	ret := _m.Called(ctx, rcv)
 
 	var r0 *receiver.Receiver
-	if rf, ok := ret.Get(0).(func(*receiver.Receiver) *receiver.Receiver); ok {
-		r0 = rf(rcv)
+	if rf, ok := ret.Get(0).(func(context.Context, *receiver.Receiver) *receiver.Receiver); ok {
+		r0 = rf(ctx, rcv)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*receiver.Receiver)
@@ -148,8 +151,8 @@ func (_m *TypeService) PopulateReceiver(rcv *receiver.Receiver) (*receiver.Recei
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*receiver.Receiver) error); ok {
-		r1 = rf(rcv)
+	if rf, ok := ret.Get(1).(func(context.Context, *receiver.Receiver) error); ok {
+		r1 = rf(ctx, rcv)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -163,14 +166,15 @@ type TypeService_PopulateReceiver_Call struct {
 }
 
 // PopulateReceiver is a helper method to define mock.On call
+//  - ctx context.Context
 //  - rcv *receiver.Receiver
-func (_e *TypeService_Expecter) PopulateReceiver(rcv interface{}) *TypeService_PopulateReceiver_Call {
-	return &TypeService_PopulateReceiver_Call{Call: _e.mock.On("PopulateReceiver", rcv)}
+func (_e *TypeService_Expecter) PopulateReceiver(ctx interface{}, rcv interface{}) *TypeService_PopulateReceiver_Call {
+	return &TypeService_PopulateReceiver_Call{Call: _e.mock.On("PopulateReceiver", ctx, rcv)}
 }
 
-func (_c *TypeService_PopulateReceiver_Call) Run(run func(rcv *receiver.Receiver)) *TypeService_PopulateReceiver_Call {
+func (_c *TypeService_PopulateReceiver_Call) Run(run func(ctx context.Context, rcv *receiver.Receiver)) *TypeService_PopulateReceiver_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*receiver.Receiver))
+		run(args[0].(context.Context), args[1].(*receiver.Receiver))
 	})
 	return _c
 }
