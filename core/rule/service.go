@@ -20,11 +20,11 @@ const (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	ListNamespaces() ([]*namespace.Namespace, error)
-	CreateNamespace(*namespace.Namespace) error
-	GetNamespace(uint64) (*namespace.Namespace, error)
-	UpdateNamespace(*namespace.Namespace) error
-	DeleteNamespace(uint64) error
+	List(context.Context) ([]*namespace.Namespace, error)
+	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Get(context.Context, uint64) (*namespace.Namespace, error)
+	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
@@ -94,7 +94,7 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rule.Variables)
 	rule.Variables = finalRuleVariables
 
-	namespace, err := s.namespaceService.GetNamespace(rule.ProviderNamespace)
+	namespace, err := s.namespaceService.Get(ctx, rule.ProviderNamespace)
 	if err != nil {
 		return err
 	}

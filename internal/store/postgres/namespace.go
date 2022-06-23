@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/odpf/siren/core/namespace"
@@ -19,10 +20,9 @@ func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
 	return &NamespaceRepository{db}
 }
 
-func (r NamespaceRepository) List() ([]*namespace.EncryptedNamespace, error) {
+func (r NamespaceRepository) List(ctx context.Context) ([]*namespace.EncryptedNamespace, error) {
 	var namespaceModels []*model.Namespace
-	selectQuery := "select * from namespaces"
-	if err := r.db.Raw(selectQuery).Find(&namespaceModels).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw("select * from namespaces").Find(&namespaceModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -38,33 +38,29 @@ func (r NamespaceRepository) List() ([]*namespace.EncryptedNamespace, error) {
 	return result, nil
 }
 
-func (r NamespaceRepository) Create(ns *namespace.EncryptedNamespace) error {
+func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.EncryptedNamespace) (uint64, error) {
 	nsModel := new(model.Namespace)
 	if err := nsModel.FromDomain(ns); err != nil {
-		return err
+		return 0, err
 	}
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := r.db.Create(nsModel).Error; err != nil {
-			err = checkPostgresError(err)
-			if errors.Is(err, errDuplicateKey) {
-				return namespace.ErrDuplicate
-			}
-			return err
+	if err := r.db.WithContext(ctx).Create(nsModel).Error; err != nil {
+		err = checkPostgresError(err)
+		if errors.Is(err, errDuplicateKey) {
+			return 0, namespace.ErrDuplicate
 		}
+		if errors.Is(err, errForeignKeyViolation) {
+			return 0, namespace.ErrRelation
+		}
+		return 0, err
+	}
 
-		newNamespace, err := nsModel.ToDomain()
-		if err != nil {
-			return err
-		}
-		*ns = *newNamespace
-		return nil
-	})
+	return nsModel.ID, nil
 }
 
-func (r NamespaceRepository) Get(id uint64) (*namespace.EncryptedNamespace, error) {
+func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.EncryptedNamespace, error) {
 	var nsModel model.Namespace
-	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(&nsModel)
+	result := r.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&nsModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -78,40 +74,32 @@ func (r NamespaceRepository) Get(id uint64) (*namespace.EncryptedNamespace, erro
 	return ns, nil
 }
 
-func (r NamespaceRepository) Update(ns *namespace.EncryptedNamespace) error {
+func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.EncryptedNamespace) (uint64, error) {
 	m := new(model.Namespace)
 	if err := m.FromDomain(ns); err != nil {
-		return err
+		return 0, err
 	}
 
-	return r.db.Transaction(func(tx *gorm.DB) error {
-		result := r.db.Where("id = ?", m.ID).Updates(m)
-		if result.Error != nil {
-			err := checkPostgresError(result.Error)
-			if errors.Is(err, errDuplicateKey) {
-				return namespace.ErrDuplicate
-			}
-			return err
+	result := r.db.Where("id = ?", m.ID).Updates(m)
+	if result.Error != nil {
+		err := checkPostgresError(result.Error)
+		if errors.Is(err, errDuplicateKey) {
+			return 0, namespace.ErrDuplicate
 		}
-		if result.RowsAffected == 0 {
-			return namespace.NotFoundError{ID: ns.ID}
+		if errors.Is(err, errForeignKeyViolation) {
+			return 0, namespace.ErrRelation
 		}
-		//TODO need to check whether this is necessary or not
-		if err := r.db.Where(fmt.Sprintf("id = %d", m.ID)).Find(m).Error; err != nil {
-			return err
-		}
+		return 0, err
+	}
+	if result.RowsAffected == 0 {
+		return 0, namespace.NotFoundError{ID: ns.ID}
+	}
 
-		newNamespace, err := m.ToDomain()
-		if err != nil {
-			return err
-		}
-		*ns = *newNamespace
-		return nil
-	})
+	return m.ID, nil
 }
 
-func (r NamespaceRepository) Delete(id uint64) error {
+func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
 	var namespace model.Namespace
-	result := r.db.Where("id = ?", id).Delete(&namespace)
+	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&namespace)
 	return result.Error
 }

@@ -12,15 +12,15 @@ import (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	ListNamespaces() ([]*namespace.Namespace, error)
-	CreateNamespace(*namespace.Namespace) error
-	GetNamespace(uint64) (*namespace.Namespace, error)
-	UpdateNamespace(*namespace.Namespace) error
-	DeleteNamespace(uint64) error
+	List(context.Context) ([]*namespace.Namespace, error)
+	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Get(context.Context, uint64) (*namespace.Namespace, error)
+	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
-func (s *GRPCServer) ListNamespaces(_ context.Context, _ *sirenv1beta1.ListNamespacesRequest) (*sirenv1beta1.ListNamespacesResponse, error) {
-	namespaces, err := s.namespaceService.ListNamespaces()
+func (s *GRPCServer) ListNamespaces(ctx context.Context, _ *sirenv1beta1.ListNamespacesRequest) (*sirenv1beta1.ListNamespacesResponse, error) {
+	namespaces, err := s.namespaceService.List(ctx)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -49,7 +49,7 @@ func (s *GRPCServer) ListNamespaces(_ context.Context, _ *sirenv1beta1.ListNames
 	}, nil
 }
 
-func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.CreateNamespaceRequest) (*sirenv1beta1.CreateNamespaceResponse, error) {
+func (s *GRPCServer) CreateNamespace(ctx context.Context, req *sirenv1beta1.CreateNamespaceRequest) (*sirenv1beta1.CreateNamespaceResponse, error) {
 	ns := &namespace.Namespace{
 		Provider:    req.GetProvider(),
 		URN:         req.GetUrn(),
@@ -57,17 +57,18 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.Create
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	}
-	if err := s.namespaceService.CreateNamespace(ns); err != nil {
+	id, err := s.namespaceService.Create(ctx, ns)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateNamespaceResponse{
-		Id: ns.ID,
+		Id: id,
 	}, nil
 }
 
-func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1beta1.GetNamespaceRequest) (*sirenv1beta1.GetNamespaceResponse, error) {
-	namespace, err := s.namespaceService.GetNamespace(req.GetId())
+func (s *GRPCServer) GetNamespace(ctx context.Context, req *sirenv1beta1.GetNamespaceRequest) (*sirenv1beta1.GetNamespaceResponse, error) {
+	namespace, err := s.namespaceService.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -91,7 +92,7 @@ func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1beta1.GetNamesp
 	}, nil
 }
 
-func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1beta1.UpdateNamespaceRequest) (*sirenv1beta1.UpdateNamespaceResponse, error) {
+func (s *GRPCServer) UpdateNamespace(ctx context.Context, req *sirenv1beta1.UpdateNamespaceRequest) (*sirenv1beta1.UpdateNamespaceResponse, error) {
 	ns := &namespace.Namespace{
 		ID:          req.GetId(),
 		Provider:    req.GetProvider(),
@@ -99,17 +100,18 @@ func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1beta1.Update
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	}
-	if err := s.namespaceService.UpdateNamespace(ns); err != nil {
+	id, err := s.namespaceService.Update(ctx, ns)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateNamespaceResponse{
-		Id: ns.ID,
+		Id: id,
 	}, nil
 }
 
-func (s *GRPCServer) DeleteNamespace(_ context.Context, req *sirenv1beta1.DeleteNamespaceRequest) (*sirenv1beta1.DeleteNamespaceResponse, error) {
-	err := s.namespaceService.DeleteNamespace(req.GetId())
+func (s *GRPCServer) DeleteNamespace(ctx context.Context, req *sirenv1beta1.DeleteNamespaceRequest) (*sirenv1beta1.DeleteNamespaceResponse, error) {
+	err := s.namespaceService.Delete(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

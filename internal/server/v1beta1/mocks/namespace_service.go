@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	namespace "github.com/odpf/siren/core/namespace"
 	mock "github.com/stretchr/testify/mock"
 
@@ -22,13 +24,58 @@ func (_m *NamespaceService) EXPECT() *NamespaceService_Expecter {
 	return &NamespaceService_Expecter{mock: &_m.Mock}
 }
 
-// CreateNamespace provides a mock function with given fields: _a0
-func (_m *NamespaceService) CreateNamespace(_a0 *namespace.Namespace) error {
-	ret := _m.Called(_a0)
+// Create provides a mock function with given fields: _a0, _a1
+func (_m *NamespaceService) Create(_a0 context.Context, _a1 *namespace.Namespace) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *namespace.Namespace) uint64); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *namespace.Namespace) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NamespaceService_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
+type NamespaceService_Create_Call struct {
+	*mock.Call
+}
+
+// Create is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 *namespace.Namespace
+func (_e *NamespaceService_Expecter) Create(_a0 interface{}, _a1 interface{}) *NamespaceService_Create_Call {
+	return &NamespaceService_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
+}
+
+func (_c *NamespaceService_Create_Call) Run(run func(_a0 context.Context, _a1 *namespace.Namespace)) *NamespaceService_Create_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*namespace.Namespace))
+	})
+	return _c
+}
+
+func (_c *NamespaceService_Create_Call) Return(_a0 uint64, _a1 error) *NamespaceService_Create_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// Delete provides a mock function with given fields: _a0, _a1
+func (_m *NamespaceService) Delete(_a0 context.Context, _a1 uint64) error {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*namespace.Namespace) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -36,73 +83,37 @@ func (_m *NamespaceService) CreateNamespace(_a0 *namespace.Namespace) error {
 	return r0
 }
 
-// NamespaceService_CreateNamespace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateNamespace'
-type NamespaceService_CreateNamespace_Call struct {
+// NamespaceService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type NamespaceService_Delete_Call struct {
 	*mock.Call
 }
 
-// CreateNamespace is a helper method to define mock.On call
-//  - _a0 *namespace.Namespace
-func (_e *NamespaceService_Expecter) CreateNamespace(_a0 interface{}) *NamespaceService_CreateNamespace_Call {
-	return &NamespaceService_CreateNamespace_Call{Call: _e.mock.On("CreateNamespace", _a0)}
+// Delete is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *NamespaceService_Expecter) Delete(_a0 interface{}, _a1 interface{}) *NamespaceService_Delete_Call {
+	return &NamespaceService_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
 
-func (_c *NamespaceService_CreateNamespace_Call) Run(run func(_a0 *namespace.Namespace)) *NamespaceService_CreateNamespace_Call {
+func (_c *NamespaceService_Delete_Call) Run(run func(_a0 context.Context, _a1 uint64)) *NamespaceService_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*namespace.Namespace))
+		run(args[0].(context.Context), args[1].(uint64))
 	})
 	return _c
 }
 
-func (_c *NamespaceService_CreateNamespace_Call) Return(_a0 error) *NamespaceService_CreateNamespace_Call {
+func (_c *NamespaceService_Delete_Call) Return(_a0 error) *NamespaceService_Delete_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-// DeleteNamespace provides a mock function with given fields: _a0
-func (_m *NamespaceService) DeleteNamespace(_a0 uint64) error {
-	ret := _m.Called(_a0)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(uint64) error); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// NamespaceService_DeleteNamespace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteNamespace'
-type NamespaceService_DeleteNamespace_Call struct {
-	*mock.Call
-}
-
-// DeleteNamespace is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *NamespaceService_Expecter) DeleteNamespace(_a0 interface{}) *NamespaceService_DeleteNamespace_Call {
-	return &NamespaceService_DeleteNamespace_Call{Call: _e.mock.On("DeleteNamespace", _a0)}
-}
-
-func (_c *NamespaceService_DeleteNamespace_Call) Run(run func(_a0 uint64)) *NamespaceService_DeleteNamespace_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
-	})
-	return _c
-}
-
-func (_c *NamespaceService_DeleteNamespace_Call) Return(_a0 error) *NamespaceService_DeleteNamespace_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-// GetNamespace provides a mock function with given fields: _a0
-func (_m *NamespaceService) GetNamespace(_a0 uint64) (*namespace.Namespace, error) {
-	ret := _m.Called(_a0)
+// Get provides a mock function with given fields: _a0, _a1
+func (_m *NamespaceService) Get(_a0 context.Context, _a1 uint64) (*namespace.Namespace, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *namespace.Namespace
-	if rf, ok := ret.Get(0).(func(uint64) *namespace.Namespace); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *namespace.Namespace); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*namespace.Namespace)
@@ -110,7 +121,54 @@ func (_m *NamespaceService) GetNamespace(_a0 uint64) (*namespace.Namespace, erro
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(uint64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NamespaceService_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type NamespaceService_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 uint64
+func (_e *NamespaceService_Expecter) Get(_a0 interface{}, _a1 interface{}) *NamespaceService_Get_Call {
+	return &NamespaceService_Get_Call{Call: _e.mock.On("Get", _a0, _a1)}
+}
+
+func (_c *NamespaceService_Get_Call) Run(run func(_a0 context.Context, _a1 uint64)) *NamespaceService_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *NamespaceService_Get_Call) Return(_a0 *namespace.Namespace, _a1 error) *NamespaceService_Get_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// List provides a mock function with given fields: _a0
+func (_m *NamespaceService) List(_a0 context.Context) ([]*namespace.Namespace, error) {
+	ret := _m.Called(_a0)
+
+	var r0 []*namespace.Namespace
+	if rf, ok := ret.Get(0).(func(context.Context) []*namespace.Namespace); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*namespace.Namespace)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -119,45 +177,43 @@ func (_m *NamespaceService) GetNamespace(_a0 uint64) (*namespace.Namespace, erro
 	return r0, r1
 }
 
-// NamespaceService_GetNamespace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetNamespace'
-type NamespaceService_GetNamespace_Call struct {
+// NamespaceService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type NamespaceService_List_Call struct {
 	*mock.Call
 }
 
-// GetNamespace is a helper method to define mock.On call
-//  - _a0 uint64
-func (_e *NamespaceService_Expecter) GetNamespace(_a0 interface{}) *NamespaceService_GetNamespace_Call {
-	return &NamespaceService_GetNamespace_Call{Call: _e.mock.On("GetNamespace", _a0)}
+// List is a helper method to define mock.On call
+//  - _a0 context.Context
+func (_e *NamespaceService_Expecter) List(_a0 interface{}) *NamespaceService_List_Call {
+	return &NamespaceService_List_Call{Call: _e.mock.On("List", _a0)}
 }
 
-func (_c *NamespaceService_GetNamespace_Call) Run(run func(_a0 uint64)) *NamespaceService_GetNamespace_Call {
+func (_c *NamespaceService_List_Call) Run(run func(_a0 context.Context)) *NamespaceService_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uint64))
+		run(args[0].(context.Context))
 	})
 	return _c
 }
 
-func (_c *NamespaceService_GetNamespace_Call) Return(_a0 *namespace.Namespace, _a1 error) *NamespaceService_GetNamespace_Call {
+func (_c *NamespaceService_List_Call) Return(_a0 []*namespace.Namespace, _a1 error) *NamespaceService_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// ListNamespaces provides a mock function with given fields:
-func (_m *NamespaceService) ListNamespaces() ([]*namespace.Namespace, error) {
-	ret := _m.Called()
+// Update provides a mock function with given fields: _a0, _a1
+func (_m *NamespaceService) Update(_a0 context.Context, _a1 *namespace.Namespace) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 []*namespace.Namespace
-	if rf, ok := ret.Get(0).(func() []*namespace.Namespace); ok {
-		r0 = rf()
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *namespace.Namespace) uint64); ok {
+		r0 = rf(_a0, _a1)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*namespace.Namespace)
-		}
+		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context, *namespace.Namespace) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -165,62 +221,27 @@ func (_m *NamespaceService) ListNamespaces() ([]*namespace.Namespace, error) {
 	return r0, r1
 }
 
-// NamespaceService_ListNamespaces_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListNamespaces'
-type NamespaceService_ListNamespaces_Call struct {
+// NamespaceService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type NamespaceService_Update_Call struct {
 	*mock.Call
 }
 
-// ListNamespaces is a helper method to define mock.On call
-func (_e *NamespaceService_Expecter) ListNamespaces() *NamespaceService_ListNamespaces_Call {
-	return &NamespaceService_ListNamespaces_Call{Call: _e.mock.On("ListNamespaces")}
+// Update is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 *namespace.Namespace
+func (_e *NamespaceService_Expecter) Update(_a0 interface{}, _a1 interface{}) *NamespaceService_Update_Call {
+	return &NamespaceService_Update_Call{Call: _e.mock.On("Update", _a0, _a1)}
 }
 
-func (_c *NamespaceService_ListNamespaces_Call) Run(run func()) *NamespaceService_ListNamespaces_Call {
+func (_c *NamespaceService_Update_Call) Run(run func(_a0 context.Context, _a1 *namespace.Namespace)) *NamespaceService_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context), args[1].(*namespace.Namespace))
 	})
 	return _c
 }
 
-func (_c *NamespaceService_ListNamespaces_Call) Return(_a0 []*namespace.Namespace, _a1 error) *NamespaceService_ListNamespaces_Call {
+func (_c *NamespaceService_Update_Call) Return(_a0 uint64, _a1 error) *NamespaceService_Update_Call {
 	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// UpdateNamespace provides a mock function with given fields: _a0
-func (_m *NamespaceService) UpdateNamespace(_a0 *namespace.Namespace) error {
-	ret := _m.Called(_a0)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*namespace.Namespace) error); ok {
-		r0 = rf(_a0)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// NamespaceService_UpdateNamespace_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateNamespace'
-type NamespaceService_UpdateNamespace_Call struct {
-	*mock.Call
-}
-
-// UpdateNamespace is a helper method to define mock.On call
-//  - _a0 *namespace.Namespace
-func (_e *NamespaceService_Expecter) UpdateNamespace(_a0 interface{}) *NamespaceService_UpdateNamespace_Call {
-	return &NamespaceService_UpdateNamespace_Call{Call: _e.mock.On("UpdateNamespace", _a0)}
-}
-
-func (_c *NamespaceService_UpdateNamespace_Call) Run(run func(_a0 *namespace.Namespace)) *NamespaceService_UpdateNamespace_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*namespace.Namespace))
-	})
-	return _c
-}
-
-func (_c *NamespaceService_UpdateNamespace_Call) Return(_a0 error) *NamespaceService_UpdateNamespace_Call {
-	_c.Call.Return(_a0)
 	return _c
 }
 

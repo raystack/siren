@@ -21,7 +21,6 @@ type ProviderRepositoryTestSuite struct {
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
 	repository *postgres.ProviderRepository
-	providers  []provider.Provider
 }
 
 func (s *ProviderRepositoryTestSuite) SetupSuite() {
@@ -39,7 +38,7 @@ func (s *ProviderRepositoryTestSuite) SetupSuite() {
 
 func (s *ProviderRepositoryTestSuite) SetupTest() {
 	var err error
-	s.providers, err = bootstrapProvider(s.db)
+	_, err = bootstrapProvider(s.db)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -128,7 +127,7 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.List(s.ctx, tc.Filter)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -170,7 +169,7 @@ func (s *ProviderRepositoryTestSuite) TestGet() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Get(s.ctx, tc.PassedID)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -220,7 +219,7 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Create(s.ctx, tc.ProviderToCreate)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -283,7 +282,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Update(s.ctx, tc.ProviderToUpdate)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}

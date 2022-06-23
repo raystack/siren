@@ -14,11 +14,11 @@ import (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	ListNamespaces() ([]*namespace.Namespace, error)
-	CreateNamespace(*namespace.Namespace) error
-	GetNamespace(uint64) (*namespace.Namespace, error)
-	UpdateNamespace(*namespace.Namespace) error
-	DeleteNamespace(uint64) error
+	List(context.Context) ([]*namespace.Namespace, error)
+	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Get(context.Context, uint64) (*namespace.Namespace, error)
+	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
@@ -206,7 +206,7 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 }
 
 func (s Service) getProviderAndNamespaceInfoFromNamespaceId(ctx context.Context, id uint64) (*provider.Provider, *namespace.Namespace, error) {
-	namespaceInfo, err := s.namespaceService.GetNamespace(id)
+	namespaceInfo, err := s.namespaceService.Get(ctx, id)
 	if err != nil {
 		return nil, nil, err
 	}

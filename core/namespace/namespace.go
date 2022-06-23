@@ -1,16 +1,17 @@
 package namespace
 
 import (
+	"context"
 	"time"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname NamespaceRepository --filename namespace_repository.go --output=./mocks
 type Repository interface {
-	List() ([]*EncryptedNamespace, error)
-	Create(*EncryptedNamespace) error
-	Get(uint64) (*EncryptedNamespace, error)
-	Update(*EncryptedNamespace) error
-	Delete(uint64) error
+	List(context.Context) ([]*EncryptedNamespace, error)
+	Create(context.Context, *EncryptedNamespace) (uint64, error)
+	Get(context.Context, uint64) (*EncryptedNamespace, error)
+	Update(context.Context, *EncryptedNamespace) (uint64, error)
+	Delete(context.Context, uint64) error
 }
 
 type Namespace struct {
