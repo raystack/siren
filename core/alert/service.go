@@ -1,7 +1,10 @@
 package alert
 
 import (
+	"context"
 	"time"
+
+	"github.com/odpf/siren/pkg/errors"
 )
 
 // Service handles business logic
@@ -14,23 +17,26 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) Create(alerts *Alerts) ([]Alert, error) {
-	result := make([]Alert, 0, len(alerts.Alerts))
+func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]*Alert, error) {
+	result := make([]*Alert, 0, len(alerts))
 
-	for i := 0; i < len(alerts.Alerts); i++ {
-		err := service.repository.Create(&alerts.Alerts[i])
+	for _, alrt := range alerts {
+		newAlert, err := s.repository.Create(ctx, alrt)
 		if err != nil {
+			if errors.Is(err, ErrRelation) {
+				return nil, errors.ErrNotFound.WithMsgf(err.Error())
+			}
 			return nil, err
 		}
-		result = append(result, alerts.Alerts[i])
+		result = append(result, newAlert)
 	}
 	return result, nil
 }
 
-func (service Service) Get(resourceName string, providerId, startTime, endTime uint64) ([]Alert, error) {
-	if endTime == 0 {
-		endTime = uint64(time.Now().Unix())
+func (s *Service) List(ctx context.Context, flt Filter) ([]*Alert, error) {
+	if flt.EndTime == 0 {
+		flt.EndTime = uint64(time.Now().Unix())
 	}
 
-	return service.repository.Get(resourceName, providerId, startTime, endTime)
+	return s.repository.List(ctx, flt)
 }

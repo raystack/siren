@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
@@ -237,6 +238,40 @@ func bootstrapReceiver(db *gorm.DB) ([]receiver.Receiver, error) {
 	var insertedData []receiver.Receiver
 	for _, d := range data {
 		var mdl model.Receiver
+		if err := mdl.FromDomain(&d); err != nil {
+			return nil, err
+		}
+
+		result := db.Create(&mdl)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		dmn, err := mdl.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, *dmn)
+	}
+
+	return insertedData, nil
+}
+
+func bootstrapAlert(db *gorm.DB) ([]alert.Alert, error) {
+	filePath := "./testdata/mock-alert.json"
+	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []alert.Alert
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []alert.Alert
+	for _, d := range data {
+		var mdl model.Alert
 		if err := mdl.FromDomain(&d); err != nil {
 			return nil, err
 		}

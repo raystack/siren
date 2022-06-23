@@ -3,7 +3,10 @@
 package mocks
 
 import (
+	context "context"
+
 	alert "github.com/odpf/siren/core/alert"
+
 	mock "github.com/stretchr/testify/mock"
 
 	testing "testing"
@@ -22,22 +25,22 @@ func (_m *AlertService) EXPECT() *AlertService_Expecter {
 	return &AlertService_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: _a0
-func (_m *AlertService) Create(_a0 *alert.Alerts) ([]alert.Alert, error) {
-	ret := _m.Called(_a0)
+// Create provides a mock function with given fields: _a0, _a1
+func (_m *AlertService) Create(_a0 context.Context, _a1 []*alert.Alert) ([]*alert.Alert, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 []alert.Alert
-	if rf, ok := ret.Get(0).(func(*alert.Alerts) []alert.Alert); ok {
-		r0 = rf(_a0)
+	var r0 []*alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, []*alert.Alert) []*alert.Alert); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]alert.Alert)
+			r0 = ret.Get(0).([]*alert.Alert)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*alert.Alerts) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, []*alert.Alert) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -51,39 +54,40 @@ type AlertService_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//  - _a0 *alert.Alerts
-func (_e *AlertService_Expecter) Create(_a0 interface{}) *AlertService_Create_Call {
-	return &AlertService_Create_Call{Call: _e.mock.On("Create", _a0)}
+//  - _a0 context.Context
+//  - _a1 []*alert.Alert
+func (_e *AlertService_Expecter) Create(_a0 interface{}, _a1 interface{}) *AlertService_Create_Call {
+	return &AlertService_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
 }
 
-func (_c *AlertService_Create_Call) Run(run func(_a0 *alert.Alerts)) *AlertService_Create_Call {
+func (_c *AlertService_Create_Call) Run(run func(_a0 context.Context, _a1 []*alert.Alert)) *AlertService_Create_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*alert.Alerts))
+		run(args[0].(context.Context), args[1].([]*alert.Alert))
 	})
 	return _c
 }
 
-func (_c *AlertService_Create_Call) Return(_a0 []alert.Alert, _a1 error) *AlertService_Create_Call {
+func (_c *AlertService_Create_Call) Return(_a0 []*alert.Alert, _a1 error) *AlertService_Create_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// Get provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *AlertService) Get(_a0 string, _a1 uint64, _a2 uint64, _a3 uint64) ([]alert.Alert, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3)
+// List provides a mock function with given fields: _a0, _a1
+func (_m *AlertService) List(_a0 context.Context, _a1 alert.Filter) ([]*alert.Alert, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 []alert.Alert
-	if rf, ok := ret.Get(0).(func(string, uint64, uint64, uint64) []alert.Alert); ok {
-		r0 = rf(_a0, _a1, _a2, _a3)
+	var r0 []*alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, alert.Filter) []*alert.Alert); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]alert.Alert)
+			r0 = ret.Get(0).([]*alert.Alert)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, uint64, uint64, uint64) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(1).(func(context.Context, alert.Filter) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -91,28 +95,26 @@ func (_m *AlertService) Get(_a0 string, _a1 uint64, _a2 uint64, _a3 uint64) ([]a
 	return r0, r1
 }
 
-// AlertService_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
-type AlertService_Get_Call struct {
+// AlertService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type AlertService_List_Call struct {
 	*mock.Call
 }
 
-// Get is a helper method to define mock.On call
-//  - _a0 string
-//  - _a1 uint64
-//  - _a2 uint64
-//  - _a3 uint64
-func (_e *AlertService_Expecter) Get(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}) *AlertService_Get_Call {
-	return &AlertService_Get_Call{Call: _e.mock.On("Get", _a0, _a1, _a2, _a3)}
+// List is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 alert.Filter
+func (_e *AlertService_Expecter) List(_a0 interface{}, _a1 interface{}) *AlertService_List_Call {
+	return &AlertService_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
 
-func (_c *AlertService_Get_Call) Run(run func(_a0 string, _a1 uint64, _a2 uint64, _a3 uint64)) *AlertService_Get_Call {
+func (_c *AlertService_List_Call) Run(run func(_a0 context.Context, _a1 alert.Filter)) *AlertService_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(uint64), args[2].(uint64), args[3].(uint64))
+		run(args[0].(context.Context), args[1].(alert.Filter))
 	})
 	return _c
 }
 
-func (_c *AlertService_Get_Call) Return(_a0 []alert.Alert, _a1 error) *AlertService_Get_Call {
+func (_c *AlertService_List_Call) Return(_a0 []*alert.Alert, _a1 error) *AlertService_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

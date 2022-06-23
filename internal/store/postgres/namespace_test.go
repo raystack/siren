@@ -114,7 +114,7 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.List(s.ctx)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -158,7 +158,7 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Get(s.ctx, tc.PassedID)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -224,7 +224,7 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Create(s.ctx, tc.NamespaceToCreate)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -319,7 +319,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Update(s.ctx, tc.NamespaceToUpdate)
-			if err != nil {
+			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
@@ -357,6 +357,6 @@ func (s *NamespaceRepositoryTestSuite) TestDelete() {
 	}
 }
 
-func TestRepository(t *testing.T) {
+func TestNamespaceRepository(t *testing.T) {
 	suite.Run(t, new(NamespaceRepositoryTestSuite))
 }

@@ -1,98 +1,194 @@
 package postgres_test
 
 import (
-	"database/sql"
-	"regexp"
+	"context"
 	"testing"
 	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 )
 
 type AlertsRepositoryTestSuite struct {
 	suite.Suite
-	sqldb      *sql.DB
-	dbmock     sqlmock.Sqlmock
+	ctx        context.Context
+	db         *gorm.DB
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.AlertRepository
 }
 
+func (s *AlertsRepositoryTestSuite) SetupSuite() {
+	var err error
+
+	logger := log.NewZap()
+	s.db, s.pool, s.resource, err = newTestClient(logger)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.ctx = context.TODO()
+	s.repository = postgres.NewAlertRepository(s.db)
+
+	_, err = bootstrapProvider(s.db)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
 func (s *AlertsRepositoryTestSuite) SetupTest() {
-	db, mock, _ := mocks.NewStore()
-	s.sqldb, _ = db.DB()
-	s.dbmock = mock
-	s.repository = postgres.NewAlertRepository(db)
+	var err error
+	_, err = bootstrapAlert(s.db)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *AlertsRepositoryTestSuite) TearDownSuite() {
+	// Clean tests
+	if err := purgeDocker(s.pool, s.resource); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *AlertsRepositoryTestSuite) TearDownTest() {
-	s.sqldb.Close()
+	if err := s.cleanup(); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
-func (s *AlertsRepositoryTestSuite) TestGet() {
-	timenow := time.Now()
-	s.Run("should fetch matching alert history objects", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from alerts where resource_name = 'foo' AND provider_id = '1' AND triggered_at BETWEEN to_timestamp('0') AND to_timestamp('1000')`)
-		expectedAlert := alert.Alert{
-			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
-			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
-		}
-		expectedAlerts := []alert.Alert{expectedAlert}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "resource_name", "provider_id",
-			"severity", "metric_name", "metric_value", "rule", "triggered_at"}).
-			AddRow(expectedAlert.ID, expectedAlert.CreatedAt,
-				expectedAlert.UpdatedAt, expectedAlert.ResourceName, expectedAlert.ProviderID, expectedAlert.Severity,
-				expectedAlert.MetricName, expectedAlert.MetricValue, expectedAlert.Rule, expectedAlert.TriggeredAt)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+func (s *AlertsRepositoryTestSuite) cleanup() error {
+	queries := []string{
+		"TRUNCATE TABLE alerts RESTART IDENTITY CASCADE",
+	}
+	return execQueries(context.TODO(), s.db, queries)
+}
 
-		actualAlerts, err := s.repository.Get("foo", 1, 0, 1000)
-		s.Equal(expectedAlerts, actualAlerts)
-		s.Nil(err)
-	})
+func (s *AlertsRepositoryTestSuite) TestList() {
+	type testCase struct {
+		Description    string
+		Filter         alert.Filter
+		ExpectedAlerts []*alert.Alert
+		ErrString      string
+	}
 
-	s.Run("should return error if any in fetching alert history objects", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from alerts where resource_name = 'foo' AND provider_id = '1' AND triggered_at BETWEEN to_timestamp('0') AND to_timestamp('1000')`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-		actualAlerts, err := s.repository.Get("foo", 1, 0, 1000)
-		s.Nil(actualAlerts)
-		s.EqualError(err, "random error")
-	})
+	var testCases = []testCase{
+		{
+			Description: "should get all filtered alerts with correct filter",
+			Filter: alert.Filter{
+				ResourceName: "odpf-kafka-1",
+				ProviderID:   1,
+				StartTime:    uint64(time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				EndTime:      uint64(time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+			},
+			ExpectedAlerts: []*alert.Alert{
+				{
+					ID:           1,
+					ProviderID:   1,
+					ResourceName: "odpf-kafka-1",
+					MetricName:   "cpu_usage_user",
+					MetricValue:  "97.30",
+					Severity:     "CRITICAL",
+					Rule:         "cpu-usage",
+				},
+				{
+					ID:           3,
+					ProviderID:   1,
+					ResourceName: "odpf-kafka-1",
+					MetricName:   "cpu_usage_user",
+					MetricValue:  "98.30",
+					Severity:     "CRITICAL",
+					Rule:         "cpu-usage",
+				},
+			},
+		},
+		{
+			Description: "should get empty alerts if out of range",
+			Filter: alert.Filter{
+				ResourceName: "odpf-kafka-1",
+				ProviderID:   1,
+				StartTime:    uint64(time.Date(1980, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				EndTime:      uint64(time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+			},
+		},
+		{
+			Description: "should return empty if filter is empty",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.List(s.ctx, tc.Filter)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedAlerts, cmpopts.IgnoreFields(alert.Alert{}, "TriggeredAt", "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedAlerts)
+			}
+		})
+	}
 }
 
 func (s *AlertsRepositoryTestSuite) TestCreate() {
-	timenow := time.Now()
-	s.Run("should create alert object", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
-		expectedAlerts := &alert.Alert{
-			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
-			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
-		}
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderID,
-			expectedAlerts.ResourceName, expectedAlerts.MetricName, expectedAlerts.MetricValue, expectedAlerts.Severity,
-			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
-			expectedAlerts.ID).
-			WillReturnRows(sqlmock.NewRows(nil))
-		err := s.repository.Create(expectedAlerts)
-		s.Nil(err)
-	})
+	type testCase struct {
+		Description   string
+		AlertToCreate *alert.Alert
+		ExpectedID    uint64
+		ErrString     string
+	}
 
-	s.Run("should return error in alert history creation", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "alerts" ("provider_id","resource_name","metric_name","metric_value","severity","rule","triggered_at","created_at","updated_at","id") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING "id"`)
-		expectedAlerts := &alert.Alert{
-			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
-			Rule: "bar", TriggeredAt: timenow, CreatedAt: time.Now(), UpdatedAt: time.Now(),
-		}
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedAlerts.ProviderID,
-			expectedAlerts.ResourceName, expectedAlerts.MetricName, expectedAlerts.MetricValue, expectedAlerts.Severity,
-			expectedAlerts.Rule, expectedAlerts.TriggeredAt, expectedAlerts.CreatedAt, expectedAlerts.UpdatedAt,
-			expectedAlerts.ID).
-			WillReturnError(errors.New("random error"))
-		err := s.repository.Create(expectedAlerts)
-		s.EqualError(err, "random error")
-	})
+	var testCases = []testCase{
+		{
+			Description: "should create an alert",
+			AlertToCreate: &alert.Alert{
+				ProviderID:   1,
+				ResourceName: "odpf-kafka-stream",
+				MetricName:   "cpu_usage_user",
+				MetricValue:  "88.88",
+				Severity:     "CRITICAL",
+				Rule:         "cpu-usage",
+			},
+			ExpectedID: uint64(4), // autoincrement in db side
+		},
+		{
+			Description: "should return error foreign key if provider id does not exist",
+			AlertToCreate: &alert.Alert{
+				ProviderID:   1000,
+				ResourceName: "odpf-kafka-stream",
+				MetricName:   "cpu_usage_user",
+				MetricValue:  "88.88",
+				Severity:     "CRITICAL",
+				Rule:         "cpu-usage",
+			},
+			ErrString: "provider id does not exist",
+		},
+		{
+			Description: "should return error if alert is nil",
+			ErrString:   "alert domain is nil",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.Create(s.ctx, tc.AlertToCreate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if tc.ExpectedID != 0 && (got.ID != tc.ExpectedID) {
+				s.T().Fatalf("got result %+v, expected was %+v", got.ID, tc.ExpectedID)
+			}
+		})
+	}
 }
 
 func TestAlertsRepository(t *testing.T) {
