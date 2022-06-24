@@ -10,8 +10,8 @@ import (
 
 //go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
 type AlertService interface {
-	Create(context.Context, []*alert.Alert) ([]*alert.Alert, error)
-	List(context.Context, alert.Filter) ([]*alert.Alert, error)
+	Create(context.Context, []*alert.Alert) ([]alert.Alert, error)
+	List(context.Context, alert.Filter) ([]alert.Alert, error)
 }
 
 func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.ListAlertsResponse, error) {

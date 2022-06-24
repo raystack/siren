@@ -68,14 +68,14 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description       string
 		Filter            provider.Filter
-		ExpectedProviders []*provider.Provider
+		ExpectedProviders []provider.Provider
 		ErrString         string
 	}
 
 	var testCases = []testCase{
 		{
 			Description: "should get all providers",
-			ExpectedProviders: []*provider.Provider{
+			ExpectedProviders: []provider.Provider{
 				{
 					ID:   1,
 					Host: "http://cortex-ingress.odpf.io",
@@ -97,7 +97,7 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			Filter: provider.Filter{
 				URN: "odpf-prometheus",
 			},
-			ExpectedProviders: []*provider.Provider{
+			ExpectedProviders: []provider.Provider{
 				{
 					ID:   2,
 					Host: "http://prometheus-ingress.odpf.io",
@@ -112,7 +112,7 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			Filter: provider.Filter{
 				Type: "cortex",
 			},
-			ExpectedProviders: []*provider.Provider{
+			ExpectedProviders: []provider.Provider{
 				{
 					ID:   1,
 					Host: "http://cortex-ingress.odpf.io",

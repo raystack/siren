@@ -14,7 +14,7 @@ import (
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	List(context.Context, provider.Filter) ([]*provider.Provider, error)
+	List(context.Context, provider.Filter) ([]provider.Provider, error)
 	Create(context.Context, *provider.Provider) (uint64, error)
 	Get(context.Context, uint64) (*provider.Provider, error)
 	Update(context.Context, *provider.Provider) (uint64, error)

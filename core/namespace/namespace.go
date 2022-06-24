@@ -7,7 +7,7 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname NamespaceRepository --filename namespace_repository.go --output=./mocks
 type Repository interface {
-	List(context.Context) ([]*EncryptedNamespace, error)
+	List(context.Context) ([]EncryptedNamespace, error)
 	Create(context.Context, *EncryptedNamespace) (uint64, error)
 	Get(context.Context, uint64) (*EncryptedNamespace, error)
 	Update(context.Context, *EncryptedNamespace) (uint64, error)

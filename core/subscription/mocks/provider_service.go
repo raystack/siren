@@ -155,15 +155,15 @@ func (_c *ProviderService_Get_Call) Return(_a0 *provider.Provider, _a1 error) *P
 }
 
 // List provides a mock function with given fields: _a0, _a1
-func (_m *ProviderService) List(_a0 context.Context, _a1 provider.Filter) ([]*provider.Provider, error) {
+func (_m *ProviderService) List(_a0 context.Context, _a1 provider.Filter) ([]provider.Provider, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 []*provider.Provider
-	if rf, ok := ret.Get(0).(func(context.Context, provider.Filter) []*provider.Provider); ok {
+	var r0 []provider.Provider
+	if rf, ok := ret.Get(0).(func(context.Context, provider.Filter) []provider.Provider); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*provider.Provider)
+			r0 = ret.Get(0).([]provider.Provider)
 		}
 	}
 
@@ -196,7 +196,7 @@ func (_c *ProviderService_List_Call) Run(run func(_a0 context.Context, _a1 provi
 	return _c
 }
 
-func (_c *ProviderService_List_Call) Return(_a0 []*provider.Provider, _a1 error) *ProviderService_List_Call {
+func (_c *ProviderService_List_Call) Return(_a0 []provider.Provider, _a1 error) *ProviderService_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

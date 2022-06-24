@@ -23,7 +23,7 @@ func TestList(t *testing.T) {
 	t.Run("should call repository List method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		dummyProviders := []*provider.Provider{
+		dummyProviders := []provider.Provider{
 			{
 				ID:          10,
 				Host:        "foo",

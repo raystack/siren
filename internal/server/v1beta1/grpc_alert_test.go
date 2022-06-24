@@ -19,7 +19,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 	t.Run("should return alert history objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		timenow := time.Now()
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
 			TriggeredAt: timenow,
 		}}
@@ -112,7 +112,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should create alerts objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -171,7 +171,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				TriggeredAt:  timenow.AsTime(),
 			},
 		}
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -247,7 +247,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",

@@ -12,7 +12,7 @@ import (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	List(context.Context) ([]*namespace.Namespace, error)
+	List(context.Context) ([]namespace.Namespace, error)
 	Create(context.Context, *namespace.Namespace) (uint64, error)
 	Get(context.Context, uint64) (*namespace.Namespace, error)
 	Update(context.Context, *namespace.Namespace) (uint64, error)

@@ -20,7 +20,7 @@ const (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	List(context.Context) ([]*namespace.Namespace, error)
+	List(context.Context) ([]namespace.Namespace, error)
 	Create(context.Context, *namespace.Namespace) (uint64, error)
 	Get(context.Context, uint64) (*namespace.Namespace, error)
 	Update(context.Context, *namespace.Namespace) (uint64, error)
@@ -29,7 +29,7 @@ type NamespaceService interface {
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	List(context.Context, provider.Filter) ([]*provider.Provider, error)
+	List(context.Context, provider.Filter) ([]provider.Provider, error)
 	Create(context.Context, *provider.Provider) (uint64, error)
 	Get(context.Context, uint64) (*provider.Provider, error)
 	Update(context.Context, *provider.Provider) (uint64, error)
@@ -39,7 +39,7 @@ type ProviderService interface {
 //go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
 type TemplateService interface {
 	Upsert(context.Context, *template.Template) (uint64, error)
-	List(context.Context, template.Filter) ([]*template.Template, error)
+	List(context.Context, template.Filter) ([]template.Template, error)
 	GetByName(context.Context, string) (*template.Template, error)
 	Delete(context.Context, string) error
 	Render(context.Context, string, map[string]string) (string, error)

@@ -73,15 +73,15 @@ func (_c *AlertRepository_Create_Call) Return(_a0 *alert.Alert, _a1 error) *Aler
 }
 
 // List provides a mock function with given fields: _a0, _a1
-func (_m *AlertRepository) List(_a0 context.Context, _a1 alert.Filter) ([]*alert.Alert, error) {
+func (_m *AlertRepository) List(_a0 context.Context, _a1 alert.Filter) ([]alert.Alert, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 []*alert.Alert
-	if rf, ok := ret.Get(0).(func(context.Context, alert.Filter) []*alert.Alert); ok {
+	var r0 []alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, alert.Filter) []alert.Alert); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*alert.Alert)
+			r0 = ret.Get(0).([]alert.Alert)
 		}
 	}
 
@@ -114,7 +114,7 @@ func (_c *AlertRepository_List_Call) Run(run func(_a0 context.Context, _a1 alert
 	return _c
 }
 
-func (_c *AlertRepository_List_Call) Return(_a0 []*alert.Alert, _a1 error) *AlertRepository_List_Call {
+func (_c *AlertRepository_List_Call) Return(_a0 []alert.Alert, _a1 error) *AlertRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

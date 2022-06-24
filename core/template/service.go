@@ -35,7 +35,7 @@ func (s *Service) Upsert(ctx context.Context, template *Template) (uint64, error
 	return id, nil
 }
 
-func (s *Service) List(ctx context.Context, flt Filter) ([]*Template, error) {
+func (s *Service) List(ctx context.Context, flt Filter) ([]Template, error) {
 	return s.repository.List(ctx, flt)
 }
 

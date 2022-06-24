@@ -68,14 +68,14 @@ func (s *TemplateRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description       string
 		Filter            template.Filter
-		ExpectedTemplates []*template.Template
+		ExpectedTemplates []template.Template
 		ErrString         string
 	}
 
 	var testCases = []testCase{
 		{
 			Description: "should get all templates",
-			ExpectedTemplates: []*template.Template{
+			ExpectedTemplates: []template.Template{
 				{
 					ID:   1,
 					Name: "zookeeper-pending-syncs",
@@ -142,7 +142,7 @@ func (s *TemplateRepositoryTestSuite) TestList() {
 			Filter: template.Filter{
 				Tag: "zookeeper",
 			},
-			ExpectedTemplates: []*template.Template{
+			ExpectedTemplates: []template.Template{
 				{
 					ID:   1,
 					Name: "zookeeper-pending-syncs",

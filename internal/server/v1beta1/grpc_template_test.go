@@ -21,7 +21,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{}
-		dummyResult := []*template.Template{
+		dummyResult := []template.Template{
 			{
 				ID:   1,
 				Name: "foo",
@@ -60,7 +60,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			Tag: "foo",
 		}
 
-		dummyResult := []*template.Template{
+		dummyResult := []template.Template{
 			{
 				ID:   1,
 				Name: "foo",

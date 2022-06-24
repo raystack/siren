@@ -74,7 +74,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description    string
 		Filter         alert.Filter
-		ExpectedAlerts []*alert.Alert
+		ExpectedAlerts []alert.Alert
 		ErrString      string
 	}
 
@@ -87,7 +87,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 				StartTime:    uint64(time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 				EndTime:      uint64(time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 			},
-			ExpectedAlerts: []*alert.Alert{
+			ExpectedAlerts: []alert.Alert{
 				{
 					ID:           1,
 					ProviderID:   1,

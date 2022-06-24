@@ -72,14 +72,14 @@ func (s *NamespaceRepositoryTestSuite) cleanup() error {
 func (s *NamespaceRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description        string
-		ExpectedNamespaces []*namespace.EncryptedNamespace
+		ExpectedNamespaces []namespace.EncryptedNamespace
 		ErrString          string
 	}
 
 	var testCases = []testCase{
 		{
 			Description: "should get all providers",
-			ExpectedNamespaces: []*namespace.EncryptedNamespace{
+			ExpectedNamespaces: []namespace.EncryptedNamespace{
 				{
 					Namespace: &namespace.Namespace{
 						ID:       1,

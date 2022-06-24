@@ -19,7 +19,7 @@ func TestService_Get(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
 		timenow := time.Now()
-		dummyAlerts := []*alert.Alert{
+		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
 			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",
@@ -46,7 +46,7 @@ func TestService_Get(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock)
 		timenow := time.Now()
-		dummyAlerts := []*alert.Alert{
+		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
 				Rule: "bar", TriggeredAt: timenow},
 			{ID: 2, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "0",

@@ -33,7 +33,7 @@ func TestService_CreateSubscription(t *testing.T) {
 	}
 	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
 	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
-	dummyReceivers := []*receiver.Receiver{
+	dummyReceivers := []receiver.Receiver{
 		{ID: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
 		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
 		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
@@ -235,7 +235,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
-		receiverServiceMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*receiver.Receiver{{ID: 10}}, nil).Once()
+		receiverServiceMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]receiver.Receiver{{ID: 10}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
@@ -281,7 +281,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		repositoryMock.EXPECT().List(ctx).Return([]*subscription.Subscription{input}, nil).Once()
 		namespaceServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), input.Namespace).Return(dummyNamespace, nil).Once()
 		providerServiceMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(dummyProvider, nil).Once()
-		receiverServiceMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*receiver.Receiver{{ID: 1, Type: "email"}}, nil).Once()
+		receiverServiceMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]receiver.Receiver{{ID: 1, Type: "email"}}, nil).Once()
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
@@ -424,7 +424,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 	}
 	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
 	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
-	dummyReceivers := []*receiver.Receiver{
+	dummyReceivers := []receiver.Receiver{
 		{ID: 1, Type: "slack", Configurations: map[string]interface{}{}},
 		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
 		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},
@@ -591,7 +591,7 @@ func TestService_DeleteSubscription(t *testing.T) {
 	}
 	dummyNamespace := &namespace.Namespace{ID: 1, Provider: 1, URN: "dummy"}
 	dummyProvider := &provider.Provider{ID: 1, URN: "test", Type: "cortex", Host: "http://localhost:8080"}
-	dummyReceivers := []*receiver.Receiver{
+	dummyReceivers := []receiver.Receiver{
 		{ID: 1, Type: "slack", Configurations: map[string]interface{}{"token": "xoxb"}},
 		{ID: 2, Type: "pagerduty", Configurations: map[string]interface{}{"service_key": "abcd"}},
 		{ID: 3, Type: "http", Configurations: map[string]interface{}{"url": "http://localhost:3000"}},

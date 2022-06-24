@@ -20,7 +20,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
-	dummyResult := []*receiver.Receiver{
+	dummyResult := []receiver.Receiver{
 		{
 			ID:             1,
 			Name:           "foo",
@@ -72,7 +72,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 		configurations["foo"] = string([]byte{0xff})
-		dummyResult := []*receiver.Receiver{
+		dummyResult := []receiver.Receiver{
 			{
 				ID:             1,
 				Name:           "foo",

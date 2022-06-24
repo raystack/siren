@@ -27,7 +27,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		dummyResult := []*namespace.Namespace{
+		dummyResult := []namespace.Namespace{
 			{
 				ID:          1,
 				Provider:    2,
@@ -69,7 +69,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			logger:           log.NewNoop(),
 		}
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := []*namespace.Namespace{
+		dummyResult := []namespace.Namespace{
 			{
 				ID:          1,
 				Provider:    2,

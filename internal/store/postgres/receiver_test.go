@@ -67,14 +67,14 @@ func (s *ReceiverRepositoryTestSuite) cleanup() error {
 func (s *ReceiverRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description       string
-		ExpectedReceivers []*receiver.Receiver
+		ExpectedReceivers []receiver.Receiver
 		ErrString         string
 	}
 
 	var testCases = []testCase{
 		{
 			Description: "should get all receivers",
-			ExpectedReceivers: []*receiver.Receiver{
+			ExpectedReceivers: []receiver.Receiver{
 				{
 					ID:   1,
 					Name: "odpf-slack",

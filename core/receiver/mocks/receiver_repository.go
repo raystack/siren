@@ -155,15 +155,15 @@ func (_c *ReceiverRepository_Get_Call) Return(_a0 *receiver.Receiver, _a1 error)
 }
 
 // List provides a mock function with given fields: _a0
-func (_m *ReceiverRepository) List(_a0 context.Context) ([]*receiver.Receiver, error) {
+func (_m *ReceiverRepository) List(_a0 context.Context) ([]receiver.Receiver, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []*receiver.Receiver
-	if rf, ok := ret.Get(0).(func(context.Context) []*receiver.Receiver); ok {
+	var r0 []receiver.Receiver
+	if rf, ok := ret.Get(0).(func(context.Context) []receiver.Receiver); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*receiver.Receiver)
+			r0 = ret.Get(0).([]receiver.Receiver)
 		}
 	}
 
@@ -195,7 +195,7 @@ func (_c *ReceiverRepository_List_Call) Run(run func(_a0 context.Context)) *Rece
 	return _c
 }
 
-func (_c *ReceiverRepository_List_Call) Return(_a0 []*receiver.Receiver, _a1 error) *ReceiverRepository_List_Call {
+func (_c *ReceiverRepository_List_Call) Return(_a0 []receiver.Receiver, _a1 error) *ReceiverRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

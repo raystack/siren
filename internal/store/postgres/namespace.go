@@ -20,20 +20,20 @@ func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
 	return &NamespaceRepository{db}
 }
 
-func (r NamespaceRepository) List(ctx context.Context) ([]*namespace.EncryptedNamespace, error) {
+func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNamespace, error) {
 	var namespaceModels []*model.Namespace
 	if err := r.db.WithContext(ctx).Raw("select * from namespaces").Find(&namespaceModels).Error; err != nil {
 		return nil, err
 	}
 
-	var result []*namespace.EncryptedNamespace
+	var result []namespace.EncryptedNamespace
 	for _, m := range namespaceModels {
 		n, err := m.ToDomain()
 		if err != nil {
 			// log error here
 			continue
 		}
-		result = append(result, n)
+		result = append(result, *n)
 	}
 	return result, nil
 }

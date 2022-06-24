@@ -17,8 +17,8 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]*Alert, error) {
-	result := make([]*Alert, 0, len(alerts))
+func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]Alert, error) {
+	result := make([]Alert, 0, len(alerts))
 
 	for _, alrt := range alerts {
 		newAlert, err := s.repository.Create(ctx, alrt)
@@ -28,12 +28,12 @@ func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]*Alert, error)
 			}
 			return nil, err
 		}
-		result = append(result, newAlert)
+		result = append(result, *newAlert)
 	}
 	return result, nil
 }
 
-func (s *Service) List(ctx context.Context, flt Filter) ([]*Alert, error) {
+func (s *Service) List(ctx context.Context, flt Filter) ([]Alert, error) {
 	if flt.EndTime == 0 {
 		flt.EndTime = uint64(time.Now().Unix())
 	}

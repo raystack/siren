@@ -42,7 +42,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) (*alert.
 	return newAlert, nil
 }
 
-func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]*alert.Alert, error) {
+func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {
 	var alertsModel []model.Alert
 	selectQuery := fmt.Sprintf("select * from alerts where resource_name = '%s' AND provider_id = '%d' AND triggered_at BETWEEN to_timestamp('%d') AND to_timestamp('%d')",
 		flt.ResourceName, flt.ProviderID, flt.StartTime, flt.EndTime)
@@ -51,14 +51,14 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]*alert.A
 		return nil, result.Error
 	}
 
-	var alerts []*alert.Alert
+	var alerts []alert.Alert
 	for _, am := range alertsModel {
 		ad, err := am.ToDomain()
 		if err != nil {
 			// TODO log here
 			continue
 		}
-		alerts = append(alerts, ad)
+		alerts = append(alerts, *ad)
 	}
 
 	return alerts, nil

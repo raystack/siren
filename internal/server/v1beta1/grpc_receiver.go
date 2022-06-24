@@ -11,7 +11,7 @@ import (
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
-	List(context.Context) ([]*receiver.Receiver, error)
+	List(context.Context) ([]receiver.Receiver, error)
 	Create(context.Context, *receiver.Receiver) (uint64, error)
 	Get(context.Context, uint64) (*receiver.Receiver, error)
 	Update(context.Context, *receiver.Receiver) (uint64, error)

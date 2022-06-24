@@ -16,7 +16,7 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (s *Service) List(ctx context.Context, flt Filter) ([]*Provider, error) {
+func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
 	return s.repository.List(ctx, flt)
 }
 

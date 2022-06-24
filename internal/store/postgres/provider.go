@@ -20,7 +20,7 @@ func NewProviderRepository(db *gorm.DB) *ProviderRepository {
 	return &ProviderRepository{db}
 }
 
-func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]*provider.Provider, error) {
+func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]provider.Provider, error) {
 	var providers []*model.Provider
 
 	db := r.db
@@ -35,14 +35,14 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]*p
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	domainProviders := make([]*provider.Provider, 0, len(providers))
+	domainProviders := make([]provider.Provider, 0, len(providers))
 	for _, provModel := range providers {
 		provDomain, err := provModel.ToDomain()
 		if err != nil {
 			// TODO log here
 			continue
 		}
-		domainProviders = append(domainProviders, provDomain)
+		domainProviders = append(domainProviders, *provDomain)
 	}
 	return domainProviders, nil
 }

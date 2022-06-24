@@ -28,7 +28,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 			providerService: mockedProviderService,
 			logger:          log.NewNoop(),
 		}
-		dummyResult := []*provider.Provider{
+		dummyResult := []provider.Provider{
 			{
 				ID:          1,
 				Host:        "foo",
@@ -71,7 +71,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		}
 
 		credentials["bar"] = string([]byte{0xff})
-		dummyResult := []*provider.Provider{
+		dummyResult := []provider.Provider{
 			{
 				ID:          1,
 				Host:        "foo",

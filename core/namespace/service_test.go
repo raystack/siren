@@ -16,7 +16,7 @@ func TestService_ListNamespaces(t *testing.T) {
 
 	type testCase struct {
 		Description        string
-		ExpectedNamespaces []*namespace.Namespace
+		ExpectedNamespaces []namespace.Namespace
 		Setup              func(*mocks.NamespaceRepository, *mocks.Encryptor, testCase)
 		Err                error
 	}
@@ -35,7 +35,7 @@ func TestService_ListNamespaces(t *testing.T) {
 			{
 				Description: "should return error if List repository success and decrypt error",
 				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*namespace.EncryptedNamespace{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
 								ID:        1,
@@ -66,7 +66,7 @@ func TestService_ListNamespaces(t *testing.T) {
 			{
 				Description: "should return error if list repository success and decrypted object is not json",
 				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*namespace.EncryptedNamespace{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
 								ID:        1,
@@ -97,7 +97,7 @@ func TestService_ListNamespaces(t *testing.T) {
 			{
 				Description: "should success if list repository and decrypt success",
 				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*namespace.EncryptedNamespace{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
 								ID:        1,
@@ -123,7 +123,7 @@ func TestService_ListNamespaces(t *testing.T) {
 					}, nil)
 					e.EXPECT().Decrypt(mock.AnythingOfType("string")).Return("{\"name\": \"a\"}", nil)
 				},
-				ExpectedNamespaces: []*namespace.Namespace{
+				ExpectedNamespaces: []namespace.Namespace{
 					{
 						ID:       1,
 						Provider: 1,

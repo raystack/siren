@@ -21,19 +21,19 @@ func NewService(cryptoClient Encryptor, repository Repository) *Service {
 	}
 }
 
-func (s *Service) List(ctx context.Context) ([]*Namespace, error) {
+func (s *Service) List(ctx context.Context) ([]Namespace, error) {
 	encrytpedNamespaces, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	namespaces := make([]*Namespace, 0, len(encrytpedNamespaces))
+	namespaces := make([]Namespace, 0, len(encrytpedNamespaces))
 	for _, en := range encrytpedNamespaces {
-		ns, err := s.decrypt(en)
+		ns, err := s.decrypt(&en)
 		if err != nil {
 			return nil, err
 		}
-		namespaces = append(namespaces, ns)
+		namespaces = append(namespaces, *ns)
 	}
 	return namespaces, nil
 }

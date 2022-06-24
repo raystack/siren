@@ -19,21 +19,21 @@ func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
 	return &ReceiverRepository{db}
 }
 
-func (r ReceiverRepository) List(ctx context.Context) ([]*receiver.Receiver, error) {
+func (r ReceiverRepository) List(ctx context.Context) ([]receiver.Receiver, error) {
 	var models []*model.Receiver
 	result := r.db.WithContext(ctx).Raw("select * from receivers").Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	var receivers []*receiver.Receiver
+	var receivers []receiver.Receiver
 	for _, r := range models {
 		rcv, err := r.ToDomain()
 		if err != nil {
 			// TODO log here
 			continue
 		}
-		receivers = append(receivers, rcv)
+		receivers = append(receivers, *rcv)
 	}
 
 	return receivers, nil

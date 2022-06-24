@@ -8,7 +8,7 @@ import (
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname TemplateRepository --filename template_repository.go --output=./mocks
 type Repository interface {
 	Upsert(context.Context, *Template) (uint64, error)
-	List(context.Context, Filter) ([]*Template, error)
+	List(context.Context, Filter) ([]Template, error)
 	GetByName(context.Context, string) (*Template, error)
 	Delete(context.Context, string) error
 }

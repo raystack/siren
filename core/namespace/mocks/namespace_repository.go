@@ -155,15 +155,15 @@ func (_c *NamespaceRepository_Get_Call) Return(_a0 *namespace.EncryptedNamespace
 }
 
 // List provides a mock function with given fields: _a0
-func (_m *NamespaceRepository) List(_a0 context.Context) ([]*namespace.EncryptedNamespace, error) {
+func (_m *NamespaceRepository) List(_a0 context.Context) ([]namespace.EncryptedNamespace, error) {
 	ret := _m.Called(_a0)
 
-	var r0 []*namespace.EncryptedNamespace
-	if rf, ok := ret.Get(0).(func(context.Context) []*namespace.EncryptedNamespace); ok {
+	var r0 []namespace.EncryptedNamespace
+	if rf, ok := ret.Get(0).(func(context.Context) []namespace.EncryptedNamespace); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*namespace.EncryptedNamespace)
+			r0 = ret.Get(0).([]namespace.EncryptedNamespace)
 		}
 	}
 
@@ -195,7 +195,7 @@ func (_c *NamespaceRepository_List_Call) Run(run func(_a0 context.Context)) *Nam
 	return _c
 }
 
-func (_c *NamespaceRepository_List_Call) Return(_a0 []*namespace.EncryptedNamespace, _a1 error) *NamespaceRepository_List_Call {
+func (_c *NamespaceRepository_List_Call) Return(_a0 []namespace.EncryptedNamespace, _a1 error) *NamespaceRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

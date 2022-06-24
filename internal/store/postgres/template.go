@@ -47,7 +47,7 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 	return modelTemplate.ID, err
 }
 
-func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]*template.Template, error) {
+func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]template.Template, error) {
 	var (
 		templates []model.Template
 		result    = r.db
@@ -60,13 +60,13 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]*t
 		return nil, result.Error
 	}
 
-	domainTemplates := make([]*template.Template, 0, len(templates))
+	domainTemplates := make([]template.Template, 0, len(templates))
 	for _, templateModel := range templates {
 		templateDomain, err := templateModel.ToDomain()
 		if err != nil {
 			return nil, err
 		}
-		domainTemplates = append(domainTemplates, templateDomain)
+		domainTemplates = append(domainTemplates, *templateDomain)
 	}
 	return domainTemplates, nil
 }

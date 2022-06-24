@@ -78,14 +78,14 @@ func (s *RuleRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description   string
 		Filter        rule.Filter
-		ExpectedRules []*rule.Rule
+		ExpectedRules []rule.Rule
 		ErrString     string
 	}
 
 	var testCases = []testCase{
 		{
 			Description: "should get all rules",
-			ExpectedRules: []*rule.Rule{
+			ExpectedRules: []rule.Rule{
 				{
 					ID:        1,
 					Name:      "prefix_provider-urn-1_namespace-urn-1_namespace-1_group-name-1_template-name-1",
@@ -152,7 +152,7 @@ func (s *RuleRepositoryTestSuite) TestList() {
 			Filter: rule.Filter{
 				Namespace: "namespace-urn-2",
 			},
-			ExpectedRules: []*rule.Rule{
+			ExpectedRules: []rule.Rule{
 				{
 					ID:        2,
 					Name:      "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",

@@ -27,13 +27,13 @@ func (s *Service) getTypeService(receiverType string) (TypeService, error) {
 	return typeService, nil
 }
 
-func (s *Service) List(ctx context.Context) ([]*Receiver, error) {
+func (s *Service) List(ctx context.Context) ([]Receiver, error) {
 	receivers, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	domainReceivers := make([]*Receiver, 0, len(receivers))
+	domainReceivers := make([]Receiver, 0, len(receivers))
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
 
@@ -41,7 +41,7 @@ func (s *Service) List(ctx context.Context) ([]*Receiver, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = typeService.Decrypt(rcv); err != nil {
+		if err = typeService.Decrypt(&rcv); err != nil {
 			return nil, err
 		}
 

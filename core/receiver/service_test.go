@@ -15,7 +15,7 @@ import (
 func TestService_ListReceivers(t *testing.T) {
 	type testCase struct {
 		Description string
-		Receivers   []*receiver.Receiver
+		Receivers   []receiver.Receiver
 		Setup       func(*mocks.ReceiverRepository, *mocks.TypeService)
 		Err         error
 	}
@@ -34,7 +34,7 @@ func TestService_ListReceivers(t *testing.T) {
 			{
 				Description: "should return error if List repository success and decrypt error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*receiver.Receiver{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]receiver.Receiver{
 						{
 							ID:   10,
 							Name: "foo",
@@ -68,7 +68,7 @@ func TestService_ListReceivers(t *testing.T) {
 			{
 				Description: "should success if list repository and decrypt success",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]*receiver.Receiver{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]receiver.Receiver{
 						{
 							ID:   10,
 							Name: "foo",
@@ -97,7 +97,7 @@ func TestService_ListReceivers(t *testing.T) {
 						UpdatedAt: timeNow,
 					}).Return(nil)
 				},
-				Receivers: []*receiver.Receiver{
+				Receivers: []receiver.Receiver{
 					{
 						ID:   10,
 						Name: "foo",

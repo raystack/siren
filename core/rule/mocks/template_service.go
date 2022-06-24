@@ -111,15 +111,15 @@ func (_c *TemplateService_GetByName_Call) Return(_a0 *template.Template, _a1 err
 }
 
 // List provides a mock function with given fields: _a0, _a1
-func (_m *TemplateService) List(_a0 context.Context, _a1 template.Filter) ([]*template.Template, error) {
+func (_m *TemplateService) List(_a0 context.Context, _a1 template.Filter) ([]template.Template, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 []*template.Template
-	if rf, ok := ret.Get(0).(func(context.Context, template.Filter) []*template.Template); ok {
+	var r0 []template.Template
+	if rf, ok := ret.Get(0).(func(context.Context, template.Filter) []template.Template); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*template.Template)
+			r0 = ret.Get(0).([]template.Template)
 		}
 	}
 
@@ -152,7 +152,7 @@ func (_c *TemplateService_List_Call) Run(run func(_a0 context.Context, _a1 templ
 	return _c
 }
 
-func (_c *TemplateService_List_Call) Return(_a0 []*template.Template, _a1 error) *TemplateService_List_Call {
+func (_c *TemplateService_List_Call) Return(_a0 []template.Template, _a1 error) *TemplateService_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
