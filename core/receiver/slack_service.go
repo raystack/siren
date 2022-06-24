@@ -93,21 +93,39 @@ func (s *SlackService) PopulateReceiver(ctx context.Context, rcv *Receiver) (*Re
 	return rcv, nil
 }
 
-func (s *SlackService) ValidateConfiguration(configurations Configurations) error {
-	_, err := configurations.GetString("client_id")
+func (s *SlackService) ValidateConfiguration(rcv *Receiver) error {
+	if rcv == nil {
+		return errors.New("receiver to validate is nil")
+	}
+	_, err := rcv.Configurations.GetString("client_id")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
 	}
 
-	_, err = configurations.GetString("client_secret")
+	_, err = rcv.Configurations.GetString("client_secret")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
 	}
 
-	_, err = configurations.GetString("auth_code")
+	_, err = rcv.Configurations.GetString("auth_code")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
 	}
 
 	return nil
+}
+
+//TODO add test
+func (s *SlackService) GetSubscriptionConfig(subsConfs map[string]string, receiverConfs Configurations) (map[string]string, error) {
+	mapConf := make(map[string]string)
+	if _, ok := subsConfs["channel_name"]; !ok {
+		return nil, errors.New("subscription receiver config 'channel_name' was missing")
+	}
+	mapConf["channel_name"] = subsConfs["channel_name"]
+	if val, ok := receiverConfs["token"]; ok {
+		if mapConf["token"], ok = val.(string); !ok {
+			return nil, errors.New("token config from receiver should be in string")
+		}
+	}
+	return mapConf, nil
 }

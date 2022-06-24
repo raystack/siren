@@ -67,6 +67,7 @@ func (s *ReceiverRepositoryTestSuite) cleanup() error {
 func (s *ReceiverRepositoryTestSuite) TestList() {
 	type testCase struct {
 		Description       string
+		Filter            receiver.Filter
 		ExpectedReceivers []receiver.Receiver
 		ErrString         string
 	}
@@ -112,11 +113,42 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 				},
 			},
 		},
+		{
+			Description: "should get filtered receivers with list of ids",
+			Filter: receiver.Filter{
+				ReceiverIDs: []uint64{2, 3},
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   2,
+					Name: "alert-history",
+					Type: "http",
+					Labels: map[string]string{
+						"entity": "odpf,org-a,org-b,org-c",
+					},
+					Configurations: receiver.Configurations{
+						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
+					},
+				},
+				{
+					ID:   3,
+					Name: "odpf_pagerduty",
+					Type: "pagerduty",
+					Labels: map[string]string{
+						"entity": "odpf",
+						"team":   "siren-odpf",
+					},
+					Configurations: receiver.Configurations{
+						"service_key": "1212121212121212121212121",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.List(s.ctx)
+			got, err := s.repository.List(s.ctx, tc.Filter)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

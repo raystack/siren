@@ -48,22 +48,11 @@ func TestService_Upsert(t *testing.T) {
 				ErrString: "some error",
 			},
 			{
-				Description: "should return error if list repository return error",
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("rule.Filter")).Return(nil, errors.New("some error"))
-				},
-				ErrString: "some error",
-			},
-			{
 				Description: "should return error if upsert repository return error",
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("rule.Filter")).Return([]rule.Rule{}, nil)
 					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(0, errors.New("some error"))
 				},
 				ErrString: "some error",
@@ -74,7 +63,6 @@ func TestService_Upsert(t *testing.T) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("rule.Filter")).Return([]rule.Rule{}, nil)
 					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(1, nil)
 				},
 			},

@@ -2,77 +2,56 @@ package subscription
 
 import (
 	context "context"
-	"database/sql/driver"
-	"encoding/json"
+	"fmt"
 	"time"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/cortex"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks
 type Repository interface {
-	Transactor
-	List(context.Context) ([]*Subscription, error)
-	Create(context.Context, *Subscription) error
+	List(context.Context, Filter) ([]Subscription, error)
+	CreateWithTx(context.Context, *Subscription, func([]Subscription) error) (uint64, error)
 	Get(context.Context, uint64) (*Subscription, error)
-	Update(context.Context, *Subscription) error
-	Delete(context.Context, uint64) error
+	UpdateWithTx(context.Context, *Subscription, func([]Subscription) error) (uint64, error)
+	DeleteWithTx(context.Context, uint64, uint64, func([]Subscription) error) error
 }
 
-type Transactor interface {
-	WithTransaction(ctx context.Context) context.Context
-	Rollback(ctx context.Context) error
-	Commit(ctx context.Context) error
-}
-
-type Subscription struct {
-	ID        uint64             `json:"id"`
-	URN       string             `json:"urn"`
-	Namespace uint64             `json:"namespace"`
-	Receivers []ReceiverMetadata `json:"receivers"`
-	Match     map[string]string  `json:"match"`
-	CreatedAt time.Time          `json:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at"`
-}
-
-type StringStringMap map[string]string
-
-func (m *StringStringMap) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("failed type assertion to []byte")
-	}
-	return json.Unmarshal(b, &m)
-}
-
-func (a StringStringMap) Value() (driver.Value, error) {
-	if len(a) == 0 {
-		return nil, nil
-	}
-	return json.Marshal(a)
-}
-
-type ReceiverMetadata struct {
-	ID            uint64            `json:"id"`
-	Configuration map[string]string `json:"configuration"`
-}
-
-type EnrichedReceiverMetadata struct {
+type Receiver struct {
 	ID            uint64            `json:"id"`
 	Type          string            `json:"type"`
 	Configuration map[string]string `json:"configuration"`
 }
+type Subscription struct {
+	ID        uint64            `json:"id"`
+	URN       string            `json:"urn"`
+	Namespace uint64            `json:"namespace"`
+	Receivers []Receiver        `json:"receivers"`
+	Match     map[string]string `json:"match"`
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
+}
 
-type EnrichedReceiverMetadataList []EnrichedReceiverMetadata
+func (s *Subscription) ToAlertManagerReceiverConfig() []cortex.ReceiverConfig {
+	if s == nil {
+		return nil
+	}
+	amReceiverConfig := make([]cortex.ReceiverConfig, 0)
+	for idx, item := range s.Receivers {
+		configMapString := make(map[string]string)
+		for key, value := range item.Configuration {
+			strKey := fmt.Sprintf("%v", key)
+			strValue := fmt.Sprintf("%v", value)
 
-type SubscriptionEnrichedWithReceivers struct {
-	ID          uint64
-	Namespace   *namespace.Namespace
-	NamespaceId uint64
-	URN         string
-	Receiver    EnrichedReceiverMetadataList
-	Match       StringStringMap
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+			configMapString[strKey] = strValue
+		}
+		newAMReceiver := cortex.ReceiverConfig{
+			Receiver:      fmt.Sprintf("%s_receiverId_%d_idx_%d", s.URN, item.ID, idx),
+			Match:         s.Match,
+			Configuration: configMapString,
+			Type:          item.Type,
+		}
+		amReceiverConfig = append(amReceiverConfig, newAMReceiver)
+	}
+	return amReceiverConfig
 }

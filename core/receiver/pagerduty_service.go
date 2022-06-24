@@ -29,11 +29,24 @@ func (s *PagerDutyService) PopulateReceiver(ctx context.Context, rcv *Receiver) 
 	return rcv, nil
 }
 
-func (s *PagerDutyService) ValidateConfiguration(configurations Configurations) error {
-	_, err := configurations.GetString("service_key")
+func (s *PagerDutyService) ValidateConfiguration(rcv *Receiver) error {
+	if rcv == nil {
+		return errors.New("receiver to validate is nil")
+	}
+	_, err := rcv.Configurations.GetString("service_key")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
 	}
 
 	return nil
+}
+
+func (s *PagerDutyService) GetSubscriptionConfig(subsConfs map[string]string, receiverConfs Configurations) (map[string]string, error) {
+	mapConf := make(map[string]string)
+	if val, ok := receiverConfs["service_key"]; ok {
+		if mapConf["service_key"], ok = val.(string); !ok {
+			return nil, errors.New("service_key config from receiver should be in string")
+		}
+	}
+	return mapConf, nil
 }

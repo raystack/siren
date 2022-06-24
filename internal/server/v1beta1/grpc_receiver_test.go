@@ -38,7 +38,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).
+		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).
 			Return(dummyResult, nil).Once()
 
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
@@ -57,7 +57,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
-		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).
+		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).
 			Return(nil, errors.New("random error"))
 
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
@@ -84,7 +84,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			},
 		}
 
-		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).
+		mockedReceiverService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).
 			Return(dummyResult, nil)
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, res)

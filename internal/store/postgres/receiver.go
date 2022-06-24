@@ -19,9 +19,15 @@ func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
 	return &ReceiverRepository{db}
 }
 
-func (r ReceiverRepository) List(ctx context.Context) ([]receiver.Receiver, error) {
+func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
 	var models []*model.Receiver
-	result := r.db.WithContext(ctx).Raw("select * from receivers").Find(&models)
+	result := r.db.WithContext(ctx)
+
+	if len(flt.ReceiverIDs) > 0 {
+		result = result.Where("id IN ?", flt.ReceiverIDs)
+	}
+
+	result = result.Find(&models)
 	if result.Error != nil {
 		return nil, result.Error
 	}

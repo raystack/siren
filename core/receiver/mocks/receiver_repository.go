@@ -154,13 +154,13 @@ func (_c *ReceiverRepository_Get_Call) Return(_a0 *receiver.Receiver, _a1 error)
 	return _c
 }
 
-// List provides a mock function with given fields: _a0
-func (_m *ReceiverRepository) List(_a0 context.Context) ([]receiver.Receiver, error) {
-	ret := _m.Called(_a0)
+// List provides a mock function with given fields: _a0, _a1
+func (_m *ReceiverRepository) List(_a0 context.Context, _a1 receiver.Filter) ([]receiver.Receiver, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 []receiver.Receiver
-	if rf, ok := ret.Get(0).(func(context.Context) []receiver.Receiver); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, receiver.Filter) []receiver.Receiver); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]receiver.Receiver)
@@ -168,8 +168,8 @@ func (_m *ReceiverRepository) List(_a0 context.Context) ([]receiver.Receiver, er
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, receiver.Filter) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -184,13 +184,14 @@ type ReceiverRepository_List_Call struct {
 
 // List is a helper method to define mock.On call
 //  - _a0 context.Context
-func (_e *ReceiverRepository_Expecter) List(_a0 interface{}) *ReceiverRepository_List_Call {
-	return &ReceiverRepository_List_Call{Call: _e.mock.On("List", _a0)}
+//  - _a1 receiver.Filter
+func (_e *ReceiverRepository_Expecter) List(_a0 interface{}, _a1 interface{}) *ReceiverRepository_List_Call {
+	return &ReceiverRepository_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
 
-func (_c *ReceiverRepository_List_Call) Run(run func(_a0 context.Context)) *ReceiverRepository_List_Call {
+func (_c *ReceiverRepository_List_Call) Run(run func(_a0 context.Context, _a1 receiver.Filter)) *ReceiverRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		run(args[0].(context.Context), args[1].(receiver.Filter))
 	})
 	return _c
 }

@@ -19,13 +19,13 @@ func NewRuleRepository(db *gorm.DB) *RuleRepository {
 	return &RuleRepository{db}
 }
 
-func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func() error) (uint64, error) {
+func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func([]rule.Rule) error) (uint64, error) {
 	m := new(model.Rule)
 	if err := m.FromDomain(rl); err != nil {
 		return 0, err
 	}
 
-	txErr := r.db.Transaction(func(tx *gorm.DB) error {
+	if txErr := r.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Where("name = ?", m.Name).Updates(&m)
 		if result.Error != nil {
 			err := checkPostgresError(result.Error)
@@ -51,10 +51,17 @@ func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postPr
 			}
 		}
 
-		return postProcessFn()
-	})
+		rulesWithinGroup, err := r.List(ctx, rule.Filter{
+			Namespace:   rl.Namespace,
+			GroupName:   rl.GroupName,
+			NamespaceID: rl.ProviderNamespace,
+		})
+		if err != nil {
+			return err
+		}
 
-	if txErr != nil {
+		return postProcessFn(rulesWithinGroup)
+	}); txErr != nil {
 		return 0, txErr
 	}
 

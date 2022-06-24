@@ -72,18 +72,18 @@ func (_c *RuleRepository_List_Call) Return(_a0 []rule.Rule, _a1 error) *RuleRepo
 }
 
 // UpsertWithTx provides a mock function with given fields: _a0, _a1, _a2
-func (_m *RuleRepository) UpsertWithTx(_a0 context.Context, _a1 *rule.Rule, _a2 func() error) (uint64, error) {
+func (_m *RuleRepository) UpsertWithTx(_a0 context.Context, _a1 *rule.Rule, _a2 func([]rule.Rule) error) (uint64, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 uint64
-	if rf, ok := ret.Get(0).(func(context.Context, *rule.Rule, func() error) uint64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *rule.Rule, func([]rule.Rule) error) uint64); ok {
 		r0 = rf(_a0, _a1, _a2)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *rule.Rule, func() error) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *rule.Rule, func([]rule.Rule) error) error); ok {
 		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
@@ -100,14 +100,14 @@ type RuleRepository_UpsertWithTx_Call struct {
 // UpsertWithTx is a helper method to define mock.On call
 //  - _a0 context.Context
 //  - _a1 *rule.Rule
-//  - _a2 func() error
+//  - _a2 func([]rule.Rule) error
 func (_e *RuleRepository_Expecter) UpsertWithTx(_a0 interface{}, _a1 interface{}, _a2 interface{}) *RuleRepository_UpsertWithTx_Call {
 	return &RuleRepository_UpsertWithTx_Call{Call: _e.mock.On("UpsertWithTx", _a0, _a1, _a2)}
 }
 
-func (_c *RuleRepository_UpsertWithTx_Call) Run(run func(_a0 context.Context, _a1 *rule.Rule, _a2 func() error)) *RuleRepository_UpsertWithTx_Call {
+func (_c *RuleRepository_UpsertWithTx_Call) Run(run func(_a0 context.Context, _a1 *rule.Rule, _a2 func([]rule.Rule) error)) *RuleRepository_UpsertWithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*rule.Rule), args[2].(func() error))
+		run(args[0].(context.Context), args[1].(*rule.Rule), args[2].(func([]rule.Rule) error))
 	})
 	return _c
 }

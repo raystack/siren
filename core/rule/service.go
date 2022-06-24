@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -106,16 +106,7 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) (uint64, error) {
 	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,
 		ns.URN, rl.Namespace, rl.GroupName, rl.Template)
 
-	rulesWithinGroup, err := s.repository.List(ctx, Filter{
-		Namespace:   rl.Namespace,
-		GroupName:   rl.GroupName,
-		NamespaceID: rl.ProviderNamespace,
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	return s.repository.UpsertWithTx(ctx, rl, func() error {
+	return s.repository.UpsertWithTx(ctx, rl, func(rulesWithinGroup []Rule) error {
 		if prov.Type == "cortex" {
 			if err := PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl, rulesWithinGroup, ns.URN); err != nil {
 				return err
@@ -149,7 +140,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 	}
 
 	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(cortexClient.NewContextWithTenantID(ctx, tenantName), rl.Namespace, rl.GroupName)
+		err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), rl.Namespace, rl.GroupName)
 		if err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil

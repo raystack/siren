@@ -98,6 +98,53 @@ func (_c *TypeService_Encrypt_Call) Return(_a0 error) *TypeService_Encrypt_Call 
 	return _c
 }
 
+// GetSubscriptionConfig provides a mock function with given fields: subsConfs, receiverConfs
+func (_m *TypeService) GetSubscriptionConfig(subsConfs map[string]string, receiverConfs receiver.Configurations) (map[string]string, error) {
+	ret := _m.Called(subsConfs, receiverConfs)
+
+	var r0 map[string]string
+	if rf, ok := ret.Get(0).(func(map[string]string, receiver.Configurations) map[string]string); ok {
+		r0 = rf(subsConfs, receiverConfs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]string, receiver.Configurations) error); ok {
+		r1 = rf(subsConfs, receiverConfs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// TypeService_GetSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSubscriptionConfig'
+type TypeService_GetSubscriptionConfig_Call struct {
+	*mock.Call
+}
+
+// GetSubscriptionConfig is a helper method to define mock.On call
+//  - subsConfs map[string]string
+//  - receiverConfs receiver.Configurations
+func (_e *TypeService_Expecter) GetSubscriptionConfig(subsConfs interface{}, receiverConfs interface{}) *TypeService_GetSubscriptionConfig_Call {
+	return &TypeService_GetSubscriptionConfig_Call{Call: _e.mock.On("GetSubscriptionConfig", subsConfs, receiverConfs)}
+}
+
+func (_c *TypeService_GetSubscriptionConfig_Call) Run(run func(subsConfs map[string]string, receiverConfs receiver.Configurations)) *TypeService_GetSubscriptionConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(map[string]string), args[1].(receiver.Configurations))
+	})
+	return _c
+}
+
+func (_c *TypeService_GetSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *TypeService_GetSubscriptionConfig_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
 // Notify provides a mock function with given fields: ctx, rcv, payloadMessage
 func (_m *TypeService) Notify(ctx context.Context, rcv *receiver.Receiver, payloadMessage receiver.NotificationMessage) error {
 	ret := _m.Called(ctx, rcv, payloadMessage)
@@ -184,13 +231,13 @@ func (_c *TypeService_PopulateReceiver_Call) Return(_a0 *receiver.Receiver, _a1 
 	return _c
 }
 
-// ValidateConfiguration provides a mock function with given fields: configurations
-func (_m *TypeService) ValidateConfiguration(configurations receiver.Configurations) error {
-	ret := _m.Called(configurations)
+// ValidateConfiguration provides a mock function with given fields: rcv
+func (_m *TypeService) ValidateConfiguration(rcv *receiver.Receiver) error {
+	ret := _m.Called(rcv)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(receiver.Configurations) error); ok {
-		r0 = rf(configurations)
+	if rf, ok := ret.Get(0).(func(*receiver.Receiver) error); ok {
+		r0 = rf(rcv)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -204,14 +251,14 @@ type TypeService_ValidateConfiguration_Call struct {
 }
 
 // ValidateConfiguration is a helper method to define mock.On call
-//  - configurations receiver.Configurations
-func (_e *TypeService_Expecter) ValidateConfiguration(configurations interface{}) *TypeService_ValidateConfiguration_Call {
-	return &TypeService_ValidateConfiguration_Call{Call: _e.mock.On("ValidateConfiguration", configurations)}
+//  - rcv *receiver.Receiver
+func (_e *TypeService_Expecter) ValidateConfiguration(rcv interface{}) *TypeService_ValidateConfiguration_Call {
+	return &TypeService_ValidateConfiguration_Call{Call: _e.mock.On("ValidateConfiguration", rcv)}
 }
 
-func (_c *TypeService_ValidateConfiguration_Call) Run(run func(configurations receiver.Configurations)) *TypeService_ValidateConfiguration_Call {
+func (_c *TypeService_ValidateConfiguration_Call) Run(run func(rcv *receiver.Receiver)) *TypeService_ValidateConfiguration_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(receiver.Configurations))
+		run(args[0].(*receiver.Receiver))
 	})
 	return _c
 }

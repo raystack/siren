@@ -8,5 +8,6 @@ type TypeService interface {
 	Decrypt(r *Receiver) error
 	PopulateReceiver(ctx context.Context, rcv *Receiver) (*Receiver, error)
 	Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error
-	ValidateConfiguration(configurations Configurations) error
+	ValidateConfiguration(rcv *Receiver) error
+	GetSubscriptionConfig(subsConfs map[string]string, receiverConfs Configurations) (map[string]string, error)
 }

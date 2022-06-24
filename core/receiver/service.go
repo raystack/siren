@@ -27,8 +27,8 @@ func (s *Service) getTypeService(receiverType string) (TypeService, error) {
 	return typeService, nil
 }
 
-func (s *Service) List(ctx context.Context) ([]Receiver, error) {
-	receivers, err := s.repository.List(ctx)
+func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
+	receivers, err := s.repository.List(ctx, flt)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) (uint64, error) {
 		return 0, err
 	}
 
-	if err := typeService.ValidateConfiguration(rcv.Configurations); err != nil {
+	if err := typeService.ValidateConfiguration(rcv); err != nil {
 		return 0, err
 	}
 
@@ -99,7 +99,7 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) (uint64, error) {
 		return 0, err
 	}
 
-	if err := typeService.ValidateConfiguration(rcv.Configurations); err != nil {
+	if err := typeService.ValidateConfiguration(rcv); err != nil {
 		return 0, err
 	}
 
@@ -117,6 +117,10 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) (uint64, error) {
 	return id, nil
 }
 
+func (s *Service) Delete(ctx context.Context, id uint64) error {
+	return s.repository.Delete(ctx, id)
+}
+
 func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage NotificationMessage) error {
 	rcv, err := s.Get(ctx, id)
 	if err != nil {
@@ -131,6 +135,15 @@ func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage Notifica
 	return typeService.Notify(ctx, rcv, payloadMessage)
 }
 
-func (s *Service) Delete(ctx context.Context, id uint64) error {
-	return s.repository.Delete(ctx, id)
+func (s *Service) GetSubscriptionConfig(subsConfs map[string]string, rcv *Receiver) (map[string]string, error) {
+	if rcv == nil {
+		return nil, errors.ErrInvalid.WithCausef("receiver is nil")
+	}
+
+	typeService, err := s.getTypeService(rcv.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return typeService.GetSubscriptionConfig(subsConfs, rcv.Configurations)
 }

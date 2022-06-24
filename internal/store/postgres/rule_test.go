@@ -204,7 +204,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 	type testCase struct {
 		Description   string
 		RuleToUpsert  *rule.Rule
-		PostProcessFn func() error
+		PostProcessFn func(rg []rule.Rule) error
 		ExpectedID    uint64
 		ErrString     string
 	}
@@ -221,7 +221,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Variables:         []rule.RuleVariable{},
 				ProviderNamespace: 1,
 			},
-			PostProcessFn: func() error { return nil },
+			PostProcessFn: func(rg []rule.Rule) error { return nil },
 			ExpectedID:    uint64(3), // autoincrement in db side
 		},
 		{
@@ -235,8 +235,8 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Variables:         []rule.RuleVariable{},
 				ProviderNamespace: 1,
 			},
-			PostProcessFn: func() error { return errors.New("rollback error") },
-			ErrString:     "rollback error",
+			PostProcessFn: func(rg []rule.Rule) error { return errors.New("some error") },
+			ErrString:     "some error",
 		},
 		{
 			Description: "should update a rule if already exist",
@@ -250,7 +250,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Variables:         []rule.RuleVariable{},
 				ProviderNamespace: 2,
 			},
-			PostProcessFn: func() error { return nil },
+			PostProcessFn: func(rg []rule.Rule) error { return nil },
 			ExpectedID:    2,
 		},
 		{
@@ -266,7 +266,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 		},
 		{
 			Description:   "should return error if rule is nil",
-			PostProcessFn: func() error { return nil },
+			PostProcessFn: func(rg []rule.Rule) error { return nil },
 			ErrString:     "rule domain is nil",
 		},
 	}

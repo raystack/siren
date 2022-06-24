@@ -13,6 +13,7 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
+	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
@@ -342,6 +343,40 @@ func bootstrapRule(db *gorm.DB) ([]rule.Rule, error) {
 	var insertedData []rule.Rule
 	for _, d := range data {
 		var mdl model.Rule
+		if err := mdl.FromDomain(&d); err != nil {
+			return nil, err
+		}
+
+		result := db.Create(&mdl)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+
+		dmn, err := mdl.ToDomain()
+		if err != nil {
+			return nil, err
+		}
+		insertedData = append(insertedData, *dmn)
+	}
+
+	return insertedData, nil
+}
+
+func bootstrapSubscription(db *gorm.DB) ([]subscription.Subscription, error) {
+	filePath := "./testdata/mock-subscription.json"
+	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []subscription.Subscription
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	var insertedData []subscription.Subscription
+	for _, d := range data {
+		var mdl model.Subscription
 		if err := mdl.FromDomain(&d); err != nil {
 			return nil, err
 		}
