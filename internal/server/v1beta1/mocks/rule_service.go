@@ -72,17 +72,24 @@ func (_c *RuleService_List_Call) Return(_a0 []rule.Rule, _a1 error) *RuleService
 }
 
 // Upsert provides a mock function with given fields: _a0, _a1
-func (_m *RuleService) Upsert(_a0 context.Context, _a1 *rule.Rule) error {
+func (_m *RuleService) Upsert(_a0 context.Context, _a1 *rule.Rule) (uint64, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *rule.Rule) error); ok {
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *rule.Rule) uint64); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(uint64)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *rule.Rule) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // RuleService_Upsert_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Upsert'
@@ -104,8 +111,8 @@ func (_c *RuleService_Upsert_Call) Run(run func(_a0 context.Context, _a1 *rule.R
 	return _c
 }
 
-func (_c *RuleService_Upsert_Call) Return(_a0 error) *RuleService_Upsert_Call {
-	_c.Call.Return(_a0)
+func (_c *RuleService_Upsert_Call) Return(_a0 uint64, _a1 error) *RuleService_Upsert_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 

@@ -9,7 +9,6 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -82,79 +81,55 @@ func NewService(
 	}
 }
 
-func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
+func (s *Service) Upsert(ctx context.Context, rl *Rule) (uint64, error) {
 	rl.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rl.Namespace, rl.GroupName, rl.Template)
 
-	template, err := s.templateService.GetByName(ctx, rl.Template)
+	tmpl, err := s.templateService.GetByName(ctx, rl.Template)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	templateVariables := template.Variables
+	templateVariables := tmpl.Variables
 	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rl.Variables)
 	rl.Variables = finalRuleVariables
 
-	namespace, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
+	ns, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	provider, err := s.providerService.Get(ctx, namespace.Provider)
+	prov, err := s.providerService.Get(ctx, ns.Provider)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
-		namespace.URN, rl.Namespace, rl.GroupName, rl.Template)
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,
+		ns.URN, rl.Namespace, rl.GroupName, rl.Template)
 
-	ctx = s.repository.WithTransaction(ctx)
-	if err := s.repository.Upsert(ctx, rl); err != nil {
-		if err := s.repository.Rollback(ctx); err != nil {
-			return err
-		}
-		if errors.Is(err, ErrDuplicate) {
-			return errors.ErrConflict.WithMsgf(err.Error())
-		}
-		return err
+	rulesWithinGroup, err := s.repository.List(ctx, Filter{
+		Namespace:   rl.Namespace,
+		GroupName:   rl.GroupName,
+		NamespaceID: rl.ProviderNamespace,
+	})
+	if err != nil {
+		return 0, err
 	}
 
-	if provider.Type == "cortex" {
-		rulesWithinGroup, err := s.repository.List(ctx, Filter{
-			Namespace:   rl.Namespace,
-			GroupName:   rl.GroupName,
-			NamespaceID: rl.ProviderNamespace,
-		})
-		if err != nil {
-			if err := s.repository.Rollback(ctx); err != nil {
+	return s.repository.UpsertWithTx(ctx, rl, func() error {
+		if prov.Type == "cortex" {
+			if err := PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl, rulesWithinGroup, ns.URN); err != nil {
 				return err
 			}
-			return err
 		}
-
-		if err := s.postRuleGroupWith(ctx, rl, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
-			if err := s.repository.Rollback(ctx); err != nil {
-				return err
-			}
-			return err
-		}
-	} else {
-		if err := s.repository.Rollback(ctx); err != nil {
-			return err
-		}
-		return errors.New("provider not supported")
-	}
-
-	if err := s.repository.Commit(ctx); err != nil {
-		return err
-	}
-	return nil
+		return nil
+	})
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
 	return s.repository.List(ctx, flt)
 }
 
-func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexClient, tenantName string) error {
+func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, rl *Rule, rulesWithinGroup []Rule, tenantName string) error {
 	renderedBodyForThisGroup := ""
 	for _, ruleWithinGroup := range rulesWithinGroup {
 		if !ruleWithinGroup.Enabled {
@@ -166,24 +141,24 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 			inputValue[v.Name] = v.Value
 		}
 
-		renderedBody, err := s.templateService.Render(ctx, ruleWithinGroup.Template, inputValue)
+		renderedBody, err := templateService.Render(ctx, ruleWithinGroup.Template, inputValue)
 		if err != nil {
 			return err
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
-	ctx = cortexClient.NewContextWithTenantId(ctx, tenantName)
+
 	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
+		err := client.DeleteRuleGroup(cortexClient.NewContextWithTenantID(ctx, tenantName), rl.Namespace, rl.GroupName)
 		if err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
-			} else {
-				return err
 			}
+			return err
 		}
 		return nil
 	}
+
 	var ruleNodes []rulefmt.RuleNode
 	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
 	if err != nil {
@@ -191,11 +166,11 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 	}
 	y := rwrulefmt.RuleGroup{
 		RuleGroup: rulefmt.RuleGroup{
-			Name:  rule.GroupName,
+			Name:  rl.GroupName,
 			Rules: ruleNodes,
 		},
 	}
-	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {
+	if err := client.CreateRuleGroup(ctx, rl.Namespace, y); err != nil {
 		return err
 	}
 	return nil

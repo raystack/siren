@@ -11,54 +11,59 @@ import (
 
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
-	*transaction
+	db *gorm.DB
 }
 
 // NewRuleRepository returns repository struct
 func NewRuleRepository(db *gorm.DB) *RuleRepository {
-	return &RuleRepository{&transaction{db}}
+	return &RuleRepository{db}
 }
 
-func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
+func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func() error) (uint64, error) {
 	m := new(model.Rule)
 	if err := m.FromDomain(rl); err != nil {
-		return err
+		return 0, err
 	}
 
-	result := r.getDb(ctx).Where("name = ?", m.Name).Updates(m)
-	if result.Error != nil {
-		err := checkPostgresError(result.Error)
-		if errors.Is(err, errDuplicateKey) {
-			return rule.ErrDuplicate
-		}
-		return err
-	}
-
-	if result.RowsAffected == 0 {
-		if err := r.getDb(ctx).Create(m).Error; err != nil {
-			err = checkPostgresError(err)
+	txErr := r.db.Transaction(func(tx *gorm.DB) error {
+		result := tx.WithContext(ctx).Where("name = ?", m.Name).Updates(&m)
+		if result.Error != nil {
+			err := checkPostgresError(result.Error)
 			if errors.Is(err, errDuplicateKey) {
 				return rule.ErrDuplicate
 			}
+			if errors.Is(err, errForeignKeyViolation) {
+				return rule.ErrRelation
+			}
 			return err
 		}
+
+		if result.RowsAffected == 0 {
+			if err := tx.WithContext(ctx).Create(&m).Error; err != nil {
+				err = checkPostgresError(err)
+				if errors.Is(err, errDuplicateKey) {
+					return rule.ErrDuplicate
+				}
+				if errors.Is(err, errForeignKeyViolation) {
+					return rule.ErrRelation
+				}
+				return err
+			}
+		}
+
+		return postProcessFn()
+	})
+
+	if txErr != nil {
+		return 0, txErr
 	}
 
-	if err := r.getDb(ctx).Where("name = ?", m.Name).Find(m).Error; err != nil {
-		return err
-	}
-
-	newRule, err := m.ToDomain()
-	if err != nil {
-		return err
-	}
-	*rl = *newRule
-	return nil
+	return m.ID, nil
 }
 
 func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule, error) {
 	var rules []model.Rule
-	db := r.getDb(ctx)
+	db := r.db.WithContext(ctx)
 	if flt.Name != "" {
 		db = db.Where("name = ?", flt.Name)
 	}

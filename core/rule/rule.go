@@ -7,15 +7,8 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname RuleRepository --filename rule_repository.go --output=./mocks
 type Repository interface {
-	Transactor
-	Upsert(context.Context, *Rule) error
+	UpsertWithTx(context.Context, *Rule, func() error) (uint64, error)
 	List(context.Context, Filter) ([]Rule, error)
-}
-
-type Transactor interface {
-	WithTransaction(ctx context.Context) context.Context
-	Rollback(ctx context.Context) error
-	Commit(ctx context.Context) error
 }
 
 type RuleVariable struct {

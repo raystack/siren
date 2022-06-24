@@ -10,7 +10,7 @@ import (
 
 //go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks
 type RuleService interface {
-	Upsert(context.Context, *rule.Rule) error
+	Upsert(context.Context, *rule.Rule) (uint64, error)
 	List(context.Context, rule.Filter) ([]rule.Rule, error)
 }
 
@@ -77,11 +77,12 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		Variables:         variables,
 	}
 
-	if err := s.ruleService.Upsert(ctx, rl); err != nil {
+	id, err := s.ruleService.Upsert(ctx, rl)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateRuleResponse{
-		Id: rl.ID,
+		Id: id,
 	}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/rule"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 type Rule struct {
@@ -22,6 +23,9 @@ type Rule struct {
 }
 
 func (rl *Rule) FromDomain(r *rule.Rule) error {
+	if r == nil {
+		return errors.New("rule domain is nil")
+	}
 	rl.ID = r.ID
 	rl.Name = r.Name
 	rl.Enabled = &r.Enabled
@@ -42,6 +46,9 @@ func (rl *Rule) FromDomain(r *rule.Rule) error {
 }
 
 func (rl *Rule) ToDomain() (*rule.Rule, error) {
+	if rl == nil {
+		return nil, errors.New("rule model is nil")
+	}
 	var variables []rule.RuleVariable
 	jsonBlob := []byte(rl.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)
