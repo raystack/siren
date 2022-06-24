@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	Transactor
 	Upsert(context.Context, *Rule) error
-	Get(context.Context, string, string, string, string, uint64) ([]Rule, error)
+	List(context.Context, Filter) ([]Rule, error)
 }
 
 type Transactor interface {

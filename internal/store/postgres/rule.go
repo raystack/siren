@@ -9,13 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type RuleResponse struct {
-	NamespaceUrn string
-	ProviderUrn  string
-	ProviderType string
-	ProviderHost string
-}
-
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
 	*transaction
@@ -63,23 +56,23 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 	return nil
 }
 
-func (r *RuleRepository) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]rule.Rule, error) {
+func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule, error) {
 	var rules []model.Rule
 	db := r.getDb(ctx)
-	if name != "" {
-		db = db.Where("name = ?", name)
+	if flt.Name != "" {
+		db = db.Where("name = ?", flt.Name)
 	}
-	if namespace != "" {
-		db = db.Where("namespace = ?", namespace)
+	if flt.Namespace != "" {
+		db = db.Where("namespace = ?", flt.Namespace)
 	}
-	if groupName != "" {
-		db = db.Where("group_name = ?", groupName)
+	if flt.GroupName != "" {
+		db = db.Where("group_name = ?", flt.GroupName)
 	}
-	if template != "" {
-		db = db.Where("template = ?", template)
+	if flt.TemplateName != "" {
+		db = db.Where("template = ?", flt.TemplateName)
 	}
-	if providerNamespace != 0 {
-		db = db.Where("provider_namespace = ?", providerNamespace)
+	if flt.NamespaceID != 0 {
+		db = db.Where("provider_namespace = ?", flt.NamespaceID)
 	}
 
 	if err := db.Find(&rules).Error; err != nil {

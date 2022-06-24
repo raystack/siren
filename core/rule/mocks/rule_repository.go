@@ -61,13 +61,13 @@ func (_c *RuleRepository_Commit_Call) Return(_a0 error) *RuleRepository_Commit_C
 	return _c
 }
 
-// Get provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5
-func (_m *RuleRepository) Get(_a0 context.Context, _a1 string, _a2 string, _a3 string, _a4 string, _a5 uint64) ([]rule.Rule, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5)
+// List provides a mock function with given fields: _a0, _a1
+func (_m *RuleRepository) List(_a0 context.Context, _a1 rule.Filter) ([]rule.Rule, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 []rule.Rule
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, uint64) []rule.Rule); ok {
-		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
+	if rf, ok := ret.Get(0).(func(context.Context, rule.Filter) []rule.Rule); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]rule.Rule)
@@ -75,8 +75,8 @@ func (_m *RuleRepository) Get(_a0 context.Context, _a1 string, _a2 string, _a3 s
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, uint64) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
+	if rf, ok := ret.Get(1).(func(context.Context, rule.Filter) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -84,30 +84,26 @@ func (_m *RuleRepository) Get(_a0 context.Context, _a1 string, _a2 string, _a3 s
 	return r0, r1
 }
 
-// RuleRepository_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
-type RuleRepository_Get_Call struct {
+// RuleRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type RuleRepository_List_Call struct {
 	*mock.Call
 }
 
-// Get is a helper method to define mock.On call
+// List is a helper method to define mock.On call
 //  - _a0 context.Context
-//  - _a1 string
-//  - _a2 string
-//  - _a3 string
-//  - _a4 string
-//  - _a5 uint64
-func (_e *RuleRepository_Expecter) Get(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}, _a4 interface{}, _a5 interface{}) *RuleRepository_Get_Call {
-	return &RuleRepository_Get_Call{Call: _e.mock.On("Get", _a0, _a1, _a2, _a3, _a4, _a5)}
+//  - _a1 rule.Filter
+func (_e *RuleRepository_Expecter) List(_a0 interface{}, _a1 interface{}) *RuleRepository_List_Call {
+	return &RuleRepository_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
 
-func (_c *RuleRepository_Get_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string, _a3 string, _a4 string, _a5 uint64)) *RuleRepository_Get_Call {
+func (_c *RuleRepository_List_Call) Run(run func(_a0 context.Context, _a1 rule.Filter)) *RuleRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string), args[5].(uint64))
+		run(args[0].(context.Context), args[1].(rule.Filter))
 	})
 	return _c
 }
 
-func (_c *RuleRepository_Get_Call) Return(_a0 []rule.Rule, _a1 error) *RuleRepository_Get_Call {
+func (_c *RuleRepository_List_Call) Return(_a0 []rule.Rule, _a1 error) *RuleRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

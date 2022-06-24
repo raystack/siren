@@ -82,19 +82,19 @@ func NewService(
 	}
 }
 
-func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
+func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rl.Namespace, rl.GroupName, rl.Template)
 
-	template, err := s.templateService.GetByName(ctx, rule.Template)
+	template, err := s.templateService.GetByName(ctx, rl.Template)
 	if err != nil {
 		return err
 	}
 
 	templateVariables := template.Variables
-	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rule.Variables)
-	rule.Variables = finalRuleVariables
+	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rl.Variables)
+	rl.Variables = finalRuleVariables
 
-	namespace, err := s.namespaceService.Get(ctx, rule.ProviderNamespace)
+	namespace, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
 	if err != nil {
 		return err
 	}
@@ -104,11 +104,11 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 		return err
 	}
 
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
-		namespace.URN, rule.Namespace, rule.GroupName, rule.Template)
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
+		namespace.URN, rl.Namespace, rl.GroupName, rl.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
-	if err := s.repository.Upsert(ctx, rule); err != nil {
+	if err := s.repository.Upsert(ctx, rl); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
 			return err
 		}
@@ -119,7 +119,11 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	}
 
 	if provider.Type == "cortex" {
-		rulesWithinGroup, err := s.repository.Get(ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace)
+		rulesWithinGroup, err := s.repository.List(ctx, Filter{
+			Namespace:   rl.Namespace,
+			GroupName:   rl.GroupName,
+			NamespaceID: rl.ProviderNamespace,
+		})
 		if err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return err
@@ -127,7 +131,7 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 			return err
 		}
 
-		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
+		if err := s.postRuleGroupWith(ctx, rl, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
 				return err
 			}
@@ -146,23 +150,23 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]Rule, error) {
-	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
+func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
+	return s.repository.List(ctx, flt)
 }
 
 func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexClient, tenantName string) error {
 	renderedBodyForThisGroup := ""
-	for i := 0; i < len(rulesWithinGroup); i++ {
-		if !rulesWithinGroup[i].Enabled {
+	for _, ruleWithinGroup := range rulesWithinGroup {
+		if !ruleWithinGroup.Enabled {
 			continue
 		}
 		inputValue := make(map[string]string)
 
-		for _, v := range rulesWithinGroup[i].Variables {
+		for _, v := range ruleWithinGroup.Variables {
 			inputValue[v.Name] = v.Value
 		}
 
-		renderedBody, err := s.templateService.Render(ctx, rulesWithinGroup[i].Template, inputValue)
+		renderedBody, err := s.templateService.Render(ctx, ruleWithinGroup.Template, inputValue)
 		if err != nil {
 			return err
 		}
