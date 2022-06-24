@@ -1,20 +1,13 @@
 package postgres
 
 import (
-	"bytes"
+	"context"
 	"fmt"
-
-	texttemplate "text/template"
 
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
-)
-
-const (
-	leftDelim  = "[["
-	rightDelim = "]]"
 )
 
 // TemplateRepository talks to the store to read or insert data
@@ -27,63 +20,60 @@ func NewTemplateRepository(db *gorm.DB) *TemplateRepository {
 	return &TemplateRepository{db}
 }
 
-func (r TemplateRepository) Upsert(tmpl *template.Template) error {
-	var newTemplate, existingTemplate model.Template
+func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) (uint64, error) {
+	var existingTemplate model.Template
 	modelTemplate := &model.Template{}
 	err := modelTemplate.FromDomain(tmpl)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	result := r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&existingTemplate)
+	result := r.db.WithContext(ctx).Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&existingTemplate)
 	if result.Error != nil {
-		return result.Error
+		return 0, result.Error
 	}
 	if result.RowsAffected == 0 {
-		result = r.db.Create(modelTemplate)
+		result = r.db.WithContext(ctx).Create(modelTemplate)
 	} else {
-		result = r.db.Where("id = ?", existingTemplate.ID).Updates(modelTemplate)
+		result = r.db.WithContext(ctx).Where("id = ?", existingTemplate.ID).Updates(modelTemplate)
 	}
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
-			return template.ErrDuplicate
+			return 0, template.ErrDuplicate
 		}
-		return result.Error
+		return 0, result.Error
 	}
-	result = r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&newTemplate)
-	if result.Error != nil {
-		return result.Error
-	}
-	res, err := newTemplate.ToDomain()
-	*tmpl = *res
-	return err
+
+	return modelTemplate.ID, err
 }
 
-func (r TemplateRepository) Index(tag string) ([]template.Template, error) {
-	var templates []model.Template
-	var result *gorm.DB
-	if tag == "" {
-		result = r.db.Find(&templates)
-	} else {
-		result = r.db.Where("tags @>ARRAY[?]", tag).Find(&templates)
+func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]*template.Template, error) {
+	var (
+		templates []model.Template
+		result    = r.db
+	)
+	if flt.Tag != "" {
+		result = result.Where("tags @>ARRAY[?]", flt.Tag)
 	}
+	result = result.WithContext(ctx).Find(&templates)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	domainTemplates := make([]template.Template, 0, len(templates))
-	for i := 0; i < len(templates); i++ {
-		t, err := templates[i].ToDomain()
+
+	domainTemplates := make([]*template.Template, 0, len(templates))
+	for _, templateModel := range templates {
+		templateDomain, err := templateModel.ToDomain()
 		if err != nil {
 			return nil, err
 		}
-		domainTemplates = append(domainTemplates, *t)
+		domainTemplates = append(domainTemplates, templateDomain)
 	}
 	return domainTemplates, nil
 }
 
-func (r TemplateRepository) GetByName(name string) (*template.Template, error) {
+func (r TemplateRepository) GetByName(ctx context.Context, name string) (*template.Template, error) {
 	var templateModel model.Template
-	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&templateModel)
+	result := r.db.WithContext(ctx).Where(fmt.Sprintf("name = '%s'", name)).Find(&templateModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -97,44 +87,8 @@ func (r TemplateRepository) GetByName(name string) (*template.Template, error) {
 	return tmpl, nil
 }
 
-func (r TemplateRepository) Delete(name string) error {
+func (r TemplateRepository) Delete(ctx context.Context, name string) error {
 	var template model.Template
-	result := r.db.Where("name = ?", name).Delete(&template)
+	result := r.db.WithContext(ctx).Where("name = ?", name).Delete(&template)
 	return result.Error
-}
-
-func enrichWithDefaults(variables []template.Variable, requestVariables map[string]string) map[string]string {
-	result := make(map[string]string)
-	for i := 0; i < len(variables); i++ {
-		name := variables[i].Name
-		defaultValue := variables[i].Default
-		val, ok := requestVariables[name]
-		if ok {
-			result[name] = val
-		} else {
-			result[name] = defaultValue
-		}
-	}
-	return result
-}
-
-var templateParser = texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse
-
-func (r TemplateRepository) Render(name string, requestVariables map[string]string) (string, error) {
-	templateFromDB, err := r.GetByName(name)
-	if err != nil {
-		return "", err
-	}
-
-	enrichedVariables := enrichWithDefaults(templateFromDB.Variables, requestVariables)
-	var tpl bytes.Buffer
-	tmpl, err := templateParser(templateFromDB.Body)
-	if err != nil {
-		return "", err
-	}
-	err = tmpl.Execute(&tpl, enrichedVariables)
-	if err != nil {
-		return "", err
-	}
-	return tpl.String(), nil
 }

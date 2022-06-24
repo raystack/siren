@@ -1,6 +1,18 @@
 package template
 
-import "github.com/odpf/siren/pkg/errors"
+import (
+	"bytes"
+	"context"
+
+	texttemplate "text/template"
+
+	"github.com/odpf/siren/pkg/errors"
+)
+
+const (
+	leftDelim  = "[["
+	rightDelim = "]]"
+)
 
 // Service handles business logic
 type Service struct {
@@ -12,22 +24,23 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) Upsert(template *Template) error {
-	if err := service.repository.Upsert(template); err != nil {
+func (s *Service) Upsert(ctx context.Context, template *Template) (uint64, error) {
+	id, err := s.repository.Upsert(ctx, template)
+	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return errors.ErrConflict.WithMsgf(err.Error())
+			return 0, errors.ErrConflict.WithMsgf(err.Error())
 		}
-		return err
+		return 0, err
 	}
-	return nil
+	return id, nil
 }
 
-func (service Service) Index(tag string) ([]Template, error) {
-	return service.repository.Index(tag)
+func (s *Service) List(ctx context.Context, flt Filter) ([]*Template, error) {
+	return s.repository.List(ctx, flt)
 }
 
-func (service Service) GetByName(name string) (*Template, error) {
-	tmpl, err := service.repository.GetByName(name)
+func (s *Service) GetByName(ctx context.Context, name string) (*Template, error) {
+	tmpl, err := s.repository.GetByName(ctx, name)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
@@ -37,10 +50,40 @@ func (service Service) GetByName(name string) (*Template, error) {
 	return tmpl, nil
 }
 
-func (service Service) Delete(name string) error {
-	return service.repository.Delete(name)
+func (s *Service) Delete(ctx context.Context, name string) error {
+	return s.repository.Delete(ctx, name)
 }
 
-func (service Service) Render(name string, body map[string]string) (string, error) {
-	return service.repository.Render(name, body)
+func (s *Service) Render(ctx context.Context, name string, requestVariables map[string]string) (string, error) {
+	templateFromDB, err := s.repository.GetByName(ctx, name)
+	if err != nil {
+		return "", err
+	}
+
+	enrichedVariables := enrichWithDefaults(templateFromDB.Variables, requestVariables)
+	var tpl bytes.Buffer
+	tmpl, err := texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse(templateFromDB.Body)
+	if err != nil {
+		return "", err
+	}
+	err = tmpl.Execute(&tpl, enrichedVariables)
+	if err != nil {
+		return "", err
+	}
+	return tpl.String(), nil
+}
+
+func enrichWithDefaults(variables []Variable, requestVariables map[string]string) map[string]string {
+	result := make(map[string]string)
+	for _, variable := range variables {
+		name := variable.Name
+		defaultValue := variable.Default
+		val, ok := requestVariables[name]
+		if ok {
+			result[name] = val
+		} else {
+			result[name] = defaultValue
+		}
+	}
+	return result
 }

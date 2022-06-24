@@ -36,13 +36,13 @@ type ProviderService interface {
 	Delete(context.Context, uint64) error
 }
 
-//go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
-type TemplatesService interface {
-	Upsert(*template.Template) error
-	Index(string) ([]template.Template, error)
-	GetByName(string) (*template.Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
+//go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
+type TemplateService interface {
+	Upsert(context.Context, *template.Template) (uint64, error)
+	List(context.Context, template.Filter) ([]*template.Template, error)
+	GetByName(context.Context, string) (*template.Template, error)
+	Delete(context.Context, string) error
+	Render(context.Context, string, map[string]string) (string, error)
 }
 
 type variable struct {
@@ -59,7 +59,7 @@ type Variables struct {
 // Service handles business logic
 type Service struct {
 	repository       Repository
-	templateService  TemplatesService
+	templateService  TemplateService
 	namespaceService NamespaceService
 	providerService  ProviderService
 	cortexClient     CortexClient
@@ -68,7 +68,7 @@ type Service struct {
 // NewService returns repository struct
 func NewService(
 	repository Repository,
-	templateService TemplatesService,
+	templateService TemplateService,
 	namespaceService NamespaceService,
 	providerService ProviderService,
 	cortexClient CortexClient,
@@ -85,7 +85,7 @@ func NewService(
 func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
 
-	template, err := s.templateService.GetByName(rule.Template)
+	template, err := s.templateService.GetByName(ctx, rule.Template)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 			inputValue[v.Name] = v.Value
 		}
 
-		renderedBody, err := s.templateService.Render(rulesWithinGroup[i].Template, inputValue)
+		renderedBody, err := s.templateService.Render(ctx, rulesWithinGroup[i].Template, inputValue)
 		if err != nil {
 			return err
 		}

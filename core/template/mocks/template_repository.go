@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	template "github.com/odpf/siren/core/template"
 	mock "github.com/stretchr/testify/mock"
 
@@ -22,13 +24,13 @@ func (_m *TemplateRepository) EXPECT() *TemplateRepository_Expecter {
 	return &TemplateRepository_Expecter{mock: &_m.Mock}
 }
 
-// Delete provides a mock function with given fields: _a0
-func (_m *TemplateRepository) Delete(_a0 string) error {
-	ret := _m.Called(_a0)
+// Delete provides a mock function with given fields: _a0, _a1
+func (_m *TemplateRepository) Delete(_a0 context.Context, _a1 string) error {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -42,14 +44,15 @@ type TemplateRepository_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//  - _a0 string
-func (_e *TemplateRepository_Expecter) Delete(_a0 interface{}) *TemplateRepository_Delete_Call {
-	return &TemplateRepository_Delete_Call{Call: _e.mock.On("Delete", _a0)}
+//  - _a0 context.Context
+//  - _a1 string
+func (_e *TemplateRepository_Expecter) Delete(_a0 interface{}, _a1 interface{}) *TemplateRepository_Delete_Call {
+	return &TemplateRepository_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
 
-func (_c *TemplateRepository_Delete_Call) Run(run func(_a0 string)) *TemplateRepository_Delete_Call {
+func (_c *TemplateRepository_Delete_Call) Run(run func(_a0 context.Context, _a1 string)) *TemplateRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -59,13 +62,13 @@ func (_c *TemplateRepository_Delete_Call) Return(_a0 error) *TemplateRepository_
 	return _c
 }
 
-// GetByName provides a mock function with given fields: _a0
-func (_m *TemplateRepository) GetByName(_a0 string) (*template.Template, error) {
-	ret := _m.Called(_a0)
+// GetByName provides a mock function with given fields: _a0, _a1
+func (_m *TemplateRepository) GetByName(_a0 context.Context, _a1 string) (*template.Template, error) {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 *template.Template
-	if rf, ok := ret.Get(0).(func(string) *template.Template); ok {
-		r0 = rf(_a0)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *template.Template); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*template.Template)
@@ -73,8 +76,8 @@ func (_m *TemplateRepository) GetByName(_a0 string) (*template.Template, error) 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -88,14 +91,15 @@ type TemplateRepository_GetByName_Call struct {
 }
 
 // GetByName is a helper method to define mock.On call
-//  - _a0 string
-func (_e *TemplateRepository_Expecter) GetByName(_a0 interface{}) *TemplateRepository_GetByName_Call {
-	return &TemplateRepository_GetByName_Call{Call: _e.mock.On("GetByName", _a0)}
+//  - _a0 context.Context
+//  - _a1 string
+func (_e *TemplateRepository_Expecter) GetByName(_a0 interface{}, _a1 interface{}) *TemplateRepository_GetByName_Call {
+	return &TemplateRepository_GetByName_Call{Call: _e.mock.On("GetByName", _a0, _a1)}
 }
 
-func (_c *TemplateRepository_GetByName_Call) Run(run func(_a0 string)) *TemplateRepository_GetByName_Call {
+func (_c *TemplateRepository_GetByName_Call) Run(run func(_a0 context.Context, _a1 string)) *TemplateRepository_GetByName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -105,65 +109,21 @@ func (_c *TemplateRepository_GetByName_Call) Return(_a0 *template.Template, _a1 
 	return _c
 }
 
-// Index provides a mock function with given fields: _a0
-func (_m *TemplateRepository) Index(_a0 string) ([]template.Template, error) {
-	ret := _m.Called(_a0)
+// List provides a mock function with given fields: _a0, _a1
+func (_m *TemplateRepository) List(_a0 context.Context, _a1 template.Filter) ([]*template.Template, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 []template.Template
-	if rf, ok := ret.Get(0).(func(string) []template.Template); ok {
-		r0 = rf(_a0)
+	var r0 []*template.Template
+	if rf, ok := ret.Get(0).(func(context.Context, template.Filter) []*template.Template); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]template.Template)
+			r0 = ret.Get(0).([]*template.Template)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(_a0)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// TemplateRepository_Index_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Index'
-type TemplateRepository_Index_Call struct {
-	*mock.Call
-}
-
-// Index is a helper method to define mock.On call
-//  - _a0 string
-func (_e *TemplateRepository_Expecter) Index(_a0 interface{}) *TemplateRepository_Index_Call {
-	return &TemplateRepository_Index_Call{Call: _e.mock.On("Index", _a0)}
-}
-
-func (_c *TemplateRepository_Index_Call) Run(run func(_a0 string)) *TemplateRepository_Index_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
-	})
-	return _c
-}
-
-func (_c *TemplateRepository_Index_Call) Return(_a0 []template.Template, _a1 error) *TemplateRepository_Index_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// Render provides a mock function with given fields: _a0, _a1
-func (_m *TemplateRepository) Render(_a0 string, _a1 map[string]string) (string, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(string, map[string]string) string); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, map[string]string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, template.Filter) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -172,42 +132,49 @@ func (_m *TemplateRepository) Render(_a0 string, _a1 map[string]string) (string,
 	return r0, r1
 }
 
-// TemplateRepository_Render_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Render'
-type TemplateRepository_Render_Call struct {
+// TemplateRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type TemplateRepository_List_Call struct {
 	*mock.Call
 }
 
-// Render is a helper method to define mock.On call
-//  - _a0 string
-//  - _a1 map[string]string
-func (_e *TemplateRepository_Expecter) Render(_a0 interface{}, _a1 interface{}) *TemplateRepository_Render_Call {
-	return &TemplateRepository_Render_Call{Call: _e.mock.On("Render", _a0, _a1)}
+// List is a helper method to define mock.On call
+//  - _a0 context.Context
+//  - _a1 template.Filter
+func (_e *TemplateRepository_Expecter) List(_a0 interface{}, _a1 interface{}) *TemplateRepository_List_Call {
+	return &TemplateRepository_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
 
-func (_c *TemplateRepository_Render_Call) Run(run func(_a0 string, _a1 map[string]string)) *TemplateRepository_Render_Call {
+func (_c *TemplateRepository_List_Call) Run(run func(_a0 context.Context, _a1 template.Filter)) *TemplateRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(map[string]string))
+		run(args[0].(context.Context), args[1].(template.Filter))
 	})
 	return _c
 }
 
-func (_c *TemplateRepository_Render_Call) Return(_a0 string, _a1 error) *TemplateRepository_Render_Call {
+func (_c *TemplateRepository_List_Call) Return(_a0 []*template.Template, _a1 error) *TemplateRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// Upsert provides a mock function with given fields: _a0
-func (_m *TemplateRepository) Upsert(_a0 *template.Template) error {
-	ret := _m.Called(_a0)
+// Upsert provides a mock function with given fields: _a0, _a1
+func (_m *TemplateRepository) Upsert(_a0 context.Context, _a1 *template.Template) (uint64, error) {
+	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*template.Template) error); ok {
-		r0 = rf(_a0)
+	var r0 uint64
+	if rf, ok := ret.Get(0).(func(context.Context, *template.Template) uint64); ok {
+		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(uint64)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *template.Template) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // TemplateRepository_Upsert_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Upsert'
@@ -216,20 +183,21 @@ type TemplateRepository_Upsert_Call struct {
 }
 
 // Upsert is a helper method to define mock.On call
-//  - _a0 *template.Template
-func (_e *TemplateRepository_Expecter) Upsert(_a0 interface{}) *TemplateRepository_Upsert_Call {
-	return &TemplateRepository_Upsert_Call{Call: _e.mock.On("Upsert", _a0)}
+//  - _a0 context.Context
+//  - _a1 *template.Template
+func (_e *TemplateRepository_Expecter) Upsert(_a0 interface{}, _a1 interface{}) *TemplateRepository_Upsert_Call {
+	return &TemplateRepository_Upsert_Call{Call: _e.mock.On("Upsert", _a0, _a1)}
 }
 
-func (_c *TemplateRepository_Upsert_Call) Run(run func(_a0 *template.Template)) *TemplateRepository_Upsert_Call {
+func (_c *TemplateRepository_Upsert_Call) Run(run func(_a0 context.Context, _a1 *template.Template)) *TemplateRepository_Upsert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*template.Template))
+		run(args[0].(context.Context), args[1].(*template.Template))
 	})
 	return _c
 }
 
-func (_c *TemplateRepository_Upsert_Call) Return(_a0 error) *TemplateRepository_Upsert_Call {
-	_c.Call.Return(_a0)
+func (_c *TemplateRepository_Upsert_Call) Return(_a0 uint64, _a1 error) *TemplateRepository_Upsert_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 

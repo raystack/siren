@@ -10,15 +10,17 @@ import (
 
 //go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
 type TemplateService interface {
-	Upsert(*template.Template) error
-	Index(string) ([]template.Template, error)
-	GetByName(string) (*template.Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
+	Upsert(context.Context, *template.Template) (uint64, error)
+	List(context.Context, template.Filter) ([]*template.Template, error)
+	GetByName(context.Context, string) (*template.Template, error)
+	Delete(context.Context, string) error
+	Render(context.Context, string, map[string]string) (string, error)
 }
 
-func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
-	templates, err := s.templateService.Index(req.GetTag())
+func (s *GRPCServer) ListTemplates(ctx context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
+	templates, err := s.templateService.List(ctx, template.Filter{
+		Tag: req.GetTag(),
+	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -51,8 +53,8 @@ func (s *GRPCServer) ListTemplates(_ context.Context, req *sirenv1beta1.ListTemp
 	}, nil
 }
 
-func (s *GRPCServer) GetTemplate(_ context.Context, req *sirenv1beta1.GetTemplateRequest) (*sirenv1beta1.GetTemplateResponse, error) {
-	template, err := s.templateService.GetByName(req.GetName())
+func (s *GRPCServer) GetTemplate(ctx context.Context, req *sirenv1beta1.GetTemplateRequest) (*sirenv1beta1.GetTemplateResponse, error) {
+	template, err := s.templateService.GetByName(ctx, req.GetName())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -79,7 +81,7 @@ func (s *GRPCServer) GetTemplate(_ context.Context, req *sirenv1beta1.GetTemplat
 	}, nil
 }
 
-func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertTemplateRequest) (*sirenv1beta1.UpsertTemplateResponse, error) {
+func (s *GRPCServer) UpsertTemplate(ctx context.Context, req *sirenv1beta1.UpsertTemplateRequest) (*sirenv1beta1.UpsertTemplateResponse, error) {
 	variables := make([]template.Variable, 0)
 	for _, variable := range req.GetVariables() {
 		variables = append(variables, template.Variable{
@@ -90,32 +92,32 @@ func (s *GRPCServer) UpsertTemplate(_ context.Context, req *sirenv1beta1.UpsertT
 		})
 	}
 	template := &template.Template{
-		ID:        uint(req.GetId()),
+		ID:        req.GetId(),
 		Name:      req.GetName(),
 		Body:      req.GetBody(),
 		Tags:      req.GetTags(),
 		Variables: variables,
 	}
-	err := s.templateService.Upsert(template)
+	id, err := s.templateService.Upsert(ctx, template)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpsertTemplateResponse{
-		Id: uint64(template.ID),
+		Id: id,
 	}, nil
 }
 
-func (s *GRPCServer) DeleteTemplate(_ context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
-	err := s.templateService.Delete(req.GetName())
+func (s *GRPCServer) DeleteTemplate(ctx context.Context, req *sirenv1beta1.DeleteTemplateRequest) (*sirenv1beta1.DeleteTemplateResponse, error) {
+	err := s.templateService.Delete(ctx, req.GetName())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 	return &sirenv1beta1.DeleteTemplateResponse{}, nil
 }
 
-func (s *GRPCServer) RenderTemplate(_ context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
-	body, err := s.templateService.Render(req.GetName(), req.GetVariables())
+func (s *GRPCServer) RenderTemplate(ctx context.Context, req *sirenv1beta1.RenderTemplateRequest) (*sirenv1beta1.RenderTemplateResponse, error) {
+	body, err := s.templateService.Render(ctx, req.GetName(), req.GetVariables())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
