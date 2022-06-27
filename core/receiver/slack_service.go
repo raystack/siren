@@ -34,7 +34,7 @@ func (s *SlackService) Notify(ctx context.Context, rcv *Receiver, payloadMessage
 	}
 
 	if err := s.slackClient.Notify(ctx, sm, slack.CallWithToken(token)); err != nil {
-		return fmt.Errorf("failed to notify: %w", err)
+		return fmt.Errorf("error calling slack notify: %w", err)
 	}
 
 	return nil

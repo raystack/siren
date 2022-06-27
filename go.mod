@@ -47,7 +47,3 @@ require (
 	gorm.io/driver/postgres v1.0.8
 	gorm.io/gorm v1.20.12
 )
-
-replace k8s.io/client-go => k8s.io/client-go v0.19.2
-
-replace github.com/grafana/cortex-tools v0.7.2 => github.com/kevinbheda/cortex-tools v0.8.0

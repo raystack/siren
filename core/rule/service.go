@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/cortex"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -146,7 +147,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 			if err.Error() == "requested resource not found" {
 				return nil
 			}
-			return err
+			return fmt.Errorf("error calling cortex: %w", err)
 		}
 		return nil
 	}
@@ -154,7 +155,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 	var ruleNodes []rulefmt.RuleNode
 	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf("cannot parse rules to alert manage rule nodes format, check your rule or template").WithCausef(err.Error())
 	}
 	y := rwrulefmt.RuleGroup{
 		RuleGroup: rulefmt.RuleGroup{
@@ -163,7 +164,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 		},
 	}
 	if err := client.CreateRuleGroup(ctx, rl.Namespace, y); err != nil {
-		return err
+		return fmt.Errorf("error calling cortex: %w", err)
 	}
 	return nil
 }

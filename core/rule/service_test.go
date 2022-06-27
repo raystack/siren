@@ -176,7 +176,7 @@ func TestService_PostRuleGroupWithCortex(t *testing.T) {
 					ts.EXPECT().Render(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return("", nil)
 					cc.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
 				},
-				ErrString: "some error",
+				ErrString: "error calling cortex: some error",
 			},
 			{
 				Description: "should return nil error if rendered body is empty and delete rule group return error \"requested resource not found\"",
@@ -197,7 +197,7 @@ func TestService_PostRuleGroupWithCortex(t *testing.T) {
 				Setup: func(ts *mocks.TemplateService, cc *mocks.CortexClient) {
 					ts.EXPECT().Render(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(",,,---", nil)
 				},
-				ErrString: "yaml: did not find expected node content",
+				ErrString: "cannot parse rules to alert manage rule nodes format, check your rule or template",
 			},
 			{
 				Description: "should return error if create rule group returns error",
@@ -205,7 +205,7 @@ func TestService_PostRuleGroupWithCortex(t *testing.T) {
 					ts.EXPECT().Render(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).Return(`- alert: "InstanceDown\\nexpr:up == 0\\nfor:5m\\nlabels:{severity:page}}"`, nil)
 					cc.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(errors.New("some error"))
 				},
-				ErrString: "some error",
+				ErrString: "error calling cortex: some error",
 			},
 			{
 				Description: "should return nil error if create rule group success",

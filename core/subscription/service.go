@@ -200,7 +200,7 @@ func SyncToUpstream(
 			Receivers: amConfig,
 		}, ns.URN)
 		if err != nil {
-			return err
+			return fmt.Errorf("error calling cortex: %w", err)
 		}
 	default:
 		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", prov.Type))
@@ -246,8 +246,9 @@ func CreateReceiversMap(ctx context.Context, receiverService ReceiverService, su
 			continue
 		}
 	}
+
 	if len(nilReceivers) > 0 {
-		return nil, fmt.Errorf("receiver id %v don't exist", nilReceivers)
+		return nil, errors.ErrInvalid.WithMsgf("receiver id %v don't exist", nilReceivers)
 	}
 
 	return receiversMap, nil
@@ -257,11 +258,11 @@ func AssignReceivers(receiverService ReceiverService, receiversMap map[uint64]*r
 	for is := range subscriptions {
 		for ir, subsRcv := range subscriptions[is].Receivers {
 			if mappedRcv := receiversMap[subsRcv.ID]; mappedRcv == nil {
-				return nil, fmt.Errorf("receiver id %d not found", subsRcv.ID)
+				return nil, errors.ErrInvalid.WithMsgf("receiver id %d not found", subsRcv.ID)
 			}
 			subsConfig, err := receiverService.GetSubscriptionConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
 			if err != nil {
-				return nil, err
+				return nil, errors.ErrInvalid.WithMsgf(err.Error())
 			}
 			subscriptions[is].Receivers[ir].ID = receiversMap[subsRcv.ID].ID
 			subscriptions[is].Receivers[ir].Type = receiversMap[subsRcv.ID].Type

@@ -64,7 +64,7 @@ func (s *Service) Render(ctx context.Context, name string, requestVariables map[
 	var tpl bytes.Buffer
 	tmpl, err := texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse(templateFromDB.Body)
 	if err != nil {
-		return "", err
+		return "", errors.ErrInvalid.WithMsgf("failed to parse template body").WithCausef(err.Error())
 	}
 	err = tmpl.Execute(&tpl, enrichedVariables)
 	if err != nil {
