@@ -97,6 +97,7 @@ func (s *SlackService) ValidateConfiguration(rcv *Receiver) error {
 	if rcv == nil {
 		return errors.New("receiver to validate is nil")
 	}
+
 	_, err := rcv.Configurations.GetString("client_id")
 	if err != nil {
 		return err

@@ -12,18 +12,22 @@ import (
 
 // SubscriptionRepository talks to the store to read or insert data
 type SubscriptionRepository struct {
-	db *gorm.DB
+	client *Client
 }
 
 // NewSubscriptionRepository returns SubscriptionRepository struct
-func NewSubscriptionRepository(db *gorm.DB) *SubscriptionRepository {
-	return &SubscriptionRepository{db}
+func NewSubscriptionRepository(client *Client) *SubscriptionRepository {
+	return &SubscriptionRepository{client}
 }
 
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
+	return r.list(ctx, r.client.db, flt)
+}
+
+func (r *SubscriptionRepository) list(ctx context.Context, tx *gorm.DB, flt subscription.Filter) ([]subscription.Subscription, error) {
 	var subscriptionModels []*model.Subscription
 
-	result := r.db.WithContext(ctx)
+	result := tx.WithContext(ctx)
 	if flt.NamespaceID != 0 {
 		result = result.Where("namespace_id = ?", flt.NamespaceID)
 	}
@@ -52,7 +56,7 @@ func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscrip
 		return 0, err
 	}
 
-	if txErr := r.db.Transaction(func(tx *gorm.DB) error {
+	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.WithContext(ctx).Create(&m).Error; err != nil {
 			err = checkPostgresError(err)
 			if errors.Is(err, errDuplicateKey) {
@@ -65,7 +69,7 @@ func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscrip
 		}
 
 		// fetch all subscriptions in this namespace.
-		subscriptionsInNamespace, err := r.List(ctx, subscription.Filter{
+		subscriptionsInNamespace, err := r.list(ctx, tx, subscription.Filter{
 			NamespaceID: sub.Namespace,
 		})
 		if err != nil {
@@ -83,7 +87,7 @@ func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscrip
 func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscription.Subscription, error) {
 	m := new(model.Subscription)
 
-	result := r.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&m)
+	result := r.client.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&m)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -105,7 +109,7 @@ func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscrip
 		return 0, err
 	}
 
-	if txErr := r.db.Transaction(func(tx *gorm.DB) error {
+	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Where("id = ?", m.ID).Updates(&m)
 		if result.Error != nil {
 			err := checkPostgresError(result.Error)
@@ -123,7 +127,7 @@ func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscrip
 		}
 
 		// fetch all subscriptions in this namespace.
-		subscriptionsInNamespace, err := r.List(ctx, subscription.Filter{
+		subscriptionsInNamespace, err := r.list(ctx, tx, subscription.Filter{
 			NamespaceID: sub.Namespace,
 		})
 		if err != nil {
@@ -139,13 +143,13 @@ func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscrip
 }
 
 func (r *SubscriptionRepository) DeleteWithTx(ctx context.Context, id uint64, namespaceID uint64, postProcessFn func([]subscription.Subscription) error) error {
-	if txErr := r.db.Transaction(func(tx *gorm.DB) error {
+	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Delete(model.Subscription{}, id)
 		if result.Error != nil {
 			return result.Error
 		}
 		// fetch all subscriptions in this namespace.
-		subscriptionsInNamespace, err := r.List(ctx, subscription.Filter{
+		subscriptionsInNamespace, err := r.list(ctx, tx, subscription.Filter{
 			NamespaceID: namespaceID,
 		})
 		if err != nil {

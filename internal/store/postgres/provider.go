@@ -7,23 +7,22 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
-	"gorm.io/gorm"
 )
 
 // ProviderRepository talks to the store to read or insert data
 type ProviderRepository struct {
-	db *gorm.DB
+	client *Client
 }
 
 // NewProviderRepository returns repository struct
-func NewProviderRepository(db *gorm.DB) *ProviderRepository {
-	return &ProviderRepository{db}
+func NewProviderRepository(client *Client) *ProviderRepository {
+	return &ProviderRepository{client}
 }
 
 func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]provider.Provider, error) {
 	var providers []*model.Provider
 
-	db := r.db
+	db := r.client.db
 	if flt.URN != "" {
 		db = db.Where(`"urn" = ?`, flt.URN)
 	}
@@ -52,7 +51,7 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 	if err := provModel.FromDomain(prov); err != nil {
 		return 0, err
 	}
-	result := r.db.WithContext(ctx).Create(&provModel)
+	result := r.client.db.WithContext(ctx).Create(&provModel)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
@@ -66,7 +65,7 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 
 func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provider, error) {
 	var provModel model.Provider
-	result := r.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&provModel)
+	result := r.client.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&provModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -86,7 +85,7 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 		return 0, err
 	}
 
-	result := r.db.Where("id = ?", provModel.ID).Updates(&provModel)
+	result := r.client.db.Where("id = ?", provModel.ID).Updates(&provModel)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
@@ -103,6 +102,6 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 
 func (r ProviderRepository) Delete(ctx context.Context, id uint64) error {
 	var provider model.Provider
-	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&provider)
+	result := r.client.db.WithContext(ctx).Where("id = ?", id).Delete(&provider)
 	return result.Error
 }

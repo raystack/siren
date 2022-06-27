@@ -57,7 +57,7 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) (uint64, error) {
 	}
 
 	if err := typeService.ValidateConfiguration(rcv); err != nil {
-		return 0, err
+		return 0, errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	if err := typeService.Encrypt(rcv); err != nil {

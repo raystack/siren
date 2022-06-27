@@ -11,12 +11,12 @@ import (
 
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
-	db *gorm.DB
+	client *Client
 }
 
 // NewRuleRepository returns repository struct
-func NewRuleRepository(db *gorm.DB) *RuleRepository {
-	return &RuleRepository{db}
+func NewRuleRepository(client *Client) *RuleRepository {
+	return &RuleRepository{client}
 }
 
 func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func([]rule.Rule) error) (uint64, error) {
@@ -25,7 +25,7 @@ func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postPr
 		return 0, err
 	}
 
-	if txErr := r.db.Transaction(func(tx *gorm.DB) error {
+	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
 		result := tx.WithContext(ctx).Where("name = ?", m.Name).Updates(&m)
 		if result.Error != nil {
 			err := checkPostgresError(result.Error)
@@ -51,7 +51,7 @@ func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postPr
 			}
 		}
 
-		rulesWithinGroup, err := r.List(ctx, rule.Filter{
+		rulesWithinGroup, err := r.list(ctx, tx, rule.Filter{
 			Namespace:   rl.Namespace,
 			GroupName:   rl.GroupName,
 			NamespaceID: rl.ProviderNamespace,
@@ -69,25 +69,29 @@ func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postPr
 }
 
 func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule, error) {
+	return r.list(ctx, r.client.db, flt)
+}
+
+func (r *RuleRepository) list(ctx context.Context, tx *gorm.DB, flt rule.Filter) ([]rule.Rule, error) {
 	var rules []model.Rule
-	db := r.db.WithContext(ctx)
+	txdb := tx.WithContext(ctx)
 	if flt.Name != "" {
-		db = db.Where("name = ?", flt.Name)
+		txdb = txdb.Where("name = ?", flt.Name)
 	}
 	if flt.Namespace != "" {
-		db = db.Where("namespace = ?", flt.Namespace)
+		txdb = txdb.Where("namespace = ?", flt.Namespace)
 	}
 	if flt.GroupName != "" {
-		db = db.Where("group_name = ?", flt.GroupName)
+		txdb = txdb.Where("group_name = ?", flt.GroupName)
 	}
 	if flt.TemplateName != "" {
-		db = db.Where("template = ?", flt.TemplateName)
+		txdb = txdb.Where("template = ?", flt.TemplateName)
 	}
 	if flt.NamespaceID != 0 {
-		db = db.Where("provider_namespace = ?", flt.NamespaceID)
+		txdb = txdb.Where("provider_namespace = ?", flt.NamespaceID)
 	}
 
-	if err := db.Find(&rules).Error; err != nil {
+	if err := txdb.Find(&rules).Error; err != nil {
 		return nil, err
 	}
 

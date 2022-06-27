@@ -6,22 +6,21 @@ import (
 
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/model"
-	"gorm.io/gorm"
 )
 
 // ReceiverRepository talks to the store to read or insert data
 type ReceiverRepository struct {
-	db *gorm.DB
+	client *Client
 }
 
 // NewReceiverRepository returns repository struct
-func NewReceiverRepository(db *gorm.DB) *ReceiverRepository {
-	return &ReceiverRepository{db}
+func NewReceiverRepository(client *Client) *ReceiverRepository {
+	return &ReceiverRepository{client}
 }
 
 func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
 	var models []*model.Receiver
-	result := r.db.WithContext(ctx)
+	result := r.client.db.WithContext(ctx)
 
 	if len(flt.ReceiverIDs) > 0 {
 		result = result.Where("id IN ?", flt.ReceiverIDs)
@@ -51,7 +50,7 @@ func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Recei
 		return 0, err
 	}
 
-	result := r.db.WithContext(ctx).Create(m)
+	result := r.client.db.WithContext(ctx).Create(m)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -61,7 +60,7 @@ func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Recei
 
 func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
 	rcvModel := new(model.Receiver)
-	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(rcvModel)
+	result := r.client.db.Where(fmt.Sprintf("id = %d", id)).Find(rcvModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -80,7 +79,7 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 	if err := m.FromDomain(rcv); err != nil {
 		return 0, err
 	}
-	result := r.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
+	result := r.client.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -94,6 +93,6 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
 	var receiver model.Receiver
-	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&receiver)
+	result := r.client.db.WithContext(ctx).Where("id = ?", id).Delete(&receiver)
 	return result.Error
 }

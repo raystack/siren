@@ -62,11 +62,13 @@ func RunServer(
 		subscriptionService,
 	)
 
+	// TODO grpc should uses the same log
 	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
-	zapper, err := zap.NewProduction()
+	zapper, err := zap.NewProduction(zap.AddStacktrace(zap.DPanicLevel))
 	if err != nil {
 		return err
 	}
+
 	// init grpc server
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(

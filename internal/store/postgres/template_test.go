@@ -11,13 +11,12 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type TemplateRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
-	db         *gorm.DB
+	client     *postgres.Client
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
 	repository *postgres.TemplateRepository
@@ -27,18 +26,18 @@ func (s *TemplateRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	s.db, s.pool, s.resource, err = newTestClient(logger)
+	s.client, s.pool, s.resource, err = newTestClient(logger)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
 	s.ctx = context.TODO()
-	s.repository = postgres.NewTemplateRepository(s.db)
+	s.repository = postgres.NewTemplateRepository(s.client)
 }
 
 func (s *TemplateRepositoryTestSuite) SetupTest() {
 	var err error
-	_, err = bootstrapTemplate(s.db)
+	_, err = bootstrapTemplate(s.client)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -61,7 +60,7 @@ func (s *TemplateRepositoryTestSuite) cleanup() error {
 	queries := []string{
 		"TRUNCATE TABLE templates RESTART IDENTITY CASCADE",
 	}
-	return execQueries(context.TODO(), s.db, queries)
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *TemplateRepositoryTestSuite) TestList() {

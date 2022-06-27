@@ -7,22 +7,21 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
-	"gorm.io/gorm"
 )
 
 // NamespaceRepository talks to the store to read or insert data
 type NamespaceRepository struct {
-	db *gorm.DB
+	client *Client
 }
 
 // NewNamespaceRepository returns repository struct
-func NewNamespaceRepository(db *gorm.DB) *NamespaceRepository {
-	return &NamespaceRepository{db}
+func NewNamespaceRepository(client *Client) *NamespaceRepository {
+	return &NamespaceRepository{client}
 }
 
 func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNamespace, error) {
 	var namespaceModels []*model.Namespace
-	if err := r.db.WithContext(ctx).Raw("select * from namespaces").Find(&namespaceModels).Error; err != nil {
+	if err := r.client.db.WithContext(ctx).Raw("select * from namespaces").Find(&namespaceModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -44,7 +43,7 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 		return 0, err
 	}
 
-	if err := r.db.WithContext(ctx).Create(nsModel).Error; err != nil {
+	if err := r.client.db.WithContext(ctx).Create(nsModel).Error; err != nil {
 		err = checkPostgresError(err)
 		if errors.Is(err, errDuplicateKey) {
 			return 0, namespace.ErrDuplicate
@@ -60,7 +59,7 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 
 func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.EncryptedNamespace, error) {
 	var nsModel model.Namespace
-	result := r.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&nsModel)
+	result := r.client.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&nsModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -80,7 +79,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 		return 0, err
 	}
 
-	result := r.db.Where("id = ?", m.ID).Updates(m)
+	result := r.client.db.Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
@@ -100,6 +99,6 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
 	var namespace model.Namespace
-	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&namespace)
+	result := r.client.db.WithContext(ctx).Where("id = ?", id).Delete(&namespace)
 	return result.Error
 }

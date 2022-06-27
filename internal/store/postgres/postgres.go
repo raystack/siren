@@ -19,8 +19,13 @@ var (
 	errForeignKeyViolation = errors.New("foreign key violation")
 )
 
-// New returns the database instance
-func New(logger log.Logger, c Config) (*gorm.DB, error) {
+type Client struct {
+	db     *gorm.DB
+	logger log.Logger
+}
+
+// New returns the database instance// NewClient initializes database connection
+func NewClient(logger log.Logger, c Config) (*Client, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
 		c.Host,
@@ -36,7 +41,10 @@ func New(logger log.Logger, c Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	return db, err
+	return &Client{
+		db:     db,
+		logger: logger,
+	}, nil
 }
 
 func getLogLevelFromString(level string) gormlogger.LogLevel {
@@ -69,9 +77,9 @@ func checkPostgresError(err error) error {
 	return err
 }
 
-func Migrate(logger log.Logger, db *gorm.DB) error {
-	logger.Info("migrating postgres...")
-	err := db.AutoMigrate(
+func (c *Client) Migrate() error {
+	c.logger.Info("migrating postgres...")
+	err := c.db.AutoMigrate(
 		&model.Alert{},
 		&model.Namespace{},
 		&model.Provider{},
@@ -82,6 +90,12 @@ func Migrate(logger log.Logger, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("migration done.")
+	c.logger.Info("migration done.")
 	return nil
+}
+
+// GetDB is a helper function for purpose only
+// don't use it in the main code
+func (c *Client) GetDB() *gorm.DB {
+	return c.db
 }

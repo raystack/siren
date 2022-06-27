@@ -19,7 +19,6 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"gorm.io/gorm"
 )
 
 const logLevelDebug = "debug"
@@ -35,7 +34,7 @@ var (
 	}
 )
 
-func newTestClient(logger log.Logger) (*gorm.DB, *dockertest.Pool, *dockertest.Resource, error) {
+func newTestClient(logger log.Logger) (*postgres.Client, *dockertest.Pool, *dockertest.Resource, error) {
 
 	opts := &dockertest.RunOptions{
 		Repository: "postgres",
@@ -103,9 +102,9 @@ func newTestClient(logger log.Logger) (*gorm.DB, *dockertest.Pool, *dockertest.R
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	pool.MaxWait = 60 * time.Second
 
-	var pgClient *gorm.DB
+	var pgClient *postgres.Client
 	if err = pool.Retry(func() error {
-		pgClient, err = postgres.New(logger, pgConfig)
+		pgClient, err = postgres.NewClient(logger, pgConfig)
 		if err != nil {
 			return err
 		}
@@ -129,25 +128,25 @@ func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	return nil
 }
 
-func setup(ctx context.Context, logger log.Logger, db *gorm.DB) (err error) {
+func setup(ctx context.Context, logger log.Logger, client *postgres.Client) (err error) {
 	var queries = []string{
 		"DROP SCHEMA public CASCADE",
 		"CREATE SCHEMA public",
 	}
 
-	err = execQueries(ctx, db, queries)
+	err = execQueries(ctx, client, queries)
 	if err != nil {
 		return
 	}
 
-	err = postgres.Migrate(logger, db)
+	err = client.Migrate()
 	return
 }
 
 // ExecQueries is used for executing list of db query
-func execQueries(ctx context.Context, db *gorm.DB, queries []string) error {
+func execQueries(ctx context.Context, client *postgres.Client, queries []string) error {
 	for _, query := range queries {
-		err := db.Exec(query).Error
+		err := client.GetDB().Exec(query).Error
 		if err != nil {
 			return err
 		}
@@ -155,7 +154,7 @@ func execQueries(ctx context.Context, db *gorm.DB, queries []string) error {
 	return nil
 }
 
-func bootstrapProvider(db *gorm.DB) ([]provider.Provider, error) {
+func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 	filePath := "./testdata/mock-provider.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -174,7 +173,7 @@ func bootstrapProvider(db *gorm.DB) ([]provider.Provider, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -189,7 +188,7 @@ func bootstrapProvider(db *gorm.DB) ([]provider.Provider, error) {
 	return insertedData, nil
 }
 
-func bootstrapNamespace(db *gorm.DB) ([]namespace.EncryptedNamespace, error) {
+func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace, error) {
 	filePath := "./testdata/mock-namespace.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -211,7 +210,7 @@ func bootstrapNamespace(db *gorm.DB) ([]namespace.EncryptedNamespace, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -226,7 +225,7 @@ func bootstrapNamespace(db *gorm.DB) ([]namespace.EncryptedNamespace, error) {
 	return insertedData, nil
 }
 
-func bootstrapReceiver(db *gorm.DB) ([]receiver.Receiver, error) {
+func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 	filePath := "./testdata/mock-receiver.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -245,7 +244,7 @@ func bootstrapReceiver(db *gorm.DB) ([]receiver.Receiver, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -260,7 +259,7 @@ func bootstrapReceiver(db *gorm.DB) ([]receiver.Receiver, error) {
 	return insertedData, nil
 }
 
-func bootstrapAlert(db *gorm.DB) ([]alert.Alert, error) {
+func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 	filePath := "./testdata/mock-alert.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -279,7 +278,7 @@ func bootstrapAlert(db *gorm.DB) ([]alert.Alert, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -294,7 +293,7 @@ func bootstrapAlert(db *gorm.DB) ([]alert.Alert, error) {
 	return insertedData, nil
 }
 
-func bootstrapTemplate(db *gorm.DB) ([]template.Template, error) {
+func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 	filePath := "./testdata/mock-template.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -313,7 +312,7 @@ func bootstrapTemplate(db *gorm.DB) ([]template.Template, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -328,7 +327,7 @@ func bootstrapTemplate(db *gorm.DB) ([]template.Template, error) {
 	return insertedData, nil
 }
 
-func bootstrapRule(db *gorm.DB) ([]rule.Rule, error) {
+func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 	filePath := "./testdata/mock-rule.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -347,7 +346,7 @@ func bootstrapRule(db *gorm.DB) ([]rule.Rule, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -362,7 +361,7 @@ func bootstrapRule(db *gorm.DB) ([]rule.Rule, error) {
 	return insertedData, nil
 }
 
-func bootstrapSubscription(db *gorm.DB) ([]subscription.Subscription, error) {
+func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription, error) {
 	filePath := "./testdata/mock-subscription.json"
 	testFixtureJSON, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -381,7 +380,7 @@ func bootstrapSubscription(db *gorm.DB) ([]subscription.Subscription, error) {
 			return nil, err
 		}
 
-		result := db.Create(&mdl)
+		result := client.GetDB().Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}

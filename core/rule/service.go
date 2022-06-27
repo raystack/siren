@@ -122,6 +122,7 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
 
 func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, rl *Rule, rulesWithinGroup []Rule, tenantName string) error {
 	renderedBodyForThisGroup := ""
+
 	for _, ruleWithinGroup := range rulesWithinGroup {
 		if !ruleWithinGroup.Enabled {
 			continue

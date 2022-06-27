@@ -11,13 +11,12 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
-	db         *gorm.DB
+	client     *postgres.Client
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
 	repository *postgres.NamespaceRepository
@@ -27,15 +26,15 @@ func (s *NamespaceRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	s.db, s.pool, s.resource, err = newTestClient(logger)
+	s.client, s.pool, s.resource, err = newTestClient(logger)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
 	s.ctx = context.TODO()
-	s.repository = postgres.NewNamespaceRepository(s.db)
+	s.repository = postgres.NewNamespaceRepository(s.client)
 
-	_, err = bootstrapProvider(s.db)
+	_, err = bootstrapProvider(s.client)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -43,7 +42,7 @@ func (s *NamespaceRepositoryTestSuite) SetupSuite() {
 
 func (s *NamespaceRepositoryTestSuite) SetupTest() {
 	var err error
-	_, err = bootstrapNamespace(s.db)
+	_, err = bootstrapNamespace(s.client)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -66,7 +65,7 @@ func (s *NamespaceRepositoryTestSuite) cleanup() error {
 	queries := []string{
 		"TRUNCATE TABLE namespaces RESTART IDENTITY CASCADE",
 	}
-	return execQueries(context.TODO(), s.db, queries)
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *NamespaceRepositoryTestSuite) TestList() {

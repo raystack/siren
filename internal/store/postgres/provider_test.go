@@ -11,13 +11,12 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type ProviderRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
-	db         *gorm.DB
+	client     *postgres.Client
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
 	repository *postgres.ProviderRepository
@@ -27,18 +26,18 @@ func (s *ProviderRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	s.db, s.pool, s.resource, err = newTestClient(logger)
+	s.client, s.pool, s.resource, err = newTestClient(logger)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
 	s.ctx = context.TODO()
-	s.repository = postgres.NewProviderRepository(s.db)
+	s.repository = postgres.NewProviderRepository(s.client)
 }
 
 func (s *ProviderRepositoryTestSuite) SetupTest() {
 	var err error
-	_, err = bootstrapProvider(s.db)
+	_, err = bootstrapProvider(s.client)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -61,7 +60,7 @@ func (s *ProviderRepositoryTestSuite) cleanup() error {
 	queries := []string{
 		"TRUNCATE TABLE providers RESTART IDENTITY CASCADE",
 	}
-	return execQueries(context.TODO(), s.db, queries)
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *ProviderRepositoryTestSuite) TestList() {
