@@ -244,7 +244,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Successfully updated receiver with id %d", id)
+			fmt.Printf("Successfully updated receiver with id %d\n", id)
 
 			return nil
 		},
