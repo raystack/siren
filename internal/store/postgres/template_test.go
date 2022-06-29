@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"database/sql"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -128,19 +128,29 @@ func (s *TemplateRepositoryTestSuite) TestGetByName() {
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if template not found", func() {
+	s.Run("should return not found if template not found", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 
 		actualTemplate, err := s.repository.GetByName("foo")
 		s.Nil(actualTemplate)
-		s.Nil(err)
+		s.EqualError(err, "template with name \"foo\" not found")
 	})
 
 	s.Run("should return error if any", func() {
 		expectedErrorMessage := "random error"
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
+
+		actualTemplates, err := s.repository.GetByName("foo")
+		s.Equal(err.Error(), expectedErrorMessage)
+		s.Empty(actualTemplates)
+	})
+
+	s.Run("should return not found if row affected 0", func() {
+		expectedErrorMessage := "template with name \"foo\" not found"
+		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
+		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(&sqlmock.Rows{})
 
 		actualTemplates, err := s.repository.GetByName("foo")
 		s.Equal(err.Error(), expectedErrorMessage)
@@ -454,7 +464,7 @@ func (s *TemplateRepositoryTestSuite) TestRender() {
 		inputBody := make(map[string]string)
 		inputBody["color"] = "brown"
 		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.Equal(err.Error(), "template not found")
+		s.EqualError(err, "template with name \"foo\" not found")
 		s.Equal("", renderedBody)
 	})
 }

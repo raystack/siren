@@ -1,5 +1,7 @@
 package provider
 
+import "github.com/odpf/siren/pkg/errors"
+
 // Service handles business logic
 type Service struct {
 	repository Repository
@@ -15,15 +17,40 @@ func (service Service) ListProviders(filters map[string]interface{}) ([]*Provide
 }
 
 func (service Service) CreateProvider(provider *Provider) (*Provider, error) {
-	return service.repository.Create(provider)
+	//TODO check provider is nil
+	prov, err := service.repository.Create(provider)
+	if err != nil {
+		if errors.Is(err, ErrDuplicate) {
+			return nil, errors.ErrConflict.WithMsgf(err.Error())
+		}
+		return nil, err
+	}
+	return prov, nil
 }
 
 func (service Service) GetProvider(id uint64) (*Provider, error) {
-	return service.repository.Get(id)
+	prov, err := service.repository.Get(id)
+	if err != nil {
+		if errors.As(err, new(NotFoundError)) {
+			return nil, errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return nil, err
+	}
+	return prov, nil
 }
 
 func (service Service) UpdateProvider(provider *Provider) (*Provider, error) {
-	return service.repository.Update(provider)
+	prov, err := service.repository.Update(provider)
+	if err != nil {
+		if errors.Is(err, ErrDuplicate) {
+			return nil, errors.ErrConflict.WithMsgf(err.Error())
+		}
+		if errors.As(err, new(NotFoundError)) {
+			return nil, errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return nil, err
+	}
+	return prov, nil
 }
 
 func (service Service) DeleteProvider(id uint64) error {

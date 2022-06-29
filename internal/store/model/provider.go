@@ -3,10 +3,10 @@ package model
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 type StringInterfaceMap map[string]interface{}
@@ -55,9 +55,9 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (p *Provider) FromDomain(t *provider.Provider) *Provider {
+func (p *Provider) FromDomain(t *provider.Provider) error {
 	if t == nil {
-		return nil
+		return errors.New("provider domain is nil")
 	}
 	p.ID = t.ID
 	p.Host = t.Host
@@ -68,12 +68,12 @@ func (p *Provider) FromDomain(t *provider.Provider) *Provider {
 	p.Labels = t.Labels
 	p.CreatedAt = t.CreatedAt
 	p.UpdatedAt = t.UpdatedAt
-	return p
+	return nil
 }
 
-func (p *Provider) ToDomain() *provider.Provider {
+func (p *Provider) ToDomain() (*provider.Provider, error) {
 	if p == nil {
-		return nil
+		return nil, errors.New("provider model is nil")
 	}
 	return &provider.Provider{
 		ID:          p.ID,
@@ -85,5 +85,5 @@ func (p *Provider) ToDomain() *provider.Provider {
 		Labels:      p.Labels,
 		CreatedAt:   p.CreatedAt,
 		UpdatedAt:   p.UpdatedAt,
-	}
+	}, nil
 }

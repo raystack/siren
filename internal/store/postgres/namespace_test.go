@@ -12,7 +12,7 @@ import (
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -197,14 +197,14 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if namespaces of given id does not exist", func() {
+	s.Run("should return not found error if namespaces of given id does not exist", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
 
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 
 		actualNamespace, err := s.repository.Get(1)
 		s.Nil(actualNamespace)
-		s.Nil(err)
+		s.EqualError(err, "namespace with id 1 not found")
 	})
 
 	s.Run("should return error in getting namespace of given id", func() {
@@ -281,7 +281,7 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 		s.dbmock.ExpectRollback()
 
 		err := s.repository.Update(input)
-		s.EqualError(err, "namespace doesn't exist")
+		s.EqualError(err, "namespace with id 99 not found")
 		s.Nil(s.dbmock.ExpectationsWereMet())
 	})
 

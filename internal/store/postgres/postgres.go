@@ -3,11 +3,20 @@ package postgres
 import (
 	"fmt"
 
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 	gormpg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
+)
+
+var (
+	errDuplicateKey        = errors.New("duplicate key")
+	errCheckViolation      = errors.New("check constraint violation")
+	errForeignKeyViolation = errors.New("foreign key violation")
 )
 
 // New returns the database instance
@@ -43,6 +52,21 @@ func getLogLevelFromString(level string) gormlogger.LogLevel {
 	default:
 		return gormlogger.Info
 	}
+}
+
+func checkPostgresError(err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case pgerrcode.UniqueViolation:
+			return fmt.Errorf("%w [%s]", errDuplicateKey, pgErr.Detail)
+		case pgerrcode.CheckViolation:
+			return fmt.Errorf("%w [%s]", errCheckViolation, pgErr.Detail)
+		case pgerrcode.ForeignKeyViolation:
+			return fmt.Errorf("%w [%s]", errForeignKeyViolation, pgErr.Detail)
+		}
+	}
+	return err
 }
 
 func Migrate(logger log.Logger, db *gorm.DB) error {

@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,35 +22,36 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SirenServiceClient interface {
+	// TODO this can be removed once we wire ping http with grpc healthcheck ref: https://github.com/odpf/siren/issues/100
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	ListProviders(ctx context.Context, in *ListProvidersRequest, opts ...grpc.CallOption) (*ListProvidersResponse, error)
-	CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
-	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error)
-	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error)
-	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*CreateProviderResponse, error)
+	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*GetProviderResponse, error)
+	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*UpdateProviderResponse, error)
+	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*DeleteProviderResponse, error)
 	NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
 	GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*GetNamespaceResponse, error)
 	UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error)
 	DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*DeleteNamespaceResponse, error)
-	ListSubscriptions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error)
-	CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
-	GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
-	UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error)
-	DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListReceivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReceiversResponse, error)
+	ListSubscriptions(ctx context.Context, in *ListSubscriptionsRequest, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error)
+	CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*CreateSubscriptionResponse, error)
+	GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*GetSubscriptionResponse, error)
+	UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*UpdateSubscriptionResponse, error)
+	DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*DeleteSubscriptionResponse, error)
+	ListReceivers(ctx context.Context, in *ListReceiversRequest, opts ...grpc.CallOption) (*ListReceiversResponse, error)
 	CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*CreateReceiverResponse, error)
 	GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*GetReceiverResponse, error)
 	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*UpdateReceiverResponse, error)
 	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error)
-	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
-	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error)
+	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*ListAlertsResponse, error)
+	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*CreateCortexAlertsResponse, error)
 	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*UpdateRuleResponse, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error)
-	GetTemplateByName(ctx context.Context, in *GetTemplateByNameRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
-	UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*TemplateResponse, error)
+	GetTemplate(ctx context.Context, in *GetTemplateRequest, opts ...grpc.CallOption) (*GetTemplateResponse, error)
+	UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*UpsertTemplateResponse, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error)
 	RenderTemplate(ctx context.Context, in *RenderTemplateRequest, opts ...grpc.CallOption) (*RenderTemplateResponse, error)
 }
@@ -82,8 +82,8 @@ func (c *sirenServiceClient) ListProviders(ctx context.Context, in *ListProvider
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
-	out := new(Provider)
+func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*CreateProviderResponse, error) {
+	out := new(CreateProviderResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -91,8 +91,8 @@ func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProvi
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
-	out := new(Provider)
+func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*GetProviderResponse, error) {
+	out := new(GetProviderResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,8 +100,8 @@ func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderReq
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*Provider, error) {
-	out := new(Provider)
+func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*UpdateProviderResponse, error) {
+	out := new(UpdateProviderResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -109,8 +109,8 @@ func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProvi
 	return out, nil
 }
 
-func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*DeleteProviderResponse, error) {
+	out := new(DeleteProviderResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (c *sirenServiceClient) DeleteNamespace(ctx context.Context, in *DeleteName
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListSubscriptions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error) {
+func (c *sirenServiceClient) ListSubscriptions(ctx context.Context, in *ListSubscriptionsRequest, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error) {
 	out := new(ListSubscriptionsResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListSubscriptions", in, out, opts...)
 	if err != nil {
@@ -181,8 +181,8 @@ func (c *sirenServiceClient) ListSubscriptions(ctx context.Context, in *emptypb.
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error) {
-	out := new(Subscription)
+func (c *sirenServiceClient) CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*CreateSubscriptionResponse, error) {
+	out := new(CreateSubscriptionResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -190,8 +190,8 @@ func (c *sirenServiceClient) CreateSubscription(ctx context.Context, in *CreateS
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error) {
-	out := new(Subscription)
+func (c *sirenServiceClient) GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*GetSubscriptionResponse, error) {
+	out := new(GetSubscriptionResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -199,8 +199,8 @@ func (c *sirenServiceClient) GetSubscription(ctx context.Context, in *GetSubscri
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*Subscription, error) {
-	out := new(Subscription)
+func (c *sirenServiceClient) UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*UpdateSubscriptionResponse, error) {
+	out := new(UpdateSubscriptionResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -208,8 +208,8 @@ func (c *sirenServiceClient) UpdateSubscription(ctx context.Context, in *UpdateS
 	return out, nil
 }
 
-func (c *sirenServiceClient) DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *sirenServiceClient) DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*DeleteSubscriptionResponse, error) {
+	out := new(DeleteSubscriptionResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -217,7 +217,7 @@ func (c *sirenServiceClient) DeleteSubscription(ctx context.Context, in *DeleteS
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReceiversResponse, error) {
+func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *ListReceiversRequest, opts ...grpc.CallOption) (*ListReceiversResponse, error) {
 	out := new(ListReceiversResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListReceivers", in, out, opts...)
 	if err != nil {
@@ -262,8 +262,8 @@ func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteRecei
 	return out, nil
 }
 
-func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*Alerts, error) {
-	out := new(Alerts)
+func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*ListAlertsResponse, error) {
+	out := new(ListAlertsResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -271,8 +271,8 @@ func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsReque
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*Alerts, error) {
-	out := new(Alerts)
+func (c *sirenServiceClient) CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*CreateCortexAlertsResponse, error) {
+	out := new(CreateCortexAlertsResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateCortexAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -307,17 +307,17 @@ func (c *sirenServiceClient) ListTemplates(ctx context.Context, in *ListTemplate
 	return out, nil
 }
 
-func (c *sirenServiceClient) GetTemplateByName(ctx context.Context, in *GetTemplateByNameRequest, opts ...grpc.CallOption) (*TemplateResponse, error) {
-	out := new(TemplateResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetTemplateByName", in, out, opts...)
+func (c *sirenServiceClient) GetTemplate(ctx context.Context, in *GetTemplateRequest, opts ...grpc.CallOption) (*GetTemplateResponse, error) {
+	out := new(GetTemplateResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sirenServiceClient) UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*TemplateResponse, error) {
-	out := new(TemplateResponse)
+func (c *sirenServiceClient) UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*UpsertTemplateResponse, error) {
+	out := new(UpsertTemplateResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpsertTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -347,35 +347,36 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
 type SirenServiceServer interface {
+	// TODO this can be removed once we wire ping http with grpc healthcheck ref: https://github.com/odpf/siren/issues/100
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error)
-	CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error)
-	GetProvider(context.Context, *GetProviderRequest) (*Provider, error)
-	UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error)
-	DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error)
+	CreateProvider(context.Context, *CreateProviderRequest) (*CreateProviderResponse, error)
+	GetProvider(context.Context, *GetProviderRequest) (*GetProviderResponse, error)
+	UpdateProvider(context.Context, *UpdateProviderRequest) (*UpdateProviderResponse, error)
+	DeleteProvider(context.Context, *DeleteProviderRequest) (*DeleteProviderResponse, error)
 	NotifyReceiver(context.Context, *NotifyReceiverRequest) (*NotifyReceiverResponse, error)
 	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
 	GetNamespace(context.Context, *GetNamespaceRequest) (*GetNamespaceResponse, error)
 	UpdateNamespace(context.Context, *UpdateNamespaceRequest) (*UpdateNamespaceResponse, error)
 	DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error)
-	ListSubscriptions(context.Context, *emptypb.Empty) (*ListSubscriptionsResponse, error)
-	CreateSubscription(context.Context, *CreateSubscriptionRequest) (*Subscription, error)
-	GetSubscription(context.Context, *GetSubscriptionRequest) (*Subscription, error)
-	UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*Subscription, error)
-	DeleteSubscription(context.Context, *DeleteSubscriptionRequest) (*emptypb.Empty, error)
-	ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error)
+	ListSubscriptions(context.Context, *ListSubscriptionsRequest) (*ListSubscriptionsResponse, error)
+	CreateSubscription(context.Context, *CreateSubscriptionRequest) (*CreateSubscriptionResponse, error)
+	GetSubscription(context.Context, *GetSubscriptionRequest) (*GetSubscriptionResponse, error)
+	UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*UpdateSubscriptionResponse, error)
+	DeleteSubscription(context.Context, *DeleteSubscriptionRequest) (*DeleteSubscriptionResponse, error)
+	ListReceivers(context.Context, *ListReceiversRequest) (*ListReceiversResponse, error)
 	CreateReceiver(context.Context, *CreateReceiverRequest) (*CreateReceiverResponse, error)
 	GetReceiver(context.Context, *GetReceiverRequest) (*GetReceiverResponse, error)
 	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*UpdateReceiverResponse, error)
 	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error)
-	ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error)
-	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error)
+	ListAlerts(context.Context, *ListAlertsRequest) (*ListAlertsResponse, error)
+	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*CreateCortexAlertsResponse, error)
 	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*UpdateRuleResponse, error)
 	ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error)
-	GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*TemplateResponse, error)
-	UpsertTemplate(context.Context, *UpsertTemplateRequest) (*TemplateResponse, error)
+	GetTemplate(context.Context, *GetTemplateRequest) (*GetTemplateResponse, error)
+	UpsertTemplate(context.Context, *UpsertTemplateRequest) (*UpsertTemplateResponse, error)
 	DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error)
 	RenderTemplate(context.Context, *RenderTemplateRequest) (*RenderTemplateResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
@@ -391,16 +392,16 @@ func (UnimplementedSirenServiceServer) Ping(context.Context, *PingRequest) (*Pin
 func (UnimplementedSirenServiceServer) ListProviders(context.Context, *ListProvidersRequest) (*ListProvidersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProviders not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateProvider(context.Context, *CreateProviderRequest) (*Provider, error) {
+func (UnimplementedSirenServiceServer) CreateProvider(context.Context, *CreateProviderRequest) (*CreateProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) GetProvider(context.Context, *GetProviderRequest) (*Provider, error) {
+func (UnimplementedSirenServiceServer) GetProvider(context.Context, *GetProviderRequest) (*GetProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdateProviderRequest) (*Provider, error) {
+func (UnimplementedSirenServiceServer) UpdateProvider(context.Context, *UpdateProviderRequest) (*UpdateProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProvider not implemented")
 }
-func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*emptypb.Empty, error) {
+func (UnimplementedSirenServiceServer) DeleteProvider(context.Context, *DeleteProviderRequest) (*DeleteProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProvider not implemented")
 }
 func (UnimplementedSirenServiceServer) NotifyReceiver(context.Context, *NotifyReceiverRequest) (*NotifyReceiverResponse, error) {
@@ -421,22 +422,22 @@ func (UnimplementedSirenServiceServer) UpdateNamespace(context.Context, *UpdateN
 func (UnimplementedSirenServiceServer) DeleteNamespace(context.Context, *DeleteNamespaceRequest) (*DeleteNamespaceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNamespace not implemented")
 }
-func (UnimplementedSirenServiceServer) ListSubscriptions(context.Context, *emptypb.Empty) (*ListSubscriptionsResponse, error) {
+func (UnimplementedSirenServiceServer) ListSubscriptions(context.Context, *ListSubscriptionsRequest) (*ListSubscriptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSubscriptions not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateSubscription(context.Context, *CreateSubscriptionRequest) (*Subscription, error) {
+func (UnimplementedSirenServiceServer) CreateSubscription(context.Context, *CreateSubscriptionRequest) (*CreateSubscriptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSubscription not implemented")
 }
-func (UnimplementedSirenServiceServer) GetSubscription(context.Context, *GetSubscriptionRequest) (*Subscription, error) {
+func (UnimplementedSirenServiceServer) GetSubscription(context.Context, *GetSubscriptionRequest) (*GetSubscriptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubscription not implemented")
 }
-func (UnimplementedSirenServiceServer) UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*Subscription, error) {
+func (UnimplementedSirenServiceServer) UpdateSubscription(context.Context, *UpdateSubscriptionRequest) (*UpdateSubscriptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSubscription not implemented")
 }
-func (UnimplementedSirenServiceServer) DeleteSubscription(context.Context, *DeleteSubscriptionRequest) (*emptypb.Empty, error) {
+func (UnimplementedSirenServiceServer) DeleteSubscription(context.Context, *DeleteSubscriptionRequest) (*DeleteSubscriptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSubscription not implemented")
 }
-func (UnimplementedSirenServiceServer) ListReceivers(context.Context, *emptypb.Empty) (*ListReceiversResponse, error) {
+func (UnimplementedSirenServiceServer) ListReceivers(context.Context, *ListReceiversRequest) (*ListReceiversResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReceivers not implemented")
 }
 func (UnimplementedSirenServiceServer) CreateReceiver(context.Context, *CreateReceiverRequest) (*CreateReceiverResponse, error) {
@@ -451,10 +452,10 @@ func (UnimplementedSirenServiceServer) UpdateReceiver(context.Context, *UpdateRe
 func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteReceiver not implemented")
 }
-func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*Alerts, error) {
+func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*ListAlertsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlerts not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*Alerts, error) {
+func (UnimplementedSirenServiceServer) CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*CreateCortexAlertsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCortexAlerts not implemented")
 }
 func (UnimplementedSirenServiceServer) ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error) {
@@ -466,10 +467,10 @@ func (UnimplementedSirenServiceServer) UpdateRule(context.Context, *UpdateRuleRe
 func (UnimplementedSirenServiceServer) ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplates not implemented")
 }
-func (UnimplementedSirenServiceServer) GetTemplateByName(context.Context, *GetTemplateByNameRequest) (*TemplateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateByName not implemented")
+func (UnimplementedSirenServiceServer) GetTemplate(context.Context, *GetTemplateRequest) (*GetTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplate not implemented")
 }
-func (UnimplementedSirenServiceServer) UpsertTemplate(context.Context, *UpsertTemplateRequest) (*TemplateResponse, error) {
+func (UnimplementedSirenServiceServer) UpsertTemplate(context.Context, *UpsertTemplateRequest) (*UpsertTemplateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertTemplate not implemented")
 }
 func (UnimplementedSirenServiceServer) DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error) {
@@ -708,7 +709,7 @@ func _SirenService_DeleteNamespace_Handler(srv interface{}, ctx context.Context,
 }
 
 func _SirenService_ListSubscriptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListSubscriptionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -720,7 +721,7 @@ func _SirenService_ListSubscriptions_Handler(srv interface{}, ctx context.Contex
 		FullMethod: "/odpf.siren.v1beta1.SirenService/ListSubscriptions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListSubscriptions(ctx, req.(*emptypb.Empty))
+		return srv.(SirenServiceServer).ListSubscriptions(ctx, req.(*ListSubscriptionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -798,7 +799,7 @@ func _SirenService_DeleteSubscription_Handler(srv interface{}, ctx context.Conte
 }
 
 func _SirenService_ListReceivers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListReceiversRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -810,7 +811,7 @@ func _SirenService_ListReceivers_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/odpf.siren.v1beta1.SirenService/ListReceivers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).ListReceivers(ctx, req.(*emptypb.Empty))
+		return srv.(SirenServiceServer).ListReceivers(ctx, req.(*ListReceiversRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -977,20 +978,20 @@ func _SirenService_ListTemplates_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_GetTemplateByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTemplateByNameRequest)
+func _SirenService_GetTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).GetTemplateByName(ctx, in)
+		return srv.(SirenServiceServer).GetTemplate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetTemplateByName",
+		FullMethod: "/odpf.siren.v1beta1.SirenService/GetTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).GetTemplateByName(ctx, req.(*GetTemplateByNameRequest))
+		return srv.(SirenServiceServer).GetTemplate(ctx, req.(*GetTemplateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1165,8 +1166,8 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_ListTemplates_Handler,
 		},
 		{
-			MethodName: "GetTemplateByName",
-			Handler:    _SirenService_GetTemplateByName_Handler,
+			MethodName: "GetTemplate",
+			Handler:    _SirenService_GetTemplate_Handler,
 		},
 		{
 			MethodName: "UpsertTemplate",

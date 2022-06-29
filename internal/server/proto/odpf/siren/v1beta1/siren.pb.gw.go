@@ -21,7 +21,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Suppress "imported and not used" errors
@@ -585,7 +584,7 @@ func local_request_SirenService_DeleteNamespace_0(ctx context.Context, marshaler
 }
 
 func request_SirenService_ListSubscriptions_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq ListSubscriptionsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.ListSubscriptions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -594,7 +593,7 @@ func request_SirenService_ListSubscriptions_0(ctx context.Context, marshaler run
 }
 
 func local_request_SirenService_ListSubscriptions_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq ListSubscriptionsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.ListSubscriptions(ctx, &protoReq)
@@ -809,7 +808,7 @@ func local_request_SirenService_DeleteSubscription_0(ctx context.Context, marsha
 }
 
 func request_SirenService_ListReceivers_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq ListReceiversRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.ListReceivers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -818,7 +817,7 @@ func request_SirenService_ListReceivers_0(ctx context.Context, marshaler runtime
 }
 
 func local_request_SirenService_ListReceivers_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq emptypb.Empty
+	var protoReq ListReceiversRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.ListReceivers(ctx, &protoReq)
@@ -1296,8 +1295,8 @@ func local_request_SirenService_ListTemplates_0(ctx context.Context, marshaler r
 
 }
 
-func request_SirenService_GetTemplateByName_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetTemplateByNameRequest
+func request_SirenService_GetTemplate_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetTemplateRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1317,13 +1316,13 @@ func request_SirenService_GetTemplateByName_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
-	msg, err := client.GetTemplateByName(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetTemplate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_SirenService_GetTemplateByName_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetTemplateByNameRequest
+func local_request_SirenService_GetTemplate_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetTemplateRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1343,7 +1342,7 @@ func local_request_SirenService_GetTemplateByName_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
-	msg, err := server.GetTemplateByName(ctx, &protoReq)
+	msg, err := server.GetTemplate(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -2156,19 +2155,19 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetTemplateByName_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_GetTemplate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1beta1.SirenService/GetTemplateByName", runtime.WithHTTPPathPattern("/v1beta1/templates/{name}"))
+		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/odpf.siren.v1beta1.SirenService/GetTemplate", runtime.WithHTTPPathPattern("/v1beta1/templates/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_SirenService_GetTemplateByName_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_SirenService_GetTemplate_0(ctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2176,7 +2175,7 @@ func RegisterSirenServiceHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 
-		forward_SirenService_GetTemplateByName_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_GetTemplate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2860,24 +2859,24 @@ func RegisterSirenServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
-	mux.Handle("GET", pattern_SirenService_GetTemplateByName_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_SirenService_GetTemplate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1beta1.SirenService/GetTemplateByName", runtime.WithHTTPPathPattern("/v1beta1/templates/{name}"))
+		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/odpf.siren.v1beta1.SirenService/GetTemplate", runtime.WithHTTPPathPattern("/v1beta1/templates/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_SirenService_GetTemplateByName_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_SirenService_GetTemplate_0(ctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_SirenService_GetTemplateByName_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_SirenService_GetTemplate_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3002,7 +3001,7 @@ var (
 
 	pattern_SirenService_ListTemplates_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1beta1", "templates"}, ""))
 
-	pattern_SirenService_GetTemplateByName_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1beta1", "templates", "name"}, ""))
+	pattern_SirenService_GetTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1beta1", "templates", "name"}, ""))
 
 	pattern_SirenService_UpsertTemplate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1beta1", "templates"}, ""))
 
@@ -3066,7 +3065,7 @@ var (
 
 	forward_SirenService_ListTemplates_0 = runtime.ForwardResponseMessage
 
-	forward_SirenService_GetTemplateByName_0 = runtime.ForwardResponseMessage
+	forward_SirenService_GetTemplate_0 = runtime.ForwardResponseMessage
 
 	forward_SirenService_UpsertTemplate_0 = runtime.ForwardResponseMessage
 

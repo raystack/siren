@@ -9,7 +9,7 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/cortex"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
@@ -64,7 +64,7 @@ func NewService(repository Repository, providerService ProviderService, namespac
 func (s Service) ListSubscriptions(ctx context.Context) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.List")
+		return nil, err
 	}
 
 	return subscriptions, nil
@@ -75,20 +75,23 @@ func (s Service) CreateSubscription(ctx context.Context, sub *Subscription) erro
 	sortReceivers(sub)
 	if err := s.repository.Create(ctx, sub); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.repository.Create")
+		if errors.Is(err, ErrDuplicate) {
+			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		return err
 	}
 
 	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+		return err
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
-		return errors.Wrap(err, "s.repository.Commit")
+		return err
 	}
 	return nil
 }
@@ -96,11 +99,12 @@ func (s Service) CreateSubscription(ctx context.Context, sub *Subscription) erro
 func (s Service) GetSubscription(ctx context.Context, id uint64) (*Subscription, error) {
 	subscription, err := s.repository.Get(ctx, id)
 	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.Get")
+		if errors.As(err, new(NotFoundError)) {
+			return nil, errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return nil, err
 	}
-	if subscription == nil {
-		return nil, nil
-	}
+
 	return subscription, nil
 }
 
@@ -109,21 +113,27 @@ func (s Service) UpdateSubscription(ctx context.Context, sub *Subscription) erro
 	sortReceivers(sub)
 	if err := s.repository.Update(ctx, sub); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.repository.Update")
+		if errors.Is(err, ErrDuplicate) {
+			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		if errors.As(err, new(NotFoundError)) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return err
 	}
 
 	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		fmt.Printf("err: %v\n", err)
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+		return err
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
-		return errors.Wrap(err, "s.repository.Commit")
+		return err
 	}
 	return nil
 }
@@ -131,25 +141,22 @@ func (s Service) UpdateSubscription(ctx context.Context, sub *Subscription) erro
 func (s Service) DeleteSubscription(ctx context.Context, id uint64) error {
 	sub, err := s.repository.Get(ctx, id)
 	if err != nil {
-		return errors.Wrap(err, "s.repository.Get")
-	}
-	if sub == nil {
-		return errors.New("subscription not found")
+		return err
 	}
 
 	ctx = s.repository.WithTransaction(ctx)
 	if err := s.repository.Delete(ctx, id); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.repository.Delete")
+		return err
 	}
 
 	if err := s.syncInUpstreamCurrentSubscriptionsOfNamespace(ctx, sub.Namespace); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace")
+		return err
 	}
 	return nil
 }
@@ -158,16 +165,16 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 	// fetch all subscriptions in this namespace.
 	subscriptionsInNamespace, err := s.getAllSubscriptionsWithinNamespace(ctx, namespaceId)
 	if err != nil {
-		return errors.Wrap(err, "s.getAllSubscriptionsWithinNamespace")
+		return err
 	}
 	// check provider type of the namespace
 	providerInfo, namespaceInfo, err := s.getProviderAndNamespaceInfoFromNamespaceId(namespaceId)
 	if err != nil {
-		return errors.Wrap(err, "s.getProviderAndNamespaceInfoFromNamespaceId")
+		return err
 	}
 	subscriptionsInNamespaceEnrichedWithReceivers, err := s.addReceiversConfiguration(subscriptionsInNamespace)
 	if err != nil {
-		return errors.Wrap(err, "s.addReceiversConfiguration")
+		return err
 	}
 	// do upstream call to create subscriptions as per provider type
 	switch providerInfo.Type {
@@ -175,7 +182,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 		amConfig := getAmConfigFromSubscriptions(subscriptionsInNamespaceEnrichedWithReceivers)
 		err = s.cortexClient.CreateAlertmanagerConfig(amConfig, namespaceInfo.URN)
 		if err != nil {
-			return errors.Wrap(err, "s.amClient.CreateAlertmanagerConfig")
+			return err
 		}
 	default:
 		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", providerInfo.Type))
@@ -187,7 +194,7 @@ func (s Service) syncInUpstreamCurrentSubscriptionsOfNamespace(ctx context.Conte
 func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint64) ([]*Subscription, error) {
 	subscriptions, err := s.repository.List(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "s.repository.List")
+		return nil, err
 	}
 	var subscriptionsWithinNamespace []*Subscription
 	for _, sub := range subscriptions {
@@ -201,11 +208,11 @@ func (s Service) getAllSubscriptionsWithinNamespace(ctx context.Context, id uint
 func (s Service) getProviderAndNamespaceInfoFromNamespaceId(id uint64) (*provider.Provider, *namespace.Namespace, error) {
 	namespaceInfo, err := s.namespaceService.GetNamespace(id)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get namespace details")
+		return nil, nil, err
 	}
 	providerInfo, err := s.providerService.GetProvider(namespaceInfo.Provider)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get provider details")
+		return nil, nil, err
 	}
 	return providerInfo, namespaceInfo, nil
 }
@@ -214,7 +221,7 @@ func (s Service) addReceiversConfiguration(subscriptions []*Subscription) ([]Sub
 	res := make([]SubscriptionEnrichedWithReceivers, 0)
 	allReceivers, err := s.receiverService.ListReceivers()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get receivers")
+		return nil, err
 	}
 	for _, item := range subscriptions {
 		enrichedReceivers := make([]EnrichedReceiverMetadata, 0)

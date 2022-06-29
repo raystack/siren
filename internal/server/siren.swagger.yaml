@@ -37,7 +37,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Alerts'
+            $ref: '#/definitions/ListAlertsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -76,7 +76,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Alerts'
+            $ref: '#/definitions/CreateCortexAlertsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -243,7 +243,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Provider'
+            $ref: '#/definitions/CreateProviderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -264,7 +264,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Provider'
+            $ref: '#/definitions/GetProviderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -284,7 +284,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            properties: {}
+            $ref: '#/definitions/DeleteProviderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -304,7 +304,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Provider'
+            $ref: '#/definitions/UpdateProviderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -555,7 +555,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Subscription'
+            $ref: '#/definitions/CreateSubscriptionResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -576,7 +576,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Subscription'
+            $ref: '#/definitions/GetSubscriptionResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -596,7 +596,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            properties: {}
+            $ref: '#/definitions/DeleteSubscriptionResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -616,7 +616,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/Subscription'
+            $ref: '#/definitions/UpdateSubscriptionResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -675,7 +675,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/TemplateResponse'
+            $ref: '#/definitions/UpsertTemplateResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -691,12 +691,12 @@ paths:
   /v1beta1/templates/{name}:
     get:
       summary: get a template
-      operationId: SirenService_GetTemplateByName
+      operationId: SirenService_GetTemplate
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/TemplateResponse'
+            $ref: '#/definitions/GetTemplateResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -780,13 +780,6 @@ definitions:
       triggered_at:
         type: string
         format: date-time
-  Alerts:
-    type: object
-    properties:
-      alerts:
-        type: array
-        items:
-          $ref: '#/definitions/Alert'
   Annotations:
     type: object
     properties:
@@ -816,6 +809,13 @@ definitions:
       starts_at:
         type: string
         format: date-time
+  CreateCortexAlertsResponse:
+    type: object
+    properties:
+      alerts:
+        type: array
+        items:
+          $ref: '#/definitions/Alert'
   CreateNamespaceRequest:
     type: object
     properties:
@@ -861,6 +861,12 @@ definitions:
         type: object
         additionalProperties:
           type: string
+  CreateProviderResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   CreateReceiverRequest:
     type: object
     properties:
@@ -896,31 +902,63 @@ definitions:
         type: object
         additionalProperties:
           type: string
+  CreateSubscriptionResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   DeleteNamespaceResponse:
     type: object
+  DeleteProviderResponse:
+    type: object
   DeleteReceiverResponse:
+    type: object
+  DeleteSubscriptionResponse:
     type: object
   DeleteTemplateResponse:
     type: object
   GetNamespaceResponse:
     type: object
     properties:
-      data:
+      namespace:
         $ref: '#/definitions/Namespace'
+  GetProviderResponse:
+    type: object
+    properties:
+      provider:
+        $ref: '#/definitions/Provider'
   GetReceiverResponse:
     type: object
     properties:
-      data:
+      receiver:
         $ref: '#/definitions/Receiver'
+  GetSubscriptionResponse:
+    type: object
+    properties:
+      subscription:
+        $ref: '#/definitions/Subscription'
+  GetTemplateResponse:
+    type: object
+    properties:
+      template:
+        $ref: '#/definitions/Template'
   Labels:
     type: object
     properties:
       severity:
         type: string
+  ListAlertsResponse:
+    type: object
+    properties:
+      alerts:
+        type: array
+        items:
+          $ref: '#/definitions/Alert'
   ListNamespacesResponse:
     type: object
     properties:
-      data:
+      namespaces:
         type: array
         items:
           $ref: '#/definitions/Namespace'
@@ -934,7 +972,7 @@ definitions:
   ListReceiversResponse:
     type: object
     properties:
-      data:
+      receivers:
         type: array
         items:
           $ref: '#/definitions/Receiver'
@@ -1158,11 +1196,6 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TemplateVariables'
-  TemplateResponse:
-    type: object
-    properties:
-      template:
-        $ref: '#/definitions/Template'
   TemplateVariables:
     type: object
     properties:
@@ -1175,6 +1208,12 @@ definitions:
       description:
         type: string
   UpdateNamespaceResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  UpdateProviderResponse:
     type: object
     properties:
       id:
@@ -1207,8 +1246,15 @@ definitions:
   UpdateRuleResponse:
     type: object
     properties:
-      rule:
-        $ref: '#/definitions/Rule'
+      id:
+        type: string
+        format: uint64
+  UpdateSubscriptionResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   UpsertTemplateRequest:
     type: object
     properties:
@@ -1227,6 +1273,12 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/TemplateVariables'
+  UpsertTemplateResponse:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   Variables:
     type: object
     properties:

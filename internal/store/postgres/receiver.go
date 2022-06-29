@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/odpf/siren/core/receiver"
@@ -29,7 +28,12 @@ func (r ReceiverRepository) List() ([]*receiver.Receiver, error) {
 
 	var receivers []*receiver.Receiver
 	for _, r := range models {
-		receivers = append(receivers, r.ToDomain())
+		rcv, err := r.ToDomain()
+		if err != nil {
+			// TODO log here
+			continue
+		}
+		receivers = append(receivers, rcv)
 	}
 
 	return receivers, nil
@@ -37,39 +41,51 @@ func (r ReceiverRepository) List() ([]*receiver.Receiver, error) {
 
 func (r ReceiverRepository) Create(receiver *receiver.Receiver) error {
 	m := new(model.Receiver)
-	m.FromDomain(receiver)
+	if err := m.FromDomain(receiver); err != nil {
+		return err
+	}
 
 	result := r.db.Create(m)
 	if result.Error != nil {
 		return result.Error
 	}
 
-	newReceiver := m.ToDomain()
+	newReceiver, err := m.ToDomain()
+	if err != nil {
+		return err
+	}
 	*receiver = *newReceiver
 	return nil
 }
 
 func (r ReceiverRepository) Get(id uint64) (*receiver.Receiver, error) {
-	receiver := new(model.Receiver)
-	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(receiver)
+	rcvModel := new(model.Receiver)
+	result := r.db.Where(fmt.Sprintf("id = %d", id)).Find(rcvModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, fmt.Errorf("receiver not found: %d", id)
+		return nil, receiver.NotFoundError{ID: id}
 	}
-
-	return receiver.ToDomain(), nil
+	rcv, err := rcvModel.ToDomain()
+	if err != nil {
+		return nil, err
+	}
+	return rcv, nil
 }
 
-func (r ReceiverRepository) Update(receiver *receiver.Receiver) error {
+func (r ReceiverRepository) Update(rcv *receiver.Receiver) error {
 	var m model.Receiver
-	m.FromDomain(receiver)
+	if err := m.FromDomain(rcv); err != nil {
+		return err
+	}
 	result := r.db.Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		return result.Error
-	} else if result.RowsAffected == 0 {
-		return errors.New("receiver doesn't exist")
+	}
+
+	if result.RowsAffected == 0 {
+		return receiver.NotFoundError{ID: rcv.ID}
 	}
 
 	result = r.db.Where(fmt.Sprintf("id = %d", m.ID)).Find(&m)
@@ -77,8 +93,11 @@ func (r ReceiverRepository) Update(receiver *receiver.Receiver) error {
 		return result.Error
 	}
 
-	newReceiver := m.ToDomain()
-	*receiver = *newReceiver
+	newRcv, err := m.ToDomain()
+	if err != nil {
+		return err
+	}
+	*rcv = *newRcv
 	return nil
 }
 

@@ -2,13 +2,13 @@ package v1beta1
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -86,7 +86,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 		assert.Equal(t, "foo", res.GetTemplates()[0].GetVariables()[0].GetName())
 	})
 
-	t.Run("should return error code 13 if getting templates failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting templates failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
@@ -99,18 +99,18 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListTemplates(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
-func TestGRPCServer_GetTemplateByName(t *testing.T) {
+func TestGRPCServer_GetTemplate(t *testing.T) {
 	t.Run("should return template by name", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
 			logger:          log.NewNoop(),
 		}
-		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
+		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
 		dummyResult := &template.Template{
@@ -130,7 +130,7 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 
 		mockedTemplateService.EXPECT().GetByName("foo").
 			Return(dummyResult, nil).Once()
-		res, err := dummyGRPCServer.GetTemplateByName(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.GetTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
 		assert.Equal(t, "foo", res.GetTemplate().GetName())
@@ -139,36 +139,36 @@ func TestGRPCServer_GetTemplateByName(t *testing.T) {
 		mockedTemplateService.AssertCalled(t, "GetByName", dummyReq.Name)
 	})
 
-	t.Run("should return error code 5 if template does not exist", func(t *testing.T) {
+	t.Run("should return error Not Found if template does not exist", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
 			logger:          log.NewNoop(),
 		}
-		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
+		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
 		mockedTemplateService.EXPECT().GetByName("foo").
-			Return(nil, nil).Once()
-		res, err := dummyGRPCServer.GetTemplateByName(context.Background(), dummyReq)
+			Return(nil, errors.ErrNotFound).Once()
+		res, err := dummyGRPCServer.GetTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = NotFound desc = template not found")
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = requested entity not found")
 	})
 
-	t.Run("should return error code 13 if getting template by name failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting template by name failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
 			logger:          log.NewNoop(),
 		}
-		dummyReq := &sirenv1beta1.GetTemplateByNameRequest{
+		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
 		mockedTemplateService.EXPECT().GetByName("foo").
 			Return(nil, errors.New("random error")).Once()
-		res, err := dummyGRPCServer.GetTemplateByName(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.GetTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -212,14 +212,23 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 		mockedTemplateService.EXPECT().Upsert(template).Return(nil).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, uint64(1), res.GetTemplate().GetId())
-		assert.Equal(t, "foo", res.GetTemplate().GetName())
-		assert.Equal(t, "bar", res.GetTemplate().GetBody())
-		assert.Equal(t, "foo", res.GetTemplate().GetVariables()[0].GetName())
+		assert.Equal(t, uint64(1), res.GetId())
 		mockedTemplateService.AssertCalled(t, "Upsert", template)
 	})
 
-	t.Run("should return error code 13 if upsert template failed", func(t *testing.T) {
+	t.Run("should return error AlreadyExists if upsert template return err conflict", func(t *testing.T) {
+		mockedTemplateService := &mocks.TemplateService{}
+		dummyGRPCServer := GRPCServer{
+			templateService: mockedTemplateService,
+			logger:          log.NewNoop(),
+		}
+		mockedTemplateService.EXPECT().Upsert(template).Return(errors.ErrConflict).Once()
+		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
+	})
+
+	t.Run("should return error Internal if upsert template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
@@ -228,7 +237,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 		mockedTemplateService.EXPECT().Upsert(template).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -251,7 +260,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 		mockedTemplateService.AssertCalled(t, "Delete", "foo")
 	})
 
-	t.Run("should return error code 13 if deleting template failed", func(t *testing.T) {
+	t.Run("should return error Internal if deleting template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
@@ -264,7 +273,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -291,7 +300,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 		mockedTemplateService.AssertCalled(t, "Render", "foo", dummyReq.GetVariables())
 	})
 
-	t.Run("should return error code 13 if rendering template failed", func(t *testing.T) {
+	t.Run("should return error Internal if rendering template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
 		dummyGRPCServer := GRPCServer{
 			templateService: mockedTemplateService,
@@ -301,6 +310,6 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 			Return("", errors.New("random error")).Once()
 		res, err := dummyGRPCServer.RenderTemplate(context.Background(), dummyReq)
 		assert.Empty(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }

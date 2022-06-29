@@ -9,7 +9,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 )
@@ -87,28 +87,21 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 
 	template, err := s.templateService.GetByName(rule.Template)
 	if err != nil {
-		return errors.Wrap(err, "s.templateService.GetByName")
+		return err
 	}
-	if template == nil {
-		return errors.New("template not found")
-	}
+
 	templateVariables := template.Variables
 	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rule.Variables)
 	rule.Variables = finalRuleVariables
 
 	namespace, err := s.namespaceService.GetNamespace(rule.ProviderNamespace)
 	if err != nil {
-		return errors.Wrap(err, "s.namespaceService.GetNamespace")
+		return err
 	}
-	if namespace == nil {
-		return errors.New("namespace not found")
-	}
+
 	provider, err := s.providerService.GetProvider(namespace.Provider)
 	if err != nil {
-		return errors.Wrap(err, "s.providerService.GetProvider")
-	}
-	if provider == nil {
-		return errors.New("provider not found")
+		return err
 	}
 
 	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
@@ -117,35 +110,38 @@ func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
 	ctx = s.repository.WithTransaction(ctx)
 	if err := s.repository.Upsert(ctx, rule); err != nil {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
-		return errors.Wrap(err, "s.repository.Upsert")
+		if errors.Is(err, ErrDuplicate) {
+			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		return err
 	}
 
 	if provider.Type == "cortex" {
 		rulesWithinGroup, err := s.repository.Get(ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace)
 		if err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
-				return errors.Wrap(err, "s.repository.Rollback")
+				return err
 			}
-			return errors.Wrap(err, "s.repository.Get")
+			return err
 		}
 
 		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
 			if err := s.repository.Rollback(ctx); err != nil {
-				return errors.Wrap(err, "s.repository.Rollback")
+				return err
 			}
-			return errors.Wrap(err, "s.postRuleGroupWith")
+			return err
 		}
 	} else {
 		if err := s.repository.Rollback(ctx); err != nil {
-			return errors.Wrap(err, "s.repository.Rollback")
+			return err
 		}
 		return errors.New("provider not supported")
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
-		return errors.Wrap(err, "s.repository.Commit")
+		return err
 	}
 	return nil
 }
@@ -168,7 +164,7 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 
 		renderedBody, err := s.templateService.Render(rulesWithinGroup[i].Template, inputValue)
 		if err != nil {
-			return errors.Wrap(err, "s.templateService.Render")
+			return err
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
@@ -179,7 +175,7 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 			if err.Error() == "requested resource not found" {
 				return nil
 			} else {
-				return errors.Wrap(err, "client.DeleteRuleGroup")
+				return err
 			}
 		}
 		return nil
@@ -196,7 +192,7 @@ func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithin
 		},
 	}
 	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {
-		return errors.Wrap(err, "client.CreateRuleGroup")
+		return err
 	}
 	return nil
 }

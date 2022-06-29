@@ -2,13 +2,9 @@ package v1beta1
 
 import (
 	"context"
-	"errors"
 
 	"github.com/odpf/siren/core/receiver"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -23,19 +19,17 @@ type ReceiverService interface {
 	NotifyReceiver(id uint64, payloadMessage receiver.NotificationMessage) error
 }
 
-func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv1beta1.ListReceiversResponse, error) {
+func (s *GRPCServer) ListReceivers(_ context.Context, _ *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.receiverService.ListReceivers()
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
-	res := &sirenv1beta1.ListReceiversResponse{
-		Data: make([]*sirenv1beta1.Receiver, 0),
-	}
+	items := []*sirenv1beta1.Receiver{}
 	for _, rcv := range receivers {
 		configurations, err := structpb.NewStruct(rcv.Configurations)
 		if err != nil {
-			return nil, gRPCLogError(s.logger, codes.Internal, err)
+			return nil, s.generateRPCErr(err)
 		}
 
 		item := &sirenv1beta1.Receiver{
@@ -47,9 +41,11 @@ func (s *GRPCServer) ListReceivers(_ context.Context, _ *emptypb.Empty) (*sirenv
 			CreatedAt:      timestamppb.New(rcv.CreatedAt),
 			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
 		}
-		res.Data = append(res.Data, item)
+		items = append(items, item)
 	}
-	return res, nil
+	return &sirenv1beta1.ListReceiversResponse{
+		Receivers: items,
+	}, nil
 }
 
 func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.CreateReceiverResponse, error) {
@@ -63,10 +59,7 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 	}
 
 	if err := s.receiverService.CreateReceiver(rcv); err != nil {
-		if errors.Is(err, receiver.ErrInvalid) {
-			return nil, status.Errorf(codes.InvalidArgument, err.Error())
-		}
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateReceiverResponse{
@@ -76,25 +69,22 @@ func (s *GRPCServer) CreateReceiver(_ context.Context, req *sirenv1beta1.CreateR
 
 func (s *GRPCServer) GetReceiver(_ context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.GetReceiverResponse, error) {
 	rcv, err := s.receiverService.GetReceiver(req.GetId())
-	if rcv == nil {
-		return nil, status.Errorf(codes.NotFound, "receiver not found")
-	}
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	data, err := structpb.NewStruct(rcv.Data)
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	configuration, err := structpb.NewStruct(rcv.Configurations)
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.GetReceiverResponse{
-		Data: &sirenv1beta1.Receiver{
+		Receiver: &sirenv1beta1.Receiver{
 			Id:             rcv.ID,
 			Name:           rcv.Name,
 			Type:           rcv.Type,
@@ -118,10 +108,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 		Configurations: configurations,
 	}
 	if err := s.receiverService.UpdateReceiver(rcv); err != nil {
-		if errors.Is(err, receiver.ErrInvalid) {
-			return nil, status.Errorf(codes.InvalidArgument, err.Error())
-		}
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateReceiverResponse{
@@ -132,7 +119,7 @@ func (s *GRPCServer) UpdateReceiver(_ context.Context, req *sirenv1beta1.UpdateR
 func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteReceiverRequest) (*sirenv1beta1.DeleteReceiverResponse, error) {
 	err := s.receiverService.DeleteReceiver(uint64(req.GetId()))
 	if err != nil {
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.DeleteReceiverResponse{}, nil
@@ -140,10 +127,7 @@ func (s *GRPCServer) DeleteReceiver(_ context.Context, req *sirenv1beta1.DeleteR
 
 func (s *GRPCServer) NotifyReceiver(_ context.Context, req *sirenv1beta1.NotifyReceiverRequest) (*sirenv1beta1.NotifyReceiverResponse, error) {
 	if err := s.receiverService.NotifyReceiver(req.GetId(), req.GetPayload().AsMap()); err != nil {
-		if errors.Is(err, receiver.ErrInvalid) {
-			return nil, status.Errorf(codes.InvalidArgument, err.Error())
-		}
-		return nil, gRPCLogError(s.logger, codes.Internal, err)
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.NotifyReceiverResponse{}, nil

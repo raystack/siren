@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -60,9 +61,14 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			providers := res.Providers
+			if res.GetProviders() == nil {
+				return errors.New("no response from server")
+			}
+
+			providers := res.GetProviders()
 			report := [][]string{}
 
+			// TODO unclear log
 			fmt.Printf(" \nShowing %d of %d providers\n \n", len(providers), len(providers))
 			report = append(report, []string{"ID", "TYPE", "URN", "NAME"})
 
@@ -173,16 +179,20 @@ func getProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
+			if res.GetProvider() == nil {
+				return errors.New("no response from server")
+			}
+
 			provider := &provider.Provider{
-				ID:          res.GetId(),
-				Host:        res.GetHost(),
-				URN:         res.GetUrn(),
-				Name:        res.GetName(),
-				Type:        res.GetType(),
-				Credentials: res.GetCredentials().AsMap(),
-				Labels:      res.GetLabels(),
-				CreatedAt:   res.CreatedAt.AsTime(),
-				UpdatedAt:   res.UpdatedAt.AsTime(),
+				ID:          res.GetProvider().GetId(),
+				Host:        res.GetProvider().GetHost(),
+				URN:         res.GetProvider().GetUrn(),
+				Name:        res.GetProvider().GetName(),
+				Type:        res.GetProvider().GetType(),
+				Credentials: res.GetProvider().GetCredentials().AsMap(),
+				Labels:      res.GetProvider().GetLabels(),
+				CreatedAt:   res.GetProvider().GetCreatedAt().AsTime(),
+				UpdatedAt:   res.GetProvider().GetUpdatedAt().AsTime(),
 			}
 
 			if err := printer.Text(provider, format); err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -117,7 +117,7 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 			WillReturnError(errors.New("random error"))
 
 		err := s.repository.Create(context.Background(), input)
-		s.EqualError(err, "failed to insert subscription: random error")
+		s.EqualError(err, "random error")
 	})
 }
 
@@ -198,7 +198,7 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 		s.EqualError(err, "random error")
 	})
 
-	s.Run("should return nil if subscription not found", func() {
+	s.Run("should return not found if subscription not found", func() {
 		selectQuery := regexp.QuoteMeta(`SELECT * FROM "subscriptions" WHERE id = 1`)
 		expectedRows := sqlmock.
 			NewRows([]string{"urn", "namespace_id", "receiver", "match", "created_at", "updated_at", "id"})
@@ -206,7 +206,7 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 
 		actualSubscription, err := s.repository.Get(context.Background(), 1)
 		s.Nil(actualSubscription)
-		s.Nil(err)
+		s.EqualError(err, "subscription with id 1 not found")
 	})
 }
 
@@ -402,7 +402,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := s.repository.Update(context.Background(), input)
-		s.EqualError(err, "subscription doesn't exist")
+		s.EqualError(err, "subscription with id 1 not found")
 	})
 
 	s.Run("should return error if got error fetching updated subscription", func() {

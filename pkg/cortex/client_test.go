@@ -1,12 +1,12 @@
 package cortex_test
 
 import (
-	"errors"
 	"io/ioutil"
 	"testing"
 
 	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/cortex/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

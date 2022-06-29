@@ -2,8 +2,8 @@ package postgres
 
 import (
 	"context"
-	"errors"
 
+	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
 )
 

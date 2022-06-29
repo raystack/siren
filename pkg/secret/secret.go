@@ -3,10 +3,10 @@ package secret
 import (
 	"bytes"
 	"encoding/base64"
-	"errors"
 	"io"
 
 	"github.com/gtank/cryptopasta"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 type Crypto struct {

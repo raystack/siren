@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 type Namespace struct {
@@ -20,7 +21,7 @@ type Namespace struct {
 
 func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
 	if n == nil {
-		return nil
+		return errors.New("nil encrypted namespace domain when converting to namespace model")
 	}
 
 	ns.ID = n.ID
@@ -36,7 +37,7 @@ func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
 
 func (ns *Namespace) ToDomain() (*namespace.EncryptedNamespace, error) {
 	if ns == nil {
-		return nil, nil
+		return nil, errors.New("nil namespace model when converting to encrypted namespace domain")
 	}
 
 	return &namespace.EncryptedNamespace{

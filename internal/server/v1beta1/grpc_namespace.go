@@ -2,12 +2,10 @@ package v1beta1
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"github.com/odpf/siren/core/namespace"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -24,18 +22,14 @@ type NamespaceService interface {
 func (s *GRPCServer) ListNamespaces(_ context.Context, _ *sirenv1beta1.ListNamespacesRequest) (*sirenv1beta1.ListNamespacesResponse, error) {
 	namespaces, err := s.namespaceService.ListNamespaces()
 	if err != nil {
-		s.logger.Error("failed to list namespaces", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(err)
 	}
 
-	res := &sirenv1beta1.ListNamespacesResponse{
-		Data: make([]*sirenv1beta1.Namespace, 0),
-	}
+	items := []*sirenv1beta1.Namespace{}
 	for _, namespace := range namespaces {
 		credentials, err := structpb.NewStruct(namespace.Credentials)
 		if err != nil {
-			s.logger.Error("failed to fetch namespace credentials", "error", err)
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, s.generateRPCErr(fmt.Errorf("failed to fetch namespace credentials: %w", err))
 		}
 
 		item := &sirenv1beta1.Namespace{
@@ -48,9 +42,11 @@ func (s *GRPCServer) ListNamespaces(_ context.Context, _ *sirenv1beta1.ListNames
 			CreatedAt:   timestamppb.New(namespace.CreatedAt),
 			UpdatedAt:   timestamppb.New(namespace.UpdatedAt),
 		}
-		res.Data = append(res.Data, item)
+		items = append(items, item)
 	}
-	return res, nil
+	return &sirenv1beta1.ListNamespacesResponse{
+		Namespaces: items,
+	}, nil
 }
 
 func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.CreateNamespaceRequest) (*sirenv1beta1.CreateNamespaceResponse, error) {
@@ -62,11 +58,7 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.Create
 		Labels:      req.GetLabels(),
 	}
 	if err := s.namespaceService.CreateNamespace(ns); err != nil {
-		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
-			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
-		}
-		s.logger.Error("failed to create namespace", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateNamespaceResponse{
@@ -77,21 +69,16 @@ func (s *GRPCServer) CreateNamespace(_ context.Context, req *sirenv1beta1.Create
 func (s *GRPCServer) GetNamespace(_ context.Context, req *sirenv1beta1.GetNamespaceRequest) (*sirenv1beta1.GetNamespaceResponse, error) {
 	namespace, err := s.namespaceService.GetNamespace(req.GetId())
 	if err != nil {
-		s.logger.Error("failed to fetch namespace id", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
-	}
-	if namespace == nil {
-		return nil, status.Errorf(codes.NotFound, "namespace not found")
+		return nil, s.generateRPCErr(err)
 	}
 
 	credentials, err := structpb.NewStruct(namespace.Credentials)
 	if err != nil {
-		s.logger.Error("failed to fetch namespace credentials", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(fmt.Errorf("failed to fetch namespace credentials: %w", err))
 	}
 
 	return &sirenv1beta1.GetNamespaceResponse{
-		Data: &sirenv1beta1.Namespace{
+		Namespace: &sirenv1beta1.Namespace{
 			Id:          namespace.ID,
 			Urn:         namespace.URN,
 			Name:        namespace.Name,
@@ -113,11 +100,7 @@ func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1beta1.Update
 		Labels:      req.GetLabels(),
 	}
 	if err := s.namespaceService.UpdateNamespace(ns); err != nil {
-		if strings.Contains(err.Error(), `violates unique constraint "urn_provider_id_unique"`) {
-			return nil, status.Errorf(codes.InvalidArgument, "urn and provider pair already exist")
-		}
-		s.logger.Error("failed to update namespace", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateNamespaceResponse{
@@ -128,8 +111,7 @@ func (s *GRPCServer) UpdateNamespace(_ context.Context, req *sirenv1beta1.Update
 func (s *GRPCServer) DeleteNamespace(_ context.Context, req *sirenv1beta1.DeleteNamespaceRequest) (*sirenv1beta1.DeleteNamespaceResponse, error) {
 	err := s.namespaceService.DeleteNamespace(req.GetId())
 	if err != nil {
-		s.logger.Error("failed to delete namespace", "error", err)
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.DeleteNamespaceResponse{}, nil

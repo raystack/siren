@@ -10,7 +10,7 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/rule/mocks"
 	"github.com/odpf/siren/core/template"
-	"github.com/pkg/errors"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -175,7 +175,7 @@ func TestService_Upsert(t *testing.T) {
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.templateService.GetByName: random error")
+		assert.EqualError(t, err, "random error")
 		mockTemplateService.AssertExpectations(t)
 	})
 
@@ -184,7 +184,7 @@ func TestService_Upsert(t *testing.T) {
 		dummyService := rule.NewService(nil, mockTemplateService, nil, nil, nil)
 		ctx := context.Background()
 
-		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(nil, nil).Once()
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(nil, errors.ErrNotFound.WithMsgf("template not found")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "template not found")
@@ -201,7 +201,7 @@ func TestService_Upsert(t *testing.T) {
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.namespaceService.GetNamespace: random error")
+		assert.EqualError(t, err, "random error")
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
 	})
@@ -214,7 +214,7 @@ func TestService_Upsert(t *testing.T) {
 		ctx := context.Background()
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
-		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(nil, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(nil, errors.ErrNotFound.WithMsgf("namespace not found")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "namespace not found")
@@ -235,7 +235,7 @@ func TestService_Upsert(t *testing.T) {
 		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.providerService.GetProvider: random error")
+		assert.EqualError(t, err, "random error")
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
 		mockProviderService.AssertExpectations(t)
@@ -251,7 +251,7 @@ func TestService_Upsert(t *testing.T) {
 
 		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
 		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
-		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(nil, errors.ErrNotFound.WithMsgf("provider not found")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
 		assert.EqualError(t, err, "provider not found")
@@ -277,7 +277,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
+		assert.EqualError(t, err, "random rollback error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -301,7 +301,31 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Upsert: random error")
+		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertExpectations(t)
+		mockTemplateService.AssertExpectations(t)
+		mockNamespaceService.AssertExpectations(t)
+		mockProviderService.AssertExpectations(t)
+	})
+
+	t.Run("should return error conflict if repository.Upsert returns err duplicate", func(t *testing.T) {
+		repositoryMock := &mocks.RuleRepository{}
+		mockTemplateService := &mocks.TemplatesService{}
+		mockNamespaceService := &mocks.NamespaceService{}
+		mockProviderService := &mocks.ProviderService{}
+		mockClient := &mocks.CortexClient{}
+		dummyService := rule.NewService(repositoryMock, mockTemplateService, mockNamespaceService, mockProviderService, mockClient)
+		ctx := context.Background()
+
+		mockTemplateService.EXPECT().GetByName(mock.Anything).Return(&template.Template{}, nil).Once()
+		mockNamespaceService.EXPECT().GetNamespace(mock.Anything).Return(&namespace.Namespace{}, nil).Once()
+		mockProviderService.EXPECT().GetProvider(mock.Anything).Return(&provider.Provider{}, nil).Once()
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Upsert(ctx, mock.AnythingOfType("*rule.Rule")).Return(rule.ErrDuplicate).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
+
+		err := dummyService.Upsert(ctx, theRule)
+		assert.EqualError(t, err, "rule conflicted with existing")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -325,7 +349,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Rollback: random error")
+		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -374,7 +398,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
+		assert.EqualError(t, err, "random rollback error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -399,7 +423,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Get: random error")
+		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -427,7 +451,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.postRuleGroupWith: s.templateService.Render: random error")
+		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -455,7 +479,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(errors.New("random rollback error")).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.repository.Rollback: random rollback error")
+		assert.EqualError(t, err, "random rollback error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -485,7 +509,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.postRuleGroupWith: client.CreateRuleGroup: random error")
+		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
@@ -511,7 +535,7 @@ func TestService_Upsert(t *testing.T) {
 		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
 
 		err := dummyService.Upsert(ctx, theRule)
-		assert.EqualError(t, err, "s.postRuleGroupWith: client.DeleteRuleGroup: random error")
+		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 		mockTemplateService.AssertExpectations(t)
 		mockNamespaceService.AssertExpectations(t)
