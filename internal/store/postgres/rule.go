@@ -5,6 +5,7 @@ import (
 
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -25,16 +26,27 @@ func NewRuleRepository(db *gorm.DB) *RuleRepository {
 	return &RuleRepository{&transaction{db}}
 }
 
-func (r *RuleRepository) Upsert(ctx context.Context, rule *rule.Rule) error {
+func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 	m := new(model.Rule)
-	if err := m.FromDomain(rule); err != nil {
+	if err := m.FromDomain(rl); err != nil {
 		return err
 	}
 
-	if result := r.getDb(ctx).Where("name = ?", m.Name).Updates(m); result.Error != nil {
-		return result.Error
-	} else if result.RowsAffected == 0 {
+	result := r.getDb(ctx).Where("name = ?", m.Name).Updates(m)
+	if result.Error != nil {
+		err := checkPostgresError(result.Error)
+		if errors.Is(err, errDuplicateKey) {
+			return rule.ErrDuplicate
+		}
+		return err
+	}
+
+	if result.RowsAffected == 0 {
 		if err := r.getDb(ctx).Create(m).Error; err != nil {
+			err = checkPostgresError(err)
+			if errors.Is(err, errDuplicateKey) {
+				return rule.ErrDuplicate
+			}
 			return err
 		}
 	}
@@ -47,7 +59,7 @@ func (r *RuleRepository) Upsert(ctx context.Context, rule *rule.Rule) error {
 	if err != nil {
 		return err
 	}
-	*rule = *newRule
+	*rl = *newRule
 	return nil
 }
 

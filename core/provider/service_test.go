@@ -1,13 +1,13 @@
 package provider_test
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/provider/mocks"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -89,6 +89,17 @@ func TestCreateProvider(t *testing.T) {
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertCalled(t, "Create", dummyProvider)
 	})
+
+	t.Run("should call repository Create method and return conflict error if duplicated", func(t *testing.T) {
+		repositoryMock := &mocks.ProviderRepository{}
+		dummyService := provider.NewService(repositoryMock)
+		repositoryMock.EXPECT().Create(dummyProvider).
+			Return(nil, provider.ErrDuplicate).Once()
+		result, err := dummyService.CreateProvider(dummyProvider)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "urn already exist")
+		repositoryMock.AssertCalled(t, "Create", dummyProvider)
+	})
 }
 
 func TestGetProvider(t *testing.T) {
@@ -129,6 +140,17 @@ func TestGetProvider(t *testing.T) {
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertCalled(t, "Get", providerID)
 	})
+
+	t.Run("should call repository Get method and return error if repository return not found error", func(t *testing.T) {
+		repositoryMock := &mocks.ProviderRepository{}
+		dummyService := provider.NewService(repositoryMock)
+		repositoryMock.EXPECT().Get(providerID).
+			Return(nil, provider.NotFoundError{}).Once()
+		result, err := dummyService.GetProvider(providerID)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "provider not found")
+		repositoryMock.AssertCalled(t, "Get", providerID)
+	})
 }
 
 func TestUpdateProvider(t *testing.T) {
@@ -166,6 +188,28 @@ func TestUpdateProvider(t *testing.T) {
 		result, err := dummyService.UpdateProvider(dummyProvider)
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertCalled(t, "Update", dummyProvider)
+	})
+
+	t.Run("should call repository Update method and return error not found if repository return not found error", func(t *testing.T) {
+		repositoryMock := &mocks.ProviderRepository{}
+		dummyService := provider.NewService(repositoryMock)
+		repositoryMock.EXPECT().Update(dummyProvider).
+			Return(nil, provider.NotFoundError{}).Once()
+		result, err := dummyService.UpdateProvider(dummyProvider)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "provider not found")
+		repositoryMock.AssertCalled(t, "Update", dummyProvider)
+	})
+
+	t.Run("should call repository Update method and return conflict error if repository return duplicate error", func(t *testing.T) {
+		repositoryMock := &mocks.ProviderRepository{}
+		dummyService := provider.NewService(repositoryMock)
+		repositoryMock.EXPECT().Update(dummyProvider).
+			Return(nil, provider.ErrDuplicate).Once()
+		result, err := dummyService.UpdateProvider(dummyProvider)
+		assert.Nil(t, result)
+		assert.EqualError(t, err, "urn already exist")
 		repositoryMock.AssertCalled(t, "Update", dummyProvider)
 	})
 }

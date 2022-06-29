@@ -3,7 +3,6 @@ package postgres_test
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -164,7 +164,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 
 		actualReceiver, err := s.repository.Get(1)
 		s.Nil(actualReceiver)
-		s.EqualError(err, "receiver not found: 1")
+		s.EqualError(err, "receiver with id 1 not found")
 	})
 
 	s.Run("should return error in getting receiver of given id", func() {
@@ -244,7 +244,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := s.repository.Update(input)
-		s.EqualError(err, "receiver doesn't exist")
+		s.EqualError(err, "receiver with id 10 not found")
 	})
 
 	s.Run("should return error updating the receiver", func() {

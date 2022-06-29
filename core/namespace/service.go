@@ -2,7 +2,8 @@ package namespace
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/odpf/siren/pkg/errors"
 )
 
 // Service handles business logic
@@ -22,7 +23,7 @@ func NewService(cryptoClient Encryptor, repository Repository) *Service {
 func (s *Service) ListNamespaces() ([]*Namespace, error) {
 	encrytpedNamespaces, err := s.repository.List()
 	if err != nil {
-		return nil, fmt.Errorf("secureService.repository.List: %w", err)
+		return nil, err
 	}
 
 	namespaces := make([]*Namespace, 0, len(encrytpedNamespaces))
@@ -36,27 +37,34 @@ func (s *Service) ListNamespaces() ([]*Namespace, error) {
 	return namespaces, nil
 }
 
-func (s *Service) CreateNamespace(namespace *Namespace) error {
-	//TODO check if namespace is nil
-	encryptedNamespace, err := s.encrypt(namespace)
+func (s *Service) CreateNamespace(ns *Namespace) error {
+	if ns == nil {
+		return errors.ErrInvalid.WithCausef("namespace is nil").WithMsgf("incoming namespace is empty")
+	}
+	encryptedNamespace, err := s.encrypt(ns)
 	if err != nil {
 		return err
 	}
 
 	if err := s.repository.Create(encryptedNamespace); err != nil {
-		return fmt.Errorf("secureService.repository.Create: %w", err)
+		if errors.Is(err, ErrDuplicate) {
+			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		return err
 	}
 
-	encryptedNamespace.Namespace.Credentials = namespace.Credentials
-	*namespace = *encryptedNamespace.Namespace
-
+	encryptedNamespace.Namespace.Credentials = ns.Credentials
+	*ns = *encryptedNamespace.Namespace
 	return nil
 }
 
 func (s *Service) GetNamespace(id uint64) (*Namespace, error) {
 	encryptedNamespace, err := s.repository.Get(id)
 	if err != nil {
-		return nil, fmt.Errorf("secureService.repository.Get: %w", err)
+		if errors.As(err, new(NotFoundError)) {
+			return nil, errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return nil, err
 	}
 	if encryptedNamespace == nil {
 		return nil, nil
@@ -72,7 +80,13 @@ func (s *Service) UpdateNamespace(namespace *Namespace) error {
 	}
 
 	if err := s.repository.Update(encryptedNamespace); err != nil {
-		return fmt.Errorf("secureService.repository.Update: %w", err)
+		if errors.Is(err, ErrDuplicate) {
+			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		if errors.As(err, new(NotFoundError)) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return err
 	}
 
 	encryptedNamespace.Namespace.Credentials = namespace.Credentials
@@ -87,12 +101,12 @@ func (s *Service) DeleteNamespace(id uint64) error {
 func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 	plainTextCredentials, err := json.Marshal(ns.Credentials)
 	if err != nil {
-		return nil, fmt.Errorf("json.Marshal: %w", err)
+		return nil, err
 	}
 
 	encryptedCredentials, err := s.cryptoClient.Encrypt(string(plainTextCredentials))
 	if err != nil {
-		return nil, fmt.Errorf("secureService.cryptoClient.Encrypt: %w", err)
+		return nil, err
 	}
 
 	return &EncryptedNamespace{
@@ -104,12 +118,12 @@ func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 func (s *Service) decrypt(ens *EncryptedNamespace) (*Namespace, error) {
 	decryptedCredentialsStr, err := s.cryptoClient.Decrypt(ens.Credentials)
 	if err != nil {
-		return nil, fmt.Errorf("secureService.cryptoClient.Decrypt: %w", err)
+		return nil, err
 	}
 
 	var decryptedCredentials map[string]interface{}
 	if err := json.Unmarshal([]byte(decryptedCredentialsStr), &decryptedCredentials); err != nil {
-		return nil, fmt.Errorf("json.Unmarshal: %w", err)
+		return nil, err
 
 	}
 

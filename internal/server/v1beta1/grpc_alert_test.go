@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/alert"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -46,7 +46,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
 	})
 
-	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -63,7 +63,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			EndTime:      200,
 		}
 		res, err := dummyGRPCServer.ListAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
 		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
 	})
@@ -194,7 +194,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService.AssertCalled(t, "Create", payload)
 	})
 
-	t.Run("should return error code 13 if getting alert history failed", func(t *testing.T) {
+	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -205,7 +205,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
 		mockedAlertService.AssertCalled(t, "Create", payload)
 	})

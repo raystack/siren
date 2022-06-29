@@ -1,10 +1,10 @@
 package slack_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/slack/mocks"
 	goslack "github.com/slack-go/slack"

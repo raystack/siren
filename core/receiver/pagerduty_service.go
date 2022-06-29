@@ -1,5 +1,7 @@
 package receiver
 
+import "github.com/odpf/siren/pkg/errors"
+
 type PagerDutyService struct{}
 
 // NewPagerDutyService returns slack service struct
@@ -26,7 +28,7 @@ func (s *PagerDutyService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 func (s *PagerDutyService) ValidateConfiguration(configurations Configurations) error {
 	_, err := configurations.GetString("service_key")
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	return nil

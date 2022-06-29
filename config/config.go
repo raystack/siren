@@ -2,13 +2,13 @@ package config
 
 import (
 	_ "embed"
-	"errors"
 	"fmt"
 
 	"github.com/odpf/salt/config"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/cortex"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 )
 

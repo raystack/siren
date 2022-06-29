@@ -2,9 +2,7 @@ package v1beta1
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -12,8 +10,8 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -43,14 +41,14 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		mockedReceiverService.EXPECT().ListReceivers().
 			Return(dummyResult, nil).Once()
 
-		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, err)
-		assert.Equal(t, 1, len(res.GetData()))
-		assert.Equal(t, uint64(1), res.GetData()[0].GetId())
-		assert.Equal(t, "foo", res.GetData()[0].GetName())
-		assert.Equal(t, "bar", res.GetData()[0].GetType())
-		assert.Equal(t, "bar", res.GetData()[0].GetConfigurations().AsMap()["foo"])
-		assert.Equal(t, "bar", res.GetData()[0].GetLabels()["foo"])
+		assert.Equal(t, 1, len(res.GetReceivers()))
+		assert.Equal(t, uint64(1), res.GetReceivers()[0].GetId())
+		assert.Equal(t, "foo", res.GetReceivers()[0].GetName())
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetType())
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetConfigurations().AsMap()["foo"])
+		assert.Equal(t, "bar", res.GetReceivers()[0].GetLabels()["foo"])
 	})
 
 	t.Run("should return error Internal if getting providers failed", func(t *testing.T) {
@@ -62,9 +60,9 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 		mockedReceiverService.EXPECT().ListReceivers().
 			Return(nil, errors.New("random error"))
 
-		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -88,10 +86,9 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 
 		mockedReceiverService.EXPECT().ListReceivers().
 			Return(dummyResult, nil)
-		res, err := dummyGRPCServer.ListReceivers(context.Background(), &emptypb.Empty{})
+		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -140,11 +137,11 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 
-		mockedReceiverService.EXPECT().CreateReceiver(payload).Return(fmt.Errorf("some error: %w", receiver.ErrInvalid)).Once()
+		mockedReceiverService.EXPECT().CreateReceiver(payload).Return(fmt.Errorf("some error: %w", errors.ErrInvalid)).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = some error: bad_request")
+			"rpc error: code = InvalidArgument desc = request is not valid")
 		assert.Nil(t, res)
 	})
 
@@ -159,7 +156,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.CreateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 }
@@ -192,24 +189,24 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, err)
-		assert.Equal(t, "foo", res.GetData().GetName())
-		assert.Equal(t, "bar", res.GetData().GetType())
-		assert.Equal(t, "bar", res.GetData().GetLabels()["foo"])
-		assert.Equal(t, "bar", res.GetData().GetConfigurations().AsMap()["foo"])
+		assert.Equal(t, "foo", res.GetReceiver().GetName())
+		assert.Equal(t, "bar", res.GetReceiver().GetType())
+		assert.Equal(t, "bar", res.GetReceiver().GetLabels()["foo"])
+		assert.Equal(t, "bar", res.GetReceiver().GetConfigurations().AsMap()["foo"])
 	})
 
-	t.Run("should return error code 5 if no receiver found", func(t *testing.T) {
+	t.Run("should return error Not Found if no receiver found", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := GRPCServer{
 			receiverService: mockedReceiverService,
 			logger:          log.NewNoop(),
 		}
 		mockedReceiverService.EXPECT().GetReceiver(receiverId).
-			Return(nil, nil).Once()
+			Return(nil, errors.ErrNotFound).Once()
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = NotFound desc = receiver not found")
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = requested entity not found")
 	})
 
 	t.Run("should return error Internal if getting receiver failed", func(t *testing.T) {
@@ -223,7 +220,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion of configuration failed", func(t *testing.T) {
@@ -245,8 +242,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return error Internal if data NewStruct conversion of data failed", func(t *testing.T) {
@@ -269,8 +265,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.Equal(t, strings.Replace(err.Error(), "\u00a0", " ", -1),
-			"rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -321,11 +316,10 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 		}
 
 		mockedReceiverService.EXPECT().UpdateReceiver(payload).
-			Return(fmt.Errorf("some invalid error: %w", receiver.ErrInvalid)).Once()
+			Return(errors.ErrInvalid).Once()
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err,
-			"rpc error: code = InvalidArgument desc = some invalid error: bad_request")
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
 		assert.Nil(t, res)
 	})
 
@@ -340,7 +334,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -375,7 +369,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 
 		res, err := dummyGRPCServer.DeleteReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -459,9 +453,9 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
 				"blocks":        dummyReq.GetPayload().Fields["blocks"].GetListValue().AsSlice(),
 			},
-		).Return(fmt.Errorf("some invalid argument error: %w", receiver.ErrInvalid))
+		).Return(errors.ErrInvalid)
 		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = some invalid argument error: bad_request")
+		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
 		mockedReceiverService.AssertExpectations(t)
 	})
 
@@ -483,7 +477,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 			},
 		).Return(errors.New("some error"))
 		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedReceiverService.AssertExpectations(t)
 	})
 

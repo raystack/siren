@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/internal/store/postgres/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -282,14 +282,14 @@ func (s *ProviderRepositoryTestSuite) TestGet() {
 		s.Nil(err)
 	})
 
-	s.Run("should return nil if provider of given id does not exist", func() {
+	s.Run("should return not found if provider of given id does not exist", func() {
 		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
 
 		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
 
 		actualProvider, err := s.repository.Get(1)
 		s.Nil(actualProvider)
-		s.Nil(err)
+		s.EqualError(err, "provider with id 1 not found")
 	})
 
 	s.Run("should return error in getting provider of given id", func() {
@@ -389,7 +389,7 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 
 		actualProvider, err := s.repository.Update(input)
 		s.Nil(actualProvider)
-		s.EqualError(err, "provider doesn't exist")
+		s.EqualError(err, "provider with id 10 not found")
 	})
 
 	s.Run("should return error in finding the provider", func() {

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/namespace"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -61,11 +61,11 @@ func listNamespacesCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			if res.GetData() == nil {
+			if res.GetNamespaces() == nil {
 				return errors.New("no response from server")
 			}
 
-			namespaces := res.GetData()
+			namespaces := res.GetNamespaces()
 			report := [][]string{}
 
 			fmt.Printf(" \nShowing %d of %d namespaces\n \n", len(namespaces), len(namespaces))
@@ -176,18 +176,18 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			if res.GetData() == nil {
+			if res.GetNamespace() == nil {
 				return errors.New("no response from server")
 			}
 
 			nspace := &namespace.Namespace{
-				ID:          res.GetData().GetId(),
-				URN:         res.GetData().GetUrn(),
-				Name:        res.GetData().GetName(),
-				Credentials: res.GetData().GetCredentials().AsMap(),
-				Labels:      res.GetData().GetLabels(),
-				CreatedAt:   res.GetData().GetCreatedAt().AsTime(),
-				UpdatedAt:   res.GetData().GetUpdatedAt().AsTime(),
+				ID:          res.GetNamespace().GetId(),
+				URN:         res.GetNamespace().GetUrn(),
+				Name:        res.GetNamespace().GetName(),
+				Credentials: res.GetNamespace().GetCredentials().AsMap(),
+				Labels:      res.GetNamespace().GetLabels(),
+				CreatedAt:   res.GetNamespace().GetCreatedAt().AsTime(),
+				UpdatedAt:   res.GetNamespace().GetUpdatedAt().AsTime(),
 			}
 
 			if err := printer.Text(nspace, format); err != nil {
@@ -243,7 +243,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Successfully updated namespace with id %q", res.GetId())
+			fmt.Printf("Successfully updated namespace with id %d", res.GetId())
 
 			return nil
 		},

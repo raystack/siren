@@ -2,13 +2,13 @@ package postgres
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	texttemplate "text/template"
 
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -44,6 +44,10 @@ func (r TemplateRepository) Upsert(tmpl *template.Template) error {
 		result = r.db.Where("id = ?", existingTemplate.ID).Updates(modelTemplate)
 	}
 	if result.Error != nil {
+		err := checkPostgresError(result.Error)
+		if errors.Is(err, errDuplicateKey) {
+			return template.ErrDuplicate
+		}
 		return result.Error
 	}
 	result = r.db.Where(fmt.Sprintf("name = '%s'", modelTemplate.Name)).Find(&newTemplate)
@@ -78,15 +82,19 @@ func (r TemplateRepository) Index(tag string) ([]template.Template, error) {
 }
 
 func (r TemplateRepository) GetByName(name string) (*template.Template, error) {
-	var template model.Template
-	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&template)
+	var templateModel model.Template
+	result := r.db.Where(fmt.Sprintf("name = '%s'", name)).Find(&templateModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return nil, nil
+		return nil, template.NotFoundError{Name: name}
 	}
-	return template.ToDomain()
+	tmpl, err := templateModel.ToDomain()
+	if err != nil {
+		return nil, err
+	}
+	return tmpl, nil
 }
 
 func (r TemplateRepository) Delete(name string) error {
@@ -117,9 +125,7 @@ func (r TemplateRepository) Render(name string, requestVariables map[string]stri
 	if err != nil {
 		return "", err
 	}
-	if templateFromDB == nil {
-		return "", errors.New("template not found")
-	}
+
 	enrichedVariables := enrichWithDefaults(templateFromDB.Variables, requestVariables)
 	var tpl bytes.Buffer
 	tmpl, err := templateParser(templateFromDB.Body)

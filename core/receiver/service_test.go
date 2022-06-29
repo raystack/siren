@@ -1,13 +1,13 @@
 package receiver_test
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/receiver/mocks"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -27,7 +27,7 @@ func TestService_ListReceivers(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					rr.EXPECT().List().Return(nil, errors.New("some error"))
 				},
-				Err: errors.New("secureService.repository.List: some error"),
+				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if List repository success and decrypt error",
@@ -167,7 +167,7 @@ func TestService_CreateReceiver(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("bad_request: invalid receiver configurations"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error if encrypt return error",
@@ -192,7 +192,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			Rcv: &receiver.Receiver{
 				Type: "random",
 			},
-			Err: errors.New("bad_request: unsupported receiver type"),
+			Err: errors.New("unsupported receiver type: \"random\""),
 		},
 		{
 			Description: "should return error if Create repository return error",
@@ -216,7 +216,7 @@ func TestService_CreateReceiver(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("secureService.repository.Create: some error"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error if decrypt return error",
@@ -314,7 +314,7 @@ func TestService_GetReceiver(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
 					rr.EXPECT().Get(testID).Return(nil, errors.New("some error"))
 				},
-				Err: errors.New("secureService.repository.Get: some error"),
+				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if type unknown",
@@ -323,7 +323,14 @@ func TestService_GetReceiver(t *testing.T) {
 						Type: "random",
 					}, nil)
 				},
-				Err: errors.New("bad_request: unsupported receiver type"),
+				Err: errors.New("unsupported receiver type: \"random\""),
+			},
+			{
+				Description: "should return error not found if Get repository return not found error",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
+					rr.EXPECT().Get(testID).Return(nil, receiver.NotFoundError{})
+				},
+				Err: errors.New("receiver not found"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypt error",
@@ -488,7 +495,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("bad_request: invalid receiver configurations"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error if type unknown",
@@ -496,7 +503,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			Rcv: &receiver.Receiver{
 				Type: "random",
 			},
-			Err: errors.New("bad_request: unsupported receiver type"),
+			Err: errors.New("unsupported receiver type: \"random\""),
 		},
 		{
 			Description: "should return error if Update repository return error",
@@ -520,7 +527,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 					"token": "key",
 				},
 			},
-			Err: errors.New("secureService.repository.Update: some error"),
+			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return nil error if no error returned",
@@ -545,6 +552,29 @@ func TestService_UpdateReceiver(t *testing.T) {
 				},
 			},
 			Err: nil,
+		}, {
+			Description: "should return error not found if repository return not found error",
+			Setup: func(rr *mocks.ReceiverRepository, ss *mocks.TypeService) {
+				ss.EXPECT().ValidateConfiguration(receiver.Configurations{
+					"token": "key",
+				}).Return(nil)
+				ss.EXPECT().Encrypt(mock.AnythingOfType("*receiver.Receiver")).Return(nil)
+				rr.EXPECT().Update(&receiver.Receiver{
+					ID:   123,
+					Type: "slack",
+					Configurations: map[string]interface{}{
+						"token": "key",
+					},
+				}).Return(receiver.NotFoundError{})
+			},
+			Rcv: &receiver.Receiver{
+				ID:   123,
+				Type: "slack",
+				Configurations: map[string]interface{}{
+					"token": "key",
+				},
+			},
+			Err: errors.New("receiver not found"),
 		},
 	}
 

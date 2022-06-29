@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 type ReceiverMetadata struct {
@@ -35,9 +36,9 @@ type Subscription struct {
 	UpdatedAt   time.Time
 }
 
-func (s *Subscription) FromDomain(sub *subscription.Subscription) {
+func (s *Subscription) FromDomain(sub *subscription.Subscription) error {
 	if s == nil {
-		return
+		return errors.New("subscription domain is nil")
 	}
 	s.ID = sub.ID
 	s.URN = sub.URN
@@ -53,11 +54,12 @@ func (s *Subscription) FromDomain(sub *subscription.Subscription) {
 	}
 	s.CreatedAt = sub.CreatedAt
 	s.UpdatedAt = sub.UpdatedAt
+	return nil
 }
 
-func (s *Subscription) ToDomain() *subscription.Subscription {
+func (s *Subscription) ToDomain() (*subscription.Subscription, error) {
 	if s == nil {
-		return nil
+		return nil, errors.New("subscription model is nil")
 	}
 	receivers := make([]subscription.ReceiverMetadata, 0)
 	for _, item := range s.Receiver {
@@ -67,7 +69,8 @@ func (s *Subscription) ToDomain() *subscription.Subscription {
 		}
 		receivers = append(receivers, receiver)
 	}
-	subscription := &subscription.Subscription{
+
+	return &subscription.Subscription{
 		ID:        s.ID,
 		URN:       s.URN,
 		Match:     s.Match,
@@ -75,6 +78,5 @@ func (s *Subscription) ToDomain() *subscription.Subscription {
 		Receivers: receivers,
 		CreatedAt: s.CreatedAt,
 		UpdatedAt: s.UpdatedAt,
-	}
-	return subscription
+	}, nil
 }

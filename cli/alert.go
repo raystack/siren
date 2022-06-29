@@ -9,6 +9,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -70,9 +71,14 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			alerts := res.Alerts
+			if res.GetAlerts() == nil {
+				return errors.New("no response from server")
+			}
+
+			alerts := res.GetAlerts()
 			report := [][]string{}
 
+			// TODO unclear log
 			fmt.Printf(" \nShowing %d of %d alerts\n \n", len(alerts), len(alerts))
 			report = append(report, []string{"ID", "PROVIDER_ID", "RESOURCE_NAME", "METRIC_NAME", "METRIC_VALUE", "SEVERITY"})
 

@@ -2,7 +2,6 @@ package subscription_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/subscription/mocks"
 	"github.com/odpf/siren/pkg/cortex"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -103,7 +103,24 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.repository.Create: random error")
+		assert.EqualError(t, err, "random error")
+	})
+
+	t.Run("should return error conflict in subscription creation if repository return error duplicate", func(t *testing.T) {
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		ctx := context.Background()
+
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Create(ctx, input).Return(subscription.ErrDuplicate).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
+
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
+		err := dummyService.CreateSubscription(context.Background(), input)
+
+		assert.EqualError(t, err, "urn already exist")
 	})
 
 	t.Run("should return error in fetching all subscriptions within given namespace", func(t *testing.T) {
@@ -121,7 +138,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.getAllSubscriptionsWithinNamespace: s.repository.List: random error")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should return error in fetching namespace details", func(t *testing.T) {
@@ -140,7 +157,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.getProviderAndNamespaceInfoFromNamespaceId: failed to get namespace details: random error")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should return error in fetching provider details", func(t *testing.T) {
@@ -160,7 +177,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.getProviderAndNamespaceInfoFromNamespaceId: failed to get provider details: random error")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should return error for unsupported providers", func(t *testing.T) {
@@ -182,7 +199,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: subscriptions for provider type 'prometheus' not supported")
+		assert.EqualError(t, err, "subscriptions for provider type 'prometheus' not supported")
 	})
 
 	t.Run("should return error in fetching all receivers", func(t *testing.T) {
@@ -203,7 +220,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.addReceiversConfiguration: failed to get receivers: random error")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should return error if receiver id not found", func(t *testing.T) {
@@ -224,7 +241,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.addReceiversConfiguration: receiver id 1 does not exist")
+		assert.EqualError(t, err, "receiver id 1 does not exist")
 	})
 
 	t.Run("should return error if slack channel name not specified in subscription configs", func(t *testing.T) {
@@ -249,7 +266,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.addReceiversConfiguration: configuration.channel_name missing from receiver with id 1")
+		assert.EqualError(t, err, "configuration.channel_name missing from receiver with id 1")
 	})
 
 	t.Run("should return error for unsupported receiver type", func(t *testing.T) {
@@ -270,7 +287,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.addReceiversConfiguration: subscriptions for receiver type email not supported via Siren inside Cortex")
+		assert.EqualError(t, err, "subscriptions for receiver type email not supported via Siren inside Cortex")
 	})
 
 	t.Run("should return error syncing config with alertmanager", func(t *testing.T) {
@@ -294,7 +311,7 @@ func TestService_CreateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 		err := dummyService.CreateSubscription(context.Background(), input)
 
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
+		assert.EqualError(t, err, "random error")
 	})
 }
 
@@ -339,7 +356,19 @@ func TestService_GetSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
 		result, err := dummyService.GetSubscription(context.Background(), 1)
-		assert.EqualError(t, err, "s.repository.Get: random error")
+		assert.EqualError(t, err, "random error")
+		assert.Nil(t, result)
+	})
+
+	t.Run("should call repository get method and return error not found if repository return not found error", func(t *testing.T) {
+		repositoryMock := new(mocks.SubscriptionRepository)
+		ctx := context.Background()
+
+		repositoryMock.EXPECT().Get(ctx, uint64(1)).Return(nil, subscription.NotFoundError{}).Once()
+		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
+
+		result, err := dummyService.GetSubscription(context.Background(), 1)
+		assert.EqualError(t, err, "subscription not found")
 		assert.Nil(t, result)
 	})
 }
@@ -369,11 +398,11 @@ func TestService_ListSubscription(t *testing.T) {
 		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
-		repositoryMock.EXPECT().List(ctx).Return(nil, errors.New("abcd")).Once()
+		repositoryMock.EXPECT().List(ctx).Return(nil, errors.New("some error")).Once()
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
 		result, err := dummyService.ListSubscriptions(context.Background())
-		assert.EqualError(t, err, "s.repository.List: abcd")
+		assert.EqualError(t, err, "some error")
 		assert.Nil(t, result)
 	})
 }
@@ -474,7 +503,41 @@ func TestService_UpdateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
 
 		err := dummyService.UpdateSubscription(context.Background(), input)
-		assert.EqualError(t, err, "s.repository.Update: random error")
+		assert.EqualError(t, err, "random error")
+	})
+
+	t.Run("should return error conflict in subscription update if repository return error duplicate", func(t *testing.T) {
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		ctx := context.Background()
+
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Update(ctx, input).Return(subscription.ErrDuplicate).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
+
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
+
+		err := dummyService.UpdateSubscription(context.Background(), input)
+		assert.EqualError(t, err, "urn already exist")
+	})
+
+	t.Run("should return error not found in subscription update if repository return not found error", func(t *testing.T) {
+		repositoryMock := new(mocks.SubscriptionRepository)
+		providerServiceMock := new(mocks.ProviderService)
+		namespaceServiceMock := new(mocks.NamespaceService)
+		receiverServiceMock := new(mocks.ReceiverService)
+		ctx := context.Background()
+
+		repositoryMock.EXPECT().WithTransaction(ctx).Return(ctx).Once()
+		repositoryMock.EXPECT().Update(ctx, input).Return(subscription.NotFoundError{}).Once()
+		repositoryMock.EXPECT().Rollback(ctx).Return(nil).Once()
+
+		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, nil)
+
+		err := dummyService.UpdateSubscription(context.Background(), input)
+		assert.EqualError(t, err, "subscription not found")
 	})
 
 	t.Run("should return error in syncing alertmanager config", func(t *testing.T) {
@@ -516,7 +579,7 @@ func TestService_UpdateSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.UpdateSubscription(context.Background(), input)
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
+		assert.EqualError(t, err, "random error")
 	})
 }
 
@@ -584,14 +647,14 @@ func TestService_DeleteSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
 		err := dummyService.DeleteSubscription(context.Background(), 1)
-		assert.EqualError(t, err, "s.repository.Get: random error")
+		assert.EqualError(t, err, "random error")
 	})
 
 	t.Run("should return error if subscription does not exist", func(t *testing.T) {
 		repositoryMock := new(mocks.SubscriptionRepository)
 		ctx := context.Background()
 
-		repositoryMock.EXPECT().Get(ctx, uint64(1)).Return(nil, nil).Once()
+		repositoryMock.EXPECT().Get(ctx, uint64(1)).Return(nil, errors.ErrNotFound.WithMsgf("subscription not found")).Once()
 
 		dummyService := subscription.NewService(repositoryMock, nil, nil, nil, nil)
 
@@ -633,6 +696,6 @@ func TestService_DeleteSubscription(t *testing.T) {
 		dummyService := subscription.NewService(repositoryMock, providerServiceMock, namespaceServiceMock, receiverServiceMock, cortexClientMock)
 
 		err := dummyService.DeleteSubscription(context.Background(), 1)
-		assert.EqualError(t, err, "s.syncInUpstreamCurrentSubscriptionsOfNamespace: s.amClient.CreateAlertmanagerConfig: random error")
+		assert.EqualError(t, err, "random error")
 	})
 }

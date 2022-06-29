@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/slack"
-	"github.com/pkg/errors"
 )
 
 type SlackService struct {
@@ -25,7 +25,7 @@ func NewSlackService(slackClient SlackClient, cryptoClient Encryptor) *SlackServ
 func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage) error {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
-		return errors.New("no token in receiver configurations found")
+		return errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 
 	sm, err := payloadMessage.ToSlackMessage()
@@ -43,7 +43,7 @@ func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage)
 func (s *SlackService) Encrypt(r *Receiver) error {
 	token, ok := r.Configurations["token"].(string)
 	if !ok {
-		return errors.New("no token field found")
+		return errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 	chiperText, err := s.cryptoClient.Encrypt(token)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *SlackService) Encrypt(r *Receiver) error {
 func (s *SlackService) Decrypt(r *Receiver) error {
 	cipherText, ok := r.Configurations["token"].(string)
 	if !ok {
-		return errors.New("no token field found")
+		return errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 	token, err := s.cryptoClient.Decrypt(cipherText)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *SlackService) Decrypt(r *Receiver) error {
 func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
-		return nil, errors.New("no token found in configurations")
+		return nil, errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 
 	channels, err := s.slackClient.GetWorkspaceChannels(
@@ -96,17 +96,17 @@ func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 func (s *SlackService) ValidateConfiguration(configurations Configurations) error {
 	_, err := configurations.GetString("client_id")
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	_, err = configurations.GetString("client_secret")
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	_, err = configurations.GetString("auth_code")
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	return nil

@@ -2,13 +2,13 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/odpf/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
@@ -92,9 +92,14 @@ func listRulesCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			rules := res.Rules
+			if res.GetRules() == nil {
+				return errors.New("no response from server")
+			}
+
+			rules := res.GetRules()
 			report := [][]string{}
 
+			// TODO unclear log
 			fmt.Printf(" \nShowing %d of %d rules\n \n", len(rules), len(rules))
 			report = append(report, []string{"ID", "NAME", "GROUP_NAME", "TEMPLATE", "ENABLED"})
 
@@ -216,26 +221,26 @@ func uploadRuleCmd(c *configuration) *cobra.Command {
 			}
 
 			if strings.ToLower(yamlObject.Type) == "rule" {
-				result, err := uploadRule(client, yamlFile)
+				rulesID, err := uploadRules(client, yamlFile)
 				if err != nil {
 					return err
 				}
-				printRules(result)
-			} else {
-				return errors.New("yaml is not rule type")
+				//TODO might need to print the actual rule here or log error rules
+				printRulesID(rulesID)
+				return nil
 			}
-			return nil
+			return errors.New("yaml is not rule type")
 		},
 	}
 }
 
-func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sirenv1beta1.Rule, error) {
+func uploadRules(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]uint64, error) {
 	var yamlBody ruleYaml
 	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
 		return nil, err
 	}
-	var successfullyUpsertedRules []*sirenv1beta1.Rule
+	var successfullyUpsertedRulesID []uint64
 
 	for groupName, v := range yamlBody.Rules {
 		var ruleVariables []*sirenv1beta1.Variables
@@ -262,8 +267,12 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			return nil, err
 		}
 
+		if providersData.GetProviders() == nil {
+			return nil, errors.New("provider not found")
+		}
+
 		var provider *sirenv1beta1.Provider
-		providers := providersData.Providers
+		providers := providersData.GetProviders()
 		if len(providers) != 0 {
 			provider = providers[0]
 		} else {
@@ -275,12 +284,12 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 			return nil, err
 		}
 
-		if res.GetData() == nil {
+		if res.GetNamespaces() == nil {
 			return nil, errors.New("no response of getting list of namespaces from server")
 		}
 
 		var providerNamespace *sirenv1beta1.Namespace
-		for _, ns := range res.GetData() {
+		for _, ns := range res.GetNamespaces() {
 			if ns.GetUrn() == yamlBody.ProviderNamespace && ns.Provider == provider.Id {
 				providerNamespace = ns
 				break
@@ -304,27 +313,20 @@ func uploadRule(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]*sir
 		if err != nil {
 			fmt.Println(fmt.Sprintf("rule %s/%s/%s upload error",
 				payload.Namespace, payload.GroupName, payload.Template), err)
-			return successfullyUpsertedRules, err
-		} else {
-			successfullyUpsertedRules = append(successfullyUpsertedRules, result.Rule)
-			fmt.Printf("successfully uploaded %s/%s/%s",
-				payload.Namespace, payload.GroupName, payload.Template)
+			return successfullyUpsertedRulesID, err
 		}
+		successfullyUpsertedRulesID = append(successfullyUpsertedRulesID, result.GetId())
+		fmt.Printf("successfully uploaded %s/%s/%s",
+			payload.Namespace, payload.GroupName, payload.Template)
+
 	}
-	return successfullyUpsertedRules, nil
+	return successfullyUpsertedRulesID, nil
 }
 
-func printRules(rules []*sirenv1beta1.Rule) {
-	for i := 0; i < len(rules); i++ {
+func printRulesID(rulesID []uint64) {
+	for i := 0; i < len(rulesID); i++ {
 		fmt.Println("Upserted Rule")
-		fmt.Println("ID:", rules[i].Id)
-		fmt.Println("Name:", rules[i].Name)
-		fmt.Println("Enabled:", rules[i].Enabled)
-		fmt.Println("Group Name:", rules[i].GroupName)
-		fmt.Println("Namespace:", rules[i].Namespace)
-		fmt.Println("Template:", rules[i].Template)
-		fmt.Println("CreatedAt At:", rules[i].CreatedAt)
-		fmt.Println("UpdatedAt At:", rules[i].UpdatedAt)
+		fmt.Println("ID:", rulesID[i])
 		fmt.Println()
 	}
 }

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,8 +10,8 @@ import (
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/receiver"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/spf13/cobra"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -58,16 +57,16 @@ func listReceiversCmd(c *configuration) *cobra.Command {
 			}
 			defer cancel()
 
-			res, err := client.ListReceivers(ctx, &emptypb.Empty{})
+			res, err := client.ListReceivers(ctx, &sirenv1beta1.ListReceiversRequest{})
 			if err != nil {
 				return err
 			}
 
-			if res.GetData() == nil {
+			if res.GetReceivers() == nil {
 				return errors.New("no response from server")
 			}
 
-			receivers := res.GetData()
+			receivers := res.GetReceivers()
 			report := [][]string{}
 
 			fmt.Printf(" \nShowing %d of %d receivers\n \n", len(receivers), len(receivers))
@@ -177,19 +176,19 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			if res.GetData() == nil {
+			if res.GetReceiver() == nil {
 				return errors.New("no response from server")
 			}
 
 			receiver := &receiver.Receiver{
-				ID:             res.GetData().GetId(),
-				Name:           res.GetData().GetName(),
-				Type:           res.GetData().GetType(),
-				Configurations: res.GetData().GetConfigurations().AsMap(),
-				Labels:         res.GetData().GetLabels(),
-				Data:           res.GetData().GetData().AsMap(),
-				CreatedAt:      res.GetData().GetCreatedAt().AsTime(),
-				UpdatedAt:      res.GetData().GetUpdatedAt().AsTime(),
+				ID:             res.GetReceiver().GetId(),
+				Name:           res.GetReceiver().GetName(),
+				Type:           res.GetReceiver().GetType(),
+				Configurations: res.GetReceiver().GetConfigurations().AsMap(),
+				Labels:         res.GetReceiver().GetLabels(),
+				Data:           res.GetReceiver().GetData().AsMap(),
+				CreatedAt:      res.GetReceiver().GetCreatedAt().AsTime(),
+				UpdatedAt:      res.GetReceiver().GetUpdatedAt().AsTime(),
 			}
 
 			if err := printer.Text(receiver, format); err != nil {
@@ -245,7 +244,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Successfully updated receiver with id %q", id)
+			fmt.Printf("Successfully updated receiver with id %d\n", id)
 
 			return nil
 		},
@@ -325,13 +324,13 @@ func notifyReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			if rcv.GetData() == nil {
+			if rcv.GetReceiver() == nil {
 				return errors.New("no response from server")
 			}
 
 			notifyReceiverReq := &sirenv1beta1.NotifyReceiverRequest{}
-			notifyReceiverReq.Id = rcv.GetData().GetId()
-			switch rcv.GetData().GetType() {
+			notifyReceiverReq.Id = rcv.GetReceiver().GetId()
+			switch rcv.GetReceiver().GetType() {
 			case "slack":
 				var slackConfig *structpb.Struct
 				if err := parseFile(filePath, &slackConfig); err != nil {

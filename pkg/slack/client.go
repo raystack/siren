@@ -3,13 +3,13 @@ package slack
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/odpf/siren/pkg/errors"
 	goslack "github.com/slack-go/slack"
 )
 
