@@ -50,26 +50,26 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 	return domainReceivers, nil
 }
 
-func (s *Service) Create(ctx context.Context, rcv *Receiver) (uint64, error) {
+func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if err := typeService.ValidateConfiguration(rcv); err != nil {
-		return 0, errors.ErrInvalid.WithMsgf(err.Error())
+		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
 	if err := typeService.Encrypt(rcv); err != nil {
-		return 0, err
+		return err
 	}
 
-	id, err := s.repository.Create(ctx, rcv)
+	err = s.repository.Create(ctx, rcv)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
@@ -93,28 +93,28 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 	return typeService.PopulateReceiver(ctx, rcv)
 }
 
-func (s *Service) Update(ctx context.Context, rcv *Receiver) (uint64, error) {
+func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 	typeService, err := s.getTypeService(rcv.Type)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if err := typeService.ValidateConfiguration(rcv); err != nil {
-		return 0, err
+		return err
 	}
 
 	if err := typeService.Encrypt(rcv); err != nil {
-		return 0, err
+		return err
 	}
 
-	id, err := s.repository.Update(ctx, rcv)
+	err = s.repository.Update(ctx, rcv)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {

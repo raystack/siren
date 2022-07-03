@@ -44,18 +44,18 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Receiver) (uint64, error) {
+func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Receiver) error {
 	m := new(model.Receiver)
 	if err := m.FromDomain(receiver); err != nil {
-		return 0, err
+		return err
 	}
 
 	result := r.client.db.WithContext(ctx).Create(m)
 	if result.Error != nil {
-		return 0, result.Error
+		return result.Error
 	}
 
-	return m.ID, nil
+	return nil
 }
 
 func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
@@ -74,21 +74,21 @@ func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Recei
 	return rcv, nil
 }
 
-func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) (uint64, error) {
+func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) error {
 	var m model.Receiver
 	if err := m.FromDomain(rcv); err != nil {
-		return 0, err
+		return err
 	}
 	result := r.client.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
-		return 0, result.Error
+		return result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return 0, receiver.NotFoundError{ID: rcv.ID}
+		return receiver.NotFoundError{ID: rcv.ID}
 	}
 
-	return rcv.ID, nil
+	return nil
 }
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {

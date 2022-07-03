@@ -7,7 +7,7 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname RuleRepository --filename rule_repository.go --output=./mocks
 type Repository interface {
-	UpsertWithTx(context.Context, *Rule, func(rulesWithinGroup []Rule) error) (uint64, error)
+	UpsertWithTx(context.Context, *Rule, func(rulesWithinGroup []Rule) error) error
 	List(context.Context, Filter) ([]Rule, error)
 }
 

@@ -239,14 +239,11 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Create(s.ctx, tc.ReceiverToCreate)
+			err := s.repository.Create(s.ctx, tc.ReceiverToCreate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}
@@ -291,14 +288,11 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Update(s.ctx, tc.ReceiverToUpdate)
+			err := s.repository.Update(s.ctx, tc.ReceiverToUpdate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}

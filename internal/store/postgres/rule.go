@@ -19,10 +19,10 @@ func NewRuleRepository(client *Client) *RuleRepository {
 	return &RuleRepository{client}
 }
 
-func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func([]rule.Rule) error) (uint64, error) {
+func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postProcessFn func([]rule.Rule) error) error {
 	m := new(model.Rule)
 	if err := m.FromDomain(rl); err != nil {
-		return 0, err
+		return err
 	}
 
 	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
@@ -62,10 +62,10 @@ func (r *RuleRepository) UpsertWithTx(ctx context.Context, rl *rule.Rule, postPr
 
 		return postProcessFn(rulesWithinGroup)
 	}); txErr != nil {
-		return 0, txErr
+		return txErr
 	}
 
-	return m.ID, nil
+	return nil
 }
 
 func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule, error) {

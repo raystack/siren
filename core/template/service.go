@@ -24,15 +24,15 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (s *Service) Upsert(ctx context.Context, template *Template) (uint64, error) {
-	id, err := s.repository.Upsert(ctx, template)
+func (s *Service) Upsert(ctx context.Context, template *Template) error {
+	err := s.repository.Upsert(ctx, template)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Template, error) {

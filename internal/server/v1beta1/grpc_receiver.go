@@ -12,9 +12,9 @@ import (
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
 	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
-	Create(ctx context.Context, rcv *receiver.Receiver) (uint64, error)
+	Create(ctx context.Context, rcv *receiver.Receiver) error
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
-	Update(ctx context.Context, rcv *receiver.Receiver) (uint64, error)
+	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
 	Notify(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage) error
 	GetSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error)
@@ -59,13 +59,13 @@ func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.Creat
 		Configurations: configurations,
 	}
 
-	id, err := s.receiverService.Create(ctx, rcv)
+	err := s.receiverService.Create(ctx, rcv)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateReceiverResponse{
-		Id: id,
+		Id: rcv.ID,
 	}, nil
 }
 
@@ -109,13 +109,14 @@ func (s *GRPCServer) UpdateReceiver(ctx context.Context, req *sirenv1beta1.Updat
 		Labels:         req.GetLabels(),
 		Configurations: configurations,
 	}
-	id, err := s.receiverService.Update(ctx, rcv)
+
+	err := s.receiverService.Update(ctx, rcv)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateReceiverResponse{
-		Id: id,
+		Id: rcv.ID,
 	}, nil
 }
 

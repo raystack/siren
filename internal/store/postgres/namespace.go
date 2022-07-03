@@ -37,24 +37,24 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 	return result, nil
 }
 
-func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.EncryptedNamespace) (uint64, error) {
+func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.EncryptedNamespace) error {
 	nsModel := new(model.Namespace)
 	if err := nsModel.FromDomain(ns); err != nil {
-		return 0, err
+		return err
 	}
 
 	if err := r.client.db.WithContext(ctx).Create(nsModel).Error; err != nil {
 		err = checkPostgresError(err)
 		if errors.Is(err, errDuplicateKey) {
-			return 0, namespace.ErrDuplicate
+			return namespace.ErrDuplicate
 		}
 		if errors.Is(err, errForeignKeyViolation) {
-			return 0, namespace.ErrRelation
+			return namespace.ErrRelation
 		}
-		return 0, err
+		return err
 	}
 
-	return nsModel.ID, nil
+	return nil
 }
 
 func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.EncryptedNamespace, error) {
@@ -73,28 +73,28 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 	return ns, nil
 }
 
-func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.EncryptedNamespace) (uint64, error) {
+func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.EncryptedNamespace) error {
 	m := new(model.Namespace)
 	if err := m.FromDomain(ns); err != nil {
-		return 0, err
+		return err
 	}
 
 	result := r.client.db.Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
-			return 0, namespace.ErrDuplicate
+			return namespace.ErrDuplicate
 		}
 		if errors.Is(err, errForeignKeyViolation) {
-			return 0, namespace.ErrRelation
+			return namespace.ErrRelation
 		}
-		return 0, err
+		return err
 	}
 	if result.RowsAffected == 0 {
-		return 0, namespace.NotFoundError{ID: ns.ID}
+		return namespace.NotFoundError{ID: ns.ID}
 	}
 
-	return m.ID, nil
+	return nil
 }
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {

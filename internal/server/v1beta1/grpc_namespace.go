@@ -13,9 +13,9 @@ import (
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
-	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Create(context.Context, *namespace.Namespace) error
 	Get(context.Context, uint64) (*namespace.Namespace, error)
-	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Update(context.Context, *namespace.Namespace) error
 	Delete(context.Context, uint64) error
 }
 
@@ -57,13 +57,13 @@ func (s *GRPCServer) CreateNamespace(ctx context.Context, req *sirenv1beta1.Crea
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	}
-	id, err := s.namespaceService.Create(ctx, ns)
+	err := s.namespaceService.Create(ctx, ns)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateNamespaceResponse{
-		Id: id,
+		Id: ns.ID,
 	}, nil
 }
 
@@ -100,13 +100,13 @@ func (s *GRPCServer) UpdateNamespace(ctx context.Context, req *sirenv1beta1.Upda
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
 	}
-	id, err := s.namespaceService.Update(ctx, ns)
+	err := s.namespaceService.Update(ctx, ns)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateNamespaceResponse{
-		Id: id,
+		Id: ns.ID,
 	}, nil
 }
 

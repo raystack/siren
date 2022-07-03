@@ -137,11 +137,9 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		dummyResult.Name = "foo"
 		dummyResult.ID = testID
 
-		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).
-			Run(func(ctx context.Context, r *rule.Rule) {
-				*r = *dummyResult
-			}).
-			Return(testID, nil).Once()
+		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Run(func(ctx context.Context, r *rule.Rule) {
+			r.ID = testID
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, err)
 
@@ -157,8 +155,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			ruleService: mockedRuleService,
 			logger:      log.NewNoop(),
 		}
-		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).
-			Return(0, errors.ErrConflict).Once()
+		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
@@ -172,9 +169,10 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 			ruleService: mockedRuleService,
 			logger:      log.NewNoop(),
 		}
-		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).
-			Return(0, errors.New("random error")).Once()
+
+		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
+
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})

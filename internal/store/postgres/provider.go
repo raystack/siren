@@ -46,21 +46,21 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]pr
 	return domainProviders, nil
 }
 
-func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider) (uint64, error) {
+func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider) error {
 	var provModel model.Provider
 	if err := provModel.FromDomain(prov); err != nil {
-		return 0, err
+		return err
 	}
 	result := r.client.db.WithContext(ctx).Create(&provModel)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
-			return 0, provider.ErrDuplicate
+			return provider.ErrDuplicate
 		}
-		return 0, result.Error
+		return result.Error
 	}
 
-	return provModel.ID, nil
+	return nil
 }
 
 func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provider, error) {
@@ -79,25 +79,25 @@ func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provi
 	return provDomain, nil
 }
 
-func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Provider) (uint64, error) {
+func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Provider) error {
 	var provModel model.Provider
 	if err := provModel.FromDomain(provDomain); err != nil {
-		return 0, err
+		return err
 	}
 
 	result := r.client.db.Where("id = ?", provModel.ID).Updates(&provModel)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
-			return 0, provider.ErrDuplicate
+			return provider.ErrDuplicate
 		}
-		return 0, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return 0, provider.NotFoundError{ID: provModel.ID}
+		return provider.NotFoundError{ID: provModel.ID}
 	}
 
-	return provModel.ID, nil
+	return nil
 }
 
 func (r ProviderRepository) Delete(ctx context.Context, id uint64) error {

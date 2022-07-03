@@ -53,7 +53,7 @@ func TestService_Upsert(t *testing.T) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(0, errors.New("some error"))
+					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -63,7 +63,7 @@ func TestService_Upsert(t *testing.T) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(1, nil)
+					rr.EXPECT().UpsertWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule"), mock.Anything).Return(nil)
 				},
 			},
 		}
@@ -81,7 +81,7 @@ func TestService_Upsert(t *testing.T) {
 
 			tc.Setup(repositoryMock, templateServiceMock, namespaceServiceMock, providerServiceMock)
 
-			_, err := svc.Upsert(ctx, &rule.Rule{
+			err := svc.Upsert(ctx, &rule.Rule{
 				Name:      "foo",
 				Namespace: "namespace",
 			})

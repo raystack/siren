@@ -19,33 +19,32 @@ func NewTemplateRepository(client *Client) *TemplateRepository {
 	return &TemplateRepository{client}
 }
 
-func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) (uint64, error) {
+func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) error {
 	modelTemplate := &model.Template{}
-	err := modelTemplate.FromDomain(tmpl)
-	if err != nil {
-		return 0, err
+	if err := modelTemplate.FromDomain(tmpl); err != nil {
+		return err
 	}
 
 	result := r.client.db.WithContext(ctx).Where("name = ?", modelTemplate.Name).Updates(&modelTemplate)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
 		if errors.Is(err, errDuplicateKey) {
-			return 0, template.ErrDuplicate
+			return template.ErrDuplicate
 		}
-		return 0, err
+		return err
 	}
 
 	if result.RowsAffected == 0 {
 		if err := r.client.db.WithContext(ctx).Create(&modelTemplate).Error; err != nil {
 			err = checkPostgresError(err)
 			if errors.Is(err, errDuplicateKey) {
-				return 0, template.ErrDuplicate
+				return template.ErrDuplicate
 			}
-			return 0, err
+			return err
 		}
 	}
 
-	return modelTemplate.ID, err
+	return nil
 }
 
 func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]template.Template, error) {

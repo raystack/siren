@@ -76,19 +76,17 @@ func TestCreate(t *testing.T) {
 	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(dummyProviderID, nil).Once()
-		result, err := dummyService.Create(ctx, dummyProvider)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(nil).Once()
+		err := dummyService.Create(ctx, dummyProvider)
 		assert.Nil(t, err)
-		assert.Equal(t, dummyProviderID, result)
 		repositoryMock.AssertExpectations(t)
 	})
 
 	t.Run("should call repository Create method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(0, errors.New("random error")).Once()
-		result, err := dummyService.Create(ctx, dummyProvider)
-		assert.Empty(t, result)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(errors.New("random error")).Once()
+		err := dummyService.Create(ctx, dummyProvider)
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -96,9 +94,8 @@ func TestCreate(t *testing.T) {
 	t.Run("should call repository Create method and return conflict error if duplicated", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(0, provider.ErrDuplicate).Once()
-		result, err := dummyService.Create(ctx, dummyProvider)
-		assert.Empty(t, result)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
+		err := dummyService.Create(ctx, dummyProvider)
 		assert.EqualError(t, err, "urn already exist")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -176,19 +173,17 @@ func TestUpdateProvider(t *testing.T) {
 	t.Run("should call repository Update method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(dummyProviderID, nil).Once()
-		result, err := dummyService.Update(ctx, dummyProvider)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(nil).Once()
+		err := dummyService.Update(ctx, dummyProvider)
 		assert.Nil(t, err)
-		assert.Equal(t, dummyProviderID, result)
 		repositoryMock.AssertExpectations(t)
 	})
 
 	t.Run("should call repository Update method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(0, errors.New("random error")).Once()
-		result, err := dummyService.Update(ctx, dummyProvider)
-		assert.Empty(t, result)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(errors.New("random error")).Once()
+		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -196,9 +191,8 @@ func TestUpdateProvider(t *testing.T) {
 	t.Run("should call repository Update method and return error not found if repository return not found error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(0, provider.NotFoundError{}).Once()
-		result, err := dummyService.Update(ctx, dummyProvider)
-		assert.Empty(t, result)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.NotFoundError{}).Once()
+		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "provider not found")
 		repositoryMock.AssertExpectations(t)
 	})
@@ -206,9 +200,8 @@ func TestUpdateProvider(t *testing.T) {
 	t.Run("should call repository Update method and return conflict error if repository return duplicate error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
 		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(0, provider.ErrDuplicate).Once()
-		result, err := dummyService.Update(ctx, dummyProvider)
-		assert.Empty(t, result)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
+		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "urn already exist")
 		repositoryMock.AssertExpectations(t)
 	})

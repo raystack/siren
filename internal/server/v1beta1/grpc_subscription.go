@@ -11,9 +11,9 @@ import (
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
 type SubscriptionService interface {
 	List(context.Context, subscription.Filter) ([]subscription.Subscription, error)
-	Create(context.Context, *subscription.Subscription) (uint64, error)
+	Create(context.Context, *subscription.Subscription) error
 	Get(context.Context, uint64) (*subscription.Subscription, error)
-	Update(context.Context, *subscription.Subscription) (uint64, error)
+	Update(context.Context, *subscription.Subscription) error
 	Delete(context.Context, uint64) error
 }
 
@@ -49,13 +49,14 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	id, err := s.subscriptionService.Create(ctx, sub)
+
+	err := s.subscriptionService.Create(ctx, sub)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateSubscriptionResponse{
-		Id: id,
+		Id: sub.ID,
 	}, nil
 }
 
@@ -92,13 +93,14 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	id, err := s.subscriptionService.Update(ctx, sub)
+
+	err := s.subscriptionService.Update(ctx, sub)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateSubscriptionResponse{
-		Id: id,
+		Id: sub.ID,
 	}, nil
 }
 

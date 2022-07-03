@@ -11,9 +11,9 @@ import (
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks
 type Repository interface {
 	List(context.Context, Filter) ([]Subscription, error)
-	CreateWithTx(context.Context, *Subscription, func([]Subscription) error) (uint64, error)
+	CreateWithTx(context.Context, *Subscription, func([]Subscription) error) error
 	Get(context.Context, uint64) (*Subscription, error)
-	UpdateWithTx(context.Context, *Subscription, func([]Subscription) error) (uint64, error)
+	UpdateWithTx(context.Context, *Subscription, func([]Subscription) error) error
 	DeleteWithTx(context.Context, uint64, uint64, func([]Subscription) error) error
 }
 

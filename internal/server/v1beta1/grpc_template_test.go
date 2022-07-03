@@ -193,7 +193,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			},
 		},
 	}
-	template := &template.Template{
+	tmpl := &template.Template{
 		ID:   1,
 		Name: "foo",
 		Body: "bar",
@@ -215,7 +215,9 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			logger:          log.NewNoop(),
 		}
 
-		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), template).Return(1, nil).Once()
+		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Run(func(_a0 context.Context, _a1 *template.Template) {
+			_a1.ID = uint64(1)
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetId())
@@ -228,7 +230,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			templateService: mockedTemplateService,
 			logger:          log.NewNoop(),
 		}
-		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), template).Return(0, errors.ErrConflict).Once()
+		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
@@ -241,7 +243,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 			templateService: mockedTemplateService,
 			logger:          log.NewNoop(),
 		}
-		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), template).Return(0, errors.New("random error")).Once()
+		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")

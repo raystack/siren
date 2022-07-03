@@ -114,7 +114,9 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(generatedID, nil).Once()
+		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *namespace.Namespace) {
+			_a1.ID = generatedID
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, err)
 		assert.Equal(t, generatedID, res.GetId())
@@ -126,8 +128,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(0, errors.New("random error")).Once()
+		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
@@ -140,7 +141,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			logger:           log.NewNoop(),
 		}
 
-		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(0, errors.ErrInvalid).Once()
+		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
@@ -154,7 +155,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 			logger:           log.NewNoop(),
 		}
 
-		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(0, errors.ErrConflict).Once()
+		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err,
@@ -273,7 +274,9 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(payload.ID, nil).Once()
+		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *namespace.Namespace) {
+			_a1.ID = payload.ID
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, err)
 		assert.Equal(t, payload.ID, res.GetId())
@@ -286,7 +289,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(0, errors.ErrInvalid).Once()
+		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
@@ -299,7 +302,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(0, errors.ErrConflict).Once()
+		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
@@ -312,8 +315,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 			namespaceService: mockedNamespaceService,
 			logger:           log.NewNoop(),
 		}
-		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(0, errors.New("random error")).Once()
+		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")

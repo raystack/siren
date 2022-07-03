@@ -143,7 +143,7 @@ func TestService_Create(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(10, nil)
+					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(nil)
 				},
 			},
 			{
@@ -151,7 +151,7 @@ func TestService_Create(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, subscription.ErrDuplicate)
+					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(subscription.ErrDuplicate)
 				},
 				ErrString: "urn already exist",
 			},
@@ -160,7 +160,7 @@ func TestService_Create(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, subscription.ErrRelation)
+					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(subscription.ErrRelation)
 				},
 				ErrString: "namespace id does not exist",
 			},
@@ -169,7 +169,7 @@ func TestService_Create(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, errors.New("some error"))
+					sr.EXPECT().CreateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -187,7 +187,7 @@ func TestService_Create(t *testing.T) {
 
 			tc.Setup(repositoryMock, namespaceServiceMock, providerServiceMock)
 
-			_, err := svc.Create(ctx, &subscription.Subscription{})
+			err := svc.Create(ctx, &subscription.Subscription{})
 			if tc.ErrString != "" {
 				if tc.ErrString != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
@@ -231,7 +231,7 @@ func TestService_Update(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(10, nil)
+					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(nil)
 				},
 			},
 			{
@@ -239,7 +239,7 @@ func TestService_Update(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, subscription.ErrDuplicate)
+					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(subscription.ErrDuplicate)
 				},
 				ErrString: "urn already exist",
 			},
@@ -248,7 +248,7 @@ func TestService_Update(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, subscription.ErrRelation)
+					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(subscription.ErrRelation)
 				},
 				ErrString: "namespace id does not exist",
 			},
@@ -257,7 +257,7 @@ func TestService_Update(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, subscription.NotFoundError{})
+					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(subscription.NotFoundError{})
 				},
 				ErrString: "subscription not found",
 			},
@@ -266,7 +266,7 @@ func TestService_Update(t *testing.T) {
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
-					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(0, errors.New("some error"))
+					sr.EXPECT().UpdateWithTx(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription"), mock.Anything).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -284,7 +284,7 @@ func TestService_Update(t *testing.T) {
 
 			tc.Setup(repositoryMock, namespaceServiceMock, providerServiceMock)
 
-			_, err := svc.Update(ctx, &subscription.Subscription{})
+			err := svc.Update(ctx, &subscription.Subscription{})
 			if tc.ErrString != "" {
 				if tc.ErrString != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

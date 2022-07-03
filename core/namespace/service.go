@@ -38,27 +38,27 @@ func (s *Service) List(ctx context.Context) ([]Namespace, error) {
 	return namespaces, nil
 }
 
-func (s *Service) Create(ctx context.Context, ns *Namespace) (uint64, error) {
+func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 	if ns == nil {
-		return 0, errors.ErrInvalid.WithCausef("namespace is nil").WithMsgf("incoming namespace is empty")
+		return errors.ErrInvalid.WithCausef("namespace is nil").WithMsgf("incoming namespace is empty")
 	}
 	encryptedNamespace, err := s.encrypt(ns)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	id, err := s.repository.Create(ctx, encryptedNamespace)
+	err = s.repository.Create(ctx, encryptedNamespace)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.Is(err, ErrRelation) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s *Service) Get(ctx context.Context, id uint64) (*Namespace, error) {
@@ -76,27 +76,27 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s *Service) Update(ctx context.Context, namespace *Namespace) (uint64, error) {
+func (s *Service) Update(ctx context.Context, namespace *Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	id, err := s.repository.Update(ctx, encryptedNamespace)
+	err = s.repository.Update(ctx, encryptedNamespace)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.Is(err, ErrRelation) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		if errors.As(err, new(NotFoundError)) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {

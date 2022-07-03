@@ -10,7 +10,7 @@ import (
 
 //go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
 type TemplateService interface {
-	Upsert(context.Context, *template.Template) (uint64, error)
+	Upsert(context.Context, *template.Template) error
 	List(context.Context, template.Filter) ([]template.Template, error)
 	GetByName(context.Context, string) (*template.Template, error)
 	Delete(context.Context, string) error
@@ -91,20 +91,21 @@ func (s *GRPCServer) UpsertTemplate(ctx context.Context, req *sirenv1beta1.Upser
 			Description: variable.Description,
 		})
 	}
-	template := &template.Template{
+
+	tmpl := &template.Template{
 		ID:        req.GetId(),
 		Name:      req.GetName(),
 		Body:      req.GetBody(),
 		Tags:      req.GetTags(),
 		Variables: variables,
 	}
-	id, err := s.templateService.Upsert(ctx, template)
-	if err != nil {
+
+	if err := s.templateService.Upsert(ctx, tmpl); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpsertTemplateResponse{
-		Id: id,
+		Id: tmpl.ID,
 	}, nil
 }
 

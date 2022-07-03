@@ -15,9 +15,9 @@ import (
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
 	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) (uint64, error)
+	Create(context.Context, *provider.Provider) error
 	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) (uint64, error)
+	Update(context.Context, *provider.Provider) error
 	Delete(context.Context, uint64) error
 }
 
@@ -56,20 +56,21 @@ func (s *GRPCServer) ListProviders(ctx context.Context, req *sirenv1beta1.ListPr
 }
 
 func (s *GRPCServer) CreateProvider(ctx context.Context, req *sirenv1beta1.CreateProviderRequest) (*sirenv1beta1.CreateProviderResponse, error) {
-	id, err := s.providerService.Create(ctx, &provider.Provider{
+	prv := &provider.Provider{
 		Host:        req.GetHost(),
 		URN:         req.GetUrn(),
 		Name:        req.GetName(),
 		Type:        req.GetType(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
-	})
-	if err != nil {
+	}
+
+	if err := s.providerService.Create(ctx, prv); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.CreateProviderResponse{
-		Id: id,
+		Id: prv.ID,
 	}, nil
 }
 
@@ -103,20 +104,21 @@ func (s *GRPCServer) GetProvider(ctx context.Context, req *sirenv1beta1.GetProvi
 }
 
 func (s *GRPCServer) UpdateProvider(ctx context.Context, req *sirenv1beta1.UpdateProviderRequest) (*sirenv1beta1.UpdateProviderResponse, error) {
-	id, err := s.providerService.Update(ctx, &provider.Provider{
+	prv := &provider.Provider{
 		ID:          req.GetId(),
 		Host:        req.GetHost(),
 		Name:        req.GetName(),
 		Type:        req.GetType(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),
-	})
-	if err != nil {
+	}
+
+	if err := s.providerService.Update(ctx, prv); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.UpdateProviderResponse{
-		Id: id,
+		Id: prv.ID,
 	}, nil
 }
 

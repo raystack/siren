@@ -21,24 +21,24 @@ const (
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
-	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Create(context.Context, *namespace.Namespace) error
 	Get(context.Context, uint64) (*namespace.Namespace, error)
-	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Update(context.Context, *namespace.Namespace) error
 	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
 	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) (uint64, error)
+	Create(context.Context, *provider.Provider) error
 	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) (uint64, error)
+	Update(context.Context, *provider.Provider) error
 	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
 type TemplateService interface {
-	Upsert(context.Context, *template.Template) (uint64, error)
+	Upsert(context.Context, *template.Template) error
 	List(context.Context, template.Filter) ([]template.Template, error)
 	GetByName(context.Context, string) (*template.Template, error)
 	Delete(context.Context, string) error
@@ -82,12 +82,12 @@ func NewService(
 	}
 }
 
-func (s *Service) Upsert(ctx context.Context, rl *Rule) (uint64, error) {
+func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 	rl.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rl.Namespace, rl.GroupName, rl.Template)
 
 	tmpl, err := s.templateService.GetByName(ctx, rl.Template)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	templateVariables := tmpl.Variables
@@ -96,12 +96,12 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) (uint64, error) {
 
 	ns, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	prov, err := s.providerService.Get(ctx, ns.Provider)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,

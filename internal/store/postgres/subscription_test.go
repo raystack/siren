@@ -290,14 +290,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.CreateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
+			err := s.repository.CreateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}
@@ -461,14 +458,11 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.UpdateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
+			err := s.repository.UpdateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}

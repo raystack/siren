@@ -15,18 +15,18 @@ import (
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
-	Create(context.Context, *namespace.Namespace) (uint64, error)
+	Create(context.Context, *namespace.Namespace) error
 	Get(context.Context, uint64) (*namespace.Namespace, error)
-	Update(context.Context, *namespace.Namespace) (uint64, error)
+	Update(context.Context, *namespace.Namespace) error
 	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
 	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
-	Create(ctx context.Context, rcv *receiver.Receiver) (uint64, error)
+	Create(ctx context.Context, rcv *receiver.Receiver) error
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
-	Update(ctx context.Context, rcv *receiver.Receiver) (uint64, error)
+	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
 	Notify(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage) error
 	GetSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error)
@@ -35,9 +35,9 @@ type ReceiverService interface {
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
 	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) (uint64, error)
+	Create(context.Context, *provider.Provider) error
 	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) (uint64, error)
+	Update(context.Context, *provider.Provider) error
 	Delete(context.Context, uint64) error
 }
 
@@ -72,34 +72,34 @@ func (s Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
 	return subscriptions, nil
 }
 
-func (s Service) Create(ctx context.Context, sub *Subscription) (uint64, error) {
+func (s Service) Create(ctx context.Context, sub *Subscription) error {
 	// check provider type of the namespace
 	ns, err := s.namespaceService.Get(ctx, sub.Namespace)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	prov, err := s.providerService.Get(ctx, ns.Provider)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	sortReceivers(sub)
 
-	id, err := s.repository.CreateWithTx(ctx, sub, func(subs []Subscription) error {
+	err = s.repository.CreateWithTx(ctx, sub, func(subs []Subscription) error {
 		return SyncToUpstream(ctx, s.receiverService, s.cortexClient, subs, ns, prov)
 	})
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.Is(err, ErrRelation) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s Service) Get(ctx context.Context, id uint64) (*Subscription, error) {
@@ -114,36 +114,36 @@ func (s Service) Get(ctx context.Context, id uint64) (*Subscription, error) {
 	return subscription, nil
 }
 
-func (s Service) Update(ctx context.Context, sub *Subscription) (uint64, error) {
+func (s Service) Update(ctx context.Context, sub *Subscription) error {
 	// check provider type of the namespace
 	ns, err := s.namespaceService.Get(ctx, sub.Namespace)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	prov, err := s.providerService.Get(ctx, ns.Provider)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	sortReceivers(sub)
 
-	id, err := s.repository.UpdateWithTx(ctx, sub, func(subs []Subscription) error {
+	err = s.repository.UpdateWithTx(ctx, sub, func(subs []Subscription) error {
 		return SyncToUpstream(ctx, s.receiverService, s.cortexClient, subs, ns, prov)
 	})
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.Is(err, ErrRelation) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		if errors.As(err, new(NotFoundError)) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s Service) Delete(ctx context.Context, id uint64) error {

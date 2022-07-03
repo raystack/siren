@@ -187,7 +187,6 @@ func TestService_CreateNamespace(t *testing.T) {
 	}
 	var (
 		ctx       = context.TODO()
-		testID    = uint64(5)
 		testCases = []testCase{
 			{
 				Description: "should return error if encrypt return error caused credential is not in json",
@@ -218,7 +217,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, errors.New("some error"))
+					}).Return(errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -234,7 +233,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, namespace.ErrDuplicate)
+					}).Return(namespace.ErrDuplicate)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -250,7 +249,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, namespace.ErrRelation)
+					}).Return(namespace.ErrRelation)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -266,7 +265,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(testID, nil)
+					}).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -287,7 +286,7 @@ func TestService_CreateNamespace(t *testing.T) {
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
-			_, err := svc.Create(ctx, tc.NSpace)
+			err := svc.Create(ctx, tc.NSpace)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
@@ -400,7 +399,6 @@ func TestService_UpdateNamespace(t *testing.T) {
 	}
 	var (
 		ctx       = context.TODO()
-		testID    = uint64(5)
 		testCases = []testCase{
 			{
 				Description: "should return error if encrypt return error caused credential is not in json",
@@ -431,7 +429,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, errors.New("some error"))
+					}).Return(errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -447,7 +445,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, namespace.NotFoundError{})
+					}).Return(namespace.NotFoundError{})
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -463,7 +461,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, namespace.ErrRelation)
+					}).Return(namespace.ErrRelation)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -479,7 +477,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(0, namespace.ErrDuplicate)
+					}).Return(namespace.ErrDuplicate)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -495,7 +493,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
 						Namespace:   tc.NSpace,
 						Credentials: "some-ciphertext",
-					}).Return(testID, nil)
+					}).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -517,7 +515,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 
 			tc.Setup(repositoryMock, encryptorMock, tc)
 
-			_, err := svc.Update(ctx, tc.NSpace)
+			err := svc.Update(ctx, tc.NSpace)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())

@@ -15,9 +15,9 @@ const (
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ReceiverRepository --filename receiver_repository.go --output=./mocks
 type Repository interface {
 	List(context.Context, Filter) ([]Receiver, error)
-	Create(context.Context, *Receiver) (uint64, error)
+	Create(context.Context, *Receiver) error
 	Get(context.Context, uint64) (*Receiver, error)
-	Update(context.Context, *Receiver) (uint64, error)
+	Update(context.Context, *Receiver) error
 	Delete(context.Context, uint64) error
 }
 

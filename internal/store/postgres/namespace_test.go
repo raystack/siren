@@ -222,14 +222,11 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Create(s.ctx, tc.NamespaceToCreate)
+			err := s.repository.Create(s.ctx, tc.NamespaceToCreate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}
@@ -317,14 +314,11 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Update(s.ctx, tc.NamespaceToUpdate)
+			err := s.repository.Update(s.ctx, tc.NamespaceToUpdate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if !cmp.Equal(got, tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedID)
 			}
 		})
 	}

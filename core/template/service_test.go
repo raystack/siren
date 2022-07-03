@@ -26,7 +26,7 @@ func TestService_Upsert(t *testing.T) {
 					ID:   1,
 					Name: "template-1",
 					Body: "body of a template",
-				}).Return(0, errors.New("some error"))
+				}).Return(errors.New("some error"))
 			},
 			Tmpl: &template.Template{
 				ID:   1,
@@ -42,7 +42,7 @@ func TestService_Upsert(t *testing.T) {
 					ID:   1,
 					Name: "template-1",
 					Body: "body of a template",
-				}).Return(0, template.ErrDuplicate)
+				}).Return(template.ErrDuplicate)
 			},
 			Tmpl: &template.Template{
 				ID:   1,
@@ -58,7 +58,7 @@ func TestService_Upsert(t *testing.T) {
 					ID:   1,
 					Name: "template-1",
 					Body: "body of a template",
-				}).Return(1, nil)
+				}).Return(nil)
 			},
 			Tmpl: &template.Template{
 				ID:   1,
@@ -78,7 +78,7 @@ func TestService_Upsert(t *testing.T) {
 
 			tc.Setup(repositoryMock)
 
-			_, err := svc.Upsert(context.TODO(), tc.Tmpl)
+			err := svc.Upsert(context.TODO(), tc.Tmpl)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())

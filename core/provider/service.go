@@ -20,16 +20,16 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
 	return s.repository.List(ctx, flt)
 }
 
-func (s *Service) Create(ctx context.Context, prov *Provider) (uint64, error) {
+func (s *Service) Create(ctx context.Context, prov *Provider) error {
 	//TODO check provider is nil
-	id, err := s.repository.Create(ctx, prov)
+	err := s.repository.Create(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (s *Service) Get(ctx context.Context, id uint64) (*Provider, error) {
@@ -43,18 +43,18 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Provider, error) {
 	return prov, nil
 }
 
-func (s *Service) Update(ctx context.Context, prov *Provider) (uint64, error) {
-	id, err := s.repository.Update(ctx, prov)
+func (s *Service) Update(ctx context.Context, prov *Provider) error {
+	err := s.repository.Update(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return 0, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.As(err, new(NotFoundError)) {
-			return 0, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return 0, err
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {

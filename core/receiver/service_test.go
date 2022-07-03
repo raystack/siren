@@ -223,7 +223,7 @@ func TestService_CreateReceiver(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-					}).Return(0, errors.New("some error"))
+					}).Return(errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -251,7 +251,7 @@ func TestService_CreateReceiver(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-					}).Return(123, nil)
+					}).Return(nil)
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -280,7 +280,7 @@ func TestService_CreateReceiver(t *testing.T) {
 
 			tc.Setup(repositoryMock, typeServiceMock)
 
-			_, err := svc.Create(ctx, tc.Rcv)
+			err := svc.Create(ctx, tc.Rcv)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
@@ -524,7 +524,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-					}).Return(0, errors.New("some error"))
+					}).Return(errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -552,7 +552,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-					}).Return(123, nil)
+					}).Return(nil)
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -579,7 +579,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 						Configurations: map[string]interface{}{
 							"token": "key",
 						},
-					}).Return(0, receiver.NotFoundError{})
+					}).Return(receiver.NotFoundError{})
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -608,7 +608,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 
 			tc.Setup(repositoryMock, typeServiceMock)
 
-			_, err := svc.Update(ctx, tc.Rcv)
+			err := svc.Update(ctx, tc.Rcv)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())

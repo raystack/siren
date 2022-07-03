@@ -50,10 +50,10 @@ func (r *SubscriptionRepository) list(ctx context.Context, tx *gorm.DB, flt subs
 	return subscriptions, nil
 }
 
-func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscription.Subscription, postProcessFn func(subs []subscription.Subscription) error) (uint64, error) {
+func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscription.Subscription, postProcessFn func(subs []subscription.Subscription) error) error {
 	m := new(model.Subscription)
 	if err := m.FromDomain(sub); err != nil {
-		return 0, err
+		return err
 	}
 
 	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
@@ -78,10 +78,10 @@ func (r *SubscriptionRepository) CreateWithTx(ctx context.Context, sub *subscrip
 
 		return postProcessFn(subscriptionsInNamespace)
 	}); txErr != nil {
-		return 0, txErr
+		return txErr
 	}
 
-	return m.ID, nil
+	return nil
 }
 
 func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscription.Subscription, error) {
@@ -103,10 +103,10 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 	return subs, nil
 }
 
-func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscription.Subscription, postProcessFn func([]subscription.Subscription) error) (uint64, error) {
+func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscription.Subscription, postProcessFn func([]subscription.Subscription) error) error {
 	m := new(model.Subscription)
 	if err := m.FromDomain(sub); err != nil {
-		return 0, err
+		return err
 	}
 
 	if txErr := r.client.db.Transaction(func(tx *gorm.DB) error {
@@ -136,10 +136,10 @@ func (r *SubscriptionRepository) UpdateWithTx(ctx context.Context, sub *subscrip
 
 		return postProcessFn(subscriptionsInNamespace)
 	}); txErr != nil {
-		return 0, txErr
+		return txErr
 	}
 
-	return m.ID, nil
+	return nil
 }
 
 func (r *SubscriptionRepository) DeleteWithTx(ctx context.Context, id uint64, namespaceID uint64, postProcessFn func([]subscription.Subscription) error) error {
