@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
@@ -9,16 +10,19 @@ import (
 )
 
 type Template struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uint64 `gorm:"primarykey"`
 	Name      string `gorm:"index:idx_template_name,unique"`
 	Body      string
 	Tags      pq.StringArray `gorm:"type:text[];index:idx_tags,type:gin"`
 	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (tmp *Template) FromDomain(t *template.Template) error {
+	if t == nil {
+		return errors.New("template domain is nil")
+	}
 	tmp.ID = t.ID
 	tmp.CreatedAt = t.CreatedAt
 	tmp.UpdatedAt = t.UpdatedAt
@@ -34,6 +38,9 @@ func (tmp *Template) FromDomain(t *template.Template) error {
 }
 
 func (tmp *Template) ToDomain() (*template.Template, error) {
+	if tmp == nil {
+		return nil, errors.New("template model is nil")
+	}
 	var variables []template.Variable
 	jsonBlob := []byte(tmp.Variables)
 	err := json.Unmarshal(jsonBlob, &variables)

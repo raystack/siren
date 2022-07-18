@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	cortexClient "github.com/grafana/cortex-tools/pkg/client"
 	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
+	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -20,29 +20,29 @@ const (
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
-	ListNamespaces() ([]*namespace.Namespace, error)
-	CreateNamespace(*namespace.Namespace) error
-	GetNamespace(uint64) (*namespace.Namespace, error)
-	UpdateNamespace(*namespace.Namespace) error
-	DeleteNamespace(uint64) error
+	List(context.Context) ([]namespace.Namespace, error)
+	Create(context.Context, *namespace.Namespace) error
+	Get(context.Context, uint64) (*namespace.Namespace, error)
+	Update(context.Context, *namespace.Namespace) error
+	Delete(context.Context, uint64) error
 }
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
-	ListProviders(map[string]interface{}) ([]*provider.Provider, error)
-	CreateProvider(*provider.Provider) (*provider.Provider, error)
-	GetProvider(uint64) (*provider.Provider, error)
-	UpdateProvider(*provider.Provider) (*provider.Provider, error)
-	DeleteProvider(uint64) error
+	List(context.Context, provider.Filter) ([]provider.Provider, error)
+	Create(context.Context, *provider.Provider) error
+	Get(context.Context, uint64) (*provider.Provider, error)
+	Update(context.Context, *provider.Provider) error
+	Delete(context.Context, uint64) error
 }
 
-//go:generate mockery --name=TemplatesService -r --case underscore --with-expecter --structname TemplatesService --filename template_service.go --output=./mocks
-type TemplatesService interface {
-	Upsert(*template.Template) error
-	Index(string) ([]template.Template, error)
-	GetByName(string) (*template.Template, error)
-	Delete(string) error
-	Render(string, map[string]string) (string, error)
+//go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
+type TemplateService interface {
+	Upsert(context.Context, *template.Template) error
+	List(context.Context, template.Filter) ([]template.Template, error)
+	GetByName(context.Context, string) (*template.Template, error)
+	Delete(context.Context, string) error
+	Render(context.Context, string, map[string]string) (string, error)
 }
 
 type variable struct {
@@ -59,7 +59,7 @@ type Variables struct {
 // Service handles business logic
 type Service struct {
 	repository       Repository
-	templateService  TemplatesService
+	templateService  TemplateService
 	namespaceService NamespaceService
 	providerService  ProviderService
 	cortexClient     CortexClient
@@ -68,7 +68,7 @@ type Service struct {
 // NewService returns repository struct
 func NewService(
 	repository Repository,
-	templateService TemplatesService,
+	templateService TemplateService,
 	namespaceService NamespaceService,
 	providerService ProviderService,
 	cortexClient CortexClient,
@@ -82,117 +82,115 @@ func NewService(
 	}
 }
 
-func (s *Service) Upsert(ctx context.Context, rule *Rule) error {
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rule.Namespace, rule.GroupName, rule.Template)
+func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rl.Namespace, rl.GroupName, rl.Template)
 
-	template, err := s.templateService.GetByName(rule.Template)
+	tmpl, err := s.templateService.GetByName(ctx, rl.Template)
 	if err != nil {
 		return err
 	}
 
-	templateVariables := template.Variables
-	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rule.Variables)
-	rule.Variables = finalRuleVariables
+	templateVariables := tmpl.Variables
+	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rl.Variables)
+	rl.Variables = finalRuleVariables
 
-	namespace, err := s.namespaceService.GetNamespace(rule.ProviderNamespace)
+	ns, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
 	if err != nil {
 		return err
 	}
 
-	provider, err := s.providerService.GetProvider(namespace.Provider)
+	prov, err := s.providerService.Get(ctx, ns.Provider)
 	if err != nil {
 		return err
 	}
 
-	rule.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, provider.URN,
-		namespace.URN, rule.Namespace, rule.GroupName, rule.Template)
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,
+		ns.URN, rl.Namespace, rl.GroupName, rl.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
-	if err := s.repository.Upsert(ctx, rule); err != nil {
-		if err := s.repository.Rollback(ctx); err != nil {
+	if err = s.repository.Upsert(ctx, rl); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
-		}
-		if errors.Is(err, ErrDuplicate) {
-			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		return err
 	}
 
-	if provider.Type == "cortex" {
-		rulesWithinGroup, err := s.repository.Get(ctx, "", rule.Namespace, rule.GroupName, "", rule.ProviderNamespace)
-		if err != nil {
-			if err := s.repository.Rollback(ctx); err != nil {
-				return err
-			}
+	rulesWithinGroup, err := s.repository.List(ctx, Filter{
+		Namespace:   rl.Namespace,
+		GroupName:   rl.GroupName,
+		NamespaceID: rl.ProviderNamespace,
+	})
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
+		return err
+	}
 
-		if err := s.postRuleGroupWith(ctx, rule, rulesWithinGroup, s.cortexClient, namespace.URN); err != nil {
-			if err := s.repository.Rollback(ctx); err != nil {
+	if prov.Type == provider.TypeCortex {
+		if err = PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl.Namespace, rl.GroupName, ns.URN, rulesWithinGroup); err != nil {
+			if err := s.repository.Rollback(ctx, err); err != nil {
 				return err
 			}
 			return err
 		}
-	} else {
-		if err := s.repository.Rollback(ctx); err != nil {
-			return err
-		}
-		return errors.New("provider not supported")
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, name, namespace, groupName, template string, providerNamespace uint64) ([]Rule, error) {
-	return s.repository.Get(ctx, name, namespace, groupName, template, providerNamespace)
+func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
+	return s.repository.List(ctx, flt)
 }
 
-func (s *Service) postRuleGroupWith(ctx context.Context, rule *Rule, rulesWithinGroup []Rule, client CortexClient, tenantName string) error {
+func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, nspace, groupName, tenantName string, rulesWithinGroup []Rule) error {
 	renderedBodyForThisGroup := ""
-	for i := 0; i < len(rulesWithinGroup); i++ {
-		if !rulesWithinGroup[i].Enabled {
+
+	for _, ruleWithinGroup := range rulesWithinGroup {
+		if !ruleWithinGroup.Enabled {
 			continue
 		}
 		inputValue := make(map[string]string)
 
-		for _, v := range rulesWithinGroup[i].Variables {
+		for _, v := range ruleWithinGroup.Variables {
 			inputValue[v.Name] = v.Value
 		}
 
-		renderedBody, err := s.templateService.Render(rulesWithinGroup[i].Template, inputValue)
+		renderedBody, err := templateService.Render(ctx, ruleWithinGroup.Template, inputValue)
 		if err != nil {
 			return err
 		}
 		renderedBodyForThisGroup += renderedBody
 	}
-	ctx = cortexClient.NewContextWithTenantId(ctx, tenantName)
+
 	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(ctx, rule.Namespace, rule.GroupName)
+		err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), nspace, groupName)
 		if err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
-			} else {
-				return err
 			}
+			return fmt.Errorf("error calling cortex: %w", err)
 		}
 		return nil
 	}
+
 	var ruleNodes []rulefmt.RuleNode
 	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf("cannot parse rules to alert manage rule nodes format, check your rule or template").WithCausef(err.Error())
 	}
 	y := rwrulefmt.RuleGroup{
 		RuleGroup: rulefmt.RuleGroup{
-			Name:  rule.GroupName,
+			Name:  groupName,
 			Rules: ruleNodes,
 		},
 	}
-	if err := client.CreateRuleGroup(ctx, rule.Namespace, y); err != nil {
-		return err
+	if err := client.CreateRuleGroup(ctx, nspace, y); err != nil {
+		return fmt.Errorf("error calling cortex: %w", err)
 	}
 	return nil
 }

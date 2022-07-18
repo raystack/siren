@@ -1,0 +1,26 @@
+[
+    {
+        "name": "odpf",
+        "urn": "odpf",
+        "provider": 1,
+        "credentials": {
+            "secret_key": "odpf-secret-key-1"
+        }
+    },
+    {
+        "name": "odpf",
+        "urn": "odpf",
+        "provider": 2,
+        "credentials": {
+            "secret_key": "odpf-secret-key-2"
+        }
+    },
+    {
+        "name": "instance-1",
+        "urn": "instance-1",
+        "provider": 2,
+        "credentials": {
+            "service_key": "instance-1-service-key"
+        }
+    }
+]

@@ -22,7 +22,7 @@ func NewSlackService(slackClient SlackClient, cryptoClient Encryptor) *SlackServ
 	}
 }
 
-func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage) error {
+func (s *SlackService) Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
 		return errors.ErrInvalid.WithMsgf("no token in configurations found")
@@ -33,8 +33,8 @@ func (s *SlackService) Notify(rcv *Receiver, payloadMessage NotificationMessage)
 		return err
 	}
 
-	if err := s.slackClient.Notify(sm, slack.CallWithToken(token)); err != nil {
-		return fmt.Errorf("failed to notify: %w", err)
+	if err := s.slackClient.Notify(ctx, sm, slack.CallWithToken(token)); err != nil {
+		return fmt.Errorf("error calling slack notify: %w", err)
 	}
 
 	return nil
@@ -67,14 +67,14 @@ func (s *SlackService) Decrypt(r *Receiver) error {
 	return nil
 }
 
-func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
+func (s *SlackService) PopulateReceiver(ctx context.Context, rcv *Receiver) (*Receiver, error) {
 	token, ok := rcv.Configurations["token"].(string)
 	if !ok {
 		return nil, errors.ErrInvalid.WithMsgf("no token in configurations found")
 	}
 
 	channels, err := s.slackClient.GetWorkspaceChannels(
-		slack.CallWithContext(context.Background()),
+		ctx,
 		slack.CallWithToken(token),
 	)
 	if err != nil {
@@ -93,21 +93,40 @@ func (s *SlackService) PopulateReceiver(rcv *Receiver) (*Receiver, error) {
 	return rcv, nil
 }
 
-func (s *SlackService) ValidateConfiguration(configurations Configurations) error {
-	_, err := configurations.GetString("client_id")
-	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+func (s *SlackService) ValidateConfiguration(rcv *Receiver) error {
+	if rcv == nil {
+		return errors.New("receiver to validate is nil")
 	}
 
-	_, err = configurations.GetString("client_secret")
+	_, err := rcv.Configurations.GetString("client_id")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
 	}
 
-	_, err = configurations.GetString("auth_code")
+	_, err = rcv.Configurations.GetString("client_secret")
 	if err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
+		return err
+	}
+
+	_, err = rcv.Configurations.GetString("auth_code")
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+//TODO add test
+func (s *SlackService) GetSubscriptionConfig(subsConfs map[string]string, receiverConfs Configurations) (map[string]string, error) {
+	mapConf := make(map[string]string)
+	if _, ok := subsConfs["channel_name"]; !ok {
+		return nil, errors.New("subscription receiver config 'channel_name' was missing")
+	}
+	mapConf["channel_name"] = subsConfs["channel_name"]
+	if val, ok := receiverConfs["token"]; ok {
+		if mapConf["token"], ok = val.(string); !ok {
+			return nil, errors.New("token config from receiver should be in string")
+		}
+	}
+	return mapConf, nil
 }

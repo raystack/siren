@@ -11,6 +11,7 @@ import (
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -22,8 +23,12 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "bar", MetricValue: "30", Rule: "bar",
 			TriggeredAt: timenow,
 		}}
-		mockedAlertService.EXPECT().Get("foo", uint64(1), uint64(100), uint64(200)).
-			Return(dummyAlerts, nil).Once()
+		mockedAlertService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), alert.Filter{
+			ProviderID:   1,
+			ResourceName: "foo",
+			StartTime:    100,
+			EndTime:      200,
+		}).Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
 		}
@@ -43,7 +48,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		assert.Equal(t, "CRITICAL", res.GetAlerts()[0].GetSeverity())
 		assert.Equal(t, "bar", res.GetAlerts()[0].GetRule())
 		assert.Nil(t, err)
-		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
+		mockedAlertService.AssertExpectations(t)
 	})
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
@@ -53,8 +58,12 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.EXPECT().Get("foo", uint64(1), uint64(100), uint64(200)).
-			Return(nil, errors.New("random error")).Once()
+		mockedAlertService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), alert.Filter{
+			ProviderID:   1,
+			ResourceName: "foo",
+			StartTime:    100,
+			EndTime:      200,
+		}).Return(nil, errors.New("random error")).Once()
 
 		dummyReq := &sirenv1beta1.ListAlertsRequest{
 			ResourceName: "foo",
@@ -65,23 +74,21 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 		res, err := dummyGRPCServer.ListAlerts(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
-		mockedAlertService.AssertCalled(t, "Get", "foo", uint64(1), uint64(100), uint64(200))
+		mockedAlertService.AssertExpectations(t)
 	})
 }
 
 func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	timenow := timestamppb.New(time.Now())
-	payload := &alert.Alerts{
-		Alerts: []alert.Alert{
-			{
-				ProviderID:   1,
-				ResourceName: "foo",
-				MetricName:   "bar",
-				MetricValue:  "30",
-				Severity:     "CRITICAL",
-				Rule:         "random",
-				TriggeredAt:  timenow.AsTime(),
-			},
+	payload := []*alert.Alert{
+		{
+			ProviderID:   1,
+			ResourceName: "foo",
+			MetricName:   "bar",
+			MetricValue:  "30",
+			Severity:     "CRITICAL",
+			Rule:         "random",
+			TriggeredAt:  timenow.AsTime(),
 		},
 	}
 	dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
@@ -115,7 +122,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Rule:         "random",
 			TriggeredAt:  timenow.AsTime(),
 		}}
-		mockedAlertService.EXPECT().Create(payload).
+		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -130,7 +137,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		assert.Equal(t, "30", res.GetAlerts()[0].GetMetricValue())
 		assert.Equal(t, "CRITICAL", res.GetAlerts()[0].GetSeverity())
 		assert.Nil(t, err)
-		mockedAlertService.AssertCalled(t, "Create", payload)
+		mockedAlertService.AssertExpectations(t)
 	})
 
 	t.Run("should create alerts for resolved alerts", func(t *testing.T) {
@@ -153,17 +160,15 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		payload := &alert.Alerts{
-			Alerts: []alert.Alert{
-				{
-					ProviderID:   1,
-					ResourceName: "foo",
-					MetricName:   "bar",
-					MetricValue:  "30",
-					Severity:     "resolved",
-					Rule:         "random",
-					TriggeredAt:  timenow.AsTime(),
-				},
+		payload := []*alert.Alert{
+			{
+				ProviderID:   1,
+				ResourceName: "foo",
+				MetricName:   "bar",
+				MetricValue:  "30",
+				Severity:     "resolved",
+				Rule:         "random",
+				TriggeredAt:  timenow.AsTime(),
 			},
 		}
 		dummyAlerts := []alert.Alert{{
@@ -176,7 +181,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Rule:         "random",
 			TriggeredAt:  timenow.AsTime(),
 		}}
-		mockedAlertService.EXPECT().Create(payload).
+		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
 		dummyGRPCServer := GRPCServer{
 			alertService: mockedAlertService,
@@ -191,7 +196,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		assert.Equal(t, "30", res.GetAlerts()[0].GetMetricValue())
 		assert.Equal(t, "resolved", res.GetAlerts()[0].GetSeverity())
 		assert.Nil(t, err)
-		mockedAlertService.AssertCalled(t, "Create", payload)
+		mockedAlertService.AssertExpectations(t)
 	})
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
@@ -201,13 +206,13 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.EXPECT().Create(payload).
+		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(nil, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
-		mockedAlertService.AssertCalled(t, "Create", payload)
+		mockedAlertService.AssertExpectations(t)
 	})
 
 	t.Run("should insert valid alerts and should not return error if parameters are missing", func(t *testing.T) {
@@ -256,7 +261,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			logger:       log.NewNoop(),
 		}
 
-		mockedAlertService.EXPECT().Create(payload).
+		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
@@ -268,6 +273,6 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		assert.Equal(t, "30", res.GetAlerts()[0].GetMetricValue())
 		assert.Equal(t, "CRITICAL", res.GetAlerts()[0].GetSeverity())
 		assert.Nil(t, err)
-		mockedAlertService.AssertCalled(t, "Create", payload)
+		mockedAlertService.AssertExpectations(t)
 	})
 }

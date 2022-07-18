@@ -1,6 +1,7 @@
 package receiver
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -13,11 +14,11 @@ const (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ReceiverRepository --filename receiver_repository.go --output=./mocks
 type Repository interface {
-	List() ([]*Receiver, error)
-	Create(*Receiver) error
-	Get(uint64) (*Receiver, error)
-	Update(*Receiver) error
-	Delete(uint64) error
+	List(context.Context, Filter) ([]Receiver, error)
+	Create(context.Context, *Receiver) error
+	Get(context.Context, uint64) (*Receiver, error)
+	Update(context.Context, *Receiver) error
+	Delete(context.Context, uint64) error
 }
 
 type Configurations map[string]interface{}

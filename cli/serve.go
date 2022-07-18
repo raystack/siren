@@ -56,7 +56,7 @@ func runServer(cfg config.Config) error {
 
 	logger := initLogger(cfg.Log.Level)
 
-	gormDB, err := postgres.New(logger, cfg.DB)
+	pgClient, err := postgres.NewClient(logger, cfg.DB)
 	if err != nil {
 		return err
 	}
@@ -67,16 +67,16 @@ func runServer(cfg config.Config) error {
 		return fmt.Errorf("cannot initialize encryptor: %w", err)
 	}
 
-	templateRepository := postgres.NewTemplateRepository(gormDB)
+	templateRepository := postgres.NewTemplateRepository(pgClient)
 	templateService := template.NewService(templateRepository)
 
-	alertRepository := postgres.NewAlertRepository(gormDB)
+	alertRepository := postgres.NewAlertRepository(pgClient)
 	alertHistoryService := alert.NewService(alertRepository)
 
-	providerRepository := postgres.NewProviderRepository(gormDB)
+	providerRepository := postgres.NewProviderRepository(pgClient)
 	providerService := provider.NewService(providerRepository)
 
-	namespaceRepository := postgres.NewNamespaceRepository(gormDB)
+	namespaceRepository := postgres.NewNamespaceRepository(pgClient)
 	namespaceService := namespace.NewService(encryptor, namespaceRepository)
 
 	if cfg.Cortex.PrometheusAlertManagerConfigYaml == "" || cfg.Cortex.PrometheusAlertManagerHelperTemplate == "" {
@@ -90,7 +90,7 @@ func runServer(cfg config.Config) error {
 		return fmt.Errorf("failed to init cortex client: %w", err)
 	}
 
-	ruleRepository := postgres.NewRuleRepository(gormDB)
+	ruleRepository := postgres.NewRuleRepository(pgClient)
 	ruleService := rule.NewService(
 		ruleRepository,
 		templateService,
@@ -103,7 +103,7 @@ func runServer(cfg config.Config) error {
 	slackReceiverService := receiver.NewSlackService(slackClient, encryptor)
 	httpReceiverService := receiver.NewHTTPService()
 	pagerDutyReceiverService := receiver.NewPagerDutyService()
-	receiverRepository := postgres.NewReceiverRepository(gormDB)
+	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
 		receiverRepository,
 		map[string]receiver.TypeService{
@@ -113,7 +113,7 @@ func runServer(cfg config.Config) error {
 		},
 	)
 
-	subscriptionRepository := postgres.NewSubscriptionRepository(gormDB)
+	subscriptionRepository := postgres.NewSubscriptionRepository(pgClient)
 	subscriptionService := subscription.NewService(subscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 
 	return server.RunServer(
@@ -132,7 +132,7 @@ func runServer(cfg config.Config) error {
 func initLogger(logLevel string) log.Logger {
 	defaultConfig := zap.NewProductionConfig()
 	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(logLevel))
-	return log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller()))
+	return log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller(), zap.AddStacktrace(zap.DPanicLevel)))
 }
 
 // getZapLogLevelFromString helps to set logLevel from string

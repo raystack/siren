@@ -9,12 +9,12 @@ import (
 type Repository interface {
 	Transactor
 	Upsert(context.Context, *Rule) error
-	Get(context.Context, string, string, string, string, uint64) ([]Rule, error)
+	List(context.Context, Filter) ([]Rule, error)
 }
 
 type Transactor interface {
 	WithTransaction(ctx context.Context) context.Context
-	Rollback(ctx context.Context) error
+	Rollback(ctx context.Context, err error) error
 	Commit(ctx context.Context) error
 }
 

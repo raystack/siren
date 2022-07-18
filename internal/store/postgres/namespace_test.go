@@ -1,368 +1,355 @@
 package postgres_test
 
 import (
-	"database/sql"
-	"encoding/json"
-	"regexp"
+	"context"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
 type NamespaceRepositoryTestSuite struct {
 	suite.Suite
-	sqldb      *sql.DB
-	dbmock     sqlmock.Sqlmock
+	ctx        context.Context
+	client     *postgres.Client
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.NamespaceRepository
 }
 
+func (s *NamespaceRepositoryTestSuite) SetupSuite() {
+	var err error
+
+	logger := log.NewZap()
+	s.client, s.pool, s.resource, err = newTestClient(logger)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.ctx = context.TODO()
+	s.repository = postgres.NewNamespaceRepository(s.client)
+
+	_, err = bootstrapProvider(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
 func (s *NamespaceRepositoryTestSuite) SetupTest() {
-	db, mock, _ := mocks.NewStore()
-	s.sqldb, _ = db.DB()
-	s.dbmock = mock
-	s.repository = postgres.NewNamespaceRepository(db)
+	var err error
+	_, err = bootstrapNamespace(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *NamespaceRepositoryTestSuite) TearDownSuite() {
+	// Clean tests
+	if err := purgeDocker(s.pool, s.resource); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *NamespaceRepositoryTestSuite) TearDownTest() {
-	s.sqldb.Close()
+	if err := s.cleanup(); err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *NamespaceRepositoryTestSuite) cleanup() error {
+	queries := []string{
+		"TRUNCATE TABLE namespaces RESTART IDENTITY CASCADE",
+	}
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *NamespaceRepositoryTestSuite) TestList() {
-	s.Run("should get all namespaces", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from namespaces`)
-		labels := make(model.StringStringMap)
-		labels["foo"] = "bar"
+	type testCase struct {
+		Description        string
+		ExpectedNamespaces []namespace.EncryptedNamespace
+		ErrString          string
+	}
 
-		ns := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        1,
-				Provider:  1,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+	var testCases = []testCase{
+		{
+			Description: "should get all providers",
+			ExpectedNamespaces: []namespace.EncryptedNamespace{
+				{
+					Namespace: &namespace.Namespace{
+						ID:       1,
+						Name:     "odpf",
+						URN:      "odpf",
+						Provider: 1,
+					},
+					Credentials: "&map[secret_key:odpf-secret-key-1]",
+				},
+				{
+					Namespace: &namespace.Namespace{
+						ID:       2,
+						Name:     "odpf",
+						URN:      "odpf",
+						Provider: 2,
+					},
+					Credentials: "&map[secret_key:odpf-secret-key-2]",
+				},
+				{
+					Namespace: &namespace.Namespace{
+						ID:       3,
+						Name:     "instance-1",
+						URN:      "instance-1",
+						Provider: 2,
+					},
+					Credentials: "&map[service_key:instance-1-service-key]",
+				},
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
-		expectedNamespaces := []*namespace.EncryptedNamespace{ns}
+		},
+	}
 
-		expectedRows := sqlmock.NewRows([]string{"id", "provider_id", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(ns.ID, ns.Provider, ns.URN, ns.Name, ns.Credentials,
-				json.RawMessage(`{"foo": "bar"}`), ns.CreatedAt, ns.UpdatedAt)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-
-		actualNamespaces, err := s.repository.List()
-		s.Equal(expectedNamespaces, actualNamespaces)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if any", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from namespaces`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualNamespaces, err := s.repository.List()
-		s.Nil(actualNamespaces)
-		s.EqualError(err, "random error")
-	})
-}
-
-func (s *NamespaceRepositoryTestSuite) TestCreate() {
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
-
-	insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
-										("provider_id","urn","name","credentials","labels","created_at","updated_at")
-										VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-	timeNow := time.Now()
-
-	s.Run("should create a namespace", func() {
-		expectedID := uint64(1)
-		expectedNamespace := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        expectedID,
-				Provider:  1,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: timeNow,
-				UpdatedAt: timeNow,
-			},
-			Credentials: `{"foo":"bar"}`,
-		}
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				Provider:  1,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: timeNow,
-				UpdatedAt: timeNow,
-			},
-			Credentials: `{"foo":"bar"}`,
-		}
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(
-				expectedNamespace.Provider,
-				expectedNamespace.URN,
-				expectedNamespace.Name,
-				expectedNamespace.Credentials,
-				labels,
-				expectedNamespace.CreatedAt,
-				expectedNamespace.UpdatedAt,
-			).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(expectedID))
-		s.dbmock.ExpectCommit()
-
-		err := s.repository.Create(input)
-		s.Equal(expectedNamespace, input)
-		s.Nil(err)
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
-
-	s.Run("should return errors in creating a namespace", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "namespaces" 
-											("provider_id","urn","name","credentials","labels","created_at","updated_at")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				Provider:  1,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-			Credentials: `{"foo":"bar"}`,
-		}
-
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectQuery(insertQuery).
-			WithArgs(
-				input.Provider,
-				input.URN,
-				input.Name,
-				input.Credentials,
-				labels,
-				input.CreatedAt,
-				input.UpdatedAt,
-			).
-			WillReturnError(errors.New("random error"))
-		s.dbmock.ExpectRollback()
-
-		err := s.repository.Create(input)
-		s.EqualError(err, "random error")
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.List(s.ctx)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedNamespaces, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespaces)
+			}
+		})
+	}
 }
 
 func (s *NamespaceRepositoryTestSuite) TestGet() {
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
+	type testCase struct {
+		Description       string
+		PassedID          uint64
+		ExpectedNamespace *namespace.EncryptedNamespace
+		ErrString         string
+	}
 
-	s.Run("should get namespace by id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-		expectedNamespace := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        1,
-				Provider:  1,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+	var testCases = []testCase{
+		{
+			Description: "should get a namespace",
+			PassedID:    3,
+			ExpectedNamespace: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       3,
+					Name:     "instance-1",
+					URN:      "instance-1",
+					Provider: 2,
+				},
+				Credentials: "&map[service_key:instance-1-service-key]",
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
+		},
+		{
+			Description: "should return not found if id not found",
+			PassedID:    1000,
+			ErrString:   "namespace with id 1000 not found",
+		},
+	}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedNamespace.URN, expectedNamespace.Name, expectedNamespace.Provider, json.RawMessage(`{"foo":"bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), expectedNamespace.CreatedAt, expectedNamespace.UpdatedAt,
-				expectedNamespace.ID)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.Get(s.ctx, tc.PassedID)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedNamespace, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespace)
+			}
+		})
+	}
+}
 
-		actualNamespace, err := s.repository.Get(1)
-		s.Equal(expectedNamespace, actualNamespace)
-		s.Nil(err)
-	})
+func (s *NamespaceRepositoryTestSuite) TestCreate() {
+	type testCase struct {
+		Description       string
+		NamespaceToCreate *namespace.EncryptedNamespace
+		ExpectedID        uint64
+		ErrString         string
+	}
 
-	s.Run("should return not found error if namespaces of given id does not exist", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
+	var testCases = []testCase{
+		{
+			Description: "should create a namespace",
+			NamespaceToCreate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					Name:     "instance-2",
+					URN:      "instance-2",
+					Provider: 2,
+				},
+				Credentials: "xxx",
+			},
+			ExpectedID: uint64(4), // autoincrement in db side
+		},
+		{
+			Description: "should return error foreign key if provider id does not exist",
+			NamespaceToCreate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					Name:     "odpf-new",
+					URN:      "odpf",
+					Provider: 1000,
+				},
+				Credentials: "xxx",
+			},
+			ErrString: "provider id does not exist",
+		},
+		{
+			Description: "should return error duplicate if URN and provider already exist",
+			NamespaceToCreate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					Name:     "odpf-new",
+					URN:      "odpf",
+					Provider: 2,
+				},
+				Credentials: "xxx",
+			},
+			ErrString: "urn and provider pair already exist",
+		},
+		{
+			Description: "should return error if namespace is nil",
+			ErrString:   "nil encrypted namespace domain when converting to namespace model",
+		},
+	}
 
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
-
-		actualNamespace, err := s.repository.Get(1)
-		s.Nil(actualNamespace)
-		s.EqualError(err, "namespace with id 1 not found")
-	})
-
-	s.Run("should return error in getting namespace of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1`)
-
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualNamespace, err := s.repository.Get(1)
-		s.Nil(actualNamespace)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Create(s.ctx, tc.NamespaceToCreate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *NamespaceRepositoryTestSuite) TestUpdate() {
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar-label"
+	type testCase struct {
+		Description       string
+		NamespaceToUpdate *namespace.EncryptedNamespace
+		ExpectedID        uint64
+		ErrString         string
+	}
 
-	s.Run("should update a namespace", func() {
-		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
-			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6 
-			WHERE id = $7 AND "id" = $8`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        1,
-				Provider:  2,
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+	var testCases = []testCase{
+		{
+			Description: "should update existing namespace",
+			NamespaceToUpdate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       1,
+					Name:     "instance-updated",
+					URN:      "instance-updated",
+					Provider: 2,
+				},
+				Credentials: "xxx",
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
-
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(1, 1))
-		expectedRows := sqlmock.
-			NewRows([]string{"urn", "name", "provider_id", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(input.URN, input.Name, input.Provider, json.RawMessage(`{"foo":"bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), input.CreatedAt, input.UpdatedAt,
-				input.ID)
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).WillReturnRows(expectedRows)
-		s.dbmock.ExpectCommit()
-
-		err := s.repository.Update(input)
-		s.Nil(err)
-		s.Equal(uint64(2), input.Provider)
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
-
-	s.Run("should return error if namespace does not exist", func() {
-		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
-			SET "provider_id"=$1,"urn"=$2,"name"=$3,"credentials"=$4,"labels"=$5,"created_at"=$6,"updated_at"=$7
-			WHERE id = $8 AND "id" = $9`)
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        99,
-				Provider:  2,
-				URN:       "foo",
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+			ExpectedID: uint64(1),
+		},
+		{
+			Description: "should return error duplicate if URN and provider already exist",
+			NamespaceToUpdate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       3,
+					Name:     "new-odpf",
+					URN:      "odpf",
+					Provider: 2,
+				},
+				Credentials: "xxx",
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
-
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.URN, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(0, 0))
-		s.dbmock.ExpectRollback()
-
-		err := s.repository.Update(input)
-		s.EqualError(err, "namespace with id 99 not found")
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
-
-	s.Run("should return error updating the namespace", func() {
-		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
-			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6
-			WHERE id = $7 AND "id" = $8`)
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        1,
-				Provider:  2,
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+			ErrString: "urn and provider pair already exist",
+		},
+		{
+			Description: "should return error not found if id not found",
+			NamespaceToUpdate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       1000,
+					Name:     "new-odpf",
+					URN:      "odpf",
+					Provider: 2,
+				},
+				Credentials: "xxx",
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
-
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.ID, input.ID).
-			WillReturnError(errors.New("random error"))
-		s.dbmock.ExpectRollback()
-
-		err := s.repository.Update(input)
-
-		s.EqualError(err, "random error")
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
-
-	s.Run("should return error getting new namespace", func() {
-		updateQuery := regexp.QuoteMeta(`UPDATE "namespaces"
-			SET "provider_id"=$1,"name"=$2,"credentials"=$3,"labels"=$4,"created_at"=$5,"updated_at"=$6
-			WHERE id = $7 AND "id" = $8`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "namespaces" WHERE id = 1 AND "namespaces"."id" = $1`)
-
-		input := &namespace.EncryptedNamespace{
-			Namespace: &namespace.Namespace{
-				ID:        1,
-				Provider:  2,
-				Name:      "foo",
-				Labels:    labels,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+			ErrString: "namespace with id 1000 not found",
+		},
+		{
+			Description: "should return error foreign key if provider id does not exist",
+			NamespaceToUpdate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       1,
+					Name:     "odpf-new",
+					URN:      "odpf",
+					Provider: 1000,
+				},
+				Credentials: "xxx",
 			},
-			Credentials: `{"foo":"bar"}`,
-		}
+			ErrString: "provider id does not exist",
+		},
+		{
+			Description: "should return error duplicate if URN and provider already exist",
+			NamespaceToUpdate: &namespace.EncryptedNamespace{
+				Namespace: &namespace.Namespace{
+					ID:       1,
+					Name:     "odpf-new",
+					URN:      "odpf",
+					Provider: 2,
+				},
+				Credentials: "xxx",
+			},
+			ErrString: "urn and provider pair already exist",
+		},
+		{
+			Description: "should return error if namespace is nil",
+			ErrString:   "nil encrypted namespace domain when converting to namespace model",
+		},
+	}
 
-		s.dbmock.ExpectBegin()
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.Provider, input.Name, input.Credentials, labels,
-			AnyTime{}, AnyTime{}, input.ID, input.ID).WillReturnResult(sqlmock.NewResult(1, 1))
-		s.dbmock.ExpectQuery(selectQuery).WithArgs(input.ID).WillReturnError(errors.New("random error"))
-		s.dbmock.ExpectRollback()
-
-		err := s.repository.Update(input)
-
-		s.EqualError(err, "random error")
-		s.Nil(s.dbmock.ExpectationsWereMet())
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Update(s.ctx, tc.NamespaceToUpdate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *NamespaceRepositoryTestSuite) TestDelete() {
-	s.Run("should delete namespace of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "namespaces" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
+	type testCase struct {
+		Description string
+		IDToDelete  uint64
+		ErrString   string
+	}
 
-		err := s.repository.Delete(1)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description: "should delete a namespace",
+			IDToDelete:  1,
+		},
+	}
 
-	s.Run("should return error in deleting namespace of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "namespaces" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnError(errors.New("random error"))
-
-		err := s.repository.Delete(1)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Delete(s.ctx, tc.IDToDelete)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
-func TestRepository(t *testing.T) {
+func TestNamespaceRepository(t *testing.T) {
 	suite.Run(t, new(NamespaceRepositoryTestSuite))
 }
