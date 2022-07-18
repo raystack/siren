@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jackc/pgconn"
@@ -14,6 +15,8 @@ import (
 )
 
 var (
+	transactionContextKey = struct{}{}
+
 	errDuplicateKey        = errors.New("duplicate key")
 	errCheckViolation      = errors.New("check constraint violation")
 	errForeignKeyViolation = errors.New("foreign key violation")
@@ -94,8 +97,45 @@ func (c *Client) Migrate() error {
 	return nil
 }
 
-// GetDB is a helper function for purpose only
-// don't use it in the main code
-func (c *Client) GetDB() *gorm.DB {
-	return c.db
+func (c *Client) WithTransaction(ctx context.Context) context.Context {
+	tx := c.db.Begin()
+	return context.WithValue(ctx, transactionContextKey, tx)
+}
+
+func (c *Client) Rollback(ctx context.Context) error {
+	if tx := extractTransaction(ctx); tx != nil {
+		tx = tx.Rollback()
+		if tx.Error != nil {
+			return c.db.Error
+		}
+		return nil
+	}
+	return errors.New("no transaction")
+}
+
+func (c *Client) Commit(ctx context.Context) error {
+	if tx := extractTransaction(ctx); tx != nil {
+		tx = tx.Commit()
+		if tx.Error != nil {
+			return c.db.Error
+		}
+		return nil
+	}
+	return errors.New("no transaction")
+}
+
+func (c *Client) GetDB(ctx context.Context) *gorm.DB {
+	db := c.db
+	if tx := extractTransaction(ctx); tx != nil {
+		db = tx
+	}
+	return db
+}
+
+func extractTransaction(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
+		return nil
+	} else {
+		return tx
+	}
 }

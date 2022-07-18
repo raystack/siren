@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -201,11 +200,10 @@ func (s *RuleRepositoryTestSuite) TestList() {
 
 func (s *RuleRepositoryTestSuite) TestUpsert() {
 	type testCase struct {
-		Description   string
-		RuleToUpsert  *rule.Rule
-		PostProcessFn func(rg []rule.Rule) error
-		ExpectedID    uint64
-		ErrString     string
+		Description  string
+		RuleToUpsert *rule.Rule
+		ExpectedID   uint64
+		ErrString    string
 	}
 
 	var testCases = []testCase{
@@ -220,22 +218,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Variables:         []rule.RuleVariable{},
 				ProviderNamespace: 1,
 			},
-			PostProcessFn: func(rg []rule.Rule) error { return nil },
-			ExpectedID:    uint64(3), // autoincrement in db side
-		},
-		{
-			Description: "should rollback when create a rule but post process return error",
-			RuleToUpsert: &rule.Rule{
-				Name:              "new-rule-name",
-				Enabled:           true,
-				GroupName:         "group-name-1",
-				Namespace:         "namespace-urn-2",
-				Template:          "template-name-1",
-				Variables:         []rule.RuleVariable{},
-				ProviderNamespace: 1,
-			},
-			PostProcessFn: func(rg []rule.Rule) error { return errors.New("some error") },
-			ErrString:     "some error",
+			ExpectedID: uint64(3), // autoincrement in db side
 		},
 		{
 			Description: "should update a rule if already exist",
@@ -249,8 +232,7 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Variables:         []rule.RuleVariable{},
 				ProviderNamespace: 2,
 			},
-			PostProcessFn: func(rg []rule.Rule) error { return nil },
-			ExpectedID:    2,
+			ExpectedID: 2,
 		},
 		{
 			Description: "should conflict if all unique components are same and name different",
@@ -261,18 +243,44 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 				Template:          "template-name-1",
 				ProviderNamespace: 2,
 			},
-			ErrString: "",
+			ErrString: "rule conflicted with existing",
 		},
 		{
-			Description:   "should return error if rule is nil",
-			PostProcessFn: func(rg []rule.Rule) error { return nil },
-			ErrString:     "rule domain is nil",
+			Description: "should return foreign key violation if provider namespace does not exist when update",
+			RuleToUpsert: &rule.Rule{
+				ID:                2,
+				Name:              "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",
+				Enabled:           true,
+				GroupName:         "group-name-1",
+				Namespace:         "namespace-urn-2",
+				Template:          "template-name-1",
+				Variables:         []rule.RuleVariable{},
+				ProviderNamespace: 2000,
+			},
+			ErrString: "provider's namespace does not exist",
+		},
+		{
+			Description: "should return foreign key violation if provider namespace does not exist when insert",
+			RuleToUpsert: &rule.Rule{
+				Name:              "new-rule-name-2",
+				Enabled:           true,
+				GroupName:         "foo",
+				Namespace:         "bar",
+				Template:          "template-name-1",
+				Variables:         []rule.RuleVariable{},
+				ProviderNamespace: 1000,
+			},
+			ErrString: "provider's namespace does not exist",
+		},
+		{
+			Description: "should return error if rule is nil",
+			ErrString:   "rule domain is nil",
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.UpsertWithTx(s.ctx, tc.RuleToUpsert, tc.PostProcessFn)
+			err := s.repository.Upsert(s.ctx, tc.RuleToUpsert)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

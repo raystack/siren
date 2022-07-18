@@ -10,11 +10,18 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks
 type Repository interface {
+	Transactor
 	List(context.Context, Filter) ([]Subscription, error)
-	CreateWithTx(context.Context, *Subscription, func([]Subscription) error) error
+	Create(context.Context, *Subscription) error
 	Get(context.Context, uint64) (*Subscription, error)
-	UpdateWithTx(context.Context, *Subscription, func([]Subscription) error) error
-	DeleteWithTx(context.Context, uint64, uint64, func([]Subscription) error) error
+	Update(context.Context, *Subscription) error
+	Delete(context.Context, uint64, uint64) error
+}
+
+type Transactor interface {
+	WithTransaction(ctx context.Context) context.Context
+	Rollback(ctx context.Context, err error) error
+	Commit(ctx context.Context) error
 }
 
 type Receiver struct {

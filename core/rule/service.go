@@ -107,21 +107,47 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,
 		ns.URN, rl.Namespace, rl.GroupName, rl.Template)
 
-	return s.repository.UpsertWithTx(ctx, rl, func(rulesWithinGroup []Rule) error {
-		if prov.Type == "cortex" {
-			if err := PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl, rulesWithinGroup, ns.URN); err != nil {
+	ctx = s.repository.WithTransaction(ctx)
+	if err = s.repository.Upsert(ctx, rl); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	rulesWithinGroup, err := s.repository.List(ctx, Filter{
+		Namespace:   rl.Namespace,
+		GroupName:   rl.GroupName,
+		NamespaceID: rl.ProviderNamespace,
+	})
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if prov.Type == provider.TypeCortex {
+		if err = PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl.Namespace, rl.GroupName, ns.URN, rulesWithinGroup); err != nil {
+			if err := s.repository.Rollback(ctx, err); err != nil {
 				return err
 			}
+			return err
 		}
-		return nil
-	})
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
 	return s.repository.List(ctx, flt)
 }
 
-func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, rl *Rule, rulesWithinGroup []Rule, tenantName string) error {
+func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, nspace, groupName, tenantName string, rulesWithinGroup []Rule) error {
 	renderedBodyForThisGroup := ""
 
 	for _, ruleWithinGroup := range rulesWithinGroup {
@@ -142,7 +168,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 	}
 
 	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), rl.Namespace, rl.GroupName)
+		err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), nspace, groupName)
 		if err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
@@ -159,11 +185,11 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 	}
 	y := rwrulefmt.RuleGroup{
 		RuleGroup: rulefmt.RuleGroup{
-			Name:  rl.GroupName,
+			Name:  groupName,
 			Rules: ruleNodes,
 		},
 	}
-	if err := client.CreateRuleGroup(ctx, rl.Namespace, y); err != nil {
+	if err := client.CreateRuleGroup(ctx, nspace, y); err != nil {
 		return fmt.Errorf("error calling cortex: %w", err)
 	}
 	return nil

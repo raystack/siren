@@ -146,7 +146,7 @@ func setup(ctx context.Context, logger log.Logger, client *postgres.Client) (err
 // ExecQueries is used for executing list of db query
 func execQueries(ctx context.Context, client *postgres.Client, queries []string) error {
 	for _, query := range queries {
-		err := client.GetDB().Exec(query).Error
+		err := client.GetDB(context.TODO()).Exec(query).Error
 		if err != nil {
 			return err
 		}
@@ -173,7 +173,7 @@ func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -210,7 +210,7 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -244,7 +244,7 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -278,7 +278,7 @@ func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -312,7 +312,7 @@ func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -346,7 +346,7 @@ func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 			return nil, err
 		}
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
@@ -376,20 +376,14 @@ func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription
 	var insertedData []subscription.Subscription
 	for _, d := range data {
 		var mdl model.Subscription
-		if err := mdl.FromDomain(&d); err != nil {
-			return nil, err
-		}
+		mdl.FromDomain(&d)
 
-		result := client.GetDB().Create(&mdl)
+		result := client.GetDB(context.TODO()).Create(&mdl)
 		if result.Error != nil {
 			return nil, result.Error
 		}
 
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		insertedData = append(insertedData, *dmn)
+		insertedData = append(insertedData, *mdl.ToDomain())
 	}
 
 	return insertedData, nil

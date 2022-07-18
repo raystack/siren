@@ -2,7 +2,6 @@ package postgres_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -181,7 +180,6 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 	type testCase struct {
 		Description          string
 		SubscriptionToUpsert *subscription.Subscription
-		PostProcessFn        func([]subscription.Subscription) error
 		ExpectedID           uint64
 		ErrString            string
 	}
@@ -208,32 +206,7 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 					},
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ExpectedID:    uint64(4), // autoincrement in db side
-		},
-		{
-			Description: "should return error when post process function return error",
-			SubscriptionToUpsert: &subscription.Subscription{
-				Namespace: 1,
-				URN:       "foo-post-process",
-				Match: map[string]string{
-					"foo": "bar",
-				},
-				Receivers: []subscription.Receiver{
-					{
-						ID:            2,
-						Configuration: map[string]string{},
-					},
-					{
-						ID: 1,
-						Configuration: map[string]string{
-							"channel_name": "test",
-						},
-					},
-				},
-			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return errors.New("some error") },
-			ErrString:     "some error",
+			ExpectedID: uint64(4), // autoincrement in db side
 		},
 		{
 			Description: "should return duplicate error if urn already exist",
@@ -256,8 +229,7 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 					},
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ErrString:     "urn already exist",
+			ErrString: "urn already exist",
 		}, {
 			Description: "should return relation error if namespace id does not exist",
 			SubscriptionToUpsert: &subscription.Subscription{
@@ -279,8 +251,7 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 					},
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ErrString:     "namespace id does not exist",
+			ErrString: "namespace id does not exist",
 		},
 		{
 			Description: "should return error if subscription is nil",
@@ -290,7 +261,7 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.CreateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
+			err := s.repository.Create(s.ctx, tc.SubscriptionToUpsert)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
@@ -354,7 +325,6 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	type testCase struct {
 		Description          string
 		SubscriptionToUpsert *subscription.Subscription
-		PostProcessFn        func([]subscription.Subscription) error
 		ExpectedID           uint64
 		ErrString            string
 	}
@@ -375,26 +345,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 					"key": "label",
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ExpectedID:    uint64(3),
-		},
-		{
-			Description: "should return error when post process function return error",
-			SubscriptionToUpsert: &subscription.Subscription{
-				ID:        3,
-				URN:       "odpf-pd",
-				Namespace: 2,
-				Receivers: []subscription.Receiver{
-					{
-						ID: 3100,
-					},
-				},
-				Match: map[string]string{
-					"key": "label",
-				},
-			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return errors.New("some error") },
-			ErrString:     "some error",
+			ExpectedID: uint64(3),
 		},
 		{
 			Description: "should return duplicate error if urn already exist",
@@ -411,8 +362,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 					"key": "label",
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ErrString:     "urn already exist",
+			ErrString: "urn already exist",
 		},
 		{
 			Description: "should return relation error if namespace id does not exist",
@@ -429,8 +379,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 					"key": "label",
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ErrString:     "namespace id does not exist",
+			ErrString: "namespace id does not exist",
 		},
 		{
 			Description: "should return not found error if id not found",
@@ -447,8 +396,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 					"key": "label",
 				},
 			},
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			ErrString:     "subscription with id 3000 not found",
+			ErrString: "subscription with id 3000 not found",
 		},
 		{
 			Description: "should return error if subscription is nil",
@@ -458,7 +406,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.UpdateWithTx(s.ctx, tc.SubscriptionToUpsert, tc.PostProcessFn)
+			err := s.repository.Update(s.ctx, tc.SubscriptionToUpsert)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
@@ -470,29 +418,21 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 
 func (s *SubscriptionRepositoryTestSuite) TestDelete() {
 	type testCase struct {
-		Description   string
-		IDToDelete    uint64
-		PostProcessFn func([]subscription.Subscription) error
-		ErrString     string
+		Description string
+		IDToDelete  uint64
+		ErrString   string
 	}
 
 	var testCases = []testCase{
 		{
-			Description:   "should delete a subscription",
-			PostProcessFn: func(subs []subscription.Subscription) error { return nil },
-			IDToDelete:    1,
-		},
-		{
-			Description:   "should return error if post process function return error",
-			IDToDelete:    1,
-			PostProcessFn: func(subs []subscription.Subscription) error { return errors.New("some error") },
-			ErrString:     "some error",
+			Description: "should delete a subscription",
+			IDToDelete:  1,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.DeleteWithTx(s.ctx, tc.IDToDelete, 1, tc.PostProcessFn)
+			err := s.repository.Delete(s.ctx, tc.IDToDelete, 1)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

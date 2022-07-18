@@ -86,10 +86,11 @@ func (s Service) Create(ctx context.Context, sub *Subscription) error {
 
 	sortReceivers(sub)
 
-	err = s.repository.CreateWithTx(ctx, sub, func(subs []Subscription) error {
-		return SyncToUpstream(ctx, s.receiverService, s.cortexClient, subs, ns, prov)
-	})
-	if err != nil {
+	ctx = s.repository.WithTransaction(ctx)
+	if err = s.repository.Create(ctx, sub); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
 		if errors.Is(err, ErrDuplicate) {
 			return errors.ErrConflict.WithMsgf(err.Error())
 		}
@@ -99,6 +100,16 @@ func (s Service) Create(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
+	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -114,7 +125,7 @@ func (s Service) Get(ctx context.Context, id uint64) (*Subscription, error) {
 	return subscription, nil
 }
 
-func (s Service) Update(ctx context.Context, sub *Subscription) error {
+func (s *Service) Update(ctx context.Context, sub *Subscription) error {
 	// check provider type of the namespace
 	ns, err := s.namespaceService.Get(ctx, sub.Namespace)
 	if err != nil {
@@ -127,10 +138,11 @@ func (s Service) Update(ctx context.Context, sub *Subscription) error {
 
 	sortReceivers(sub)
 
-	err = s.repository.UpdateWithTx(ctx, sub, func(subs []Subscription) error {
-		return SyncToUpstream(ctx, s.receiverService, s.cortexClient, subs, ns, prov)
-	})
-	if err != nil {
+	ctx = s.repository.WithTransaction(ctx)
+	if err = s.repository.Update(ctx, sub); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
 		if errors.Is(err, ErrDuplicate) {
 			return errors.ErrConflict.WithMsgf(err.Error())
 		}
@@ -143,6 +155,16 @@ func (s Service) Update(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
+	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -161,29 +183,47 @@ func (s Service) Delete(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	if err := s.repository.DeleteWithTx(ctx, id, sub.Namespace, func(subs []Subscription) error {
-		return SyncToUpstream(ctx, s.receiverService, s.cortexClient, subs, ns, prov)
-	}); err != nil {
+	ctx = s.repository.WithTransaction(ctx)
+	if err := s.repository.Delete(ctx, id, sub.Namespace); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func SyncToUpstream(
+func (s *Service) SyncToUpstream(
 	ctx context.Context,
-	receiverService ReceiverService,
-	cortexClient CortexClient,
-	subscriptions []Subscription,
 	ns *namespace.Namespace,
 	prov *provider.Provider) error {
 
-	receiversMap, err := CreateReceiversMap(ctx, receiverService, subscriptions)
+	// fetch all subscriptions in this namespace.
+	subscriptionsInNamespace, err := s.repository.List(ctx, Filter{
+		NamespaceID: ns.ID,
+	})
 	if err != nil {
 		return err
 	}
 
-	subscriptions, err = AssignReceivers(receiverService, receiversMap, subscriptions)
+	receiversMap, err := CreateReceiversMap(ctx, s.receiverService, subscriptionsInNamespace)
+	if err != nil {
+		return err
+	}
+
+	subscriptions, err := AssignReceivers(s.receiverService, receiversMap, subscriptionsInNamespace)
 	if err != nil {
 		return err
 	}
@@ -196,7 +236,7 @@ func SyncToUpstream(
 			amConfig = append(amConfig, item.ToAlertManagerReceiverConfig()...)
 		}
 
-		err = cortexClient.CreateAlertmanagerConfig(cortex.AlertManagerConfig{
+		err = s.cortexClient.CreateAlertmanagerConfig(cortex.AlertManagerConfig{
 			Receivers: amConfig,
 		}, ns.URN)
 		if err != nil {
