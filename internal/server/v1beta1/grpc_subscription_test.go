@@ -25,19 +25,19 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		dummyResult := []*subscription.Subscription{
+		dummyResult := []subscription.Subscription{
 			{
 				ID:        1,
 				URN:       "foo",
 				Namespace: 1,
-				Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
+				Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 				Match:     match,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
 		}
 
-		mockedSubscriptionService.EXPECT().ListSubscriptions(context.Background()).Return(dummyResult, nil).Once()
+		mockedSubscriptionService.EXPECT().List(context.Background(), subscription.Filter{}).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &sirenv1beta1.ListSubscriptionsRequest{})
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(res.GetSubscriptions()))
@@ -51,8 +51,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().ListSubscriptions(context.Background()).
-			Return(nil, errors.New("random error")).Once()
+		mockedSubscriptionService.EXPECT().List(context.Background(), subscription.Filter{}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &sirenv1beta1.ListSubscriptionsRequest{})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
@@ -75,13 +74,13 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			ID:        1,
 			URN:       "foo",
 			Namespace: 1,
-			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
+			Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 			Match:     match,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
 
-		mockedSubscriptionService.EXPECT().GetSubscription(context.Background(), uint64(1)).Return(dummyResult, nil).Once()
+		mockedSubscriptionService.EXPECT().Get(context.Background(), uint64(1)).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetSubscription().GetId())
@@ -94,7 +93,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().GetSubscription(context.Background(), uint64(1)).Return(nil, errors.ErrNotFound).Once()
+		mockedSubscriptionService.EXPECT().Get(context.Background(), uint64(1)).Return(nil, errors.ErrNotFound).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = NotFound desc = requested entity not found")
@@ -106,7 +105,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().GetSubscription(context.Background(), uint64(1)).
+		mockedSubscriptionService.EXPECT().Get(context.Background(), uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
@@ -123,8 +122,18 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 	payload := &subscription.Subscription{
 		Namespace: 1,
 		URN:       "foo",
-		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
+		Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 		Match:     match,
+	}
+
+	dummyResult := &subscription.Subscription{
+		ID:        1,
+		URN:       "foo",
+		Namespace: 10,
+		Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
+		Match:     match,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	t.Run("should create a subscription", func(t *testing.T) {
@@ -133,20 +142,10 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		dummyResult := &subscription.Subscription{
-			ID:        1,
-			URN:       "foo",
-			Namespace: 10,
-			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
-			Match:     match,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
 
-		mockedSubscriptionService.EXPECT().CreateSubscription(context.Background(), payload).Return(nil).
-			Run(func(ctx context.Context, s *subscription.Subscription) {
-				*s = *dummyResult
-			}).Once()
+		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
+			_a1.ID = dummyResult.ID
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -154,7 +153,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			Match:     match,
 		})
 		assert.Nil(t, err)
-		assert.Equal(t, uint64(1), res.GetId())
+		assert.Equal(t, dummyResult.ID, res.GetId())
 	})
 
 	t.Run("should return error InvalidArgument if creating subscriptions return err invalid", func(t *testing.T) {
@@ -164,8 +163,9 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 
-		mockedSubscriptionService.EXPECT().CreateSubscription(context.Background(), payload).
-			Return(errors.ErrInvalid).Once()
+		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
+			_a1.ID = dummyResult.ID
+		}).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -183,8 +183,9 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 
-		mockedSubscriptionService.EXPECT().CreateSubscription(context.Background(), payload).
-			Return(errors.ErrConflict).Once()
+		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
+			_a1.ID = dummyResult.ID
+		}).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -202,8 +203,9 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 
-		mockedSubscriptionService.EXPECT().CreateSubscription(context.Background(), payload).
-			Return(errors.New("random error")).Once()
+		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
+			_a1.ID = dummyResult.ID
+		}).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
@@ -224,7 +226,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		ID:        1,
 		Namespace: 10,
 		URN:       "foo",
-		Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
+		Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 		Match:     match,
 	}
 
@@ -234,20 +236,10 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		dummyResult := &subscription.Subscription{
-			ID:        1,
-			URN:       "foo",
-			Namespace: 10,
-			Receivers: []subscription.ReceiverMetadata{{ID: 1, Configuration: configuration}},
-			Match:     match,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
 
-		mockedSubscriptionService.EXPECT().UpdateSubscription(context.Background(), payload).Return(nil).
-			Run(func(ctx context.Context, s *subscription.Subscription) {
-				*s = *dummyResult
-			}).Once()
+		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
+			_a1.ID = uint64(1)
+		}).Return(nil).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -265,7 +257,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().UpdateSubscription(context.Background(), payload).Return(errors.ErrInvalid).Once()
+		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -283,7 +275,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().UpdateSubscription(context.Background(), payload).Return(errors.ErrConflict).Once()
+		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -301,7 +293,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().UpdateSubscription(context.Background(), payload).Return(errors.New("random error")).Once()
+		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -319,7 +311,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			subscriptionService: mockedSubscriptionService,
 			logger:              log.NewNoop(),
 		}
-		mockedSubscriptionService.EXPECT().UpdateSubscription(context.Background(), payload).Return(errors.ErrInvalid).Once()
+		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
@@ -340,7 +332,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 
-		mockedSubscriptionService.EXPECT().DeleteSubscription(context.Background(), uint64(1)).Return(nil).Once()
+		mockedSubscriptionService.EXPECT().Delete(context.Background(), uint64(1)).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
 		assert.Nil(t, err)
 		assert.Equal(t, &sirenv1beta1.DeleteSubscriptionResponse{}, res)
@@ -353,7 +345,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 			logger:              log.NewNoop(),
 		}
 
-		mockedSubscriptionService.EXPECT().DeleteSubscription(context.Background(), uint64(1)).Return(errors.New("random error")).Once()
+		mockedSubscriptionService.EXPECT().Delete(context.Background(), uint64(1)).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)

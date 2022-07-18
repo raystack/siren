@@ -1,6 +1,7 @@
 package namespace
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/odpf/siren/pkg/errors"
@@ -20,24 +21,24 @@ func NewService(cryptoClient Encryptor, repository Repository) *Service {
 	}
 }
 
-func (s *Service) ListNamespaces() ([]*Namespace, error) {
-	encrytpedNamespaces, err := s.repository.List()
+func (s *Service) List(ctx context.Context) ([]Namespace, error) {
+	encrytpedNamespaces, err := s.repository.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	namespaces := make([]*Namespace, 0, len(encrytpedNamespaces))
+	namespaces := make([]Namespace, 0, len(encrytpedNamespaces))
 	for _, en := range encrytpedNamespaces {
-		ns, err := s.decrypt(en)
+		ns, err := s.decrypt(&en)
 		if err != nil {
 			return nil, err
 		}
-		namespaces = append(namespaces, ns)
+		namespaces = append(namespaces, *ns)
 	}
 	return namespaces, nil
 }
 
-func (s *Service) CreateNamespace(ns *Namespace) error {
+func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 	if ns == nil {
 		return errors.ErrInvalid.WithCausef("namespace is nil").WithMsgf("incoming namespace is empty")
 	}
@@ -46,20 +47,22 @@ func (s *Service) CreateNamespace(ns *Namespace) error {
 		return err
 	}
 
-	if err := s.repository.Create(encryptedNamespace); err != nil {
+	err = s.repository.Create(ctx, encryptedNamespace)
+	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
 			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		if errors.Is(err, ErrRelation) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		return err
 	}
 
-	encryptedNamespace.Namespace.Credentials = ns.Credentials
-	*ns = *encryptedNamespace.Namespace
 	return nil
 }
 
-func (s *Service) GetNamespace(id uint64) (*Namespace, error) {
-	encryptedNamespace, err := s.repository.Get(id)
+func (s *Service) Get(ctx context.Context, id uint64) (*Namespace, error) {
+	encryptedNamespace, err := s.repository.Get(ctx, id)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
@@ -73,15 +76,19 @@ func (s *Service) GetNamespace(id uint64) (*Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s *Service) UpdateNamespace(namespace *Namespace) error {
+func (s *Service) Update(ctx context.Context, namespace *Namespace) error {
 	encryptedNamespace, err := s.encrypt(namespace)
 	if err != nil {
 		return err
 	}
 
-	if err := s.repository.Update(encryptedNamespace); err != nil {
+	err = s.repository.Update(ctx, encryptedNamespace)
+	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
 			return errors.ErrConflict.WithMsgf(err.Error())
+		}
+		if errors.Is(err, ErrRelation) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		if errors.As(err, new(NotFoundError)) {
 			return errors.ErrNotFound.WithMsgf(err.Error())
@@ -89,13 +96,11 @@ func (s *Service) UpdateNamespace(namespace *Namespace) error {
 		return err
 	}
 
-	encryptedNamespace.Namespace.Credentials = namespace.Credentials
-	*namespace = *encryptedNamespace.Namespace
 	return nil
 }
 
-func (s *Service) DeleteNamespace(id uint64) error {
-	return s.repository.Delete(id)
+func (s *Service) Delete(ctx context.Context, id uint64) error {
+	return s.repository.Delete(ctx, id)
 }
 
 func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {

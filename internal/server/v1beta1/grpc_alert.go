@@ -10,17 +10,18 @@ import (
 
 //go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
 type AlertService interface {
-	Create(*alert.Alerts) ([]alert.Alert, error)
-	Get(string, uint64, uint64, uint64) ([]alert.Alert, error)
+	Create(context.Context, []*alert.Alert) ([]alert.Alert, error)
+	List(context.Context, alert.Filter) ([]alert.Alert, error)
 }
 
-func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.ListAlertsResponse, error) {
-	resourceName := req.GetResourceName()
-	providerId := req.GetProviderId()
-	startTime := req.GetStartTime()
-	endTime := req.GetEndTime()
+func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlertsRequest) (*sirenv1beta1.ListAlertsResponse, error) {
 
-	alerts, err := s.alertService.Get(resourceName, providerId, startTime, endTime)
+	alerts, err := s.alertService.List(ctx, alert.Filter{
+		ResourceName: req.GetResourceName(),
+		ProviderID:   req.GetProviderId(),
+		StartTime:    req.GetStartTime(),
+		EndTime:      req.GetEndTime(),
+	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -44,8 +45,8 @@ func (s *GRPCServer) ListAlerts(_ context.Context, req *sirenv1beta1.ListAlertsR
 	}, nil
 }
 
-func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.CreateCortexAlertsResponse, error) {
-	alerts := alert.Alerts{Alerts: make([]alert.Alert, 0)}
+func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.CreateCortexAlertsResponse, error) {
+	alerts := make([]*alert.Alert, 0)
 
 	badAlertCount := 0
 	for _, item := range req.GetAlerts() {
@@ -54,7 +55,7 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 			severity = item.GetStatus()
 		}
 
-		alert := alert.Alert{
+		alrt := &alert.Alert{
 			ProviderID:   req.GetProviderId(),
 			ResourceName: item.GetAnnotations().GetResource(),
 			MetricName:   item.GetAnnotations().GetMetricName(),
@@ -63,13 +64,13 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 			Rule:         item.GetAnnotations().GetTemplate(),
 			TriggeredAt:  item.GetStartsAt().AsTime(),
 		}
-		if !isValidCortexAlert(alert) {
+		if !isValidCortexAlert(alrt) {
 			badAlertCount++
 			continue
 		}
-		alerts.Alerts = append(alerts.Alerts, alert)
+		alerts = append(alerts, alrt)
 	}
-	createdAlerts, err := s.alertService.Create(&alerts)
+	createdAlerts, err := s.alertService.Create(ctx, alerts)
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -99,8 +100,8 @@ func (s *GRPCServer) CreateCortexAlerts(_ context.Context, req *sirenv1beta1.Cre
 	return result, nil
 }
 
-func isValidCortexAlert(alert alert.Alert) bool {
-	return !(alert.ResourceName == "" || alert.Rule == "" ||
-		alert.MetricValue == "" || alert.MetricName == "" ||
-		alert.Severity == "")
+func isValidCortexAlert(alrt *alert.Alert) bool {
+	return alrt != nil && !(alrt.ResourceName == "" || alrt.Rule == "" ||
+		alrt.MetricValue == "" || alrt.MetricName == "" ||
+		alrt.Severity == "")
 }

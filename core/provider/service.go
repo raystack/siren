@@ -1,6 +1,10 @@
 package provider
 
-import "github.com/odpf/siren/pkg/errors"
+import (
+	"context"
+
+	"github.com/odpf/siren/pkg/errors"
+)
 
 // Service handles business logic
 type Service struct {
@@ -12,24 +16,24 @@ func NewService(repository Repository) *Service {
 	return &Service{repository}
 }
 
-func (service Service) ListProviders(filters map[string]interface{}) ([]*Provider, error) {
-	return service.repository.List(filters)
+func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
+	return s.repository.List(ctx, flt)
 }
 
-func (service Service) CreateProvider(provider *Provider) (*Provider, error) {
+func (s *Service) Create(ctx context.Context, prov *Provider) error {
 	//TODO check provider is nil
-	prov, err := service.repository.Create(provider)
+	err := s.repository.Create(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return nil, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
-		return nil, err
+		return err
 	}
-	return prov, nil
+	return nil
 }
 
-func (service Service) GetProvider(id uint64) (*Provider, error) {
-	prov, err := service.repository.Get(id)
+func (s *Service) Get(ctx context.Context, id uint64) (*Provider, error) {
+	prov, err := s.repository.Get(ctx, id)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
@@ -39,20 +43,20 @@ func (service Service) GetProvider(id uint64) (*Provider, error) {
 	return prov, nil
 }
 
-func (service Service) UpdateProvider(provider *Provider) (*Provider, error) {
-	prov, err := service.repository.Update(provider)
+func (s *Service) Update(ctx context.Context, prov *Provider) error {
+	err := s.repository.Update(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
-			return nil, errors.ErrConflict.WithMsgf(err.Error())
+			return errors.ErrConflict.WithMsgf(err.Error())
 		}
 		if errors.As(err, new(NotFoundError)) {
-			return nil, errors.ErrNotFound.WithMsgf(err.Error())
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
-		return nil, err
+		return err
 	}
-	return prov, nil
+	return nil
 }
 
-func (service Service) DeleteProvider(id uint64) error {
-	return service.repository.Delete(id)
+func (s *Service) Delete(ctx context.Context, id uint64) error {
+	return s.repository.Delete(ctx, id)
 }

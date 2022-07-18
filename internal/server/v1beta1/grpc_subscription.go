@@ -10,15 +10,15 @@ import (
 
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
 type SubscriptionService interface {
-	ListSubscriptions(context.Context) ([]*subscription.Subscription, error)
-	CreateSubscription(context.Context, *subscription.Subscription) error
-	GetSubscription(context.Context, uint64) (*subscription.Subscription, error)
-	UpdateSubscription(context.Context, *subscription.Subscription) error
-	DeleteSubscription(context.Context, uint64) error
+	List(context.Context, subscription.Filter) ([]subscription.Subscription, error)
+	Create(context.Context, *subscription.Subscription) error
+	Get(context.Context, uint64) (*subscription.Subscription, error)
+	Update(context.Context, *subscription.Subscription) error
+	Delete(context.Context, uint64) error
 }
 
 func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *sirenv1beta1.ListSubscriptionsRequest) (*sirenv1beta1.ListSubscriptionsResponse, error) {
-	subscriptions, err := s.subscriptionService.ListSubscriptions(ctx)
+	subscriptions, err := s.subscriptionService.List(ctx, subscription.Filter{})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -49,7 +49,9 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	if err := s.subscriptionService.CreateSubscription(ctx, sub); err != nil {
+
+	err := s.subscriptionService.Create(ctx, sub)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
@@ -59,7 +61,7 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 }
 
 func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetSubscriptionRequest) (*sirenv1beta1.GetSubscriptionResponse, error) {
-	sub, err := s.subscriptionService.GetSubscription(ctx, req.GetId())
+	sub, err := s.subscriptionService.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -91,7 +93,9 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
 	}
-	if err := s.subscriptionService.UpdateSubscription(ctx, sub); err != nil {
+
+	err := s.subscriptionService.Update(ctx, sub)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
@@ -101,36 +105,36 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 }
 
 func (s *GRPCServer) DeleteSubscription(ctx context.Context, req *sirenv1beta1.DeleteSubscriptionRequest) (*sirenv1beta1.DeleteSubscriptionResponse, error) {
-	err := s.subscriptionService.DeleteSubscription(ctx, req.GetId())
+	err := s.subscriptionService.Delete(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 	return &sirenv1beta1.DeleteSubscriptionResponse{}, nil
 }
 
-func getReceiverMetadataFromDomainObject(item *subscription.ReceiverMetadata) sirenv1beta1.ReceiverMetadata {
+func getReceiverMetadataFromDomainObject(item *subscription.Receiver) sirenv1beta1.ReceiverMetadata {
 	return sirenv1beta1.ReceiverMetadata{
 		Id:            item.ID,
 		Configuration: item.Configuration,
 	}
 }
 
-func getReceiverMetadataInDomainObject(item *sirenv1beta1.ReceiverMetadata) subscription.ReceiverMetadata {
-	return subscription.ReceiverMetadata{
+func getReceiverMetadataInDomainObject(item *sirenv1beta1.ReceiverMetadata) subscription.Receiver {
+	return subscription.Receiver{
 		ID:            item.Id,
 		Configuration: item.Configuration,
 	}
 }
 
-func getReceiverMetadataListInDomainObject(domainReceivers []*sirenv1beta1.ReceiverMetadata) []subscription.ReceiverMetadata {
-	receivers := make([]subscription.ReceiverMetadata, 0)
+func getReceiverMetadataListInDomainObject(domainReceivers []*sirenv1beta1.ReceiverMetadata) []subscription.Receiver {
+	receivers := make([]subscription.Receiver, 0)
 	for _, receiverMetadataItem := range domainReceivers {
 		receivers = append(receivers, getReceiverMetadataInDomainObject(receiverMetadataItem))
 	}
 	return receivers
 }
 
-func getReceiverMetadataListFromDomainObject(domainReceivers []subscription.ReceiverMetadata) []*sirenv1beta1.ReceiverMetadata {
+func getReceiverMetadataListFromDomainObject(domainReceivers []subscription.Receiver) []*sirenv1beta1.ReceiverMetadata {
 	receivers := make([]*sirenv1beta1.ReceiverMetadata, 0)
 	for _, receiverMetadataItem := range domainReceivers {
 		item := getReceiverMetadataFromDomainObject(&receiverMetadataItem)

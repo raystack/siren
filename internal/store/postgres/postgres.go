@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jackc/pgconn"
@@ -14,13 +15,20 @@ import (
 )
 
 var (
+	transactionContextKey = struct{}{}
+
 	errDuplicateKey        = errors.New("duplicate key")
 	errCheckViolation      = errors.New("check constraint violation")
 	errForeignKeyViolation = errors.New("foreign key violation")
 )
 
-// New returns the database instance
-func New(logger log.Logger, c Config) (*gorm.DB, error) {
+type Client struct {
+	db     *gorm.DB
+	logger log.Logger
+}
+
+// New returns the database instance// NewClient initializes database connection
+func NewClient(logger log.Logger, c Config) (*Client, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
 		c.Host,
@@ -33,10 +41,13 @@ func New(logger log.Logger, c Config) (*gorm.DB, error) {
 
 	db, err := gorm.Open(gormpg.Open(dsn), &gorm.Config{Logger: gormlogger.Default.LogMode(getLogLevelFromString(logger.Level()))})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return db, err
+	return &Client{
+		db:     db,
+		logger: logger,
+	}, nil
 }
 
 func getLogLevelFromString(level string) gormlogger.LogLevel {
@@ -69,9 +80,9 @@ func checkPostgresError(err error) error {
 	return err
 }
 
-func Migrate(logger log.Logger, db *gorm.DB) error {
-	logger.Info("migrating postgres...")
-	err := db.AutoMigrate(
+func (c *Client) Migrate() error {
+	c.logger.Info("migrating postgres...")
+	err := c.db.AutoMigrate(
 		&model.Alert{},
 		&model.Namespace{},
 		&model.Provider{},
@@ -82,6 +93,49 @@ func Migrate(logger log.Logger, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("migration done.")
+	c.logger.Info("migration done.")
 	return nil
+}
+
+func (c *Client) WithTransaction(ctx context.Context) context.Context {
+	tx := c.db.Begin()
+	return context.WithValue(ctx, transactionContextKey, tx)
+}
+
+func (c *Client) Rollback(ctx context.Context) error {
+	if tx := extractTransaction(ctx); tx != nil {
+		tx = tx.Rollback()
+		if tx.Error != nil {
+			return c.db.Error
+		}
+		return nil
+	}
+	return errors.New("no transaction")
+}
+
+func (c *Client) Commit(ctx context.Context) error {
+	if tx := extractTransaction(ctx); tx != nil {
+		tx = tx.Commit()
+		if tx.Error != nil {
+			return c.db.Error
+		}
+		return nil
+	}
+	return errors.New("no transaction")
+}
+
+func (c *Client) GetDB(ctx context.Context) *gorm.DB {
+	db := c.db
+	if tx := extractTransaction(ctx); tx != nil {
+		db = tx
+	}
+	return db
+}
+
+func extractTransaction(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
+		return nil
+	} else {
+		return tx
+	}
 }

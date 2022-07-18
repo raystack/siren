@@ -11,17 +11,17 @@ import (
 //go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks
 type RuleService interface {
 	Upsert(context.Context, *rule.Rule) error
-	Get(context.Context, string, string, string, string, uint64) ([]rule.Rule, error)
+	List(context.Context, rule.Filter) ([]rule.Rule, error)
 }
 
 func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
-	name := req.GetName()
-	namespace := req.GetNamespace()
-	groupName := req.GetGroupName()
-	template := req.GetTemplate()
-	providerNamespace := req.GetProviderNamespace()
-
-	rules, err := s.ruleService.Get(ctx, name, namespace, groupName, template, providerNamespace)
+	rules, err := s.ruleService.List(ctx, rule.Filter{
+		Name:         req.GetName(),
+		Namespace:    req.GetNamespace(),
+		GroupName:    req.GetGroupName(),
+		TemplateName: req.GetTemplate(),
+		NamespaceID:  req.GetProviderNamespace(),
+	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -77,7 +77,8 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		Variables:         variables,
 	}
 
-	if err := s.ruleService.Upsert(ctx, rl); err != nil {
+	err := s.ruleService.Upsert(ctx, rl)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 

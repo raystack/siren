@@ -1,472 +1,343 @@
 package postgres_test
 
 import (
-	"database/sql"
-	"regexp"
+	"context"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
 type TemplateRepositoryTestSuite struct {
 	suite.Suite
-	sqldb      *sql.DB
-	dbmock     sqlmock.Sqlmock
+	ctx        context.Context
+	client     *postgres.Client
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.TemplateRepository
 }
 
+func (s *TemplateRepositoryTestSuite) SetupSuite() {
+	var err error
+
+	logger := log.NewZap()
+	s.client, s.pool, s.resource, err = newTestClient(logger)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.ctx = context.TODO()
+	s.repository = postgres.NewTemplateRepository(s.client)
+}
+
 func (s *TemplateRepositoryTestSuite) SetupTest() {
-	db, mock, _ := mocks.NewStore()
-	s.sqldb, _ = db.DB()
-	s.dbmock = mock
-	s.repository = postgres.NewTemplateRepository(db)
+	var err error
+	_, err = bootstrapTemplate(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *TemplateRepositoryTestSuite) TearDownSuite() {
+	// Clean tests
+	if err := purgeDocker(s.pool, s.resource); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *TemplateRepositoryTestSuite) TearDownTest() {
-	s.sqldb.Close()
+	if err := s.cleanup(); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
-func (s *TemplateRepositoryTestSuite) TestIndex() {
+func (s *TemplateRepositoryTestSuite) cleanup() error {
+	queries := []string{
+		"TRUNCATE TABLE templates RESTART IDENTITY CASCADE",
+	}
+	return execQueries(context.TODO(), s.client, queries)
+}
 
-	s.Run("should get all templates if tag is not passed", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates"`)
-		template := model.Template{
-			ID:        1,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{ "name": "foo"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(template.ID, template.CreatedAt,
-				template.UpdatedAt, template.Name,
-				template.Body, template.Tags,
-				template.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+func (s *TemplateRepositoryTestSuite) TestList() {
+	type testCase struct {
+		Description       string
+		Filter            template.Filter
+		ExpectedTemplates []template.Template
+		ErrString         string
+	}
 
-		actualTemplates, err := s.repository.Index("")
-		s.Equal(1, len(actualTemplates))
-		s.Equal("foo", actualTemplates[0].Name)
-		s.Equal("bar", actualTemplates[0].Body)
-		s.Equal([]string{"baz"}, actualTemplates[0].Tags)
-		s.Equal(1, len(actualTemplates[0].Variables))
-		s.Equal("foo", actualTemplates[0].Variables[0].Name)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description: "should get all templates",
+			ExpectedTemplates: []template.Template{
+				{
+					ID:   1,
+					Name: "zookeeper-pending-syncs",
+					Body: "- alert: zookeeper pending syncs warning\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.warning]]\"\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper pending sync on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n- alert: zookeeper pending sync critical\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.critical]]\"\n    environment: '{{ $labels.environment }}'\n    severity: CRITICAL\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper oustanding requests on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n",
+					Tags: []string{
+						"zookeeper",
+					},
+					Variables: []template.Variable{
+						{
+							Name:        "for",
+							Type:        "string",
+							Default:     "5m",
+							Description: "For eg 5m, 2h; Golang duration format",
+						},
+						{
+							Name:    "warning",
+							Type:    "int",
+							Default: "10",
+						},
+						{
+							Name:    "critical",
+							Type:    "int",
+							Default: "100",
+						},
+						{
+							Name:        "team",
+							Type:        "string",
+							Default:     "odpf",
+							Description: "For eg team name which the alert should go to",
+						},
+					},
+				},
+				{
+					ID:   2,
+					Name: "kafka-under-replicated-partitions",
+					Body: "- alert: kafka under replicated partitions warning\n  expr: sum by (host, environment) (v2_jolokia_kafka_server_ReplicaManager_UnderReplicatedPartitionsValue) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: number of under replicated partitions on host {{ $labels.host }} is {{ $value }}\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: kafka_under_replicated_partitions\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: under replicated partitions on host {{ $labels.host }} is {{ $value }} is greather than [[.warning]]\n    template: kafka-under-replicated-partitions\n",
+					Tags: []string{
+						"kafka",
+					},
+					Variables: []template.Variable{
+						{
+							Name:        "for",
+							Type:        "string",
+							Default:     "10m",
+							Description: "For eg 5m, 2h; Golang duration format",
+						},
+						{
+							Name:    "warning",
+							Type:    "int",
+							Default: "0",
+						},
+						{
+							Name:        "team",
+							Type:        "string",
+							Default:     "odpf",
+							Description: "For eg team name which the alert should go to",
+						},
+					},
+				},
+			},
+		},
+		{
+			Description: "should get filtered templates",
+			Filter: template.Filter{
+				Tag: "zookeeper",
+			},
+			ExpectedTemplates: []template.Template{
+				{
+					ID:   1,
+					Name: "zookeeper-pending-syncs",
+					Body: "- alert: zookeeper pending syncs warning\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.warning]]\"\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper pending sync on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n- alert: zookeeper pending sync critical\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.critical]]\"\n    environment: '{{ $labels.environment }}'\n    severity: CRITICAL\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper oustanding requests on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n",
+					Tags: []string{
+						"zookeeper",
+					},
+					Variables: []template.Variable{
+						{
+							Name:        "for",
+							Type:        "string",
+							Default:     "5m",
+							Description: "For eg 5m, 2h; Golang duration format",
+						},
+						{
+							Name:    "warning",
+							Type:    "int",
+							Default: "10",
+						},
+						{
+							Name:    "critical",
+							Type:    "int",
+							Default: "100",
+						},
+						{
+							Name:        "team",
+							Type:        "string",
+							Default:     "odpf",
+							Description: "For eg team name which the alert should go to",
+						},
+					},
+				},
+			},
+		},
+	}
 
-	s.Run("should get templates of matching tags", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE tags @>ARRAY[$1]`)
-		template := model.Template{
-			ID:        1,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(template.ID, template.CreatedAt, template.UpdatedAt, template.Name, template.Body, template.Tags, template.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-
-		actualTemplates, err := s.repository.Index("foo")
-		s.Equal(1, len(actualTemplates))
-		s.Equal("foo", actualTemplates[0].Name)
-		s.Equal("bar", actualTemplates[0].Body)
-		s.Equal([]string{"baz"}, actualTemplates[0].Tags)
-		s.Equal(1, len(actualTemplates[0].Variables))
-		s.Equal("foo", actualTemplates[0].Variables[0].Name)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if any", func() {
-		expectedErrorMessage := "random error"
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates"`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualTemplates, err := s.repository.Index("")
-		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplates)
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.List(s.ctx, tc.Filter)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedTemplates, cmpopts.IgnoreFields(template.Template{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedTemplates)
+			}
+		})
+	}
 }
 
 func (s *TemplateRepositoryTestSuite) TestGetByName() {
+	type testCase struct {
+		Description      string
+		Name             string
+		ExpectedTemplate *template.Template
+		ErrString        string
+	}
 
-	s.Run("should get template by name", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+	var testCases = []testCase{
+		{
+			Description: "should get by name",
+			Name:        "zookeeper-pending-syncs",
+			ExpectedTemplate: &template.Template{
+				ID:   1,
+				Name: "zookeeper-pending-syncs",
+				Body: "- alert: zookeeper pending syncs warning\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.warning]]\"\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper pending sync on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n- alert: zookeeper pending sync critical\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.critical]]\"\n    environment: '{{ $labels.environment }}'\n    severity: CRITICAL\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper oustanding requests on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n",
+				Tags: []string{
+					"zookeeper",
+				},
+				Variables: []template.Variable{
+					{
+						Name:        "for",
+						Type:        "string",
+						Default:     "5m",
+						Description: "For eg 5m, 2h; Golang duration format",
+					},
+					{
+						Name:    "warning",
+						Type:    "int",
+						Default: "10",
+					},
+					{
+						Name:    "critical",
+						Type:    "int",
+						Default: "100",
+					},
+					{
+						Name:        "team",
+						Type:        "string",
+						Default:     "odpf",
+						Description: "For eg team name which the alert should go to",
+					},
+				},
+			},
+		},
+		{
+			Description: "should return not found if name does not exist",
+			Name:        "random",
+			ErrString:   "template with name \"random\" not found",
+		},
+	}
 
-		actualTemplate, err := s.repository.GetByName("foo")
-		s.Equal("foo", actualTemplate.Name)
-		s.Equal("bar", actualTemplate.Body)
-		s.Equal([]string{"baz"}, actualTemplate.Tags)
-		s.Equal(1, len(actualTemplate.Variables))
-		s.Equal("foo", actualTemplate.Variables[0].Name)
-		s.Nil(err)
-	})
-
-	s.Run("should return not found if template not found", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
-
-		actualTemplate, err := s.repository.GetByName("foo")
-		s.Nil(actualTemplate)
-		s.EqualError(err, "template with name \"foo\" not found")
-	})
-
-	s.Run("should return error if any", func() {
-		expectedErrorMessage := "random error"
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualTemplates, err := s.repository.GetByName("foo")
-		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplates)
-	})
-
-	s.Run("should return not found if row affected 0", func() {
-		expectedErrorMessage := "template with name \"foo\" not found"
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(&sqlmock.Rows{})
-
-		actualTemplates, err := s.repository.GetByName("foo")
-		s.Equal(err.Error(), expectedErrorMessage)
-		s.Empty(actualTemplates)
-	})
-}
-
-func (s *TemplateRepositoryTestSuite) TestDelete() {
-
-	s.Run("should delete template by name", func() {
-		deleteQuery := regexp.QuoteMeta(`DELETE FROM "templates" WHERE name = $1`)
-		s.dbmock.ExpectExec(deleteQuery).WithArgs("foo").WillReturnResult(sqlmock.NewResult(0, 1))
-		err := s.repository.Delete("foo")
-		s.Nil(err)
-	})
-
-	s.Run("should return error if any", func() {
-		expectedErrorMessage := "random error"
-		deleteQuery := regexp.QuoteMeta(`DELETE FROM "templates" WHERE name = $1`)
-		s.dbmock.ExpectExec(deleteQuery).WithArgs("foo").WillReturnError(errors.New(expectedErrorMessage))
-		err := s.repository.Delete("foo")
-		s.Equal(err.Error(), expectedErrorMessage)
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.GetByName(s.ctx, tc.Name)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedTemplate, cmpopts.IgnoreFields(template.Template{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedTemplate)
+			}
+		})
+	}
 }
 
 func (s *TemplateRepositoryTestSuite) TestUpsert() {
+	type testCase struct {
+		Description      string
+		TemplateToUpsert *template.Template
+		ExpectedID       uint64
+		ErrString        string
+	}
 
-	s.Run("should insert template if not exist", func() {
-		timeNow := time.Now()
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "templates" ("created_at","updated_at","name","body","tags","variables","id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &template.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: []template.Variable{{Name: "foo", Type: "string", Default: "bar", Description: "baz"}},
-		}
-		modelTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo","type":"string","default":"bar","description":"baz"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(modelTemplate.ID, modelTemplate.CreatedAt, modelTemplate.UpdatedAt, modelTemplate.Name,
-				modelTemplate.Body, modelTemplate.Tags, modelTemplate.Variables)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(AnyTime{}, AnyTime{}, modelTemplate.Name, modelTemplate.Body,
-			modelTemplate.Tags, modelTemplate.Variables, modelTemplate.ID).WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows)
-		err := s.repository.Upsert(expectedTemplate)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description: "should create non existent template",
+			TemplateToUpsert: &template.Template{
+				Name: "new-template",
+				Body: "template body",
+				Tags: []string{
+					"unknown",
+				},
+				Variables: []template.Variable{},
+			},
+			ExpectedID: uint64(3),
+		},
+		{
+			Description: "should update the existing template",
+			TemplateToUpsert: &template.Template{
+				ID:        1,
+				Name:      "zookeeper-pending-syncs",
+				Body:      "new body",
+				Tags:      []string{},
+				Variables: []template.Variable{},
+			},
+			ExpectedID: uint64(1),
+		},
+		{
+			Description: "should return error if template is nil",
+			ErrString:   "template domain is nil",
+		},
+	}
 
-	s.Run("should update template if exist", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "templates" SET "created_at"=$1,"updated_at"=$2,"name"=$3,"body"=$4,"tags"=$5,"variables"=$6 WHERE id = $7`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		timeNow := time.Now()
-		expectedTemplate := &template.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"updated-baz"},
-			Variables: []template.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
-		}
-		modelTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo","type":"string","default":"bar","description":"baz"}]`,
-		}
-		updatedModelTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"updated-baz"},
-			Variables: `[{"name":"updated-foo","type":"string","default":"bar","description":"baz"}]`,
-		}
-		input := &template.Template{
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"updated-baz"},
-			Variables: []template.Variable{{Name: "updated-foo", Type: "string", Default: "bar", Description: "baz"}},
-		}
-
-		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(modelTemplate.ID, modelTemplate.CreatedAt, modelTemplate.UpdatedAt, modelTemplate.Name,
-				modelTemplate.Body, modelTemplate.Tags, modelTemplate.Variables)
-
-		expectedRows2 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(updatedModelTemplate.ID, updatedModelTemplate.CreatedAt, updatedModelTemplate.UpdatedAt,
-				updatedModelTemplate.Name, updatedModelTemplate.Body, updatedModelTemplate.Tags,
-				updatedModelTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(AnyTime{}, AnyTime{}, updatedModelTemplate.Name, updatedModelTemplate.Body,
-			updatedModelTemplate.Tags, updatedModelTemplate.Variables, updatedModelTemplate.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows2)
-		err := s.repository.Upsert(input)
-		s.Equal([]string{"updated-baz"}, expectedTemplate.Tags)
-		s.Equal("updated-foo", expectedTemplate.Variables[0].Name)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if first select query fails", func() {
-		expectedErrorMessage := "random error"
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnError(errors.New("random error"))
-		timeNow := time.Now()
-		input := &template.Template{
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: []template.Variable{{Name: "foo"}},
-		}
-		err := s.repository.Upsert(input)
-		s.Equal(err.Error(), expectedErrorMessage)
-	})
-
-	s.Run("should return error if insert fails", func() {
-		expectedErrorMessage := "random error"
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "templates" ("created_at","updated_at","name","body","tags","variables","id") VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		timeNow := time.Now()
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
-		}
-		input := &template.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: []template.Variable{{Name: "foo"}},
-		}
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedTemplate.CreatedAt,
-			expectedTemplate.UpdatedAt, expectedTemplate.Name,
-			expectedTemplate.Body, expectedTemplate.Tags,
-			expectedTemplate.Variables, expectedTemplate.ID).WillReturnError(errors.New("random error"))
-
-		err := s.repository.Upsert(input)
-		s.Equal(err.Error(), expectedErrorMessage)
-	})
-
-	s.Run("should return error if update fails", func() {
-		expectedErrorMessage := "random error"
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "templates" SET "created_at"=$1,"updated_at"=$2,"name"=$3,"body"=$4,"tags"=$5,"variables"=$6 WHERE id = $7`)
-		timeNow := time.Now()
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
-		}
-		input := &template.Template{
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: []template.Variable{{Name: "foo"}},
-		}
-
-		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(AnyTime{},
-			AnyTime{}, expectedTemplate.Name,
-			expectedTemplate.Body, expectedTemplate.Tags,
-			expectedTemplate.Variables, expectedTemplate.ID).
-			WillReturnError(errors.New(expectedErrorMessage))
-
-		err := s.repository.Upsert(input)
-		s.Equal(err.Error(), expectedErrorMessage)
-	})
-
-	s.Run("should return error if second select query fails", func() {
-		expectedErrorMessage := "random error"
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "templates" SET "created_at"=$1,"updated_at"=$2,"name"=$3,"body"=$4,"tags"=$5,"variables"=$6 WHERE id = $7`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		timeNow := time.Now()
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"foo","type":"","default":"","description":""}]`,
-		}
-		input := &template.Template{
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-			Name:      "foo",
-			Body:      "bar",
-			Tags:      []string{"baz"},
-			Variables: []template.Variable{{Name: "foo"}},
-		}
-
-		expectedRows1 := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(AnyTime{},
-			AnyTime{}, expectedTemplate.Name,
-			expectedTemplate.Body, expectedTemplate.Tags,
-			expectedTemplate.Variables, expectedTemplate.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New(expectedErrorMessage))
-		err := s.repository.Upsert(input)
-		s.Equal(err.Error(), expectedErrorMessage)
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Upsert(s.ctx, tc.TemplateToUpsert)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
-func (s *TemplateRepositoryTestSuite) TestRender() {
+func (s *TemplateRepositoryTestSuite) TestDelete() {
+	type testCase struct {
+		Description  string
+		NameToDelete string
+		ErrString    string
+	}
 
-	s.Run("should render template body from the input", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "The quick [[.color]] fox jumped over the [[.adjective]] dog.",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"color","default":"brown","type":"string","description":"test"}, {"name":"adjective","default":"lazy","type":"string","description":"test"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-		expectedBody := "The quick red fox jumped over the dumb dog."
-		inputBody := make(map[string]string)
-		inputBody["color"] = "red"
-		inputBody["adjective"] = "dumb"
-		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.Equal(expectedBody, renderedBody)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description:  "should delete a template",
+			NameToDelete: "zookeeper-pending-syncs",
+		},
+		{
+			Description:  "should return nil if name does not exist",
+			NameToDelete: "random",
+		},
+	}
 
-	s.Run("should render template body enriched with defaults", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		expectedTemplate := &model.Template{
-			ID:        10,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-			Name:      "foo",
-			Body:      "The quick [[.color]] fox jumped over the [[.adjective]] dog.",
-			Tags:      []string{"baz"},
-			Variables: `[{"name":"color","default":"red","type":"string","description":"test"}, {"name":"adjective","default":"lazy","type":"string","description":"test"}]`,
-		}
-		expectedRows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "name", "body", "tags", "variables"}).
-			AddRow(expectedTemplate.ID, expectedTemplate.CreatedAt,
-				expectedTemplate.UpdatedAt, expectedTemplate.Name,
-				expectedTemplate.Body, expectedTemplate.Tags,
-				expectedTemplate.Variables)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-		expectedBody := "The quick brown fox jumped over the lazy dog."
-		inputBody := make(map[string]string)
-		inputBody["color"] = "brown"
-		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.Equal(expectedBody, renderedBody)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if template not found", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "templates" WHERE name = 'foo'`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
-		inputBody := make(map[string]string)
-		inputBody["color"] = "brown"
-		renderedBody, err := s.repository.Render("foo", inputBody)
-		s.EqualError(err, "template with name \"foo\" not found")
-		s.Equal("", renderedBody)
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Delete(s.ctx, tc.NameToDelete)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func TestTemplateRepository(t *testing.T) {

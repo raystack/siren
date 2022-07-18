@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrDuplicate = errors.New("urn and provider pair already exist")
+	ErrRelation  = errors.New("provider id does not exist")
 )
 
 type NotFoundError struct {

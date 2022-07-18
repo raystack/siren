@@ -1,546 +1,316 @@
 package postgres_test
 
 import (
-	"database/sql"
-	"database/sql/driver"
-	"encoding/json"
-	"regexp"
+	"context"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
-// AnyTime is used to expect arbitrary time value
-type AnyTime struct{}
-
-// Match satisfies sqlmock.Argument interface
-func (a AnyTime) Match(v driver.Value) bool {
-	_, ok := v.(time.Time)
-	return ok
-}
-
 type ProviderRepositoryTestSuite struct {
 	suite.Suite
-	sqldb      *sql.DB
-	dbmock     sqlmock.Sqlmock
+	ctx        context.Context
+	client     *postgres.Client
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.ProviderRepository
 }
 
+func (s *ProviderRepositoryTestSuite) SetupSuite() {
+	var err error
+
+	logger := log.NewZap()
+	s.client, s.pool, s.resource, err = newTestClient(logger)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.ctx = context.TODO()
+	s.repository = postgres.NewProviderRepository(s.client)
+}
+
 func (s *ProviderRepositoryTestSuite) SetupTest() {
-	db, mock, _ := mocks.NewStore()
-	s.sqldb, _ = db.DB()
-	s.dbmock = mock
-	s.repository = postgres.NewProviderRepository(db)
+	var err error
+	_, err = bootstrapProvider(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *ProviderRepositoryTestSuite) TearDownSuite() {
+	// Clean tests
+	if err := purgeDocker(s.pool, s.resource); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *ProviderRepositoryTestSuite) TearDownTest() {
-	s.sqldb.Close()
+	if err := s.cleanup(); err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *ProviderRepositoryTestSuite) cleanup() error {
+	queries := []string{
+		"TRUNCATE TABLE providers RESTART IDENTITY CASCADE",
+	}
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *ProviderRepositoryTestSuite) TestList() {
-	s.Run("should get all providers", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
-		credentials := make(model.StringInterfaceMap)
-		credentials["foo"] = "bar"
-		labels := make(model.StringStringMap)
-		labels["foo"] = "bar"
+	type testCase struct {
+		Description       string
+		Filter            provider.Filter
+		ExpectedProviders []provider.Provider
+		ErrString         string
+	}
 
-		prv := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		expectedProviders := []*provider.Provider{prv}
+	var testCases = []testCase{
+		{
+			Description: "should get all providers",
+			ExpectedProviders: []provider.Provider{
+				{
+					ID:   1,
+					Host: "http://cortex-ingress.odpf.io",
+					URN:  "odpf-cortex",
+					Name: "odpf-cortex",
+					Type: "cortex",
+				},
+				{
+					ID:   2,
+					Host: "http://prometheus-ingress.odpf.io",
+					URN:  "odpf-prometheus",
+					Name: "odpf-prometheus",
+					Type: "prometheus",
+				},
+			},
+		},
+		{
+			Description: "should filter by urn",
+			Filter: provider.Filter{
+				URN: "odpf-prometheus",
+			},
+			ExpectedProviders: []provider.Provider{
+				{
+					ID:   2,
+					Host: "http://prometheus-ingress.odpf.io",
+					URN:  "odpf-prometheus",
+					Name: "odpf-prometheus",
+					Type: "prometheus",
+				},
+			},
+		},
+		{
+			Description: "should filter by type",
+			Filter: provider.Filter{
+				Type: "cortex",
+			},
+			ExpectedProviders: []provider.Provider{
+				{
+					ID:   1,
+					Host: "http://cortex-ingress.odpf.io",
+					URN:  "odpf-cortex",
+					Name: "odpf-cortex",
+					Type: "cortex",
+				},
+			},
+		},
+	}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(prv.ID, prv.Host, prv.Type, prv.URN, prv.Name, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), prv.CreatedAt, prv.UpdatedAt)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-
-		actualProviders, err := s.repository.List(map[string]interface{}{})
-		s.Equal(expectedProviders, actualProviders)
-		s.Nil(err)
-	})
-
-	s.Run("should get all providers by filters", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
-		credentials := make(model.StringInterfaceMap)
-		credentials["foo"] = "bar"
-		labels := make(model.StringStringMap)
-		labels["foo"] = "bar"
-
-		prv := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		expectedProviders := []*provider.Provider{prv}
-
-		expectedRows := sqlmock.
-			NewRows([]string{"id", "host", "type", "urn", "name", "credentials", "labels", "created_at", "updated_at"}).
-			AddRow(prv.ID, prv.Host, prv.Type, prv.URN, prv.Name, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), prv.CreatedAt, prv.UpdatedAt)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-
-		actualProviders, err := s.repository.List(map[string]interface{}{
-			"urn":  "foo",
-			"type": "bar",
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.List(s.ctx, tc.Filter)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedProviders, cmpopts.IgnoreFields(provider.Provider{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedProviders)
+			}
 		})
-		s.Equal(expectedProviders, actualProviders)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if any", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers"`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualProviders, err := s.repository.List(map[string]interface{}{})
-		s.Nil(actualProviders)
-		s.EqualError(err, "random error")
-	})
-}
-
-func (s *ProviderRepositoryTestSuite) TestCreate() {
-	credentials := make(model.StringInterfaceMap)
-	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
-
-	s.Run("should create a provider", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "providers" 
-											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
-											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-
-		modelProvider := &model.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		expectedProvider := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   modelProvider.CreatedAt,
-			UpdatedAt:   modelProvider.UpdatedAt,
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(modelProvider.Host, modelProvider.URN,
-			modelProvider.Name, expectedProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			modelProvider.CreatedAt, modelProvider.UpdatedAt, modelProvider.ID).
-			WillReturnRows(sqlmock.NewRows(nil))
-
-		expectedRows := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(modelProvider.Host, modelProvider.URN, modelProvider.Name, modelProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), modelProvider.CreatedAt,
-				modelProvider.UpdatedAt, modelProvider.ID)
-
-		s.dbmock.ExpectQuery(selectQuery).WillReturnRows(expectedRows)
-		actualProvider, err := s.repository.Create(expectedProvider)
-		s.Equal(expectedProvider, actualProvider)
-		s.Nil(err)
-	})
-
-	s.Run("should return errors in creating a provider", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "providers" 
-											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
-											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		modelProvider := &model.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		expectedProvider := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   modelProvider.CreatedAt,
-			UpdatedAt:   modelProvider.UpdatedAt,
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(modelProvider.Host, modelProvider.URN,
-			modelProvider.Name, modelProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			modelProvider.CreatedAt, modelProvider.UpdatedAt, modelProvider.ID).
-			WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Create(expectedProvider)
-		s.EqualError(err, "random error")
-		s.Nil(actualProvider)
-	})
-
-	s.Run("should return error if finding newly inserted provider fails", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "providers" 
-											("host","urn","name","type","credentials","labels","created_at","updated_at","id") 
-											VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING "id"`)
-		selectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-
-		modelProvider := &model.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
-		expectedProvider := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   modelProvider.CreatedAt,
-			UpdatedAt:   modelProvider.UpdatedAt,
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(modelProvider.Host, modelProvider.URN,
-			modelProvider.Name, modelProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			modelProvider.CreatedAt, modelProvider.UpdatedAt, modelProvider.ID).
-			WillReturnRows(sqlmock.NewRows(nil))
-		s.dbmock.ExpectQuery(selectQuery).WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Create(expectedProvider)
-		s.EqualError(err, "random error")
-		s.Nil(actualProvider)
-	})
+	}
 }
 
 func (s *ProviderRepositoryTestSuite) TestGet() {
-	credentials := make(model.StringInterfaceMap)
-	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
+	type testCase struct {
+		Description      string
+		PassedID         uint64
+		ExpectedProvider *provider.Provider
+		ErrString        string
+	}
 
-	s.Run("should get provider by id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-		expectedProvider := &provider.Provider{
-			ID:          1,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		}
+	var testCases = []testCase{
+		{
+			Description: "should get a provider",
+			PassedID:    uint64(2),
+			ExpectedProvider: &provider.Provider{
+				ID:   2,
+				Host: "http://prometheus-ingress.odpf.io",
+				URN:  "odpf-prometheus",
+				Name: "odpf-prometheus",
+				Type: "prometheus",
+			},
+		},
+		{
+			Description: "should return not found if id not found",
+			PassedID:    uint64(1000),
+			ErrString:   "provider with id 1000 not found",
+		},
+	}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedProvider.Host, expectedProvider.URN, expectedProvider.Name, expectedProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
-				expectedProvider.UpdatedAt, expectedProvider.ID)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.Get(s.ctx, tc.PassedID)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedProvider, cmpopts.IgnoreFields(provider.Provider{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedProvider)
+			}
+		})
+	}
+}
 
-		actualProvider, err := s.repository.Get(1)
-		s.Equal(expectedProvider, actualProvider)
-		s.Nil(err)
-	})
+func (s *ProviderRepositoryTestSuite) TestCreate() {
+	type testCase struct {
+		Description      string
+		ProviderToCreate *provider.Provider
+		ExpectedID       uint64
+		ErrString        string
+	}
 
-	s.Run("should return not found if provider of given id does not exist", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
+	var testCases = []testCase{
+		{
+			Description: "should create a provider",
+			ProviderToCreate: &provider.Provider{
+				Host: "http://new-provider-ingress.odpf.io",
+				URN:  "odpf-new-provider",
+				Name: "odpf-new-provider",
+				Type: "new-provider",
+			},
+			ExpectedID: uint64(3), // autoincrement in db side
+		},
+		{
+			Description: "should return error duplicate if URN already exist",
+			ProviderToCreate: &provider.Provider{
+				Host: "http://newhostcortex",
+				URN:  "odpf-cortex",
+				Name: "odpf-cortex-new",
+				Type: "cortex",
+			},
+			ErrString: "urn already exist",
+		},
+		{
+			Description: "should return error if provider is nil",
+			ErrString:   "provider domain is nil",
+		},
+	}
 
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
-
-		actualProvider, err := s.repository.Get(1)
-		s.Nil(actualProvider)
-		s.EqualError(err, "provider with id 1 not found")
-	})
-
-	s.Run("should return error in getting provider of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 1`)
-
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Get(1)
-		s.Nil(actualProvider)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Create(s.ctx, tc.ProviderToCreate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *ProviderRepositoryTestSuite) TestUpdate() {
-	credentials := make(model.StringInterfaceMap)
-	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
+	type testCase struct {
+		Description      string
+		ProviderToUpdate *provider.Provider
+		ExpectedID       uint64
+		ErrString        string
+	}
 
-	s.Run("should update a provider", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "providers" 
-						SET "id"=$1,"host"=$2,"name"=$3,"type"=$4,"credentials"=$5,"labels"=$6,"created_at"=$7,"updated_at"=$8 WHERE id = $9 AND "id" = $10`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		timeNow := time.Now()
-		modelProvider := &model.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		expectedProvider := &model.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		input := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			Name:        "baz",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
+	var testCases = []testCase{
+		{
+			Description: "should update existing provider",
+			ProviderToUpdate: &provider.Provider{
+				ID:   1,
+				Host: "http://new-provider-ingress.odpf.io",
+				URN:  "odpf-new-provider",
+				Name: "odpf-new-provider",
+				Type: "new-provider",
+			},
+			ExpectedID: uint64(1),
+		},
+		{
+			Description: "should return error duplicate if URN already exist",
+			ProviderToUpdate: &provider.Provider{
+				ID:   2,
+				Host: "http://prometheus",
+				URN:  "odpf-new-provider",
+				Name: "odpf-prometheus",
+				Type: "prometheus",
+			},
+			ErrString: "urn already exist",
+		},
+		{
+			Description: "should return error not found if id not found",
+			ProviderToUpdate: &provider.Provider{
+				ID:   1000,
+				Host: "http://prometheus",
+				URN:  "odpf-new-provider",
+				Name: "odpf-prometheus",
+				Type: "prometheus",
+			},
+			ErrString: "provider with id 1000 not found",
+		},
+		{
+			Description: "should return error if provider is nil",
+			ErrString:   "provider domain is nil",
+		},
+	}
 
-		expectedRows1 := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedProvider.Host, expectedProvider.URN, expectedProvider.Name, expectedProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
-				expectedProvider.UpdatedAt, expectedProvider.ID)
-		expectedRows2 := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedProvider.Host, expectedProvider.URN, "baz", expectedProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
-				expectedProvider.UpdatedAt, expectedProvider.ID)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows1)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(modelProvider.ID, modelProvider.Host,
-			"baz", modelProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			AnyTime{}, AnyTime{}, modelProvider.ID, modelProvider.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnRows(expectedRows2)
-
-		actualProvider, err := s.repository.Update(input)
-		s.Equal("baz", actualProvider.Name)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if provider does not exist", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		timeNow := time.Now()
-		input := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(sqlmock.NewRows(nil))
-
-		actualProvider, err := s.repository.Update(input)
-		s.Nil(actualProvider)
-		s.EqualError(err, "provider with id 10 not found")
-	})
-
-	s.Run("should return error in finding the provider", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		timeNow := time.Now()
-		input := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Update(input)
-		s.Nil(actualProvider)
-		s.EqualError(err, "random error")
-	})
-
-	s.Run("should return error updating the provider", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "providers" 
-						SET "id"=$1,"host"=$2,"name"=$3,"type"=$4,"credentials"=$5,"labels"=$6,"created_at"=$7,"updated_at"=$8 WHERE id = $9 AND "id" = $10`)
-		timeNow := time.Now()
-		modelProvider := &model.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		expectedProvider := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		input := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			Name:        "baz",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-
-		expectedRows := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedProvider.Host, expectedProvider.URN, expectedProvider.Name, expectedProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
-				expectedProvider.UpdatedAt, expectedProvider.ID)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(modelProvider.ID, modelProvider.Host,
-			"baz", modelProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			AnyTime{}, AnyTime{}, modelProvider.ID, modelProvider.ID).
-			WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Update(input)
-		s.Nil(actualProvider)
-		s.EqualError(err, "random error")
-	})
-
-	s.Run("should return error in finding the updated provider", func() {
-		firstSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		updateQuery := regexp.QuoteMeta(`UPDATE "providers" 
-						SET "id"=$1,"host"=$2,"name"=$3,"type"=$4,"credentials"=$5,"labels"=$6,"created_at"=$7,"updated_at"=$8 WHERE id = $9 AND "id" = $10`)
-		secondSelectQuery := regexp.QuoteMeta(`SELECT * FROM "providers" WHERE id = 10`)
-		timeNow := time.Now()
-		modelProvider := &model.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		expectedProvider := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			URN:         "foo",
-			Name:        "foo",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-		input := &provider.Provider{
-			ID:          10,
-			Host:        "foo",
-			Type:        "bar",
-			Name:        "baz",
-			Credentials: credentials,
-			Labels:      labels,
-			CreatedAt:   timeNow,
-			UpdatedAt:   timeNow,
-		}
-
-		expectedRows := sqlmock.
-			NewRows([]string{"host", "urn", "name", "type", "credentials", "labels", "created_at", "updated_at", "id"}).
-			AddRow(expectedProvider.Host, expectedProvider.URN, expectedProvider.Name, expectedProvider.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedProvider.CreatedAt,
-				expectedProvider.UpdatedAt, expectedProvider.ID)
-		s.dbmock.ExpectQuery(firstSelectQuery).WillReturnRows(expectedRows)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(modelProvider.ID, modelProvider.Host,
-			"baz", modelProvider.Type, modelProvider.Credentials, modelProvider.Labels,
-			AnyTime{}, AnyTime{}, modelProvider.ID, modelProvider.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(secondSelectQuery).WillReturnError(errors.New("random error"))
-
-		actualProvider, err := s.repository.Update(input)
-		s.Nil(actualProvider)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Update(s.ctx, tc.ProviderToUpdate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *ProviderRepositoryTestSuite) TestDelete() {
-	s.Run("should delete provider of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "providers" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
+	type testCase struct {
+		Description string
+		IDToDelete  uint64
+		ErrString   string
+	}
 
-		err := s.repository.Delete(1)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description: "should delete a provider",
+			IDToDelete:  1,
+		},
+	}
 
-	s.Run("should return error in deleting provider of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "providers" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnError(errors.New("random error"))
-
-		err := s.repository.Delete(1)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Delete(s.ctx, tc.IDToDelete)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func TestProviderRepository(t *testing.T) {

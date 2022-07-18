@@ -1,6 +1,7 @@
 package slack_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -19,48 +20,51 @@ func TestClient_GetWorkspaceChannels(t *testing.T) {
 		Err         error
 	}
 
-	var testCases = []testCase{
-		{
-			Description: "return error when goslack client creation error",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
-				return c.GetWorkspaceChannels()
+	var (
+		ctx       = context.TODO()
+		testCases = []testCase{
+			{
+				Description: "return error when goslack client creation error",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
+					return c.GetWorkspaceChannels(ctx)
+				},
+				Err: errors.New("goslack client creation failure: no client id/secret credential provided"),
 			},
-			Err: errors.New("goslack client creation failure: no client id/secret credential provided"),
-		},
-		{
-			Description: "return error when failed to fetch joined channel list",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
-				gsc.EXPECT().GetConversationsForUser(mock.Anything).Return(nil, "", errors.New("some error"))
-				return c.GetWorkspaceChannels(slack.CallWithGoSlackClient(gsc))
+			{
+				Description: "return error when failed to fetch joined channel list",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
+					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, "", errors.New("some error"))
+					return c.GetWorkspaceChannels(ctx, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("failed to fetch joined channel list: some error"),
 			},
-			Err: errors.New("failed to fetch joined channel list: some error"),
-		},
-		{
-			Description: "return channels when GetWorkspaceChannels succeed",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
-				gsc.EXPECT().GetConversationsForUser(&goslack.GetConversationsForUserParameters{
-					Types:  []string{"public_channel", "private_channel"},
-					Cursor: "",
-					Limit:  1000}).Return([]goslack.Channel{
-					{
-						GroupConversation: goslack.GroupConversation{
-							Conversation: goslack.Conversation{
-								ID: "123",
+			{
+				Description: "return channels when GetWorkspaceChannels succeed",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) ([]slack.Channel, error) {
+					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), &goslack.GetConversationsForUserParameters{
+						Types:  []string{"public_channel", "private_channel"},
+						Cursor: "",
+						Limit:  1000}).Return([]goslack.Channel{
+						{
+							GroupConversation: goslack.GroupConversation{
+								Conversation: goslack.Conversation{
+									ID: "123",
+								},
+								Name: "test",
 							},
-							Name: "test",
+							IsChannel: true,
 						},
-						IsChannel: true,
-					},
-				}, "", nil)
-				return c.GetWorkspaceChannels(slack.CallWithGoSlackClient(gsc))
+					}, "", nil)
+					return c.GetWorkspaceChannels(ctx, slack.CallWithGoSlackClient(gsc))
+				},
+				Channels: []slack.Channel{{
+					ID:   "123",
+					Name: "test",
+				}},
+				Err: nil,
 			},
-			Channels: []slack.Channel{{
-				ID:   "123",
-				Name: "test",
-			}},
-			Err: nil,
-		},
-	}
+		}
+	)
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			mockGoSlackClient := new(mocks.GoSlackCaller)
@@ -86,94 +90,97 @@ func TestClient_Notify(t *testing.T) {
 		Err         error
 	}
 
-	var testCases = []testCase{
-		{
-			Description: "return error when message receiver type is wrong",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				return c.Notify(&slack.Message{
-					ReceiverType: "random",
-				}, slack.CallWithGoSlackClient(gsc))
+	var (
+		ctx       = context.TODO()
+		testCases = []testCase{
+			{
+				Description: "return error when message receiver type is wrong",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					return c.Notify(ctx, &slack.Message{
+						ReceiverType: "random",
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("unknown receiver type \"random\""),
 			},
-			Err: errors.New("unknown receiver type \"random\""),
-		},
-		{
-			Description: "(channels) return error when goslack client creation error",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				return c.Notify(nil)
+			{
+				Description: "(channels) return error when goslack client creation error",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					return c.Notify(ctx, nil)
+				},
+				Err: errors.New("goslack client creation failure: no client id/secret credential provided"),
 			},
-			Err: errors.New("goslack client creation failure: no client id/secret credential provided"),
-		},
-		{
-			Description: "(channel) return error when failed to fetch joined channel list",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				gsc.EXPECT().GetConversationsForUser(mock.Anything).Return(nil, "", errors.New("some error"))
-				return c.Notify(&slack.Message{
-					ReceiverType: slack.TypeReceiverChannel,
-				}, slack.CallWithGoSlackClient(gsc))
+			{
+				Description: "(channel) return error when failed to fetch joined channel list",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, "", errors.New("some error"))
+					return c.Notify(ctx, &slack.Message{
+						ReceiverType: slack.TypeReceiverChannel,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("failed to fetch joined channel list: some error"),
 			},
-			Err: errors.New("failed to fetch joined channel list: some error"),
-		},
-		{
-			Description: "(channel) return error when app is not part of the channel",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				gsc.EXPECT().GetConversationsForUser(&goslack.GetConversationsForUserParameters{
-					Types:  []string{"public_channel", "private_channel"},
-					Cursor: "",
-					Limit:  1000}).Return([]goslack.Channel{
-					{
-						GroupConversation: goslack.GroupConversation{
-							Conversation: goslack.Conversation{
-								ID: "123",
+			{
+				Description: "(channel) return error when app is not part of the channel",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), &goslack.GetConversationsForUserParameters{
+						Types:  []string{"public_channel", "private_channel"},
+						Cursor: "",
+						Limit:  1000}).Return([]goslack.Channel{
+						{
+							GroupConversation: goslack.GroupConversation{
+								Conversation: goslack.Conversation{
+									ID: "123",
+								},
+								Name: "test",
 							},
-							Name: "test",
+							IsChannel: true,
 						},
-						IsChannel: true,
-					},
-				}, "", nil)
-				return c.Notify(&slack.Message{
-					ReceiverName: "unknown",
-					ReceiverType: slack.TypeReceiverChannel,
-				}, slack.CallWithGoSlackClient(gsc))
+					}, "", nil)
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "unknown",
+						ReceiverType: slack.TypeReceiverChannel,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("app is not part of the channel \"unknown\""),
 			},
-			Err: errors.New("app is not part of the channel \"unknown\""),
-		},
-		{
-			Description: "(user) return error when failed to get user for an email",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				gsc.EXPECT().GetUserByEmail("email@email.com").Return(nil, errors.New("users_not_found"))
-				return c.Notify(&slack.Message{
-					ReceiverName: "email@email.com",
-					ReceiverType: slack.TypeReceiverUser,
-				}, slack.CallWithGoSlackClient(gsc))
+			{
+				Description: "(user) return error when failed to get user for an email",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetUserByEmailContext(mock.AnythingOfType("*context.emptyCtx"), "email@email.com").Return(nil, errors.New("users_not_found"))
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "email@email.com",
+						ReceiverType: slack.TypeReceiverUser,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("failed to get id for \"email@email.com\""),
 			},
-			Err: errors.New("failed to get id for \"email@email.com\""),
-		},
-		{
-			Description: "return nil error when notify is succeed",
-			Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
-				gsc.EXPECT().GetConversationsForUser(&goslack.GetConversationsForUserParameters{
-					Types:  []string{"public_channel", "private_channel"},
-					Cursor: "",
-					Limit:  1000}).Return([]goslack.Channel{
-					{
-						GroupConversation: goslack.GroupConversation{
-							Conversation: goslack.Conversation{
-								ID: "123123",
+			{
+				Description: "return nil error when notify is succeed",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), &goslack.GetConversationsForUserParameters{
+						Types:  []string{"public_channel", "private_channel"},
+						Cursor: "",
+						Limit:  1000}).Return([]goslack.Channel{
+						{
+							GroupConversation: goslack.GroupConversation{
+								Conversation: goslack.Conversation{
+									ID: "123123",
+								},
+								Name: "unknown",
 							},
-							Name: "unknown",
+							IsChannel: true,
 						},
-						IsChannel: true,
-					},
-				}, "", nil)
-				gsc.EXPECT().SendMessage("123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil)
-				return c.Notify(&slack.Message{
-					ReceiverName: "unknown",
-					ReceiverType: slack.TypeReceiverChannel,
-				}, slack.CallWithGoSlackClient(gsc))
+					}, "", nil)
+					gsc.EXPECT().SendMessageContext(mock.AnythingOfType("*context.emptyCtx"), "123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil)
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "unknown",
+						ReceiverType: slack.TypeReceiverChannel,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: nil,
 			},
-			Err: nil,
-		},
-	}
+		}
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {

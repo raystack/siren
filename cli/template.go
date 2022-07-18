@@ -222,7 +222,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 			}
 
 			template := &template.Template{
-				ID:        uint(templateData.GetId()),
+				ID:        templateData.GetId(),
 				Name:      templateData.GetName(),
 				Body:      templateData.GetBody(),
 				Tags:      templateData.GetTags(),

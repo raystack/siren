@@ -1,9 +1,11 @@
 package receiver_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/receiver/mocks"
 	"github.com/odpf/siren/pkg/errors"
@@ -168,6 +170,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 		Err         error
 	}
 	var (
+		ctx       = context.TODO()
 		testCases = []testCase{
 			{
 				Description: "should return error if no token field in configurations",
@@ -178,7 +181,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 			{
 				Description: "should return error if failed to get workspace channels with slack client",
 				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					Configurations: map[string]interface{}{
@@ -189,7 +192,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if success populating receiver.Receiver",
 				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("slack.ClientCallOption"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
 						{
 							ID:   "id",
 							Name: "name",
@@ -215,7 +218,7 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 
 			tc.Setup(slackClientMock, encryptorMock)
 
-			_, err := svc.PopulateReceiver(tc.Rcv)
+			_, err := svc.PopulateReceiver(ctx, tc.Rcv)
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
@@ -230,38 +233,113 @@ func TestSlackService_PopulateReceiver(t *testing.T) {
 
 func TestSlackService_ValidateConfiguration(t *testing.T) {
 	type testCase struct {
-		Description  string
-		InputConfigs receiver.Configurations
-		ErrString    string
+		Description string
+		Rcv         *receiver.Receiver
+		ErrString   string
 	}
 
 	var (
 		testCases = []testCase{
 			{
 				Description: "should return error if 'client_id' is empty",
+				Rcv:         &receiver.Receiver{},
 				ErrString:   "no value supplied for required configurations map key \"client_id\"",
 			},
 			{
 				Description: "should return error if 'client_secret' is empty",
-				InputConfigs: receiver.Configurations{
-					"client_id": "client_id",
+				Rcv: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"client_id": "client_id",
+					},
 				},
 				ErrString: "no value supplied for required configurations map key \"client_secret\"",
 			},
 			{
 				Description: "should return error if 'auth_code' is empty",
-				InputConfigs: receiver.Configurations{
-					"client_id":     "client_id",
-					"client_secret": "client_secret",
+				Rcv: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"client_id":     "client_id",
+						"client_secret": "client_secret",
+					},
 				},
 				ErrString: "no value supplied for required configurations map key \"auth_code\"",
 			},
 			{
 				Description: "should return nil error if all configurations are valid",
-				InputConfigs: receiver.Configurations{
-					"client_id":     "client_id",
-					"client_secret": "client_secret",
-					"auth_code":     "auth_code",
+				Rcv: &receiver.Receiver{
+					Configurations: receiver.Configurations{
+						"client_id":     "client_id",
+						"client_secret": "client_secret",
+						"auth_code":     "auth_code",
+					},
+				},
+			},
+			{
+				Description: "should return error if receiver is nil",
+				ErrString:   "receiver to validate is nil",
+			},
+		}
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			svc := receiver.NewSlackService(nil, nil)
+
+			err := svc.ValidateConfiguration(tc.Rcv)
+			if err != nil {
+				if tc.ErrString != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
+}
+
+func TestSlackService_GetSubscriptionConfig(t *testing.T) {
+	type testCase struct {
+		Description         string
+		SubscriptionConfigs map[string]string
+		ReceiverConfigs     receiver.Configurations
+		ExpectedConfigMap   map[string]string
+		ErrString           string
+	}
+
+	var (
+		testCases = []testCase{
+			{
+				Description: "should return error if 'channel_name' does not exist",
+				ErrString:   "subscription receiver config 'channel_name' was missing",
+			},
+			{
+				Description: "should return error if receiver 'token' exist but it is not string",
+				SubscriptionConfigs: map[string]string{
+					"channel_name": "odpf_warning",
+				},
+				ReceiverConfigs: receiver.Configurations{
+					"token": 123,
+				},
+				ErrString: "token config from receiver should be in string",
+			},
+			{
+				Description: "should return configs without token if receiver 'token' does not exist", //TODO might need to check this behaviour, should be returning error
+				SubscriptionConfigs: map[string]string{
+					"channel_name": "odpf_warning",
+				},
+				ExpectedConfigMap: map[string]string{
+					"channel_name": "odpf_warning",
+				},
+			},
+			{
+				Description: "should return configs with token if receiver 'token'exist in string",
+				SubscriptionConfigs: map[string]string{
+					"channel_name": "odpf_warning",
+				},
+				ReceiverConfigs: receiver.Configurations{
+					"token": "123",
+				},
+				ExpectedConfigMap: map[string]string{
+					"channel_name": "odpf_warning",
+					"token":        "123",
 				},
 			},
 		}
@@ -271,11 +349,14 @@ func TestSlackService_ValidateConfiguration(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			svc := receiver.NewSlackService(nil, nil)
 
-			err := svc.ValidateConfiguration(tc.InputConfigs)
-			if err != nil {
+			got, err := svc.GetSubscriptionConfig(tc.SubscriptionConfigs, tc.ReceiverConfigs)
+			if tc.ErrString != "" {
 				if tc.ErrString != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
+			}
+			if !cmp.Equal(got, tc.ExpectedConfigMap) {
+				t.Fatalf("got result %+v, expected was %+v", got, tc.ExpectedConfigMap)
 			}
 		})
 	}

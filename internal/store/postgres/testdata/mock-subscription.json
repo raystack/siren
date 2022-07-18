@@ -1,0 +1,41 @@
+[
+    {
+        "urn": "alert-history-odpf",
+        "namespace": 2,
+        "receivers": [
+            {
+                "id": 1
+            }
+        ]
+    },
+    {
+        "urn": "odpf-data-warning",
+        "namespace": 1,
+        "receivers": [
+            {
+                "id": 1,
+                "configuration": {
+                    "channel_name": "odpf-data"
+                }
+            }
+        ],
+        "match": {
+            "environment": "integration",
+            "team": "odpf-data"
+        }
+    },
+    {
+        "urn": "odpf-pd",
+        "namespace": 2,
+        "receivers": [
+            {
+                "id": 31
+            }
+        ],
+        "match": {
+            "environment": "production",
+            "severity": "CRITICAL",
+            "team": "odpf-app"
+        }
+    }
+]

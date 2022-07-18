@@ -1,17 +1,14 @@
 package alert
 
 import (
+	"context"
 	"time"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname AlertRepository --filename alert_repository.go --output=./mocks
 type Repository interface {
-	Create(*Alert) error
-	Get(string, uint64, uint64, uint64) ([]Alert, error)
-}
-
-type Alerts struct {
-	Alerts []Alert `json:"alerts"`
+	Create(context.Context, *Alert) (*Alert, error)
+	List(context.Context, Filter) ([]Alert, error)
 }
 
 type Alert struct {

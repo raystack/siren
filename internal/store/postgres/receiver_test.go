@@ -1,331 +1,327 @@
 package postgres_test
 
 import (
-	"database/sql"
-	"encoding/json"
-	"regexp"
+	"context"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/internal/store/postgres/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
 type ReceiverRepositoryTestSuite struct {
 	suite.Suite
-	sqldb      *sql.DB
-	dbmock     sqlmock.Sqlmock
+	ctx        context.Context
+	client     *postgres.Client
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.ReceiverRepository
 }
 
+func (s *ReceiverRepositoryTestSuite) SetupSuite() {
+	var err error
+
+	logger := log.NewZap()
+	s.client, s.pool, s.resource, err = newTestClient(logger)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.ctx = context.TODO()
+	s.repository = postgres.NewReceiverRepository(s.client)
+}
+
 func (s *ReceiverRepositoryTestSuite) SetupTest() {
-	db, mock, _ := mocks.NewStore()
-	repo := postgres.NewReceiverRepository(db)
-	s.sqldb, _ = db.DB()
-	s.dbmock = mock
-	s.repository = repo
+	var err error
+	_, err = bootstrapReceiver(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *ReceiverRepositoryTestSuite) TearDownSuite() {
+	// Clean tests
+	if err := purgeDocker(s.pool, s.resource); err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *ReceiverRepositoryTestSuite) TearDownTest() {
-	s.sqldb.Close()
+	if err := s.cleanup(); err != nil {
+		s.T().Fatal(err)
+	}
+}
+
+func (s *ReceiverRepositoryTestSuite) cleanup() error {
+	queries := []string{
+		"TRUNCATE TABLE receivers RESTART IDENTITY CASCADE",
+	}
+	return execQueries(context.TODO(), s.client, queries)
 }
 
 func (s *ReceiverRepositoryTestSuite) TestList() {
-	s.Run("should get all receivers", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from receivers`)
-		configurations := make(map[string]interface{})
-		configurations["foo"] = "bar"
-		labels := make(map[string]string)
-		labels["foo"] = "bar"
+	type testCase struct {
+		Description       string
+		Filter            receiver.Filter
+		ExpectedReceivers []receiver.Receiver
+		ErrString         string
+	}
 
-		rcv := &receiver.Receiver{
-			ID:             1,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
-		expectedReceivers := []*receiver.Receiver{rcv}
+	var testCases = []testCase{
+		{
+			Description: "should get all receivers",
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   1,
+					Name: "odpf-slack",
+					Type: "slack",
+					Labels: map[string]string{
+						"entity": "odpf,org-a,org-b",
+					},
+					Configurations: receiver.Configurations{
+						"token":     "xxxxxxxxxx",
+						"workspace": "Odpf",
+					},
+				},
+				{
+					ID:   2,
+					Name: "alert-history",
+					Type: "http",
+					Labels: map[string]string{
+						"entity": "odpf,org-a,org-b,org-c",
+					},
+					Configurations: receiver.Configurations{
+						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
+					},
+				},
+				{
+					ID:   3,
+					Name: "odpf_pagerduty",
+					Type: "pagerduty",
+					Labels: map[string]string{
+						"entity": "odpf",
+						"team":   "siren-odpf",
+					},
+					Configurations: receiver.Configurations{
+						"service_key": "1212121212121212121212121",
+					},
+				},
+			},
+		},
+		{
+			Description: "should get filtered receivers with list of ids",
+			Filter: receiver.Filter{
+				ReceiverIDs: []uint64{2, 3},
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   2,
+					Name: "alert-history",
+					Type: "http",
+					Labels: map[string]string{
+						"entity": "odpf,org-a,org-b,org-c",
+					},
+					Configurations: receiver.Configurations{
+						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
+					},
+				},
+				{
+					ID:   3,
+					Name: "odpf_pagerduty",
+					Type: "pagerduty",
+					Labels: map[string]string{
+						"entity": "odpf",
+						"team":   "siren-odpf",
+					},
+					Configurations: receiver.Configurations{
+						"service_key": "1212121212121212121212121",
+					},
+				},
+			},
+		},
+	}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"id", "name", "type", "labels", "configurations", "created_at", "updated_at"}).
-			AddRow(rcv.ID, rcv.Name, rcv.Type, json.RawMessage(`{"foo": "bar"}`),
-				json.RawMessage(`{"foo": "bar"}`), rcv.CreatedAt, rcv.UpdatedAt)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
-
-		actualReceivers, err := s.repository.List()
-		s.Equal(expectedReceivers, actualReceivers)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if any", func() {
-		expectedQuery := regexp.QuoteMeta(`select * from receivers`)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualReceiver, err := s.repository.List()
-		s.Nil(actualReceiver)
-		s.EqualError(err, "random error")
-	})
-}
-
-func (s *ReceiverRepositoryTestSuite) TestCreate() {
-	configurations := make(map[string]interface{})
-	configurations["foo"] = "bar"
-	labels := make(map[string]string)
-	labels["foo"] = "bar"
-
-	s.Run("should create a receiver", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
-											("name","type","labels","configurations","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &receiver.Receiver{
-			ID:             1,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedReceiver.Name,
-			expectedReceiver.Type, json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			expectedReceiver.CreatedAt, expectedReceiver.UpdatedAt, expectedReceiver.ID).
-			WillReturnRows(sqlmock.NewRows(nil))
-
-		err := s.repository.Create(expectedReceiver)
-		s.Nil(err)
-	})
-
-	s.Run("should return errors in creating a receiver", func() {
-		insertQuery := regexp.QuoteMeta(`INSERT INTO "receivers"
-											("name","type","labels","configurations","created_at","updated_at","id")
-											VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING "id"`)
-		expectedReceiver := &receiver.Receiver{
-			ID:             1,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
-
-		s.dbmock.ExpectQuery(insertQuery).WithArgs(expectedReceiver.Name, expectedReceiver.Type,
-			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			expectedReceiver.CreatedAt, expectedReceiver.UpdatedAt, expectedReceiver.ID).
-			WillReturnError(errors.New("random error"))
-
-		err := s.repository.Create(expectedReceiver)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.List(s.ctx, tc.Filter)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedReceivers, cmpopts.IgnoreFields(receiver.Receiver{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedReceivers)
+			}
+		})
+	}
 }
 
 func (s *ReceiverRepositoryTestSuite) TestGet() {
-	configurations := make(map[string]interface{})
-	configurations["foo"] = "bar"
-	labels := make(map[string]string)
-	labels["foo"] = "bar"
+	type testCase struct {
+		Description      string
+		PassedID         uint64
+		ExpectedReceiver *receiver.Receiver
+		ErrString        string
+	}
 
-	s.Run("should get receiver by id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-		expectedReceiver := &receiver.Receiver{
-			ID:             1,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
-		}
+	var testCases = []testCase{
+		{
+			Description: "should get a receivers",
+			PassedID:    3,
+			ExpectedReceiver: &receiver.Receiver{
+				ID:   3,
+				Name: "odpf_pagerduty",
+				Type: "pagerduty",
+				Labels: map[string]string{
+					"entity": "odpf",
+					"team":   "siren-odpf",
+				},
+				Configurations: receiver.Configurations{
+					"service_key": "1212121212121212121212121",
+				},
+			},
+		},
+		{
+			Description: "should return not found if id not found",
+			PassedID:    1000,
+			ErrString:   "receiver with id 1000 not found",
+		},
+	}
 
-		expectedRows := sqlmock.
-			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow(expectedReceiver.Name, expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.ID)
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(expectedRows)
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			got, err := s.repository.Get(s.ctx, tc.PassedID)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if !cmp.Equal(got, tc.ExpectedReceiver, cmpopts.IgnoreFields(receiver.Receiver{}, "CreatedAt", "UpdatedAt")) {
+				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedReceiver)
+			}
+		})
+	}
+}
 
-		actualReceiver, err := s.repository.Get(1)
-		s.Equal(expectedReceiver, actualReceiver)
-		s.Nil(err)
-	})
+func (s *ReceiverRepositoryTestSuite) TestCreate() {
+	type testCase struct {
+		Description      string
+		ReceiverToCreate *receiver.Receiver
+		ExpectedID       uint64
+		ErrString        string
+	}
 
-	s.Run("should return error if receiver of given id does not exist", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
+	var testCases = []testCase{
+		{
+			Description: "should create a provider",
+			ReceiverToCreate: &receiver.Receiver{
+				Name: "neworg_pagerduty",
+				Type: "pagerduty",
+				Labels: map[string]string{
+					"entity": "neworg",
+					"team":   "siren-neworg",
+				},
+				Configurations: receiver.Configurations{
+					"service_key": "000999",
+				},
+			},
+			ExpectedID: uint64(4), // autoincrement in db side
+		},
+		{
+			Description: "should return error if receiver is nil",
+			ErrString:   "receiver domain is nil",
+		},
+	}
 
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnRows(sqlmock.NewRows(nil))
-
-		actualReceiver, err := s.repository.Get(1)
-		s.Nil(actualReceiver)
-		s.EqualError(err, "receiver with id 1 not found")
-	})
-
-	s.Run("should return error in getting receiver of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 1`)
-
-		s.dbmock.ExpectQuery(expectedQuery).WillReturnError(errors.New("random error"))
-
-		actualReceiver, err := s.repository.Get(1)
-		s.Nil(actualReceiver)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Create(s.ctx, tc.ReceiverToCreate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *ReceiverRepositoryTestSuite) TestUpdate() {
-	configurations := make(map[string]interface{})
-	configurations["foo"] = "bar"
-	labels := make(map[string]string)
-	labels["foo"] = "bar"
+	type testCase struct {
+		Description      string
+		ReceiverToUpdate *receiver.Receiver
+		ExpectedID       uint64
+		ErrString        string
+	}
 
-	updateQuery := regexp.QuoteMeta(`UPDATE "receivers"
-						SET "id"=$1,"name"=$2,"type"=$3,"labels"=$4,"configurations"=$5,"created_at"=$6,"updated_at"=$7
-						WHERE id = $8 AND "id" = $9`)
-	findQuery := regexp.QuoteMeta(`SELECT * FROM "receivers" WHERE id = 10`)
+	var testCases = []testCase{
+		{
+			Description: "should update existing receiver",
+			ReceiverToUpdate: &receiver.Receiver{
+				ID:   2,
+				Name: "alert-history-updated",
+				Type: "http",
+				Labels: map[string]string{
+					"entity": "odpf",
+				},
+				Configurations: receiver.Configurations{
+					"url": "http://siren.odpf.io/v2/alerts/cortex",
+				},
+			},
+			ExpectedID: uint64(2),
+		},
+		{
+			Description: "should return error not found if id not found",
+			ReceiverToUpdate: &receiver.Receiver{
+				ID: 1000,
+			},
+			ErrString: "receiver with id 1000 not found",
+		},
+		{
+			Description: "should return error if receiver is nil",
+			ErrString:   "receiver domain is nil",
+		},
+	}
 
-	s.Run("should update a receiver", func() {
-		timeNow := time.Now()
-		expectedReceiver := &receiver.Receiver{
-			ID:             10,
-			Name:           "foo",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-		input := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-
-		expectedRows2 := sqlmock.
-			NewRows([]string{"name", "type", "labels", "configurations", "created_at", "updated_at", "id"}).
-			AddRow("baz", expectedReceiver.Type,
-				json.RawMessage(`{"foo": "bar"}`), json.RawMessage(`{"foo": "bar"}`), expectedReceiver.CreatedAt,
-				expectedReceiver.UpdatedAt, expectedReceiver.ID)
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.ID, "baz", input.Type,
-			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			AnyTime{}, AnyTime{}, input.ID, input.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(findQuery).WillReturnRows(expectedRows2)
-
-		err := s.repository.Update(input)
-		s.Equal("baz", input.Name)
-		s.Nil(err)
-	})
-
-	s.Run("should return error if receiver does not exist", func() {
-		timeNow := time.Now()
-		input := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-
-		s.dbmock.ExpectExec(updateQuery).WithArgs(input.ID, "baz", input.Type,
-			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			AnyTime{}, AnyTime{}, input.ID, input.ID).
-			WillReturnResult(sqlmock.NewResult(0, 0))
-
-		err := s.repository.Update(input)
-		s.EqualError(err, "receiver with id 10 not found")
-	})
-
-	s.Run("should return error updating the receiver", func() {
-		timeNow := time.Now()
-		expectedReceiver := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-
-			CreatedAt: timeNow,
-			UpdatedAt: timeNow,
-		}
-		input := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-
-		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedReceiver.ID, "baz", expectedReceiver.Type,
-			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			AnyTime{}, AnyTime{}, expectedReceiver.ID, expectedReceiver.ID).
-			WillReturnError(errors.New("random error"))
-
-		err := s.repository.Update(input)
-		s.EqualError(err, "random error")
-	})
-
-	s.Run("should return error in finding the updated receiver", func() {
-		timeNow := time.Now()
-		expectedReceiver := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-		input := &receiver.Receiver{
-			ID:             10,
-			Name:           "baz",
-			Type:           "slack",
-			Labels:         labels,
-			Configurations: configurations,
-			CreatedAt:      timeNow,
-			UpdatedAt:      timeNow,
-		}
-
-		s.dbmock.ExpectExec(updateQuery).WithArgs(expectedReceiver.ID, "baz", expectedReceiver.Type,
-			json.RawMessage(`{"foo":"bar"}`), json.RawMessage(`{"foo":"bar"}`),
-			AnyTime{}, AnyTime{}, expectedReceiver.ID, expectedReceiver.ID).
-			WillReturnResult(sqlmock.NewResult(10, 1))
-		s.dbmock.ExpectQuery(findQuery).WillReturnError(errors.New("random error"))
-
-		err := s.repository.Update(input)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Update(s.ctx, tc.ReceiverToUpdate)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func (s *ReceiverRepositoryTestSuite) TestDelete() {
-	s.Run("should delete receiver of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "receivers" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnResult(sqlmock.NewResult(0, 1))
+	type testCase struct {
+		Description string
+		IDToDelete  uint64
+		ErrString   string
+	}
 
-		err := s.repository.Delete(1)
-		s.Nil(err)
-	})
+	var testCases = []testCase{
+		{
+			Description: "should delete a receiver",
+			IDToDelete:  1,
+		},
+	}
 
-	s.Run("should return error in deleting receiver of given id", func() {
-		expectedQuery := regexp.QuoteMeta(`DELETE FROM "receivers" WHERE id = $1`)
-		s.dbmock.ExpectExec(expectedQuery).WillReturnError(errors.New("random error"))
-
-		err := s.repository.Delete(1)
-		s.EqualError(err, "random error")
-	})
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.Delete(s.ctx, tc.IDToDelete)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
 }
 
 func TestReceiverRepository(t *testing.T) {

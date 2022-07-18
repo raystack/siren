@@ -1,6 +1,8 @@
 package slack
 
 import (
+	"context"
+
 	goslack "github.com/slack-go/slack"
 )
 
@@ -13,9 +15,9 @@ const (
 
 //go:generate mockery --name=GoSlackCaller -r --case underscore --with-expecter --structname GoSlackCaller --filename goslack_caller.go --output=./mocks
 type GoSlackCaller interface {
-	GetConversationsForUser(params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
-	GetUserByEmail(email string) (*goslack.User, error)
-	SendMessage(channel string, options ...goslack.MsgOption) (string, string, string, error)
+	GetConversationsForUserContext(ctx context.Context, params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
+	GetUserByEmailContext(ctx context.Context, email string) (*goslack.User, error)
+	SendMessageContext(ctx context.Context, channel string, options ...goslack.MsgOption) (string, string, string, error)
 }
 
 type codeExchangeHTTPResponse struct {

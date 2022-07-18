@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrDuplicate = errors.New("urn already exist")
+	ErrRelation  = errors.New("namespace id does not exist")
 )
 
 type NotFoundError struct {
