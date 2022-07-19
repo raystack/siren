@@ -1,4 +1,4 @@
-package v1beta1
+package v1beta1_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/internal/server/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -16,10 +17,9 @@ import (
 func TestGRPCServer_ListTemplates(t *testing.T) {
 	t.Run("should return list of all templates", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
+
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{}
 		dummyResult := []template.Template{
 			{
@@ -52,10 +52,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 
 	t.Run("should return list of all templates matching particular tag", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
 		}
@@ -91,10 +88,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 
 	t.Run("should return error Internal if getting templates failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.ListTemplatesRequest{
 			Tag: "foo",
 		}
@@ -110,10 +104,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 func TestGRPCServer_GetTemplate(t *testing.T) {
 	t.Run("should return template by name", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
@@ -145,10 +136,7 @@ func TestGRPCServer_GetTemplate(t *testing.T) {
 
 	t.Run("should return error Not Found if template does not exist", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
@@ -162,10 +150,7 @@ func TestGRPCServer_GetTemplate(t *testing.T) {
 
 	t.Run("should return error Internal if getting template by name failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.GetTemplateRequest{
 			Name: "foo",
 		}
@@ -210,10 +195,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 
 	t.Run("should return template by name", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 
 		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Run(func(_a0 context.Context, _a1 *template.Template) {
 			_a1.ID = uint64(1)
@@ -226,10 +208,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 
 	t.Run("should return error AlreadyExists if upsert template return err conflict", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -239,10 +218,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 
 	t.Run("should return error Internal if upsert template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
@@ -254,10 +230,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 func TestGRPCServer_DeleteTemplate(t *testing.T) {
 	t.Run("should delete template", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
 		}
@@ -272,10 +245,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 
 	t.Run("should return error Internal if deleting template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		dummyReq := &sirenv1beta1.DeleteTemplateRequest{
 			Name: "foo",
 		}
@@ -298,10 +268,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 
 	t.Run("should render template", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 
 		mockedTemplateService.EXPECT().Render(mock.AnythingOfType("*context.emptyCtx"), "foo", dummyReq.GetVariables()).
 			Return("random", nil).Once()
@@ -313,10 +280,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 
 	t.Run("should return error Internal if rendering template failed", func(t *testing.T) {
 		mockedTemplateService := &mocks.TemplateService{}
-		dummyGRPCServer := GRPCServer{
-			templateService: mockedTemplateService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), mockedTemplateService, nil, nil, nil, nil, nil, nil)
 		mockedTemplateService.EXPECT().Render(mock.AnythingOfType("*context.emptyCtx"), "foo", dummyReq.GetVariables()).
 			Return("", errors.New("random error")).Once()
 		res, err := dummyGRPCServer.RenderTemplate(context.Background(), dummyReq)

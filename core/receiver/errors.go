@@ -2,6 +2,12 @@ package receiver
 
 import (
 	"fmt"
+
+	"github.com/odpf/siren/pkg/errors"
+)
+
+var (
+	ErrNotImplemented = errors.New("operation not supported")
 )
 
 type NotFoundError struct {

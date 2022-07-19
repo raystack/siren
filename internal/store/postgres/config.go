@@ -8,5 +8,4 @@ type Config struct {
 	Name     string `mapstructure:"name" default:"postgres"`
 	Port     string `mapstructure:"port" default:"5432"`
 	SSLMode  string `mapstructure:"sslmode" default:"disable"`
-	LogLevel string `mapstructure:"log_level" default:"info"`
 }

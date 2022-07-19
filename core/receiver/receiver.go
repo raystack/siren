@@ -30,10 +30,7 @@ func (c Configurations) GetString(key string) (string, error) {
 	}
 	typedVal, ok := val.(string)
 	if !ok {
-		return "",
-			fmt.Errorf(
-				"wrong type for configurations map key %q: expected type %v, got value %q of type %t",
-				key, "string", val, val)
+		return "", fmt.Errorf("wrong type for configurations map key %q: expected type string, got value %v of type %T", key, val, val)
 	}
 	return typedVal, nil
 }

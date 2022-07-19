@@ -1,15 +1,43 @@
 package cortex_test
 
 import (
+	"context"
 	"io/ioutil"
 	"testing"
 
+	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/cortex/mocks"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestClient_New(t *testing.T) {
+	t.Run("should initiate cortex client if not passed from option", func(t *testing.T) {
+		c, err := cortex.NewClient(cortex.Config{})
+		if err != nil {
+			t.Fatalf("got error %v, expected was nil", err)
+		}
+		if c == nil {
+			t.Fatalf("got client %v, expected was not nil", c)
+		}
+	})
+
+	t.Run("should return error when cortex client client creation return error", func(t *testing.T) {
+		c, err := cortex.NewClient(cortex.Config{
+			Address: ":::",
+		})
+		expectedErrorString := "parse \":::\": missing protocol scheme"
+		if err.Error() != expectedErrorString {
+			t.Fatalf("got error %v, expected was %v", err, expectedErrorString)
+		}
+		if c != nil {
+			t.Fatalf("got client %v, expected was nil", c)
+		}
+	})
+}
 
 func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 	type testCase struct {
@@ -136,4 +164,140 @@ func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 		})
 	}
 
+}
+
+func TestClient_CreateRuleGroup(t *testing.T) {
+
+	t.Run("should return error if cortex client return error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(errors.New("some error"))
+
+		err = c.CreateRuleGroup(context.TODO(), "namespace", rwrulefmt.RuleGroup{})
+		assert.NotNil(t, err)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+
+	t.Run("should return nil error if cortex client return nil error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(nil)
+
+		err = c.CreateRuleGroup(context.TODO(), "namespace", rwrulefmt.RuleGroup{})
+		assert.Nil(t, err)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+}
+
+func TestClient_DeleteRuleGroup(t *testing.T) {
+
+	t.Run("should return error if cortex client return error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
+
+		err = c.DeleteRuleGroup(context.TODO(), "namespace", "groupname")
+		assert.NotNil(t, err)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+
+	t.Run("should return nil error if cortex client return nil error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil)
+
+		err = c.DeleteRuleGroup(context.TODO(), "namespace", "groupname")
+		assert.Nil(t, err)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+}
+
+func TestClient_GetRuleGroup(t *testing.T) {
+
+	t.Run("should return error if cortex client return error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
+
+		rg, err := c.GetRuleGroup(context.TODO(), "namespace", "groupname")
+		assert.NotNil(t, err)
+		assert.Nil(t, rg)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+
+	t.Run("should return nil error if cortex client return nil error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
+
+		rg, err := c.GetRuleGroup(context.TODO(), "namespace", "groupname")
+		assert.Nil(t, err)
+		assert.NotNil(t, rg)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+}
+
+func TestClient_ListRules(t *testing.T) {
+
+	t.Run("should return error if cortex client return error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().ListRules(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
+
+		rg, err := c.ListRules(context.TODO(), "namespace")
+		assert.NotNil(t, err)
+		assert.Nil(t, rg)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
+
+	t.Run("should return nil error if cortex client return nil error", func(t *testing.T) {
+		cortexCallerMock := &mocks.CortexCaller{}
+
+		c, err := cortex.NewClient(cortex.Config{}, cortex.WithCortexClient(cortexCallerMock))
+		require.Nil(t, err)
+		require.NotNil(t, c)
+
+		cortexCallerMock.EXPECT().ListRules(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(map[string][]rwrulefmt.RuleGroup{}, nil)
+
+		rg, err := c.ListRules(context.TODO(), "namespace")
+		assert.Nil(t, err)
+		assert.NotNil(t, rg)
+
+		cortexCallerMock.AssertExpectations(t)
+	})
 }

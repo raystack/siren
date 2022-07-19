@@ -52,16 +52,16 @@ func NewClient(logger log.Logger, c Config) (*Client, error) {
 
 func getLogLevelFromString(level string) gormlogger.LogLevel {
 	switch level {
-	case "silent":
-		return gormlogger.Silent
 	case "error":
 		return gormlogger.Error
 	case "warn":
 		return gormlogger.Warn
 	case "info":
 		return gormlogger.Info
-	default:
+	case "debug":
 		return gormlogger.Info
+	default:
+		return gormlogger.Silent
 	}
 }
 

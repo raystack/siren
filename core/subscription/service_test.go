@@ -856,25 +856,38 @@ func TestAssignReceivers(t *testing.T) {
 				4: nil,
 			},
 			Setup: func(rs *mocks.ReceiverService) {
-				rs.EXPECT().GetSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
 			},
 			ErrString: "receiver id 1 not found",
+		},
+		{
+			Description:   "should return error if get subscription config return error",
+			Subscriptions: inputSubscriptions,
+			ReceiversMap: map[uint64]*receiver.Receiver{
+				1: {ID: 1, Type: receiver.TypeHTTP},
+				2: {ID: 2, Type: receiver.TypePagerDuty},
+				3: {ID: 3, Type: receiver.TypeSlack},
+				4: {ID: 4, Type: receiver.TypeSlack},
+			},
+			Setup: func(rs *mocks.ReceiverService) {
+				rs.EXPECT().GetSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
+			},
+			ErrString: "some error",
 		},
 		{
 			Description:   "should assign receivers to subscription if assigning receivers return no error",
 			Subscriptions: inputSubscriptions,
 			ReceiversMap: map[uint64]*receiver.Receiver{
-				1: {ID: 1, Type: "http"},
-				2: {ID: 2, Type: "pagerduty"},
-				3: {ID: 3, Type: "slack"},
-				4: {ID: 4, Type: "slack"},
+				1: {ID: 1, Type: receiver.TypeHTTP},
+				2: {ID: 2, Type: receiver.TypePagerDuty},
+				3: {ID: 3, Type: receiver.TypeSlack},
+				4: {ID: 4, Type: receiver.TypeSlack},
 			},
 			ExpectedSubscriptions: []subscription.Subscription{
 				{
 					Receivers: []subscription.Receiver{
 						{
 							ID:   1,
-							Type: "http",
+							Type: receiver.TypeHTTP,
 							Configuration: map[string]string{
 								"newkey": "newvalue",
 								"token":  "abcabc",
@@ -882,7 +895,7 @@ func TestAssignReceivers(t *testing.T) {
 						},
 						{
 							ID:   2,
-							Type: "pagerduty",
+							Type: receiver.TypePagerDuty,
 							Configuration: map[string]string{
 								"newkey": "newvalue",
 								"token":  "abcabc",
@@ -894,7 +907,7 @@ func TestAssignReceivers(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID:   3,
-							Type: "slack",
+							Type: receiver.TypeSlack,
 							Configuration: map[string]string{
 								"newkey": "newvalue",
 								"token":  "abcabc",
@@ -902,7 +915,7 @@ func TestAssignReceivers(t *testing.T) {
 						},
 						{
 							ID:   4,
-							Type: "slack",
+							Type: receiver.TypeSlack,
 							Configuration: map[string]string{
 								"newkey": "newvalue",
 								"token":  "abcabc",
@@ -942,6 +955,7 @@ func TestAssignReceivers(t *testing.T) {
 }
 
 func TestSyncToUpstream(t *testing.T) {
+
 	type testCase struct {
 		Description string
 		Setup       func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ProviderService, *mocks.ReceiverService, *mocks.CortexClient)
@@ -1097,7 +1111,6 @@ func TestSyncToUpstream(t *testing.T) {
 				rs.EXPECT().GetSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]string{}, nil)
 				cc.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("cortex.AlertManagerConfig"), mock.AnythingOfType("string")).Return(errors.New("some error"))
 			},
-
 			Provider: &provider.Provider{
 				Type: provider.TypeCortex,
 			},

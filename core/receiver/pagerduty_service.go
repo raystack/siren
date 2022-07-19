@@ -14,7 +14,7 @@ func NewPagerDutyService() *PagerDutyService {
 }
 
 func (s *PagerDutyService) Notify(ctx context.Context, rcv *Receiver, payloadMessage NotificationMessage) error {
-	return nil
+	return ErrNotImplemented
 }
 
 func (s *PagerDutyService) Encrypt(r *Receiver) error {

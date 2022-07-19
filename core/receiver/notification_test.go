@@ -19,6 +19,20 @@ func TestNotification_ToSlackMessage(t *testing.T) {
 
 	var testCases = []testCase{
 		{
+			Description: "should return error if struct can't be marshalled",
+			Message: receiver.NotificationMessage{
+				"test": make(chan int),
+			},
+			ExpectedErrString: "unable to marshal notification message: json: unsupported type: chan int",
+		},
+		{
+			Description: "should return error if json byte can't be unmarshalled",
+			Message: receiver.NotificationMessage{
+				"blocks": "abc",
+			},
+			ExpectedErrString: "unable to unmarshal notification message byte to slack message: json: cannot unmarshal string into Go struct field Message.blocks of type []json.RawMessage",
+		},
+		{
 			Description:       "should return error if 'message' are empty and blocks are empty",
 			Message:           receiver.NotificationMessage{},
 			ExpectedErrString: "non empty message or non zero length block is required",

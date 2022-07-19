@@ -1,4 +1,4 @@
-package v1beta1
+package v1beta1_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/internal/server/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -24,10 +25,9 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 	t.Run("should return list of all provider", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
+
 		dummyResult := []provider.Provider{
 			{
 				ID:          1,
@@ -52,10 +52,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 	t.Run("should return error Internal if getting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), provider.Filter{}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListProviders(ctx, &sirenv1beta1.ListProvidersRequest{})
@@ -65,10 +62,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []provider.Provider{
@@ -119,10 +113,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 	t.Run("should create provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *provider.Provider) {
 			_a1.ID = testID
@@ -134,10 +125,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if provider return error invalid", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.CreateProvider(ctx, dummyReq)
@@ -147,10 +135,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 	t.Run("should return error AlreadyExist if provider return error conflict", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.CreateProvider(ctx, dummyReq)
@@ -160,10 +145,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 	t.Run("should return error Internal if creating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateProvider(ctx, dummyReq)
@@ -186,10 +168,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 	t.Run("should return a provider", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 		dummyResult := &provider.Provider{
 			ID:          1,
 			Host:        "foo",
@@ -213,10 +192,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 	t.Run("should return error Not Found if no provider found", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), providerId).
 			Return(nil, nil).Once()
@@ -228,10 +204,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 	t.Run("should return error Internal if getting provider failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 		dummyResult := &provider.Provider{
 			ID:          1,
 			Host:        "foo",
@@ -253,10 +226,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &provider.Provider{
@@ -306,10 +276,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 	t.Run("should update provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *provider.Provider) {
 			_a1.ID = testID
@@ -321,10 +288,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if updating providers return err invalid", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.UpdateProvider(ctx, dummyReq)
@@ -334,10 +298,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 	t.Run("should return error AlreadyExist if updating providers return err conflict", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpdateProvider(ctx, dummyReq)
@@ -347,10 +308,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 
 	t.Run("should return error Internal if updating providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateProvider(ctx, dummyReq)
@@ -367,10 +325,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 
 	t.Run("should delete provider object", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), providerId).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteProvider(context.Background(), dummyReq)
@@ -380,10 +335,7 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 
 	t.Run("should return error Internal if deleting providers failed", func(t *testing.T) {
 		mockedProviderService := &mocks.ProviderService{}
-		dummyGRPCServer := GRPCServer{
-			providerService: mockedProviderService,
-			logger:          log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, mockedProviderService, nil, nil, nil)
 
 		mockedProviderService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), providerId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteProvider(context.Background(), dummyReq)

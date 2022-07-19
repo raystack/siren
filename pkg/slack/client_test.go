@@ -155,7 +155,18 @@ func TestClient_Notify(t *testing.T) {
 				Err: errors.New("failed to get id for \"email@email.com\""),
 			},
 			{
-				Description: "return nil error when notify is succeed",
+				Description: "(user) return error when GetUserByEmailContext return error",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetUserByEmailContext(mock.AnythingOfType("*context.emptyCtx"), "email@email.com").Return(nil, errors.New("some error"))
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "email@email.com",
+						ReceiverType: slack.TypeReceiverUser,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("some error"),
+			},
+			{
+				Description: "return nil error when notify is succeed through channel",
 				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
 					gsc.EXPECT().GetConversationsForUserContext(mock.AnythingOfType("*context.emptyCtx"), &goslack.GetConversationsForUserParameters{
 						Types:  []string{"public_channel", "private_channel"},
@@ -172,12 +183,40 @@ func TestClient_Notify(t *testing.T) {
 						},
 					}, "", nil)
 					gsc.EXPECT().SendMessageContext(mock.AnythingOfType("*context.emptyCtx"), "123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil)
-					return c.Notify(ctx, &slack.Message{
+					return c.Notify(context.TODO(), &slack.Message{
 						ReceiverName: "unknown",
 						ReceiverType: slack.TypeReceiverChannel,
 					}, slack.CallWithGoSlackClient(gsc))
 				},
-				Err: nil,
+			},
+			{
+				Description: "return nil error when notify is succeed through user",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetUserByEmailContext(mock.AnythingOfType("*context.emptyCtx"), "email@email.com").Return(&goslack.User{
+						ID:   "123123",
+						Name: "email@email.com",
+					}, nil)
+					gsc.EXPECT().SendMessageContext(mock.AnythingOfType("*context.emptyCtx"), "123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", nil)
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "email@email.com",
+						ReceiverType: slack.TypeReceiverUser,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+			},
+			{
+				Description: "return error when send message return error",
+				Call: func(c *slack.Client, gsc *mocks.GoSlackCaller) error {
+					gsc.EXPECT().GetUserByEmailContext(mock.AnythingOfType("*context.emptyCtx"), "email@email.com").Return(&goslack.User{
+						ID:   "123123",
+						Name: "email@email.com",
+					}, nil)
+					gsc.EXPECT().SendMessageContext(mock.AnythingOfType("*context.emptyCtx"), "123123", mock.AnythingOfType("slack.MsgOption"), mock.AnythingOfType("slack.MsgOption")).Return("", "", "", errors.New("some error"))
+					return c.Notify(ctx, &slack.Message{
+						ReceiverName: "email@email.com",
+						ReceiverType: slack.TypeReceiverUser,
+					}, slack.CallWithGoSlackClient(gsc))
+				},
+				Err: errors.New("failed to send message to \"email@email.com\""),
 			},
 		}
 	)

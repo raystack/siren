@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
 )
 
 type Receiver struct {
@@ -18,10 +17,7 @@ type Receiver struct {
 	UpdatedAt      time.Time
 }
 
-func (rcv *Receiver) FromDomain(t *receiver.Receiver) error {
-	if t == nil {
-		return errors.New("receiver domain is nil")
-	}
+func (rcv *Receiver) FromDomain(t *receiver.Receiver) {
 	rcv.ID = t.ID
 	rcv.Name = t.Name
 	rcv.Type = t.Type
@@ -30,13 +26,9 @@ func (rcv *Receiver) FromDomain(t *receiver.Receiver) error {
 	rcv.Data = t.Data
 	rcv.CreatedAt = t.CreatedAt
 	rcv.UpdatedAt = t.UpdatedAt
-	return nil
 }
 
-func (rcv *Receiver) ToDomain() (*receiver.Receiver, error) {
-	if rcv == nil {
-		return nil, errors.New("receiver model is nil")
-	}
+func (rcv *Receiver) ToDomain() *receiver.Receiver {
 	return &receiver.Receiver{
 		ID:             rcv.ID,
 		Name:           rcv.Name,
@@ -46,5 +38,5 @@ func (rcv *Receiver) ToDomain() (*receiver.Receiver, error) {
 		Data:           rcv.Data,
 		CreatedAt:      rcv.CreatedAt,
 		UpdatedAt:      rcv.UpdatedAt,
-	}, nil
+	}
 }
