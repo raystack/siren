@@ -320,6 +320,56 @@ func (s *RuleRepositoryTestSuite) TestUpsert() {
 	}
 }
 
+func (s *RuleRepositoryTestSuite) TestTransaction() {
+	s.Run("successfully commit transaction", func() {
+		ctx := s.repository.WithTransaction(context.Background())
+		err := s.repository.Upsert(ctx, &rule.Rule{
+			ID:                888,
+			Name:              "test-commit",
+			Enabled:           true,
+			GroupName:         "group-name-1",
+			Namespace:         "ns-test-commit",
+			Template:          "template-name-1",
+			Variables:         []rule.RuleVariable{},
+			ProviderNamespace: 2,
+		})
+		s.NoError(err)
+
+		err = s.repository.Commit(ctx)
+		s.NoError(err)
+
+		fetchedRules, err := s.repository.List(s.ctx, rule.Filter{
+			Name: "test-commit",
+		})
+		s.NoError(err)
+		s.Len(fetchedRules, 1)
+	})
+
+	s.Run("successfully rollback transaction", func() {
+		ctx := s.repository.WithTransaction(context.Background())
+		err := s.repository.Upsert(ctx, &rule.Rule{
+			ID:                999,
+			Name:              "test-rollback",
+			Enabled:           true,
+			GroupName:         "group-name-1",
+			Namespace:         "ns-test-rollback",
+			Template:          "template-name-1",
+			Variables:         []rule.RuleVariable{},
+			ProviderNamespace: 2,
+		})
+		s.NoError(err)
+
+		err = s.repository.Rollback(ctx, nil)
+		s.NoError(err)
+
+		fetchedRules, err := s.repository.List(s.ctx, rule.Filter{
+			Name: "test-rollback",
+		})
+		s.NoError(err)
+		s.Len(fetchedRules, 0)
+	})
+}
+
 func TestRuleRepository(t *testing.T) {
 	suite.Run(t, new(RuleRepositoryTestSuite))
 }
