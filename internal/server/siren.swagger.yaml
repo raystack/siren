@@ -4,7 +4,7 @@ info:
   description: |-
     Documentation of our Siren API with gRPC and
     gRPC-Gateway.
-  version: 0.3.0
+  version: 0.4.0
 tags:
 - name: SirenService
 schemes:
@@ -14,21 +14,6 @@ consumes:
 produces:
 - application/json
 paths:
-  /ping:
-    get:
-      summary: ping
-      operationId: SirenService_Ping
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/PingResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/Status'
-      tags:
-      - Ping
   /v1beta1/alerts/{provider_name}/{provider_id}:
     get:
       summary: list alerts
@@ -1036,11 +1021,6 @@ definitions:
        The JSON representation for `NullValue` is JSON `null`.
 
        - NULL_VALUE: Null value.
-  PingResponse:
-    type: object
-    properties:
-      message:
-        type: string
   Provider:
     type: object
     properties:
