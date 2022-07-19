@@ -209,10 +209,6 @@ func TestUpdateProvider(t *testing.T) {
 
 func TestDeleteProvider(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(model.StringInterfaceMap)
-	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
-	labels["foo"] = "bar"
 	providerID := uint64(10)
 
 	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {

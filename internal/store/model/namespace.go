@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/pkg/errors"
 )
 
 type Namespace struct {
@@ -19,11 +18,7 @@ type Namespace struct {
 	UpdatedAt   time.Time
 }
 
-func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
-	if n == nil {
-		return errors.New("nil encrypted namespace domain when converting to namespace model")
-	}
-
+func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) {
 	ns.ID = n.ID
 	ns.URN = n.URN
 	ns.Name = n.Name
@@ -32,14 +27,9 @@ func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) error {
 	ns.Labels = StringStringMap(n.Labels)
 	ns.CreatedAt = n.CreatedAt
 	ns.UpdatedAt = n.UpdatedAt
-	return nil
 }
 
-func (ns *Namespace) ToDomain() (*namespace.EncryptedNamespace, error) {
-	if ns == nil {
-		return nil, errors.New("nil namespace model when converting to encrypted namespace domain")
-	}
-
+func (ns *Namespace) ToDomain() *namespace.EncryptedNamespace {
 	return &namespace.EncryptedNamespace{
 		Namespace: &namespace.Namespace{
 			ID:        ns.ID,
@@ -51,5 +41,5 @@ func (ns *Namespace) ToDomain() (*namespace.EncryptedNamespace, error) {
 			UpdatedAt: ns.UpdatedAt,
 		},
 		Credentials: ns.Credentials,
-	}, nil
+	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/model"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 // ReceiverRepository talks to the store to read or insert data
@@ -33,22 +34,19 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 
 	var receivers []receiver.Receiver
 	for _, r := range models {
-		rcv, err := r.ToDomain()
-		if err != nil {
-			// TODO log here
-			continue
-		}
-		receivers = append(receivers, *rcv)
+		receivers = append(receivers, *r.ToDomain())
 	}
 
 	return receivers, nil
 }
 
-func (r ReceiverRepository) Create(ctx context.Context, receiver *receiver.Receiver) error {
-	m := new(model.Receiver)
-	if err := m.FromDomain(receiver); err != nil {
-		return err
+func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) error {
+	if rcv == nil {
+		return errors.New("receiver domain is nil")
 	}
+
+	m := new(model.Receiver)
+	m.FromDomain(rcv)
 
 	result := r.client.db.WithContext(ctx).Create(m)
 	if result.Error != nil {
@@ -67,18 +65,18 @@ func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Recei
 	if result.RowsAffected == 0 {
 		return nil, receiver.NotFoundError{ID: id}
 	}
-	rcv, err := rcvModel.ToDomain()
-	if err != nil {
-		return nil, err
-	}
-	return rcv, nil
+
+	return rcvModel.ToDomain(), nil
 }
 
 func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) error {
-	var m model.Receiver
-	if err := m.FromDomain(rcv); err != nil {
-		return err
+	if rcv == nil {
+		return errors.New("receiver domain is nil")
 	}
+
+	var m model.Receiver
+	m.FromDomain(rcv)
+
 	result := r.client.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
 	if result.Error != nil {
 		return result.Error

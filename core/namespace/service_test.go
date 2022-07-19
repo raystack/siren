@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/namespace/mocks"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -188,6 +189,11 @@ func TestService_CreateNamespace(t *testing.T) {
 	var (
 		ctx       = context.TODO()
 		testCases = []testCase{
+			{
+				Description: "should return error if namespace is nil",
+				Setup:       func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {},
+				Err:         errors.New("incoming namespace is empty"),
+			},
 			{
 				Description: "should return error if encrypt return error caused credential is not in json",
 				Setup:       func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, tc testCase) {},
@@ -526,4 +532,27 @@ func TestService_UpdateNamespace(t *testing.T) {
 			encryptorMock.AssertExpectations(t)
 		})
 	}
+}
+
+func TestDeleteNamespace(t *testing.T) {
+	ctx := context.TODO()
+	namespaceID := uint64(10)
+
+	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
+		repositoryMock := &mocks.NamespaceRepository{}
+		dummyService := namespace.NewService(nil, repositoryMock)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceID).Return(nil).Once()
+		err := dummyService.Delete(ctx, namespaceID)
+		assert.Nil(t, err)
+		repositoryMock.AssertExpectations(t)
+	})
+
+	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
+		repositoryMock := &mocks.NamespaceRepository{}
+		dummyService := namespace.NewService(nil, repositoryMock)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceID).Return(errors.New("random error")).Once()
+		err := dummyService.Delete(ctx, namespaceID)
+		assert.EqualError(t, err, "random error")
+		repositoryMock.AssertExpectations(t)
+	})
 }

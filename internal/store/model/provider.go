@@ -55,10 +55,7 @@ type Provider struct {
 	UpdatedAt   time.Time
 }
 
-func (p *Provider) FromDomain(t *provider.Provider) error {
-	if t == nil {
-		return errors.New("provider domain is nil")
-	}
+func (p *Provider) FromDomain(t *provider.Provider) {
 	p.ID = t.ID
 	p.Host = t.Host
 	p.URN = t.URN
@@ -68,13 +65,9 @@ func (p *Provider) FromDomain(t *provider.Provider) error {
 	p.Labels = t.Labels
 	p.CreatedAt = t.CreatedAt
 	p.UpdatedAt = t.UpdatedAt
-	return nil
 }
 
-func (p *Provider) ToDomain() (*provider.Provider, error) {
-	if p == nil {
-		return nil, errors.New("provider model is nil")
-	}
+func (p *Provider) ToDomain() *provider.Provider {
 	return &provider.Provider{
 		ID:          p.ID,
 		Host:        p.Host,
@@ -85,5 +78,5 @@ func (p *Provider) ToDomain() (*provider.Provider, error) {
 		Labels:      p.Labels,
 		CreatedAt:   p.CreatedAt,
 		UpdatedAt:   p.UpdatedAt,
-	}, nil
+	}
 }

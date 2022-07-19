@@ -69,9 +69,6 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Namespace, error) {
 		}
 		return nil, err
 	}
-	if encryptedNamespace == nil {
-		return nil, nil
-	}
 
 	return s.decrypt(encryptedNamespace)
 }

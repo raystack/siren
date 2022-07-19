@@ -36,21 +36,19 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]pr
 	}
 	domainProviders := make([]provider.Provider, 0, len(providers))
 	for _, provModel := range providers {
-		provDomain, err := provModel.ToDomain()
-		if err != nil {
-			// TODO log here
-			continue
-		}
-		domainProviders = append(domainProviders, *provDomain)
+		domainProviders = append(domainProviders, *provModel.ToDomain())
 	}
 	return domainProviders, nil
 }
 
 func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider) error {
-	var provModel model.Provider
-	if err := provModel.FromDomain(prov); err != nil {
-		return err
+	if prov == nil {
+		return errors.New("provider domain is nil")
 	}
+
+	var provModel model.Provider
+	provModel.FromDomain(prov)
+
 	result := r.client.db.WithContext(ctx).Create(&provModel)
 	if result.Error != nil {
 		err := checkPostgresError(result.Error)
@@ -72,18 +70,17 @@ func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provi
 	if result.RowsAffected == 0 {
 		return nil, provider.NotFoundError{ID: id}
 	}
-	provDomain, err := provModel.ToDomain()
-	if err != nil {
-		return nil, err
-	}
-	return provDomain, nil
+
+	return provModel.ToDomain(), nil
 }
 
 func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Provider) error {
-	var provModel model.Provider
-	if err := provModel.FromDomain(provDomain); err != nil {
-		return err
+	if provDomain == nil {
+		return errors.New("provider domain is nil")
 	}
+
+	var provModel model.Provider
+	provModel.FromDomain(provDomain)
 
 	result := r.client.db.Where("id = ?", provModel.ID).Updates(&provModel)
 	if result.Error != nil {

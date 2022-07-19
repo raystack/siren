@@ -1,4 +1,4 @@
-package v1beta1
+package v1beta1_test
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/odpf/siren/core/rule"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/internal/server/v1beta1"
 	"github.com/odpf/siren/internal/server/v1beta1/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,10 +48,8 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			},
 		}
 
-		dummyGRPCServer := GRPCServer{
-			ruleService: mockedRuleService,
-			logger:      log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, mockedRuleService, nil, nil, nil, nil, nil)
+
 		mockedRuleService.EXPECT().List(ctx, rule.Filter{
 			Name:         dummyPayload.Name,
 			Namespace:    dummyPayload.Namespace,
@@ -73,10 +72,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := GRPCServer{
-			ruleService: mockedRuleService,
-			logger:      log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, mockedRuleService, nil, nil, nil, nil, nil)
 		mockedRuleService.EXPECT().List(ctx, rule.Filter{
 			Name:         dummyPayload.Name,
 			Namespace:    dummyPayload.Namespace,
@@ -127,10 +123,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	t.Run("should update rule", func(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
-		dummyGRPCServer := GRPCServer{
-			ruleService: mockedRuleService,
-			logger:      log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, mockedRuleService, nil, nil, nil, nil, nil)
 		dummyResult := &rule.Rule{}
 		*dummyResult = *dummyPayload
 		dummyResult.Enabled = false
@@ -151,11 +144,9 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := GRPCServer{
-			ruleService: mockedRuleService,
-			logger:      log.NewNoop(),
-		}
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, mockedRuleService, nil, nil, nil, nil, nil)
 		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.ErrConflict).Once()
+
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
@@ -165,12 +156,9 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := GRPCServer{
-			ruleService: mockedRuleService,
-			logger:      log.NewNoop(),
-		}
-
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, mockedRuleService, nil, nil, nil, nil, nil)
 		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.New("random error")).Once()
+
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 
 		assert.Nil(t, res)

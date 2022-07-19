@@ -116,7 +116,6 @@ func (s *SlackService) ValidateConfiguration(rcv *Receiver) error {
 	return nil
 }
 
-//TODO add test
 func (s *SlackService) GetSubscriptionConfig(subsConfs map[string]string, receiverConfs Configurations) (map[string]string, error) {
 	mapConf := make(map[string]string)
 	if _, ok := subsConfs["channel_name"]; !ok {

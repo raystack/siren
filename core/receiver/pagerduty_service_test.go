@@ -1,11 +1,63 @@
 package receiver_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/receiver"
 )
+
+func TestPagerDutyService_Functions(t *testing.T) {
+	t.Run("should return error not implemented if notify is called", func(t *testing.T) {
+		svc := receiver.NewPagerDutyService()
+
+		expectedErrorString := "operation not supported"
+		err := svc.Notify(context.TODO(), &receiver.Receiver{}, receiver.NotificationMessage{})
+
+		if err.Error() != expectedErrorString {
+			t.Fatalf("got error %s, expected was %s", err.Error(), expectedErrorString)
+		}
+	})
+
+	t.Run("should return error nil if encrypt is called", func(t *testing.T) {
+		svc := receiver.NewPagerDutyService()
+
+		err := svc.Encrypt(&receiver.Receiver{})
+
+		if err != nil {
+			t.Fatalf("got error %s, expected was nil", err.Error())
+		}
+	})
+
+	t.Run("should return error nil if decrypt is called", func(t *testing.T) {
+		svc := receiver.NewPagerDutyService()
+
+		err := svc.Decrypt(&receiver.Receiver{})
+
+		if err != nil {
+			t.Fatalf("got error %s, expected was nil", err.Error())
+		}
+	})
+
+	t.Run("should return as-is if populate receiver is called", func(t *testing.T) {
+		svc := receiver.NewPagerDutyService()
+
+		inputReceiver := &receiver.Receiver{
+			ID:   123,
+			Name: "a-receiver",
+		}
+		got, err := svc.PopulateReceiver(context.TODO(), inputReceiver)
+
+		if err != nil {
+			t.Fatalf("got error %s, expected was nil", err.Error())
+		}
+
+		if !cmp.Equal(got, inputReceiver) {
+			t.Fatalf("got result %v, expected was %v", got, inputReceiver)
+		}
+	})
+}
 
 func TestPagerDutyService_ValidateConfiguration(t *testing.T) {
 	type testCase struct {

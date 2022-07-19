@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
@@ -73,7 +72,7 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 
 func (r TemplateRepository) GetByName(ctx context.Context, name string) (*template.Template, error) {
 	var templateModel model.Template
-	result := r.client.db.WithContext(ctx).Where(fmt.Sprintf("name = '%s'", name)).Find(&templateModel)
+	result := r.client.db.WithContext(ctx).Where("name = ?", name).Find(&templateModel)
 	if result.Error != nil {
 		return nil, result.Error
 	}

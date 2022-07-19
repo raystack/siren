@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/pkg/errors"
 )
 
 type Alert struct {
@@ -21,11 +20,7 @@ type Alert struct {
 	UpdatedAt    time.Time
 }
 
-func (a *Alert) FromDomain(alrt *alert.Alert) error {
-	if alrt == nil {
-		return errors.New("alert domain is nil")
-	}
-
+func (a *Alert) FromDomain(alrt *alert.Alert) {
 	a.ID = alrt.ID
 	a.ProviderID = alrt.ProviderID
 	a.ResourceName = alrt.ResourceName
@@ -36,14 +31,9 @@ func (a *Alert) FromDomain(alrt *alert.Alert) error {
 	a.TriggeredAt = alrt.TriggeredAt
 	a.CreatedAt = alrt.CreatedAt
 	a.UpdatedAt = alrt.UpdatedAt
-	return nil
 }
 
-func (a *Alert) ToDomain() (*alert.Alert, error) {
-	if a == nil {
-		return nil, errors.New("alert domain is nil")
-	}
-
+func (a *Alert) ToDomain() *alert.Alert {
 	return &alert.Alert{
 		ID:           a.ID,
 		ProviderID:   a.ProviderID,
@@ -55,5 +45,5 @@ func (a *Alert) ToDomain() (*alert.Alert, error) {
 		TriggeredAt:  a.TriggeredAt,
 		CreatedAt:    a.CreatedAt,
 		UpdatedAt:    a.UpdatedAt,
-	}, nil
+	}
 }

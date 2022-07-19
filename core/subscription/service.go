@@ -63,7 +63,7 @@ func NewService(repository Repository, providerService ProviderService, namespac
 	}
 }
 
-func (s Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
+func (s *Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
 	subscriptions, err := s.repository.List(ctx, flt)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (s Service) Create(ctx context.Context, sub *Subscription) error {
 	return nil
 }
 
-func (s Service) Get(ctx context.Context, id uint64) (*Subscription, error) {
+func (s *Service) Get(ctx context.Context, id uint64) (*Subscription, error) {
 	subscription, err := s.repository.Get(ctx, id)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
@@ -168,7 +168,7 @@ func (s *Service) Update(ctx context.Context, sub *Subscription) error {
 	return nil
 }
 
-func (s Service) Delete(ctx context.Context, id uint64) error {
+func (s *Service) Delete(ctx context.Context, id uint64) error {
 	sub, err := s.repository.Get(ctx, id)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (s *Service) SyncToUpstream(
 			return fmt.Errorf("error calling cortex: %w", err)
 		}
 	default:
-		return errors.New(fmt.Sprintf("subscriptions for provider type '%s' not supported", prov.Type))
+		return fmt.Errorf("subscriptions for provider type '%s' not supported", prov.Type)
 	}
 	return nil
 }

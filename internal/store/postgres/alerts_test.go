@@ -158,6 +158,14 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			ExpectedID: uint64(4), // autoincrement in db side
 		},
 		{
+			Description: "should return an alert if something wrong in DB",
+			AlertToCreate: &alert.Alert{
+				ID:         1,
+				ProviderID: 1,
+			},
+			ErrString: "ERROR: duplicate key value violates unique constraint \"alerts_pkey\" (SQLSTATE 23505)",
+		},
+		{
 			Description: "should return error foreign key if provider id does not exist",
 			AlertToCreate: &alert.Alert{
 				ProviderID:   1000,
