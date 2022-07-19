@@ -127,13 +127,16 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 		return err
 	}
 
-	if prov.Type == provider.TypeCortex {
+	switch prov.Type {
+	case provider.TypeCortex:
 		if err = PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl.Namespace, rl.GroupName, ns.URN, rulesWithinGroup); err != nil {
 			if err := s.repository.Rollback(ctx, err); err != nil {
 				return err
 			}
 			return err
 		}
+	default:
+		return errors.ErrInvalid.WithCausef("unknown provider type %s", prov.Type)
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
@@ -168,8 +171,7 @@ func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateS
 	}
 
 	if renderedBodyForThisGroup == "" {
-		err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), nspace, groupName)
-		if err != nil {
+		if err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), nspace, groupName); err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
 			}
