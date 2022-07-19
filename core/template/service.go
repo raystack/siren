@@ -54,23 +54,14 @@ func (s *Service) Delete(ctx context.Context, name string) error {
 	return s.repository.Delete(ctx, name)
 }
 
+// TODO might want to delete this and use the static function instead
 func (s *Service) Render(ctx context.Context, name string, requestVariables map[string]string) (string, error) {
 	templateFromDB, err := s.repository.GetByName(ctx, name)
 	if err != nil {
 		return "", err
 	}
 
-	enrichedVariables := enrichWithDefaults(templateFromDB.Variables, requestVariables)
-	var tpl bytes.Buffer
-	tmpl, err := texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse(templateFromDB.Body)
-	if err != nil {
-		return "", errors.ErrInvalid.WithMsgf("failed to parse template body").WithCausef(err.Error())
-	}
-	err = tmpl.Execute(&tpl, enrichedVariables)
-	if err != nil {
-		return "", err
-	}
-	return tpl.String(), nil
+	return RenderWithTemplate(ctx, templateFromDB, requestVariables)
 }
 
 func enrichWithDefaults(variables []Variable, requestVariables map[string]string) map[string]string {
@@ -86,4 +77,18 @@ func enrichWithDefaults(variables []Variable, requestVariables map[string]string
 		}
 	}
 	return result
+}
+
+func RenderWithTemplate(ctx context.Context, templateToUse *Template, requestVariables map[string]string) (string, error) {
+	enrichedVariables := enrichWithDefaults(templateToUse.Variables, requestVariables)
+	var tpl bytes.Buffer
+	tmpl, err := texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse(templateToUse.Body)
+	if err != nil {
+		return "", errors.ErrInvalid.WithMsgf("failed to parse template body").WithCausef(err.Error())
+	}
+	err = tmpl.Execute(&tpl, enrichedVariables)
+	if err != nil {
+		return "", err
+	}
+	return tpl.String(), nil
 }

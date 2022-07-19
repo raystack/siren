@@ -29,6 +29,7 @@ require (
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
 	github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca
 	github.com/ory/dockertest/v3 v3.9.1
+	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
@@ -36,12 +37,14 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/slack-go/slack v0.11.0
 	github.com/spf13/cobra v1.5.0
+	github.com/spf13/viper v1.12.0 // indirect
 	github.com/stretchr/testify v1.8.0
 	github.com/subosito/gotenv v1.4.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.22.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
+	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/tools v0.1.11 // indirect
 	google.golang.org/genproto v0.0.0-20220805133916-01dd62135a58
 	google.golang.org/grpc v1.48.0

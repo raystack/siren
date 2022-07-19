@@ -52,6 +52,7 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 }
 
 func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRuleRequest) (*sirenv1beta1.UpdateRuleResponse, error) {
+
 	variables := make([]rule.RuleVariable, 0)
 	for _, variable := range req.Variables {
 		variables = append(variables, rule.RuleVariable{
@@ -71,8 +72,7 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		Variables:         variables,
 	}
 
-	err := s.ruleService.Upsert(ctx, rl)
-	if err != nil {
+	if err := s.ruleService.Upsert(ctx, rl); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 

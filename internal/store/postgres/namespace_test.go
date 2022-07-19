@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
@@ -81,31 +82,55 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 			ExpectedNamespaces: []namespace.EncryptedNamespace{
 				{
 					Namespace: &namespace.Namespace{
-						ID:       1,
-						Name:     "odpf",
-						URN:      "odpf",
-						Provider: 1,
-						Labels:   map[string]string{},
+						ID:   1,
+						Name: "odpf",
+						URN:  "odpf",
+						Provider: provider.Provider{
+							ID:          1,
+							Host:        "http://cortex-ingress.odpf.io",
+							URN:         "odpf-cortex",
+							Name:        "odpf-cortex",
+							Type:        "cortex",
+							Credentials: map[string]interface{}{},
+							Labels:      map[string]string{},
+						},
+						Labels: map[string]string{},
 					},
 					Credentials: "map[secret_key:odpf-secret-key-1]",
 				},
 				{
 					Namespace: &namespace.Namespace{
-						ID:       2,
-						Name:     "odpf",
-						URN:      "odpf",
-						Provider: 2,
-						Labels:   map[string]string{},
+						ID:   2,
+						Name: "odpf",
+						URN:  "odpf",
+						Provider: provider.Provider{
+							ID:          2,
+							Host:        "http://prometheus-ingress.odpf.io",
+							URN:         "odpf-prometheus",
+							Name:        "odpf-prometheus",
+							Type:        "prometheus",
+							Credentials: map[string]interface{}{},
+							Labels:      map[string]string{},
+						},
+						Labels: map[string]string{},
 					},
 					Credentials: "map[secret_key:odpf-secret-key-2]",
 				},
 				{
 					Namespace: &namespace.Namespace{
-						ID:       3,
-						Name:     "instance-1",
-						URN:      "instance-1",
-						Provider: 2,
-						Labels:   map[string]string{},
+						ID:   3,
+						Name: "instance-1",
+						URN:  "instance-1",
+						Provider: provider.Provider{
+							ID:          2,
+							Host:        "http://prometheus-ingress.odpf.io",
+							URN:         "odpf-prometheus",
+							Name:        "odpf-prometheus",
+							Type:        "prometheus",
+							Credentials: map[string]interface{}{},
+							Labels:      map[string]string{},
+						},
+						Labels: map[string]string{},
 					},
 					Credentials: "map[service_key:instance-1-service-key]",
 				},
@@ -121,7 +146,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
 			}
-			if !cmp.Equal(got, tc.ExpectedNamespaces, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "Namespace.CreatedAt", "Namespace.UpdatedAt")) {
+			if !cmp.Equal(got, tc.ExpectedNamespaces, cmpopts.IgnoreFields(namespace.EncryptedNamespace{},
+				"Namespace.CreatedAt", "Namespace.UpdatedAt",
+				"Namespace.Provider.CreatedAt", "Namespace.Provider.UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespaces)
 			}
 		})
@@ -142,11 +169,19 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 			PassedID:    3,
 			ExpectedNamespace: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       3,
-					Name:     "instance-1",
-					URN:      "instance-1",
-					Provider: 2,
-					Labels:   map[string]string{},
+					ID:   3,
+					Name: "instance-1",
+					URN:  "instance-1",
+					Provider: provider.Provider{
+						ID:          2,
+						Host:        "http://prometheus-ingress.odpf.io",
+						URN:         "odpf-prometheus",
+						Name:        "odpf-prometheus",
+						Type:        "prometheus",
+						Credentials: map[string]interface{}{},
+						Labels:      map[string]string{},
+					},
+					Labels: map[string]string{},
 				},
 				Credentials: "map[service_key:instance-1-service-key]",
 			},
@@ -161,12 +196,12 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Get(s.ctx, tc.PassedID)
-			if tc.ErrString != "" {
-				if err.Error() != tc.ErrString {
-					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
+			if err != nil && err.Error() != tc.ErrString {
+				s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 			}
-			if !cmp.Equal(got, tc.ExpectedNamespace, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "Namespace.CreatedAt", "Namespace.UpdatedAt")) {
+			if !cmp.Equal(got, tc.ExpectedNamespace, cmpopts.IgnoreFields(namespace.EncryptedNamespace{},
+				"Namespace.CreatedAt", "Namespace.UpdatedAt",
+				"Namespace.Provider.CreatedAt", "Namespace.Provider.UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespace)
 			}
 		})
@@ -186,9 +221,11 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Description: "should create a namespace",
 			NamespaceToCreate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					Name:     "instance-2",
-					URN:      "instance-2",
-					Provider: 2,
+					Name: "instance-2",
+					URN:  "instance-2",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -198,9 +235,11 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Description: "should return error foreign key if provider id does not exist",
 			NamespaceToCreate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					Name:     "odpf-new",
-					URN:      "odpf",
-					Provider: 1000,
+					Name: "odpf-new",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 1000,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -210,9 +249,11 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Description: "should return error duplicate if URN and provider already exist",
 			NamespaceToCreate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					Name:     "odpf-new",
-					URN:      "odpf",
-					Provider: 2,
+					Name: "odpf-new",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -249,10 +290,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			Description: "should update existing namespace",
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       1,
-					Name:     "instance-updated",
-					URN:      "instance-updated",
-					Provider: 2,
+					ID:   1,
+					Name: "instance-updated",
+					URN:  "instance-updated",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -262,10 +305,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			Description: "should return error duplicate if URN and provider already exist",
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       3,
-					Name:     "new-odpf",
-					URN:      "odpf",
-					Provider: 2,
+					ID:   3,
+					Name: "new-odpf",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -275,10 +320,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			Description: "should return error not found if id not found",
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       1000,
-					Name:     "new-odpf",
-					URN:      "odpf",
-					Provider: 2,
+					ID:   1000,
+					Name: "new-odpf",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -288,10 +335,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			Description: "should return error foreign key if provider id does not exist",
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       1,
-					Name:     "odpf-new",
-					URN:      "odpf",
-					Provider: 1000,
+					ID:   1,
+					Name: "odpf-new",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 1000,
+					},
 				},
 				Credentials: "xxx",
 			},
@@ -301,10 +350,12 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			Description: "should return error duplicate if URN and provider already exist",
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					ID:       1,
-					Name:     "odpf-new",
-					URN:      "odpf",
-					Provider: 2,
+					ID:   1,
+					Name: "odpf-new",
+					URN:  "odpf",
+					Provider: provider.Provider{
+						ID: 2,
+					},
 				},
 				Credentials: "xxx",
 			},

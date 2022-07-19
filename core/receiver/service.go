@@ -6,25 +6,35 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
+//go:generate mockery --name=ReceiverPlugin -r --case underscore --with-expecter --structname ReceiverPlugin --filename plugin_service.go --output=./mocks
+type ReceiverPlugin interface {
+	PopulateDataFromConfigs(ctx context.Context, configs Configurations) (map[string]interface{}, error)
+	Notify(ctx context.Context, configs Configurations, payloadMessage map[string]interface{}) error
+	ValidateConfigurations(configs Configurations) error
+	EnrichSubscriptionConfig(subsConfs map[string]string, configs Configurations) (map[string]string, error)
+	PreHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
+	PostHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
+}
+
 // Service handles business logic
 type Service struct {
-	registry   map[string]TypeService
+	registry   map[string]ReceiverPlugin
 	repository Repository
 }
 
-func NewService(repository Repository, registry map[string]TypeService) *Service {
+func NewService(repository Repository, registry map[string]ReceiverPlugin) *Service {
 	return &Service{
 		repository: repository,
 		registry:   registry,
 	}
 }
 
-func (s *Service) getTypeService(receiverType string) (TypeService, error) {
-	typeService, exist := s.registry[receiverType]
+func (s *Service) getReceiverPlugin(receiverType string) (ReceiverPlugin, error) {
+	receiverPlugin, exist := s.registry[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
 	}
-	return typeService, nil
+	return receiverPlugin, nil
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
@@ -37,13 +47,15 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
 
-		typeService, err := s.getTypeService(rcv.Type)
+		receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 		if err != nil {
 			return nil, err
 		}
-		if err = typeService.Decrypt(&rcv); err != nil {
+		transformedConfigs, err := receiverPlugin.PostHookTransformConfigs(ctx, rcv.Configurations)
+		if err != nil {
 			return nil, err
 		}
+		rcv.Configurations = transformedConfigs
 
 		domainReceivers = append(domainReceivers, rcv)
 	}
@@ -51,16 +63,17 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 }
 
 func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
-	typeService, err := s.getTypeService(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	if err := typeService.ValidateConfiguration(rcv); err != nil {
+	if err := receiverPlugin.ValidateConfigurations(rcv.Configurations); err != nil {
 		return errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
-	if err := typeService.Encrypt(rcv); err != nil {
+	rcv.Configurations, err = receiverPlugin.PreHookTransformConfigs(ctx, rcv.Configurations)
+	if err != nil {
 		return err
 	}
 
@@ -81,29 +94,39 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 		return nil, err
 	}
 
-	typeService, err := s.getTypeService(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := typeService.Decrypt(rcv); err != nil {
+	transformedConfigs, err := receiverPlugin.PostHookTransformConfigs(ctx, rcv.Configurations)
+	if err != nil {
+		return nil, err
+	}
+	rcv.Configurations = transformedConfigs
+
+	populatedData, err := receiverPlugin.PopulateDataFromConfigs(ctx, rcv.Configurations)
+	if err != nil {
 		return nil, err
 	}
 
-	return typeService.PopulateReceiver(ctx, rcv)
+	rcv.Data = populatedData
+
+	return rcv, nil
 }
 
 func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
-	typeService, err := s.getTypeService(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	if err := typeService.ValidateConfiguration(rcv); err != nil {
+	if err := receiverPlugin.ValidateConfigurations(rcv.Configurations); err != nil {
 		return err
 	}
 
-	if err := typeService.Encrypt(rcv); err != nil {
+	rcv.Configurations, err = receiverPlugin.PreHookTransformConfigs(ctx, rcv.Configurations)
+	if err != nil {
 		return err
 	}
 
@@ -121,29 +144,29 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
 }
 
-func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage NotificationMessage) error {
+func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error {
 	rcv, err := s.Get(ctx, id)
 	if err != nil {
 		return errors.ErrInvalid.WithMsgf("error getting receiver with id %d", id).WithCausef(err.Error())
 	}
 
-	typeService, err := s.getTypeService(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	return typeService.Notify(ctx, rcv, payloadMessage)
+	return receiverPlugin.Notify(ctx, rcv.Configurations, payloadMessage)
 }
 
-func (s *Service) GetSubscriptionConfig(subsConfs map[string]string, rcv *Receiver) (map[string]string, error) {
+func (s *Service) EnrichSubscriptionConfig(subsConfs map[string]string, rcv *Receiver) (map[string]string, error) {
 	if rcv == nil {
 		return nil, errors.ErrInvalid.WithCausef("receiver is nil")
 	}
 
-	typeService, err := s.getTypeService(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	return typeService.GetSubscriptionConfig(subsConfs, rcv.Configurations)
+	return receiverPlugin.EnrichSubscriptionConfig(subsConfs, rcv.Configurations)
 }

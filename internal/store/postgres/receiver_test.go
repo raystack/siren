@@ -82,7 +82,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"token":     "xxxxxxxxxx",
 						"workspace": "Odpf",
 					},
@@ -94,7 +94,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b,org-c",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -106,7 +106,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "odpf",
 						"team":   "siren-odpf",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -125,7 +125,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b,org-c",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -137,7 +137,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "odpf",
 						"team":   "siren-odpf",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -180,7 +180,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 					"entity": "odpf",
 					"team":   "siren-odpf",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"service_key": "1212121212121212121212121",
 				},
 			},
@@ -225,7 +225,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 					"entity": "neworg",
 					"team":   "siren-neworg",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"service_key": "000999",
 				},
 			},
@@ -267,7 +267,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 				Labels: map[string]string{
 					"entity": "odpf",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"url": "http://siren.odpf.io/v2/alerts/cortex",
 				},
 			},

@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	rwrulefmt "github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/errors"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
-	"gopkg.in/yaml.v3"
 )
 
 const (
 	namePrefix = "siren_api"
 )
+
+//go:generate mockery --name=RuleUploader -r --case underscore --with-expecter --structname RuleUploader --filename rule_uploader.go --output=./mocks
+type RuleUploader interface {
+	UpsertRule(ctx context.Context, rl *Rule, templateToUpdate *template.Template, namespaceURN string) error
+}
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
@@ -27,22 +27,12 @@ type NamespaceService interface {
 	Delete(context.Context, uint64) error
 }
 
-//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface {
-	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) error
-	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) error
-	Delete(context.Context, uint64) error
-}
-
 //go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
 type TemplateService interface {
 	Upsert(context.Context, *template.Template) error
 	List(context.Context, template.Filter) ([]template.Template, error)
 	GetByName(context.Context, string) (*template.Template, error)
 	Delete(context.Context, string) error
-	Render(context.Context, string, map[string]string) (string, error)
 }
 
 type variable struct {
@@ -58,11 +48,10 @@ type Variables struct {
 
 // Service handles business logic
 type Service struct {
-	repository       Repository
-	templateService  TemplateService
-	namespaceService NamespaceService
-	providerService  ProviderService
-	cortexClient     CortexClient
+	repository            Repository
+	templateService       TemplateService
+	namespaceService      NamespaceService
+	ruleUploadersRegistry map[string]RuleUploader
 }
 
 // NewService returns repository struct
@@ -70,41 +59,32 @@ func NewService(
 	repository Repository,
 	templateService TemplateService,
 	namespaceService NamespaceService,
-	providerService ProviderService,
-	cortexClient CortexClient,
+	ruleUploadersRegistry map[string]RuleUploader,
 ) *Service {
 	return &Service{
-		repository:       repository,
-		templateService:  templateService,
-		namespaceService: namespaceService,
-		providerService:  providerService,
-		cortexClient:     cortexClient,
+		repository:            repository,
+		templateService:       templateService,
+		namespaceService:      namespaceService,
+		ruleUploadersRegistry: ruleUploadersRegistry,
 	}
 }
 
 func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
-	rl.Name = fmt.Sprintf("%s_%s_%s_%s", namePrefix, rl.Namespace, rl.GroupName, rl.Template)
-
-	tmpl, err := s.templateService.GetByName(ctx, rl.Template)
-	if err != nil {
-		return err
-	}
-
-	templateVariables := tmpl.Variables
-	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rl.Variables)
-	rl.Variables = finalRuleVariables
-
 	ns, err := s.namespaceService.Get(ctx, rl.ProviderNamespace)
 	if err != nil {
 		return err
 	}
 
-	prov, err := s.providerService.Get(ctx, ns.Provider)
+	templateToUpdate, err := s.templateService.GetByName(ctx, rl.Template)
 	if err != nil {
 		return err
 	}
 
-	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, prov.URN,
+	templateVariables := templateToUpdate.Variables
+	finalRuleVariables := mergeRuleVariablesWithDefaults(templateVariables, rl.Variables)
+	rl.Variables = finalRuleVariables
+
+	rl.Name = fmt.Sprintf("%s_%s_%s_%s_%s_%s", namePrefix, ns.Provider.URN,
 		ns.URN, rl.Namespace, rl.GroupName, rl.Template)
 
 	ctx = s.repository.WithTransaction(ctx)
@@ -115,11 +95,7 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 		return err
 	}
 
-	rulesWithinGroup, err := s.repository.List(ctx, Filter{
-		Namespace:   rl.Namespace,
-		GroupName:   rl.GroupName,
-		NamespaceID: rl.ProviderNamespace,
-	})
+	pluginService, err := s.getProviderPluginService(ns.Provider.Type)
 	if err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
@@ -127,16 +103,11 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 		return err
 	}
 
-	switch prov.Type {
-	case provider.TypeCortex:
-		if err = PostRuleGroupWithCortex(ctx, s.cortexClient, s.templateService, rl.Namespace, rl.GroupName, ns.URN, rulesWithinGroup); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+	if err := pluginService.UpsertRule(ctx, rl, templateToUpdate, ns.URN); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
-	default:
-		return errors.ErrInvalid.WithCausef("unknown provider type %s", prov.Type)
+		return err
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
@@ -146,55 +117,16 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 	return nil
 }
 
-func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
-	return s.repository.List(ctx, flt)
+func (s *Service) getProviderPluginService(providerType string) (RuleUploader, error) {
+	pluginService, exist := s.ruleUploadersRegistry[providerType]
+	if !exist {
+		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)
+	}
+	return pluginService, nil
 }
 
-func PostRuleGroupWithCortex(ctx context.Context, client CortexClient, templateService TemplateService, nspace, groupName, tenantName string, rulesWithinGroup []Rule) error {
-	renderedBodyForThisGroup := ""
-
-	for _, ruleWithinGroup := range rulesWithinGroup {
-		if !ruleWithinGroup.Enabled {
-			continue
-		}
-		inputValue := make(map[string]string)
-
-		for _, v := range ruleWithinGroup.Variables {
-			inputValue[v.Name] = v.Value
-		}
-
-		renderedBody, err := templateService.Render(ctx, ruleWithinGroup.Template, inputValue)
-		if err != nil {
-			return err
-		}
-		renderedBodyForThisGroup += renderedBody
-	}
-
-	if renderedBodyForThisGroup == "" {
-		if err := client.DeleteRuleGroup(cortex.NewContext(ctx, tenantName), nspace, groupName); err != nil {
-			if err.Error() == "requested resource not found" {
-				return nil
-			}
-			return fmt.Errorf("error calling cortex: %w", err)
-		}
-		return nil
-	}
-
-	var ruleNodes []rulefmt.RuleNode
-	err := yaml.Unmarshal([]byte(renderedBodyForThisGroup), &ruleNodes)
-	if err != nil {
-		return errors.ErrInvalid.WithMsgf("cannot parse rules to alert manage rule nodes format, check your rule or template").WithCausef(err.Error())
-	}
-	y := rwrulefmt.RuleGroup{
-		RuleGroup: rulefmt.RuleGroup{
-			Name:  groupName,
-			Rules: ruleNodes,
-		},
-	}
-	if err := client.CreateRuleGroup(ctx, nspace, y); err != nil {
-		return fmt.Errorf("error calling cortex: %w", err)
-	}
-	return nil
+func (s *Service) List(ctx context.Context, flt Filter) ([]Rule, error) {
+	return s.repository.List(ctx, flt)
 }
 
 func mergeRuleVariablesWithDefaults(templateVariables []template.Variable, ruleVariables []RuleVariable) []RuleVariable {

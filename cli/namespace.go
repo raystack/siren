@@ -141,7 +141,7 @@ func createNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			defer cancel()
 
 			res, err := client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-				Provider:    namespaceConfig.Provider,
+				Provider:    namespaceConfig.Provider.ID,
 				Urn:         namespaceConfig.URN,
 				Name:        namespaceConfig.Name,
 				Credentials: grpcCredentials,
@@ -280,7 +280,7 @@ func updateNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 
 			res, err := client.UpdateNamespace(ctx, &sirenv1beta1.UpdateNamespaceRequest{
 				Id:          id,
-				Provider:    namespaceConfig.Provider,
+				Provider:    namespaceConfig.Provider.ID,
 				Name:        namespaceConfig.Name,
 				Credentials: grpcCredentials,
 				Labels:      namespaceConfig.Labels,

@@ -7,9 +7,10 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -28,8 +29,10 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := []namespace.Namespace{
 			{
-				ID:          1,
-				Provider:    2,
+				ID: 1,
+				Provider: provider.Provider{
+					ID: 2,
+				},
 				Name:        "foo",
 				Credentials: credentials,
 				Labels:      labels,
@@ -55,7 +58,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -64,8 +67,10 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []namespace.Namespace{
 			{
-				ID:          1,
-				Provider:    2,
+				ID: 1,
+				Provider: provider.Provider{
+					ID: 2,
+				},
 				Name:        "foo",
 				Credentials: credentials,
 				Labels:      labels,
@@ -76,7 +81,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		mockedNamespaceService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -89,7 +94,9 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
-		Provider:    2,
+		Provider: provider.Provider{
+			ID: 2,
+		},
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -118,7 +125,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return error Invalid Argument if create service return err invalid", func(t *testing.T) {
@@ -154,8 +161,10 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := &namespace.Namespace{
-			ID:          1,
-			Provider:    2,
+			ID: 1,
+			Provider: provider.Provider{
+				ID: 2,
+			},
 			Name:        "foo",
 			Credentials: credentials,
 			Labels:      labels,
@@ -191,7 +200,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -199,8 +208,10 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &namespace.Namespace{
-			ID:          1,
-			Provider:    2,
+			ID: 1,
+			Provider: provider.Provider{
+				ID: 2,
+			},
 			Name:        "foo",
 			Credentials: credentials,
 			Labels:      labels,
@@ -211,7 +222,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -223,8 +234,10 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
-		ID:          1,
-		Provider:    2,
+		ID: 1,
+		Provider: provider.Provider{
+			ID: 2,
+		},
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -277,7 +290,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		mockedNamespaceService.AssertExpectations(t)
 	})
 }
@@ -304,6 +317,6 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 		mockedNamespaceService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }

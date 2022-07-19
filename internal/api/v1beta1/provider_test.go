@@ -8,8 +8,8 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +58,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		mockedProviderService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), provider.Filter{}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListProviders(ctx, &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 		mockedProviderService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), provider.Filter{}).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListProviders(ctx, &sirenv1beta1.ListProvidersRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch provider credentials: proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -151,7 +151,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 		mockedProviderService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateProvider(ctx, dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -222,7 +222,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 		res, err := dummyGRPCServer.GetProvider(ctx, dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -245,7 +245,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 			Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.GetProvider(ctx, dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch provider credentials: proto: invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -314,7 +314,7 @@ func TestGRPCServer_UpdateProvider(t *testing.T) {
 		mockedProviderService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateProvider(ctx, dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -341,6 +341,6 @@ func TestGRPCServer_DeleteProvider(t *testing.T) {
 		mockedProviderService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), providerId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteProvider(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }

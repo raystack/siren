@@ -41,8 +41,7 @@ func NewGRPCServer(
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
-	err := errors.E(e)
-
+	var err = e
 	var code codes.Code
 	switch {
 	case errors.Is(err, errors.ErrNotFound):
@@ -57,5 +56,15 @@ func (s *GRPCServer) generateRPCErr(e error) error {
 	default:
 		code = codes.Internal
 	}
+
+	if code == codes.Internal {
+		// This will return the error detail (Message & Cause)
+		// we might want to use errors.E(e) if we want to hide
+		// the error
+		err = errors.Verbose(err)
+	} else {
+		err = errors.E(e)
+	}
+
 	return status.Error(code, err.Error())
 }

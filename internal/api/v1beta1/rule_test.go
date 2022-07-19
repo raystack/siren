@@ -10,8 +10,8 @@ import (
 
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
@@ -83,7 +83,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -163,6 +163,6 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }

@@ -6,13 +6,13 @@ info:
     gRPC-Gateway.
   version: 0.4.0
 tags:
-- name: SirenService
+  - name: SirenService
 schemes:
-- http
+  - http
 consumes:
-- application/json
+  - application/json
 produces:
-- application/json
+  - application/json
 paths:
   /v1beta1/alerts/{provider_name}/{provider_id}:
     get:
@@ -28,31 +28,31 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: provider_name
-        in: path
-        required: true
-        type: string
-      - name: provider_id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: resource_name
-        in: query
-        required: false
-        type: string
-      - name: start_time
-        in: query
-        required: false
-        type: string
-        format: uint64
-      - name: end_time
-        in: query
-        required: false
-        type: string
-        format: uint64
+        - name: provider_name
+          in: path
+          required: true
+          type: string
+        - name: provider_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: resource_name
+          in: query
+          required: false
+          type: string
+        - name: start_time
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: end_time
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
-      - Alert
+        - Alert
   /v1beta1/alerts/cortex/{provider_id}:
     post:
       summary: create cortex alerts
@@ -67,23 +67,23 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: provider_id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            alerts:
-              type: array
-              items:
-                $ref: '#/definitions/CortexAlert'
+        - name: provider_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              alerts:
+                type: array
+                items:
+                  $ref: '#/definitions/CortexAlert'
       tags:
-      - Alert
+        - Alert
   /v1beta1/namespaces:
     get:
       summary: list namespaces
@@ -98,7 +98,7 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       tags:
-      - Namespace
+        - Namespace
     post:
       summary: create a namespace
       operationId: SirenService_CreateNamespace
@@ -112,13 +112,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateNamespaceRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateNamespaceRequest'
       tags:
-      - Namespace
+        - Namespace
   /v1beta1/namespaces/{id}:
     get:
       summary: get a namespace
@@ -133,13 +133,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Namespace
+        - Namespace
     delete:
       summary: delete a namespace
       operationId: SirenService_DeleteNamespace
@@ -153,13 +153,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Namespace
+        - Namespace
     put:
       summary: update a namespace
       operationId: SirenService_UpdateNamespace
@@ -173,30 +173,30 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            name:
-              type: string
-            provider:
-              type: string
-              format: uint64
-            credentials:
-              type: object
-            labels:
-              type: object
-              additionalProperties:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              credentials:
+                type: object
+              labels:
+                type: object
+                additionalProperties:
+                  type: string
+              name:
                 type: string
+              provider:
+                type: string
+                format: uint64
       tags:
-      - Namespace
+        - Namespace
   /v1beta1/providers:
     get:
       summary: list providers
@@ -211,16 +211,16 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: urn
-        in: query
-        required: false
-        type: string
-      - name: type
-        in: query
-        required: false
-        type: string
+        - name: urn
+          in: query
+          required: false
+          type: string
+        - name: type
+          in: query
+          required: false
+          type: string
       tags:
-      - Provider
+        - Provider
     post:
       summary: create a provider
       operationId: SirenService_CreateProvider
@@ -234,13 +234,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateProviderRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateProviderRequest'
       tags:
-      - Provider
+        - Provider
   /v1beta1/providers/{id}:
     get:
       summary: get a provider
@@ -255,13 +255,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Provider
+        - Provider
     delete:
       summary: delete a provider
       operationId: SirenService_DeleteProvider
@@ -275,13 +275,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Provider
+        - Provider
     put:
       summary: update a provider
       operationId: SirenService_UpdateProvider
@@ -295,31 +295,31 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            host:
-              type: string
-            name:
-              type: string
-            type:
-              type: string
-            credentials:
-              type: object
-            labels:
-              type: object
-              additionalProperties:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              credentials:
+                type: object
+              host:
+                type: string
+              labels:
+                type: object
+                additionalProperties:
+                  type: string
+              name:
+                type: string
+              type:
                 type: string
       tags:
-      - Provider
+        - Provider
   /v1beta1/receivers:
     get:
       summary: list receivers
@@ -334,7 +334,7 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       tags:
-      - Receiver
+        - Receiver
     post:
       summary: create a receiver
       operationId: SirenService_CreateReceiver
@@ -348,13 +348,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateReceiverRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateReceiverRequest'
       tags:
-      - Receiver
+        - Receiver
   /v1beta1/receivers/{id}:
     get:
       summary: get a receiver
@@ -369,13 +369,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Receiver
+        - Receiver
     delete:
       summary: delete a receiver
       operationId: SirenService_DeleteReceiver
@@ -389,13 +389,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Receiver
+        - Receiver
     put:
       summary: update a receiver
       operationId: SirenService_UpdateReceiver
@@ -409,29 +409,29 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            name:
-              type: string
-            type:
-              type: string
-            labels:
-              type: object
-              additionalProperties:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              configurations:
+                type: object
+              labels:
+                type: object
+                additionalProperties:
+                  type: string
+              name:
                 type: string
-            configurations:
-              type: object
+              type:
+                type: string
       tags:
-      - Receiver
+        - Receiver
   /v1beta1/receivers/{id}/send:
     post:
       summary: send notification to receiver
@@ -446,21 +446,21 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            payload:
-              type: object
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              payload:
+                type: object
       tags:
-      - Receiver
+        - Receiver
   /v1beta1/rules:
     get:
       summary: list rules
@@ -475,29 +475,29 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: name
-        in: query
-        required: false
-        type: string
-      - name: namespace
-        in: query
-        required: false
-        type: string
-      - name: group_name
-        in: query
-        required: false
-        type: string
-      - name: template
-        in: query
-        required: false
-        type: string
-      - name: provider_namespace
-        in: query
-        required: false
-        type: string
-        format: uint64
+        - name: name
+          in: query
+          required: false
+          type: string
+        - name: namespace
+          in: query
+          required: false
+          type: string
+        - name: group_name
+          in: query
+          required: false
+          type: string
+        - name: template
+          in: query
+          required: false
+          type: string
+        - name: provider_namespace
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
-      - Rule
+        - Rule
     put:
       summary: add/update a rule
       operationId: SirenService_UpdateRule
@@ -511,13 +511,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/UpdateRuleRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateRuleRequest'
       tags:
-      - Rule
+        - Rule
   /v1beta1/subscriptions:
     get:
       summary: List subscriptions
@@ -532,7 +532,7 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       tags:
-      - Subscription
+        - Subscription
     post:
       summary: Create a subscription
       operationId: SirenService_CreateSubscription
@@ -546,13 +546,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateSubscriptionRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateSubscriptionRequest'
       tags:
-      - Subscription
+        - Subscription
   /v1beta1/subscriptions/{id}:
     get:
       summary: Get a subscription
@@ -567,13 +567,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Subscription
+        - Subscription
     delete:
       summary: Delete a subscription
       operationId: SirenService_DeleteSubscription
@@ -587,13 +587,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
-      - Subscription
+        - Subscription
     put:
       summary: Update a subscription
       operationId: SirenService_UpdateSubscription
@@ -607,32 +607,32 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: id
-        in: path
-        required: true
-        type: string
-        format: uint64
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            urn:
-              type: string
-            namespace:
-              type: string
-              format: uint64
-            receivers:
-              type: array
-              items:
-                $ref: '#/definitions/ReceiverMetadata'
-            match:
-              type: object
-              additionalProperties:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              match:
+                type: object
+                additionalProperties:
+                  type: string
+              namespace:
+                type: string
+                format: uint64
+              receivers:
+                type: array
+                items:
+                  $ref: '#/definitions/ReceiverMetadata'
+              urn:
                 type: string
       tags:
-      - Subscription
+        - Subscription
   /v1beta1/templates:
     get:
       summary: list templates
@@ -647,12 +647,12 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: tag
-        in: query
-        required: false
-        type: string
+        - name: tag
+          in: query
+          required: false
+          type: string
       tags:
-      - Template
+        - Template
     put:
       summary: add/update a template
       operationId: SirenService_UpsertTemplate
@@ -666,13 +666,13 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          $ref: '#/definitions/UpsertTemplateRequest'
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpsertTemplateRequest'
       tags:
-      - Template
+        - Template
   /v1beta1/templates/{name}:
     get:
       summary: get a template
@@ -687,12 +687,12 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: name
-        in: path
-        required: true
-        type: string
+        - name: name
+          in: path
+          required: true
+          type: string
       tags:
-      - Template
+        - Template
     delete:
       summary: delete a template
       operationId: SirenService_DeleteTemplate
@@ -706,12 +706,12 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: name
-        in: path
-        required: true
-        type: string
+        - name: name
+          in: path
+          required: true
+          type: string
       tags:
-      - Template
+        - Template
   /v1beta1/templates/{name}/render:
     post:
       summary: render a template
@@ -726,22 +726,22 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-      - name: name
-        in: path
-        required: true
-        type: string
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            variables:
-              type: object
-              additionalProperties:
-                type: string
+        - name: name
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              variables:
+                type: object
+                additionalProperties:
+                  type: string
       tags:
-      - Template
+        - Template
 definitions:
   Alert:
     type: object
@@ -749,18 +749,18 @@ definitions:
       id:
         type: string
         format: uint64
+      metric_name:
+        type: string
+      metric_value:
+        type: string
       provider_id:
         type: string
         format: uint64
       resource_name:
         type: string
-      metric_name:
-        type: string
-      metric_value:
+      rule:
         type: string
       severity:
-        type: string
-      rule:
         type: string
       triggered_at:
         type: string
@@ -789,11 +789,11 @@ definitions:
         $ref: '#/definitions/Annotations'
       labels:
         $ref: '#/definitions/Labels'
-      status:
-        type: string
       starts_at:
         type: string
         format: date-time
+      status:
+        type: string
   CreateCortexAlertsResponse:
     type: object
     properties:
@@ -804,25 +804,25 @@ definitions:
   CreateNamespaceRequest:
     type: object
     properties:
-      name:
+      created_at:
         type: string
-      urn:
-        type: string
-      provider:
-        type: string
-        format: uint64
+        format: date-time
       credentials:
         type: object
       labels:
         type: object
         additionalProperties:
           type: string
-      created_at:
+      name:
         type: string
-        format: date-time
+      provider:
+        type: string
+        format: uint64
       updated_at:
         type: string
         format: date-time
+      urn:
+        type: string
   CreateNamespaceResponse:
     type: object
     properties:
@@ -832,20 +832,20 @@ definitions:
   CreateProviderRequest:
     type: object
     properties:
-      host:
-        type: string
-      urn:
-        type: string
-      name:
-        type: string
-      type:
-        type: string
       credentials:
         type: object
+      host:
+        type: string
       labels:
         type: object
         additionalProperties:
           type: string
+      name:
+        type: string
+      type:
+        type: string
+      urn:
+        type: string
   CreateProviderResponse:
     type: object
     properties:
@@ -855,16 +855,16 @@ definitions:
   CreateReceiverRequest:
     type: object
     properties:
-      name:
-        type: string
-      type:
-        type: string
+      configurations:
+        type: object
       labels:
         type: object
         additionalProperties:
           type: string
-      configurations:
-        type: object
+      name:
+        type: string
+      type:
+        type: string
   CreateReceiverResponse:
     type: object
     properties:
@@ -874,8 +874,10 @@ definitions:
   CreateSubscriptionRequest:
     type: object
     properties:
-      urn:
-        type: string
+      match:
+        type: object
+        additionalProperties:
+          type: string
       namespace:
         type: string
         format: uint64
@@ -883,10 +885,8 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ReceiverMetadata'
-      match:
-        type: object
-        additionalProperties:
-          type: string
+      urn:
+        type: string
   CreateSubscriptionResponse:
     type: object
     properties:
@@ -985,34 +985,34 @@ definitions:
   Namespace:
     type: object
     properties:
+      created_at:
+        type: string
+        format: date-time
+      credentials:
+        type: object
       id:
         type: string
         format: uint64
-      urn:
-        type: string
+      labels:
+        type: object
+        additionalProperties:
+          type: string
       name:
         type: string
       provider:
         type: string
         format: uint64
-      credentials:
-        type: object
-      labels:
-        type: object
-        additionalProperties:
-          type: string
-      created_at:
-        type: string
-        format: date-time
       updated_at:
         type: string
         format: date-time
+      urn:
+        type: string
   NotifyReceiverResponse:
     type: object
   NullValue:
     type: string
     enum:
-    - NULL_VALUE
+      - NULL_VALUE
     default: NULL_VALUE
     description: |-
       `NullValue` is a singleton enumeration to represent the null value for the
@@ -1024,63 +1024,63 @@ definitions:
   Provider:
     type: object
     properties:
+      created_at:
+        type: string
+        format: date-time
+      credentials:
+        type: object
+      host:
+        type: string
       id:
         type: string
         format: uint64
-      host:
-        type: string
-      urn:
-        type: string
-      name:
-        type: string
-      type:
-        type: string
-      credentials:
-        type: object
       labels:
         type: object
         additionalProperties:
           type: string
-      created_at:
+      name:
         type: string
-        format: date-time
+      type:
+        type: string
       updated_at:
         type: string
         format: date-time
+      urn:
+        type: string
   Receiver:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
-      name:
-        type: string
-      type:
-        type: string
-      labels:
-        type: object
-        additionalProperties:
-          type: string
       configurations:
-        type: object
-      data:
         type: object
       created_at:
         type: string
         format: date-time
+      data:
+        type: object
+      id:
+        type: string
+        format: uint64
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+      name:
+        type: string
+      type:
+        type: string
       updated_at:
         type: string
         format: date-time
   ReceiverMetadata:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
       configuration:
         type: object
         additionalProperties:
           type: string
+      id:
+        type: string
+        format: uint64
   RenderTemplateResponse:
     type: object
     properties:
@@ -1089,52 +1089,57 @@ definitions:
   Rule:
     type: object
     properties:
+      created_at:
+        type: string
+        format: date-time
+      enabled:
+        type: boolean
+      group_name:
+        type: string
       id:
         type: string
         format: uint64
       name:
         type: string
-      enabled:
-        type: boolean
-      group_name:
-        type: string
       namespace:
         type: string
+      provider_namespace:
+        type: string
+        format: uint64
       template:
         type: string
+      updated_at:
+        type: string
+        format: date-time
       variables:
         type: array
         items:
           $ref: '#/definitions/Variables'
-      created_at:
-        type: string
-        format: date-time
-      updated_at:
-        type: string
-        format: date-time
-      provider_namespace:
-        type: string
-        format: uint64
   Status:
     type: object
     properties:
       code:
         type: integer
         format: int32
-      message:
-        type: string
       details:
         type: array
         items:
           $ref: '#/definitions/Any'
+      message:
+        type: string
   Subscription:
     type: object
     properties:
+      created_at:
+        type: string
+        format: date-time
       id:
         type: string
         format: uint64
-      urn:
-        type: string
+      match:
+        type: object
+        additionalProperties:
+          type: string
       namespace:
         type: string
         format: uint64
@@ -1142,33 +1147,28 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/ReceiverMetadata'
-      match:
-        type: object
-        additionalProperties:
-          type: string
-      created_at:
-        type: string
-        format: date-time
       updated_at:
         type: string
         format: date-time
+      urn:
+        type: string
   Template:
     type: object
     properties:
+      body:
+        type: string
+      created_at:
+        type: string
+        format: date-time
       id:
         type: string
         format: uint64
       name:
         type: string
-      body:
-        type: string
       tags:
         type: array
         items:
           type: string
-      created_at:
-        type: string
-        format: date-time
       updated_at:
         type: string
         format: date-time
@@ -1179,13 +1179,13 @@ definitions:
   TemplateVariables:
     type: object
     properties:
-      name:
-        type: string
-      type:
-        type: string
       default:
         type: string
       description:
+        type: string
+      name:
+        type: string
+      type:
         type: string
   UpdateNamespaceResponse:
     type: object
@@ -1214,15 +1214,15 @@ definitions:
         type: string
       namespace:
         type: string
+      provider_namespace:
+        type: string
+        format: uint64
       template:
         type: string
       variables:
         type: array
         items:
           $ref: '#/definitions/Variables'
-      provider_namespace:
-        type: string
-        format: uint64
   UpdateRuleResponse:
     type: object
     properties:
@@ -1238,12 +1238,12 @@ definitions:
   UpsertTemplateRequest:
     type: object
     properties:
+      body:
+        type: string
       id:
         type: string
         format: uint64
       name:
-        type: string
-      body:
         type: string
       tags:
         type: array
@@ -1262,11 +1262,11 @@ definitions:
   Variables:
     type: object
     properties:
-      name:
+      description:
         type: string
-      value:
+      name:
         type: string
       type:
         type: string
-      description:
+      value:
         type: string

@@ -8,8 +8,8 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -69,7 +69,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			EndTime:      200,
 		}
 		res, err := dummyGRPCServer.ListAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedAlertService.AssertExpectations(t)
 	})
@@ -200,7 +200,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 		mockedAlertService.AssertExpectations(t)
 	})

@@ -8,8 +8,8 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +54,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 		mockedSubscriptionService.EXPECT().List(context.Background(), subscription.Filter{}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &sirenv1beta1.ListSubscriptionsRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -100,7 +100,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -192,7 +192,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 			Match:     match,
 		})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 }
 
@@ -269,7 +269,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Match:     match,
 		})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 	})
 
 	t.Run("should return error Invalid for bad requests", func(t *testing.T) {
@@ -305,7 +305,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 
 		mockedSubscriptionService.EXPECT().Delete(context.Background(), uint64(1)).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
-		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
 		assert.Nil(t, res)
 	})
 }
