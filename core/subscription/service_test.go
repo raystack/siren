@@ -269,13 +269,39 @@ func TestService_Create(t *testing.T) {
 				ErrString: "commit error",
 			},
 			{
-				Description: "should return error if transaction rollback return error",
+				Description: "should return error if create repository return error and rollback return error",
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
 					sr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
+				},
+				ErrString: "some rollback error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback success",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
+				},
+				ErrString: "some error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback failed",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
 				},
 				ErrString: "some rollback error",
@@ -448,13 +474,39 @@ func TestService_Update(t *testing.T) {
 				ErrString: "some error",
 			},
 			{
-				Description: "should return error if transaction rollback return error",
+				Description: "should return error if update subscription return error and rollback return error",
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
 					sr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
+				},
+				ErrString: "some rollback error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback success",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
+				},
+				ErrString: "some error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback failed",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
 				},
 				ErrString: "some rollback error",
@@ -630,7 +682,7 @@ func TestService_Delete(t *testing.T) {
 				ErrString: "some error",
 			},
 			{
-				Description: "should return error if transaction rollback return error",
+				Description: "should return error if delete subscription return error and rollback return error",
 				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
@@ -638,6 +690,34 @@ func TestService_Delete(t *testing.T) {
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
 					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
+				},
+				ErrString: "some rollback error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback success",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
+					sr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
+				},
+				ErrString: "some error",
+			},
+			{
+				Description: "should return error if sync to upstream return error and rollback failed",
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, ps *mocks.ProviderService, rs *mocks.ReceiverService, cc *mocks.CortexClient) {
+					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
+					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
+
+					sr.EXPECT().WithTransaction(ctx).Return(ctx)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
 				},
 				ErrString: "some rollback error",
