@@ -1,8 +1,6 @@
 package v1beta1
 
 import (
-	"context"
-
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
 	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
@@ -44,10 +42,6 @@ func NewGRPCServer(
 		receiverService:     receiverService,
 		subscriptionService: subscriptionService,
 	}
-}
-
-func (s *GRPCServer) Ping(ctx context.Context, in *sirenv1beta1.PingRequest) (*sirenv1beta1.PingResponse, error) {
-	return &sirenv1beta1.PingResponse{Message: "Pong"}, nil
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
