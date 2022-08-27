@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -23,8 +22,9 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/odpf/salt/log"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/internal/server/v1beta1"
+	"github.com/odpf/siren/internal/api/v1beta1"
+	swagger "github.com/odpf/siren/proto"
+	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -33,9 +33,6 @@ import (
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
-
-//go:embed siren.swagger.yaml
-var swaggerFile embed.FS
 
 type Config struct {
 	Host string `mapstructure:"host" default:"localhost"`
@@ -130,7 +127,7 @@ func RunServer(
 
 	baseMux := http.NewServeMux()
 	baseMux.HandleFunc("/siren.swagger.yaml", func(w http.ResponseWriter, r *http.Request) {
-		http.FileServer(http.FS(swaggerFile)).ServeHTTP(w, r)
+		http.FileServer(http.FS(swagger.File)).ServeHTTP(w, r)
 	})
 	baseMux.Handle("/documentation", middleware.SwaggerUI(middleware.SwaggerUIOpts{
 		SpecURL: "/siren.swagger.yaml",

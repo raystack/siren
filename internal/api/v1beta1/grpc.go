@@ -3,8 +3,8 @@ package v1beta1
 import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/pkg/errors"
+	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

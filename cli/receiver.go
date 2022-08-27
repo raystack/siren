@@ -9,8 +9,8 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/receiver"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
 	"github.com/odpf/siren/pkg/errors"
+	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/structpb"
 )

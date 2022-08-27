@@ -1,23 +1,21 @@
-version: v1beta1
+version: v1
 plugins:
-  - name: go
-    out: internal/server/proto
+  - remote: "buf.build/library/plugins/go:v1.27.1-1"
+    out: proto
     opt: paths=source_relative
-  - name: go-grpc
-    out: internal/server/proto
+  - remote: "buf.build/library/plugins/go-grpc:v1.1.0-2"
+    out: proto
     opt: paths=source_relative,require_unimplemented_servers=true
-  - name: grpc-gateway
-    out: internal/server/proto
+  - remote: buf.build/odpf/plugins/validate
+    out: "proto"
+    opt: "paths=source_relative,lang=go"
+  - remote: "buf.build/grpc-ecosystem/plugins/grpc-gateway:v2.5.0-1"
+    out: proto
     opt:
       - paths=source_relative
       - allow_repeated_fields_in_body=true
-  - name: validate
-    out: internal/server/proto
-    opt:
-      - paths=source_relative
-      - lang=go
-  - name: openapiv2
-    out: internal/server
+  - remote: "buf.build/grpc-ecosystem/plugins/openapiv2:v2.6.0-1"
+    out: proto
     opt:
       - allow_repeated_fields_in_body=true
       - output_format=yaml

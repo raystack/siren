@@ -7,10 +7,10 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/internal/server/v1beta1"
-	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/internal/api/v1beta1"
+	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
+	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/structpb"
