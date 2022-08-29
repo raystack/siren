@@ -9,9 +9,9 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 
 	"github.com/odpf/siren/core/rule"
-	sirenv1beta1 "github.com/odpf/siren/internal/server/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/internal/server/v1beta1"
-	"github.com/odpf/siren/internal/server/v1beta1/mocks"
+	"github.com/odpf/siren/internal/api/v1beta1"
+	"github.com/odpf/siren/internal/api/v1beta1/mocks"
+	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
 
