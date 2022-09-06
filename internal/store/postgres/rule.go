@@ -4,10 +4,37 @@ import (
 	"context"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 )
+
+const ruleUpsertQuery = `
+INSERT INTO
+rules
+	(name, namespace, group_name, template, enabled, variables, provider_namespace, created_at, updated_at)
+VALUES
+	($1, $2, $3, $4, $5, $6, $7, now(), now())
+ON CONFLICT
+	(name)
+DO UPDATE SET
+	(namespace, group_name, template, enabled, variables, provider_namespace, updated_at) =
+	($2, $3, $4, $5, $6, $7, now())
+RETURNING *`
+
+var ruleListQueryBuilder = sq.Select(
+	"id",
+	"name",
+	"namespace",
+	"group_name",
+	"template",
+	"enabled",
+	"variables",
+	"provider_namespace",
+	"created_at",
+	"updated_at",
+).From("rules")
 
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
@@ -20,16 +47,26 @@ func NewRuleRepository(client *Client) *RuleRepository {
 }
 
 func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
-	m := new(model.Rule)
-	if err := m.FromDomain(rl); err != nil {
+	if rl == nil {
+		return errors.New("rule domain is nil")
+	}
+
+	ruleModel := new(model.Rule)
+	if err := ruleModel.FromDomain(*rl); err != nil {
 		return err
 	}
 
-	tx := r.client.GetDB(ctx)
-
-	result := tx.WithContext(ctx).Where("name = ?", m.Name).Updates(&m)
-	if result.Error != nil {
-		err := checkPostgresError(result.Error)
+	var newRuleModel model.Rule
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, ruleUpsertQuery,
+		ruleModel.Name,
+		ruleModel.Namespace,
+		ruleModel.GroupName,
+		ruleModel.Template,
+		ruleModel.Enabled,
+		ruleModel.Variables,
+		ruleModel.ProviderNamespace,
+	).StructScan(&newRuleModel); err != nil {
+		err = checkPostgresError(err)
 		if errors.Is(err, errDuplicateKey) {
 			return rule.ErrDuplicate
 		}
@@ -39,65 +76,63 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 		return err
 	}
 
-	if result.RowsAffected == 0 {
-		if err := tx.WithContext(ctx).Create(&m).Error; err != nil {
-			err = checkPostgresError(err)
-			if errors.Is(err, errDuplicateKey) {
-				return rule.ErrDuplicate
-			}
-			if errors.Is(err, errForeignKeyViolation) {
-				return rule.ErrRelation
-			}
-			return err
-		}
-	}
-
-	newRule, err := m.ToDomain()
+	newRule, err := newRuleModel.ToDomain()
 	if err != nil {
 		return err
 	}
 
 	*rl = *newRule
+
 	return nil
 }
 
 func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule, error) {
-	var rules []model.Rule
-	txdb := r.client.GetDB(ctx).WithContext(ctx)
+	var queryBuilder = ruleListQueryBuilder
 	if flt.Name != "" {
-		txdb = txdb.Where("name = ?", flt.Name)
+		queryBuilder = queryBuilder.Where("name = ?", flt.Name)
 	}
 	if flt.Namespace != "" {
-		txdb = txdb.Where("namespace = ?", flt.Namespace)
+		queryBuilder = queryBuilder.Where("namespace = ?", flt.Namespace)
 	}
 	if flt.GroupName != "" {
-		txdb = txdb.Where("group_name = ?", flt.GroupName)
+		queryBuilder = queryBuilder.Where("group_name = ?", flt.GroupName)
 	}
 	if flt.TemplateName != "" {
-		txdb = txdb.Where("template = ?", flt.TemplateName)
+		queryBuilder = queryBuilder.Where("template = ?", flt.TemplateName)
 	}
 	if flt.NamespaceID != 0 {
-		txdb = txdb.Where("provider_namespace = ?", flt.NamespaceID)
+		queryBuilder = queryBuilder.Where("provider_namespace = ?", flt.NamespaceID)
 	}
 
-	if err := txdb.Find(&rules).Error; err != nil {
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
 		return nil, err
 	}
 
-	var domainRules []rule.Rule
-	for _, r := range rules {
-		rule, err := r.ToDomain()
+	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	var rulesDomain []rule.Rule
+	for rows.Next() {
+		var ruleModel model.Rule
+		if err := rows.StructScan(&ruleModel); err != nil {
+			return nil, err
+		}
+
+		newRule, err := ruleModel.ToDomain()
 		if err != nil {
 			return nil, err
 		}
-		domainRules = append(domainRules, *rule)
+		rulesDomain = append(rulesDomain, *newRule)
 	}
 
-	return domainRules, nil
+	return rulesDomain, nil
 }
 
 func (r *RuleRepository) WithTransaction(ctx context.Context) context.Context {
-	return r.client.WithTransaction(ctx)
+	return r.client.WithTransaction(ctx, nil)
 }
 
 func (r *RuleRepository) Rollback(ctx context.Context, err error) error {

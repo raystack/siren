@@ -3,6 +3,6 @@ package alert
 type Filter struct {
 	ResourceName string
 	ProviderID   uint64
-	StartTime    uint64
-	EndTime      uint64
+	StartTime    int64
+	EndTime      int64
 }

@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"testing"
 	"time"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -16,22 +17,26 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"go.uber.org/zap"
 )
 
-const logLevelDebug = "debug"
+const (
+	logLevelDebug     = "debug"
+	pgUser            = "test_user"
+	pgPass            = "test_pass"
+	pgDBName          = "test_db"
+	testEncryptionKey = "ZGnfZTqlQtT7chPFDFHQpPNFX3ugSERl"
+)
 
 var (
-	pgConfig = postgres.Config{
-		Host:     "localhost",
-		User:     "test_user",
-		Password: "test_pass",
-		Name:     "test_db",
-		SSLMode:  "disable",
+	dbConfig = db.Config{
+		Driver:          "pgx",
+		MaxIdleConns:    10,
+		MaxOpenConns:    10,
+		ConnMaxLifeTime: 1000,
+		MaxQueryTimeout: 1000,
 	}
 )
 
@@ -41,9 +46,9 @@ func newTestClient(logger log.Logger) (*postgres.Client, *dockertest.Pool, *dock
 		Repository: "postgres",
 		Tag:        "12",
 		Env: []string{
-			"POSTGRES_PASSWORD=" + pgConfig.Password,
-			"POSTGRES_USER=" + pgConfig.User,
-			"POSTGRES_DB=" + pgConfig.Name,
+			"POSTGRES_PASSWORD=" + pgPass,
+			"POSTGRES_USER=" + pgUser,
+			"POSTGRES_DB=" + pgDBName,
 		},
 	}
 
@@ -63,7 +68,7 @@ func newTestClient(logger log.Logger) (*postgres.Client, *dockertest.Pool, *dock
 		return nil, nil, nil, fmt.Errorf("could not start resource: %w", err)
 	}
 
-	pgConfig.Port = resource.GetPort("5432/tcp")
+	pgPort := resource.GetPort("5432/tcp")
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("cannot parse external port of container to int: %w", err)
 	}
@@ -103,22 +108,30 @@ func newTestClient(logger log.Logger) (*postgres.Client, *dockertest.Pool, *dock
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	pool.MaxWait = 60 * time.Second
 
-	var pgClient *postgres.Client
+	var dbClient *db.Client
 	if err = pool.Retry(func() error {
-		pgClient, err = postgres.NewClient(logger, pgConfig)
+		dbConfig.URL = fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", pgUser, pgPass, pgPort, pgDBName)
+		dbc, err := db.New(dbConfig)
 		if err != nil {
 			return err
 		}
+
+		dbClient = dbc
 
 		return nil
 	}); err != nil {
 		return nil, nil, nil, fmt.Errorf("could not connect to docker: %w", err)
 	}
 
-	err = setup(context.Background(), logger, pgClient)
+	pgClient, err := postgres.NewClient(logger, dbClient)
 	if err != nil {
+		logger.Fatal("failed to create postgres client", "error", err)
+	}
+
+	if err = setup(context.Background(), logger, pgClient, dbConfig); err != nil {
 		logger.Fatal("failed to setup and migrate DB", "error", err)
 	}
+
 	return pgClient, pool, resource, nil
 }
 
@@ -129,7 +142,7 @@ func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	return nil
 }
 
-func setup(ctx context.Context, logger log.Logger, client *postgres.Client) (err error) {
+func setup(ctx context.Context, logger log.Logger, client *postgres.Client, dbConf db.Config) (err error) {
 	var queries = []string{
 		"DROP SCHEMA public CASCADE",
 		"CREATE SCHEMA public",
@@ -140,14 +153,14 @@ func setup(ctx context.Context, logger log.Logger, client *postgres.Client) (err
 		return
 	}
 
-	err = client.Migrate()
+	err = postgres.Migrate(dbConf)
 	return
 }
 
 // ExecQueries is used for executing list of db query
 func execQueries(ctx context.Context, client *postgres.Client, queries []string) error {
 	for _, query := range queries {
-		err := client.GetDB(context.TODO()).Exec(query).Error
+		_, err := client.GetDB(ctx).QueryContext(ctx, query)
 		if err != nil {
 			return err
 		}
@@ -162,25 +175,25 @@ func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 		return nil, err
 	}
 
+	repo := postgres.NewProviderRepository(client)
+
 	var data []provider.Provider
 	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
 		return nil, err
 	}
 
-	var insertedData []provider.Provider
 	for _, d := range data {
-		var mdl model.Provider
-		mdl.FromDomain(&d)
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
+		if err := repo.Create(context.Background(), &d); err != nil {
+			return nil, err
 		}
-
-		insertedData = append(insertedData, *mdl.ToDomain())
 	}
 
-	return insertedData, nil
+	providers, err := repo.List(context.Background(), provider.Filter{})
+	if err != nil {
+		return nil, err
+	}
+
+	return providers, nil
 }
 
 func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace, error) {
@@ -190,25 +203,39 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 		return nil, err
 	}
 
+	repo := postgres.NewNamespaceRepository(client)
+
 	var data []namespace.Namespace
 	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
 		return nil, err
 	}
 
-	var insertedData []namespace.EncryptedNamespace
+	// encryptService, err := secret.New(testEncryptionKey)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
 	for _, d := range data {
-		var mdl model.Namespace
-		mdl.FromDomain(&namespace.EncryptedNamespace{
+		// plainTextCredentials, err := json.Marshal(d.Credentials)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// cipherTextCredentials, err := encryptService.Encrypt(string(plainTextCredentials))
+		// if err != nil {
+		// 	return nil, err
+		// }
+		encryptedNS := namespace.EncryptedNamespace{
 			Namespace:   &d,
-			Credentials: fmt.Sprintf("%+v", &d.Credentials),
-		})
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
+			Credentials: fmt.Sprintf("%+v", d.Credentials),
 		}
+		if err := repo.Create(context.Background(), &encryptedNS); err != nil {
+			return nil, err
+		}
+	}
 
-		insertedData = append(insertedData, *mdl.ToDomain())
+	insertedData, err := repo.List(context.Background())
+	if err != nil {
+		return nil, err
 	}
 
 	return insertedData, nil
@@ -221,22 +248,22 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 		return nil, err
 	}
 
+	repo := postgres.NewReceiverRepository(client)
+
 	var data []receiver.Receiver
 	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
 		return nil, err
 	}
 
-	var insertedData []receiver.Receiver
 	for _, d := range data {
-		var mdl model.Receiver
-		mdl.FromDomain(&d)
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
+		if err := repo.Create(context.Background(), &d); err != nil {
+			return nil, err
 		}
+	}
 
-		insertedData = append(insertedData, *mdl.ToDomain())
+	insertedData, err := repo.List(context.Background(), receiver.Filter{})
+	if err != nil {
+		return nil, err
 	}
 
 	return insertedData, nil
@@ -254,18 +281,16 @@ func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 		return nil, err
 	}
 
+	repo := postgres.NewAlertRepository(client)
+
 	var insertedData []alert.Alert
 	for _, d := range data {
-		var mdl model.Alert
-		mdl.FromDomain(&d)
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
+		alrt, err := repo.Create(context.Background(), &d)
+		if err != nil {
+			return nil, err
 		}
 
-		dmn := mdl.ToDomain()
-		insertedData = append(insertedData, *dmn)
+		insertedData = append(insertedData, *alrt)
 	}
 
 	return insertedData, nil
@@ -283,25 +308,18 @@ func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 		return nil, err
 	}
 
-	var insertedData []template.Template
+	repo := postgres.NewTemplateRepository(client)
+
 	for _, d := range data {
-		var mdl model.Template
-		if err := mdl.FromDomain(&d); err != nil {
+		if err := repo.Upsert(context.Background(), &d); err != nil {
 			return nil, err
 		}
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-
-		dmn, err := mdl.ToDomain()
-		if err != nil {
-			return nil, err
-		}
-		insertedData = append(insertedData, *dmn)
 	}
 
+	insertedData, err := repo.List(context.Background(), template.Filter{})
+	if err != nil {
+		return nil, err
+	}
 	return insertedData, nil
 }
 
@@ -317,23 +335,16 @@ func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 		return nil, err
 	}
 
+	repo := postgres.NewRuleRepository(client)
+
 	var insertedData []rule.Rule
 	for _, d := range data {
-		var mdl model.Rule
-		if err := mdl.FromDomain(&d); err != nil {
-			return nil, err
-		}
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-
-		dmn, err := mdl.ToDomain()
+		err := repo.Upsert(context.Background(), &d)
 		if err != nil {
 			return nil, err
 		}
-		insertedData = append(insertedData, *dmn)
+
+		insertedData = append(insertedData, d)
 	}
 
 	return insertedData, nil
@@ -351,102 +362,17 @@ func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription
 		return nil, err
 	}
 
+	repo := postgres.NewSubscriptionRepository(client)
+
 	var insertedData []subscription.Subscription
 	for _, d := range data {
-		var mdl model.Subscription
-		mdl.FromDomain(&d)
-
-		result := client.GetDB(context.TODO()).Create(&mdl)
-		if result.Error != nil {
-			return nil, result.Error
+		err := repo.Create(context.Background(), &d)
+		if err != nil {
+			return nil, err
 		}
 
-		insertedData = append(insertedData, *mdl.ToDomain())
+		insertedData = append(insertedData, d)
 	}
 
 	return insertedData, nil
-}
-
-func TestMigration(t *testing.T) {
-	t.Run("successfully migrate if there is no problem", func(t *testing.T) {
-		logger := log.NewZap()
-		client, pool, resource, err := newTestClient(logger)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if err = client.Migrate(); err != nil {
-			t.Fatal(err)
-		}
-
-		if err = purgeDocker(pool, resource); err != nil {
-			t.Fatal(err)
-		}
-	})
-
-}
-
-func TestLogs(t *testing.T) {
-	wrongPGConfig := postgres.Config{
-		Host:     "localhost",
-		User:     "test_user",
-		Password: "test_pass",
-		Name:     "test_db",
-		SSLMode:  "disable",
-	}
-
-	t.Run("failed migrate if there is a problem with log level error", func(t *testing.T) {
-		zapConfig := zap.NewProductionConfig()
-		zapConfig.Level = zap.NewAtomicLevelAt(zap.ErrorLevel)
-		logger := log.NewZap(log.ZapWithConfig(zapConfig))
-
-		_, err := postgres.NewClient(logger, wrongPGConfig)
-		if err == nil {
-			t.Fatal("should throw error")
-		}
-	})
-
-	t.Run("failed migrate if there is a problem with log level warn", func(t *testing.T) {
-		zapConfig := zap.NewProductionConfig()
-		zapConfig.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
-		logger := log.NewZap(log.ZapWithConfig(zapConfig))
-
-		_, err := postgres.NewClient(logger, wrongPGConfig)
-		if err == nil {
-			t.Fatal("should throw error")
-		}
-	})
-
-	t.Run("failed migrate if there is a problem with log level info", func(t *testing.T) {
-		zapConfig := zap.NewProductionConfig()
-		zapConfig.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-		logger := log.NewZap(log.ZapWithConfig(zapConfig))
-
-		_, err := postgres.NewClient(logger, wrongPGConfig)
-		if err == nil {
-			t.Fatal("should throw error")
-		}
-	})
-
-	t.Run("failed migrate if there is a problem with log level debug", func(t *testing.T) {
-		zapConfig := zap.NewProductionConfig()
-		zapConfig.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-		logger := log.NewZap(log.ZapWithConfig(zapConfig))
-
-		_, err := postgres.NewClient(logger, wrongPGConfig)
-		if err == nil {
-			t.Fatal("should throw error")
-		}
-	})
-
-	t.Run("failed migrate if there is a problem with other log level", func(t *testing.T) {
-		zapConfig := zap.NewProductionConfig()
-		zapConfig.Level = zap.NewAtomicLevelAt(zap.DPanicLevel)
-		logger := log.NewZap(log.ZapWithConfig(zapConfig))
-
-		_, err := postgres.NewClient(logger, wrongPGConfig)
-		if err == nil {
-			t.Fatal("should throw error")
-		}
-	})
 }

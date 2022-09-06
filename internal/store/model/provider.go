@@ -14,6 +14,10 @@ type StringInterfaceMap map[string]interface{}
 type StringStringMap map[string]string
 
 func (m *StringInterfaceMap) Scan(value interface{}) error {
+	if value == nil {
+		m = new(StringInterfaceMap)
+		return nil
+	}
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("failed type assertion to []byte")
@@ -29,6 +33,10 @@ func (a StringInterfaceMap) Value() (driver.Value, error) {
 }
 
 func (m *StringStringMap) Scan(value interface{}) error {
+	if value == nil {
+		m = new(StringStringMap)
+		return nil
+	}
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("failed type assertion to []byte")
@@ -44,18 +52,18 @@ func (a StringStringMap) Value() (driver.Value, error) {
 }
 
 type Provider struct {
-	ID          uint64 `gorm:"primarykey"`
-	Host        string
-	URN         string `gorm:"unique:urn"`
-	Name        string
-	Type        string
-	Credentials StringInterfaceMap `gorm:"type:jsonb" sql:"type:jsonb" `
-	Labels      StringStringMap    `gorm:"type:jsonb" sql:"type:jsonb" `
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint64             `db:"id"`
+	Host        string             `db:"host"`
+	URN         string             `db:"urn"`
+	Name        string             `db:"name"`
+	Type        string             `db:"type"`
+	Credentials StringInterfaceMap `db:"credentials"`
+	Labels      StringStringMap    `db:"labels"`
+	CreatedAt   time.Time          `db:"created_at"`
+	UpdatedAt   time.Time          `db:"updated_at"`
 }
 
-func (p *Provider) FromDomain(t *provider.Provider) {
+func (p *Provider) FromDomain(t provider.Provider) {
 	p.ID = t.ID
 	p.Host = t.Host
 	p.URN = t.URN

@@ -231,7 +231,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 				UpdatedAt: templateData.UpdatedAt.AsTime(),
 			}
 
-			if err := printer.Text(template, format); err != nil {
+			if err := printer.File(template, format); err != nil {
 				return fmt.Errorf("failed to format template: %v", err)
 			}
 			return nil
@@ -312,7 +312,7 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			if err := printer.Text(template, format); err != nil {
+			if err := printer.File(template, format); err != nil {
 				return fmt.Errorf("failed to format template: %v", err)
 			}
 			return nil

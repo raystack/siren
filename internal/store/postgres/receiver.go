@@ -2,12 +2,40 @@ package postgres
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 
+	sq "github.com/Masterminds/squirrel"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 )
+
+const receiverInsertQuery = `
+INSERT INTO receivers (name, type, labels, configurations, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, now(), now())
+RETURNING *
+`
+
+const receiverUpdateQuery = `
+UPDATE receivers SET name=$2, type=$3, labels=$4, configurations=$5, updated_at=now()
+WHERE id = $1
+RETURNING *
+`
+
+const receiverDeleteQuery = `
+DELETE from receivers where id=$1
+`
+
+var receiverListQueryBuilder = sq.Select(
+	"id",
+	"name",
+	"type",
+	"labels",
+	"configurations",
+	"created_at",
+	"updated_at",
+).From("receivers")
 
 // ReceiverRepository talks to the store to read or insert data
 type ReceiverRepository struct {
@@ -20,24 +48,31 @@ func NewReceiverRepository(client *Client) *ReceiverRepository {
 }
 
 func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
-	var models []*model.Receiver
-	result := r.client.db.WithContext(ctx)
-
+	var queryBuilder = receiverListQueryBuilder
 	if len(flt.ReceiverIDs) > 0 {
-		result = result.Where("id IN ?", flt.ReceiverIDs)
+		queryBuilder = queryBuilder.Where(sq.Eq{"id": flt.ReceiverIDs})
 	}
 
-	result = result.Find(&models)
-	if result.Error != nil {
-		return nil, result.Error
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
 	}
 
-	var receivers []receiver.Receiver
-	for _, r := range models {
-		receivers = append(receivers, *r.ToDomain())
+	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return receivers, nil
+	receiversDomain := []receiver.Receiver{}
+	for rows.Next() {
+		var receiverModel model.Receiver
+		if err := rows.StructScan(&receiverModel); err != nil {
+			return nil, err
+		}
+		receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
+	}
+
+	return receiversDomain, nil
 }
 
 func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) error {
@@ -45,28 +80,43 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 		return errors.New("receiver domain is nil")
 	}
 
-	m := new(model.Receiver)
-	m.FromDomain(rcv)
+	receiverModel := new(model.Receiver)
+	receiverModel.FromDomain(*rcv)
 
-	result := r.client.db.WithContext(ctx).Create(m)
-	if result.Error != nil {
-		return result.Error
+	var createdReceiver model.Receiver
+	if err := r.client.db.QueryRowxContext(ctx, receiverInsertQuery,
+		receiverModel.Name,
+		receiverModel.Type,
+		receiverModel.Labels,
+		receiverModel.Configurations,
+	).StructScan(&createdReceiver); err != nil {
+		err := checkPostgresError(err)
+		if errors.Is(err, errDuplicateKey) {
+			return provider.ErrDuplicate
+		}
+		return err
 	}
+
+	*rcv = *createdReceiver.ToDomain()
 
 	return nil
 }
 
 func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
-	rcvModel := new(model.Receiver)
-	result := r.client.db.Where(fmt.Sprintf("id = %d", id)).Find(rcvModel)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return nil, receiver.NotFoundError{ID: id}
+	query, args, err := receiverListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
 	}
 
-	return rcvModel.ToDomain(), nil
+	var receiverModel model.Receiver
+	if err := r.client.db.GetContext(ctx, &receiverModel, query, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, receiver.NotFoundError{ID: id}
+		}
+		return nil, err
+	}
+
+	return receiverModel.ToDomain(), nil
 }
 
 func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) error {
@@ -74,23 +124,31 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 		return errors.New("receiver domain is nil")
 	}
 
-	var m model.Receiver
-	m.FromDomain(rcv)
+	receiverModel := new(model.Receiver)
+	receiverModel.FromDomain(*rcv)
 
-	result := r.client.db.WithContext(ctx).Where("id = ?", m.ID).Updates(m)
-	if result.Error != nil {
-		return result.Error
+	var updatedReceiver model.Receiver
+	if err := r.client.db.QueryRowxContext(ctx, receiverUpdateQuery,
+		receiverModel.ID,
+		receiverModel.Name,
+		receiverModel.Type,
+		receiverModel.Labels,
+		receiverModel.Configurations,
+	).StructScan(&updatedReceiver); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return receiver.NotFoundError{ID: receiverModel.ID}
+		}
+		return err
 	}
 
-	if result.RowsAffected == 0 {
-		return receiver.NotFoundError{ID: rcv.ID}
-	}
+	*rcv = *updatedReceiver.ToDomain()
 
 	return nil
 }
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
-	var receiver model.Receiver
-	result := r.client.db.WithContext(ctx).Where("id = ?", id).Delete(&receiver)
-	return result.Error
+	if _, err := r.client.db.ExecContext(ctx, receiverDeleteQuery, id); err != nil {
+		return err
+	}
+	return nil
 }
