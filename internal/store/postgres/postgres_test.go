@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -23,11 +23,10 @@ import (
 )
 
 const (
-	logLevelDebug     = "debug"
-	pgUser            = "test_user"
-	pgPass            = "test_pass"
-	pgDBName          = "test_db"
-	testEncryptionKey = "ZGnfZTqlQtT7chPFDFHQpPNFX3ugSERl"
+	logLevelDebug = "debug"
+	pgUser        = "test_user"
+	pgPass        = "test_pass"
+	pgDBName      = "test_db"
 )
 
 var (
@@ -170,7 +169,7 @@ func execQueries(ctx context.Context, client *postgres.Client, queries []string)
 
 func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 	filePath := "./testdata/mock-provider.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +197,7 @@ func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 
 func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace, error) {
 	filePath := "./testdata/mock-namespace.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +242,7 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 
 func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 	filePath := "./testdata/mock-receiver.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +270,7 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 
 func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 	filePath := "./testdata/mock-alert.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +297,7 @@ func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
 
 func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 	filePath := "./testdata/mock-template.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +324,7 @@ func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 
 func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 	filePath := "./testdata/mock-rule.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +351,7 @@ func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 
 func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription, error) {
 	filePath := "./testdata/mock-subscription.json"
-	testFixtureJSON, err := ioutil.ReadFile(filePath)
+	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}

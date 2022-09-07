@@ -72,7 +72,7 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 		return err
 	}
 
-	tmpl = newTemplate
+	*tmpl = *newTemplate
 
 	return nil
 }

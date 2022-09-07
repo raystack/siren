@@ -2,7 +2,7 @@ package cortex_test
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
@@ -105,11 +105,11 @@ func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 			{
 				Description: "return error if error CreateAlertmanagerConfig with cortex client",
 				Setup: func(cc *mocks.CortexCaller) *cortex.Client {
-					configYaml, err := ioutil.ReadFile("./testdata/config.goyaml")
+					configYaml, err := os.ReadFile("./testdata/config.goyaml")
 					require.NoError(t, err)
-					helperTemplate, err := ioutil.ReadFile("./testdata/helper.tmpl")
+					helperTemplate, err := os.ReadFile("./testdata/helper.tmpl")
 					require.NoError(t, err)
-					expectedConfigYaml, err := ioutil.ReadFile("./testdata/expected_config.yaml")
+					expectedConfigYaml, err := os.ReadFile("./testdata/expected_config.yaml")
 					require.NoError(t, err)
 
 					cc.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("*context.valueCtx"), string(expectedConfigYaml), map[string]string{
@@ -127,11 +127,11 @@ func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 			{
 				Description: "return nil error if succeed",
 				Setup: func(cc *mocks.CortexCaller) *cortex.Client {
-					configYaml, err := ioutil.ReadFile("./testdata/config.goyaml")
+					configYaml, err := os.ReadFile("./testdata/config.goyaml")
 					require.NoError(t, err)
-					helperTemplate, err := ioutil.ReadFile("./testdata/helper.tmpl")
+					helperTemplate, err := os.ReadFile("./testdata/helper.tmpl")
 					require.NoError(t, err)
-					expectedConfigYaml, err := ioutil.ReadFile("./testdata/expected_config.yaml")
+					expectedConfigYaml, err := os.ReadFile("./testdata/expected_config.yaml")
 					require.NoError(t, err)
 
 					cc.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("*context.valueCtx"), string(expectedConfigYaml), map[string]string{
