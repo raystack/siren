@@ -9,7 +9,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"go.uber.org/zap"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -19,6 +18,7 @@ import (
 	"github.com/odpf/salt/mux"
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/api/v1beta1"
+	"github.com/odpf/siren/pkg/zaputil"
 	swagger "github.com/odpf/siren/proto"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc"
@@ -47,28 +47,31 @@ func RunServer(
 	nr *newrelic.Application,
 	apiDeps *api.Deps) error {
 
-	// TODO grpc should uses the same log
-	loggerOpts := []grpc_zap.Option{grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel)}
-	zapper, err := zap.NewProduction(zap.AddStacktrace(zap.DPanicLevel))
+	var err error
+
+	// init grpc server
+	zapLogger, err := zaputil.GRPCZapLogger(logger)
 	if err != nil {
 		return err
 	}
-
-	// init grpc server
+	loggerOpts := []grpc_zap.Option{
+		grpc_zap.WithLevels(zaputil.GRPCCodeToLevel),
+		grpc_zap.WithTimestampFormat(time.RFC3339Nano),
+	}
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
 			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
-			grpc_zap.UnaryServerInterceptor(zapper, loggerOpts...),
+			grpc_zap.UnaryServerInterceptor(zapLogger, loggerOpts...),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
 			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
-			grpc_zap.StreamServerInterceptor(zapper),
+			grpc_zap.StreamServerInterceptor(zapLogger, loggerOpts...),
 		)),
 	)
 

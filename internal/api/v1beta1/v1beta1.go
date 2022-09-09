@@ -41,7 +41,6 @@ func NewGRPCServer(
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
-	s.logger.Error("grpc error", "err", errors.Verbose(e))
 	err := errors.E(e)
 
 	var code codes.Code

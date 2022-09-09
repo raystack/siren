@@ -21,7 +21,7 @@ import (
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/odpf/siren/pkg/zapgcp"
+	"github.com/odpf/siren/pkg/zaputil"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -148,7 +148,7 @@ func initLogger(cfg config.Log) log.Logger {
 				Initial:    100,
 				Thereafter: 100,
 			},
-			EncoderConfig:    zapgcp.EncoderConfig,
+			EncoderConfig:    zaputil.EncoderConfig,
 			OutputPaths:      []string{"stdout"},
 			ErrorOutputPaths: []string{"stderr"},
 		}
@@ -156,7 +156,7 @@ func initLogger(cfg config.Log) log.Logger {
 
 	return log.NewZap(log.ZapWithConfig(
 		defaultConfig,
-		zap.Fields(zapgcp.ServiceContext(serviceName)),
+		zap.Fields(zaputil.ServiceContext(serviceName)),
 		zap.AddCaller(),
 		zap.AddStacktrace(zap.DPanicLevel),
 	))
