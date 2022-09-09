@@ -6,9 +6,9 @@ import (
 
 // NewRelic contains the New Relic go-agent configuration
 type NewRelicConfig struct {
-	Enabled bool   `mapstructure:"enabled" default:"false"`
-	AppName string `mapstructure:"appname" default:"siren"`
-	License string `mapstructure:"license"`
+	Enabled bool   `yaml:"enabled" mapstructure:"enabled" default:"false"`
+	AppName string `yaml:"appname" mapstructure:"appname" default:"siren"`
+	License string `yaml:"license" mapstructure:"license"`
 }
 
 func New(c NewRelicConfig) (*newrelic.Application, error) {

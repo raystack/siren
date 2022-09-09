@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/errors"
@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func providersCmd(c *configuration) *cobra.Command {
+func providersCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "provider",
 		Aliases: []string{"providers"},
@@ -27,19 +27,23 @@ func providersCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listProvidersCmd(c))
-	cmd.AddCommand(createProviderCmd(c))
-	cmd.AddCommand(getProviderCmd(c))
-	cmd.AddCommand(updateProviderCmd(c))
-	cmd.AddCommand(deleteProviderCmd(c))
+	cmd.AddCommand(
+		listProvidersCmd(cmdxConfig),
+		createProviderCmd(cmdxConfig),
+		getProviderCmd(cmdxConfig),
+		updateProviderCmd(cmdxConfig),
+		deleteProviderCmd(cmdxConfig),
+	)
+
 	return cmd
 }
 
-func listProvidersCmd(c *configuration) *cobra.Command {
-	return &cobra.Command{
+func listProvidersCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List providers",
 		Long: heredoc.Doc(`
@@ -49,7 +53,16 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -65,6 +78,7 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
+			spinner.Stop()
 			providers := res.GetProviders()
 			report := [][]string{}
 
@@ -86,9 +100,11 @@ func listProvidersCmd(c *configuration) *cobra.Command {
 			return nil
 		},
 	}
+
+	return cmd
 }
 
-func createProviderCmd(c *configuration) *cobra.Command {
+func createProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -100,6 +116,16 @@ func createProviderCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var providerConfig provider.Provider
 			if err := parseFile(filePath, &providerConfig); err != nil {
 				return err
@@ -110,7 +136,6 @@ func createProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -130,7 +155,10 @@ func createProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Provider created with id: %v\n", res.GetId())
+			spinner.Stop()
+			printer.Successf("Provider created with id: %v", res.GetId())
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -142,7 +170,7 @@ func createProviderCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func getProviderCmd(c *configuration) *cobra.Command {
+func getProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
 		Use:   "view",
@@ -150,7 +178,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 		Long: heredoc.Doc(`
 			View a provider.
 
-			Display the Id, name, and other information about a provider.
+			Display the id, name, and other information about a provider.
 		`),
 		Example: heredoc.Doc(`
 			$ siren provider view 1
@@ -160,7 +188,16 @@ func getProviderCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -195,6 +232,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 				UpdatedAt:   res.GetProvider().GetUpdatedAt().AsTime(),
 			}
 
+			spinner.Stop()
 			if err := printer.File(provider, format); err != nil {
 				return fmt.Errorf("failed to format provider: %v", err)
 			}
@@ -207,7 +245,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func updateProviderCmd(c *configuration) *cobra.Command {
+func updateProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -220,6 +258,16 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var providerConfig provider.Provider
 			if err := parseFile(filePath, &providerConfig); err != nil {
 				return err
@@ -230,7 +278,6 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -249,7 +296,10 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully updated provider")
+			spinner.Stop()
+			printer.Success("Successfully updated provider")
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -263,7 +313,7 @@ func updateProviderCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func deleteProviderCmd(c *configuration) *cobra.Command {
+func deleteProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a provider details",
@@ -275,7 +325,16 @@ func deleteProviderCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -294,7 +353,11 @@ func deleteProviderCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully deleted provider")
+			spinner.Stop()
+			printer.Success("Successfully deleted provider")
+			printer.Space()
+			printer.SuccessIcon()
+
 			return nil
 		},
 	}

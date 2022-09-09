@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/pkg/errors"
@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func namespacesCmd(c *configuration) *cobra.Command {
+func namespacesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "namespace",
 		Aliases: []string{"namespaces"},
@@ -27,19 +27,23 @@ func namespacesCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listNamespacesCmd(c))
-	cmd.AddCommand(createNamespaceCmd(c))
-	cmd.AddCommand(getNamespaceCmd(c))
-	cmd.AddCommand(updateNamespaceCmd(c))
-	cmd.AddCommand(deleteNamespaceCmd(c))
+	cmd.AddCommand(
+		listNamespacesCmd(cmdxConfig),
+		createNamespaceCmd(cmdxConfig),
+		getNamespaceCmd(cmdxConfig),
+		updateNamespaceCmd(cmdxConfig),
+		deleteNamespaceCmd(cmdxConfig),
+	)
+
 	return cmd
 }
 
-func listNamespacesCmd(c *configuration) *cobra.Command {
-	return &cobra.Command{
+func listNamespacesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List namespaces",
 		Long: heredoc.Doc(`
@@ -49,7 +53,16 @@ func listNamespacesCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -65,6 +78,7 @@ func listNamespacesCmd(c *configuration) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
+			spinner.Stop()
 			namespaces := res.GetNamespaces()
 			report := [][]string{}
 
@@ -84,9 +98,11 @@ func listNamespacesCmd(c *configuration) *cobra.Command {
 			return nil
 		},
 	}
+
+	return cmd
 }
 
-func createNamespaceCmd(c *configuration) *cobra.Command {
+func createNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -98,6 +114,16 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var namespaceConfig namespace.Namespace
 			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
@@ -108,7 +134,6 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -127,8 +152,10 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("namespace created with id: %v\n", res.GetId())
-
+			spinner.Stop()
+			printer.Successf("Namespace created with id: %v", res.GetId())
+			printer.Space()
+			printer.SuccessIcon()
 			return nil
 		},
 	}
@@ -139,7 +166,7 @@ func createNamespaceCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func getNamespaceCmd(c *configuration) *cobra.Command {
+func getNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
 		Use:   "view",
@@ -147,7 +174,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 		Long: heredoc.Doc(`
 			View a namespace.
 
-			Display the Id, name, and other information about a namespace.
+			Display the id, name, and other information about a namespace.
 		`),
 		Example: heredoc.Doc(`
 			$ siren namespace view 1
@@ -157,7 +184,16 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -190,6 +226,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				UpdatedAt:   res.GetNamespace().GetUpdatedAt().AsTime(),
 			}
 
+			spinner.Stop()
 			if err := printer.File(nspace, format); err != nil {
 				return fmt.Errorf("failed to format namespace: %v", err)
 			}
@@ -202,7 +239,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func updateNamespaceCmd(c *configuration) *cobra.Command {
+func updateNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -215,6 +252,16 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var namespaceConfig namespace.Namespace
 			if err := parseFile(filePath, &namespaceConfig); err != nil {
 				return err
@@ -225,7 +272,6 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -243,7 +289,10 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Successfully updated namespace with id %d", res.GetId())
+			spinner.Stop()
+			printer.Successf("Successfully updated namespace with id %d", res.GetId())
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -257,7 +306,7 @@ func updateNamespaceCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func deleteNamespaceCmd(c *configuration) *cobra.Command {
+func deleteNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a namespace details",
@@ -269,7 +318,16 @@ func deleteNamespaceCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -288,7 +346,11 @@ func deleteNamespaceCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully deleted namespace")
+			spinner.Stop()
+			printer.Success("Successfully deleted namespace")
+			printer.Space()
+			printer.SuccessIcon()
+
 			return nil
 		},
 	}

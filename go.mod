@@ -26,10 +26,11 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-sqlite3 v1.14.12 // indirect
+	github.com/mcuadros/go-defaults v1.2.0
 	github.com/muesli/termenv v0.12.0 // indirect
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
-	github.com/odpf/salt v0.1.1-0.20220830230424-94215a338f4c
+	github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
@@ -52,5 +53,6 @@ require (
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/ini.v1 v1.66.6 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )

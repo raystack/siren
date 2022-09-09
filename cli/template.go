@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
@@ -34,7 +36,7 @@ type templateStruct struct {
 	Variables  []template.Variable `yaml:"variables"`
 }
 
-func templatesCmd(c *configuration) *cobra.Command {
+func templatesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "template",
 		Aliases: []string{"templates"},
@@ -46,20 +48,23 @@ func templatesCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listTemplatesCmd(c))
-	cmd.AddCommand(upsertTemplateCmd(c))
-	cmd.AddCommand(getTemplateCmd(c))
-	cmd.AddCommand(deleteTemplateCmd(c))
-	cmd.AddCommand(renderTemplateCmd(c))
-	cmd.AddCommand(uploadTemplateCmd(c))
+	cmd.AddCommand(
+		listTemplatesCmd(cmdxConfig),
+		upsertTemplateCmd(cmdxConfig),
+		getTemplateCmd(cmdxConfig),
+		deleteTemplateCmd(cmdxConfig),
+		renderTemplateCmd(cmdxConfig),
+		uploadTemplateCmd(cmdxConfig),
+	)
 
 	return cmd
 }
 
-func listTemplatesCmd(c *configuration) *cobra.Command {
+func listTemplatesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var tag string
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -71,7 +76,16 @@ func listTemplatesCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -89,6 +103,7 @@ func listTemplatesCmd(c *configuration) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
+			spinner.Stop()
 			templates := res.GetTemplates()
 			report := [][]string{}
 
@@ -114,7 +129,7 @@ func listTemplatesCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func upsertTemplateCmd(c *configuration) *cobra.Command {
+func upsertTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "upsert",
@@ -126,12 +141,21 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var templateConfig template.Template
 			if err := parseFile(filePath, &templateConfig); err != nil {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -159,7 +183,10 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("template created with id: %v\n", res.GetId())
+			spinner.Stop()
+			printer.Successf("Template created with id: %v", res.GetId())
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -171,7 +198,7 @@ func upsertTemplateCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func getTemplateCmd(c *configuration) *cobra.Command {
+func getTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
 		Use:   "view",
@@ -179,7 +206,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 		Long: heredoc.Doc(`
 			View a template.
 
-			Display the Id, name, and other information about a template.
+			Display the id, name, and other information about a template.
 		`),
 		Example: heredoc.Doc(`
 			$ siren template view <template_name>
@@ -189,7 +216,16 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -230,6 +266,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 				UpdatedAt: templateData.UpdatedAt.AsTime(),
 			}
 
+			spinner.Stop()
 			if err := printer.File(template, format); err != nil {
 				return fmt.Errorf("failed to format template: %v", err)
 			}
@@ -242,7 +279,7 @@ func getTemplateCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func deleteTemplateCmd(c *configuration) *cobra.Command {
+func deleteTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a template details",
@@ -254,7 +291,16 @@ func deleteTemplateCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -269,7 +315,11 @@ func deleteTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully deleted template")
+			spinner.Stop()
+			printer.Success("Successfully deleted template")
+			printer.Space()
+			printer.SuccessIcon()
+
 			return nil
 		},
 	}
@@ -277,7 +327,7 @@ func deleteTemplateCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func renderTemplateCmd(c *configuration) *cobra.Command {
+func renderTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var name string
 	var filePath string
 	var format string
@@ -289,6 +339,16 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var variableConfig struct {
 				Variables map[string]string
 			}
@@ -296,7 +356,6 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -311,6 +370,7 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
+			spinner.Stop()
 			if err := printer.File(template, format); err != nil {
 				return fmt.Errorf("failed to format template: %v", err)
 			}
@@ -328,9 +388,9 @@ func renderTemplateCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func uploadTemplateCmd(c *configuration) *cobra.Command {
-	var fileReader = os.ReadFile
-	return &cobra.Command{
+func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+	var fileReader = ioutil.ReadFile
+	cmd := &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Templates YAML file",
 		Annotations: map[string]string{
@@ -338,7 +398,16 @@ func uploadTemplateCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -364,6 +433,7 @@ func uploadTemplateCmd(c *configuration) *cobra.Command {
 				if err != nil {
 					return err
 				}
+				spinner.Stop()
 				//TODO might need to log the actual template or log error here
 				printTemplateID(templateID)
 				return nil
@@ -371,6 +441,8 @@ func uploadTemplateCmd(c *configuration) *cobra.Command {
 			return errors.New("yaml is not rule type")
 		},
 	}
+
+	return cmd
 }
 
 func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (uint64, error) {

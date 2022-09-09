@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/rule"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
@@ -36,7 +38,7 @@ type ruleYaml struct {
 	} `yaml:"rules"`
 }
 
-func rulesCmd(c *configuration) *cobra.Command {
+func rulesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "rule",
 		Aliases: []string{"rules"},
@@ -48,17 +50,20 @@ func rulesCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listRulesCmd(c))
-	cmd.AddCommand(updateRuleCmd(c))
-	cmd.AddCommand(uploadRuleCmd(c))
+	cmd.AddCommand(
+		listRulesCmd(cmdxConfig),
+		updateRuleCmd(cmdxConfig),
+		uploadRuleCmd(cmdxConfig),
+	)
 
 	return cmd
 }
 
-func listRulesCmd(c *configuration) *cobra.Command {
+func listRulesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var name string
 	var namespace string
 	var groupName string
@@ -74,7 +79,16 @@ func listRulesCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -95,10 +109,10 @@ func listRulesCmd(c *configuration) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
+			spinner.Stop()
 			rules := res.GetRules()
 			report := [][]string{}
 
-			// TODO unclear log
 			fmt.Printf(" \nShowing %d of %d rules\n \n", len(rules), len(rules))
 			report = append(report, []string{"ID", "NAME", "GROUP_NAME", "TEMPLATE", "ENABLED"})
 
@@ -127,7 +141,7 @@ func listRulesCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func updateRuleCmd(c *configuration) *cobra.Command {
+func updateRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -140,12 +154,21 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var ruleConfig rule.Rule
 			if err := parseFile(filePath, &ruleConfig); err != nil {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -174,7 +197,10 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully updated rule")
+			spinner.Stop()
+			printer.Success("Successfully updated rule")
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -188,9 +214,9 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func uploadRuleCmd(c *configuration) *cobra.Command {
-	var fileReader = os.ReadFile
-	return &cobra.Command{
+func uploadRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+	var fileReader = ioutil.ReadFile
+	cmd := &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Rules YAML file",
 		Annotations: map[string]string{
@@ -198,7 +224,16 @@ func uploadRuleCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -224,6 +259,8 @@ func uploadRuleCmd(c *configuration) *cobra.Command {
 				if err != nil {
 					return err
 				}
+
+				spinner.Stop()
 				//TODO might need to print the actual rule here or log error rules
 				printRulesID(rulesID)
 				return nil
@@ -231,6 +268,8 @@ func uploadRuleCmd(c *configuration) *cobra.Command {
 			return errors.New("yaml is not rule type")
 		},
 	}
+
+	return cmd
 }
 
 func uploadRules(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]uint64, error) {
