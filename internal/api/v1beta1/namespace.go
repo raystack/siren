@@ -10,15 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
-type NamespaceService interface {
-	List(context.Context) ([]namespace.Namespace, error)
-	Create(context.Context, *namespace.Namespace) error
-	Get(context.Context, uint64) (*namespace.Namespace, error)
-	Update(context.Context, *namespace.Namespace) error
-	Delete(context.Context, uint64) error
-}
-
 func (s *GRPCServer) ListNamespaces(ctx context.Context, _ *sirenv1beta1.ListNamespacesRequest) (*sirenv1beta1.ListNamespacesResponse, error) {
 	namespaces, err := s.namespaceService.List(ctx)
 	if err != nil {

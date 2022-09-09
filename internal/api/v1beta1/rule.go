@@ -8,12 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks
-type RuleService interface {
-	Upsert(context.Context, *rule.Rule) error
-	List(context.Context, rule.Filter) ([]rule.Rule, error)
-}
-
 func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesRequest) (*sirenv1beta1.ListRulesResponse, error) {
 	rules, err := s.ruleService.List(ctx, rule.Filter{
 		Name:         req.GetName(),

@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/api/v1beta1"
 	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
@@ -24,7 +25,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 
 	t.Run("should return list of all namespaces", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := []namespace.Namespace{
 			{
 				ID:          1,
@@ -49,7 +50,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 
 	t.Run("should return Internal if getting namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
@@ -59,7 +60,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 
 	t.Run("should return Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []namespace.Namespace{
 			{
@@ -102,7 +103,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	t.Run("should create a namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *namespace.Namespace) {
 			_a1.ID = generatedID
 		}).Return(nil).Once()
@@ -113,7 +114,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	t.Run("should return error Internal if creating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
@@ -122,7 +123,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if create service return err invalid", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
@@ -133,7 +134,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	t.Run("should return error AlreadyExists if create service return err conflict", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
@@ -151,7 +152,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 
 	t.Run("should get the namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := &namespace.Namespace{
 			ID:          1,
 			Provider:    2,
@@ -174,7 +175,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if no namespace found", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), uint64(1)).Return(nil, errors.ErrNotFound.WithCausef("some error")).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
@@ -184,7 +185,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 
 	t.Run("should return error Internal if getting namespace fails", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
@@ -195,7 +196,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &namespace.Namespace{
 			ID:          1,
@@ -238,7 +239,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	t.Run("should update a namespace", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Run(func(_a0 context.Context, _a1 *namespace.Namespace) {
 			_a1.ID = payload.ID
 		}).Return(nil).Once()
@@ -250,7 +251,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if namespace service return err invalid", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrInvalid).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
@@ -260,7 +261,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	t.Run("should return error AlreadyExists if namespace service return err conflict", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.ErrConflict).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
@@ -271,7 +272,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 	t.Run("should return error Internal if updating namespaces failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
@@ -289,7 +290,7 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 
 	t.Run("should delete namespace object", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceId).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
 		assert.Nil(t, err)
@@ -299,7 +300,7 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 
 	t.Run("should return error Internal if deleting namespace failed", func(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, mockedNamespaceService, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		mockedNamespaceService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
 		assert.Nil(t, res)

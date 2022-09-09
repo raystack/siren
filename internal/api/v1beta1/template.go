@@ -8,15 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=TemplateService -r --case underscore --with-expecter --structname TemplateService --filename template_service.go --output=./mocks
-type TemplateService interface {
-	Upsert(context.Context, *template.Template) error
-	List(context.Context, template.Filter) ([]template.Template, error)
-	GetByName(context.Context, string) (*template.Template, error)
-	Delete(context.Context, string) error
-	Render(context.Context, string, map[string]string) (string, error)
-}
-
 func (s *GRPCServer) ListTemplates(ctx context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
 	templates, err := s.templateService.List(ctx, template.Filter{
 		Tag: req.GetTag(),

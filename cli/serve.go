@@ -13,6 +13,7 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
+	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/cortex"
@@ -20,6 +21,7 @@ import (
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/odpf/siren/pkg/zapgcp"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -54,7 +56,7 @@ func runServer(cfg config.Config) error {
 		return err
 	}
 
-	logger := initLogger(cfg.Log.Level)
+	logger := initLogger(cfg.Log)
 
 	pgClient, err := postgres.NewClient(logger, cfg.DB)
 	if err != nil {
@@ -116,23 +118,49 @@ func runServer(cfg config.Config) error {
 	subscriptionRepository := postgres.NewSubscriptionRepository(pgClient)
 	subscriptionService := subscription.NewService(subscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
 
+	apiDeps := &api.Deps{
+		TemplateService:     templateService,
+		RuleService:         ruleService,
+		AlertService:        alertHistoryService,
+		ProviderService:     providerService,
+		NamespaceService:    namespaceService,
+		ReceiverService:     receiverService,
+		SubscriptionService: subscriptionService,
+	}
 	return server.RunServer(
 		cfg.SirenService,
 		logger,
 		nr,
-		templateService,
-		ruleService,
-		alertHistoryService,
-		providerService,
-		namespaceService,
-		receiverService,
-		subscriptionService)
+		apiDeps,
+	)
 }
 
-func initLogger(logLevel string) log.Logger {
+func initLogger(cfg config.Log) log.Logger {
 	defaultConfig := zap.NewProductionConfig()
-	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(logLevel))
-	return log.NewZap(log.ZapWithConfig(defaultConfig, zap.AddCaller(), zap.AddStacktrace(zap.DPanicLevel)))
+	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(cfg.Level))
+
+	if cfg.GCPCompatible {
+		defaultConfig = zap.Config{
+			Level:       zap.NewAtomicLevelAt(getZapLogLevelFromString(cfg.Level)),
+			Encoding:    "json",
+			Development: false,
+			Sampling: &zap.SamplingConfig{
+				Initial:    100,
+				Thereafter: 100,
+			},
+			EncoderConfig:    zapgcp.EncoderConfig,
+			OutputPaths:      []string{"stdout"},
+			ErrorOutputPaths: []string{"stderr"},
+		}
+	}
+
+	return log.NewZap(log.ZapWithConfig(
+		defaultConfig,
+		zap.Fields(zapgcp.ServiceContext(serviceName)),
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.DPanicLevel),
+	))
+
 }
 
 // getZapLogLevelFromString helps to set logLevel from string

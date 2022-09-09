@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const serviceName = "siren"
+
 // Execute runs the command line interface
 func Execute() {
 	rootCmd := &cobra.Command{

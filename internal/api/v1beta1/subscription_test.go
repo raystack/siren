@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/api/v1beta1"
 	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
@@ -23,7 +24,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 	t.Run("should return list of all subscriptions", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		dummyResult := []subscription.Subscription{
 			{
@@ -48,7 +49,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 	t.Run("should return error Internal if getting subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().List(context.Background(), subscription.Filter{}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListSubscriptions(context.Background(), &sirenv1beta1.ListSubscriptionsRequest{})
@@ -65,7 +66,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 
 	t.Run("should return a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		dummyResult := &subscription.Subscription{
 			ID:        1,
 			URN:       "foo",
@@ -85,7 +86,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 
 	t.Run("should return error Not Found if subscriptions not found", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Get(context.Background(), uint64(1)).Return(nil, errors.ErrNotFound).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
 		assert.Nil(t, res)
@@ -94,7 +95,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 
 	t.Run("should return error Internal if getting subscription fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Get(context.Background(), uint64(1)).
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetSubscription(context.Background(), &sirenv1beta1.GetSubscriptionRequest{Id: 1})
@@ -128,7 +129,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 	t.Run("should create a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
@@ -145,7 +146,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 	t.Run("should return error InvalidArgument if creating subscriptions return err invalid", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
@@ -162,7 +163,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 	t.Run("should return error AlreadyExists if creating subscriptions return err conflict", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
@@ -179,7 +180,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 
 	t.Run("should return error Internal if creating subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
@@ -210,7 +211,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 	t.Run("should update a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = uint64(1)
@@ -228,7 +229,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if updating subscriptions return err invalid", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
@@ -243,7 +244,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 	t.Run("should return error AlreadyExist if updating subscriptions return err conflict", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrConflict).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
@@ -258,7 +259,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 	t.Run("should return error Internal if updating subscriptions fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
@@ -273,7 +274,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 
 	t.Run("should return error Invalid for bad requests", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
@@ -290,7 +291,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 func TestGRPCServer_DeleteSubscription(t *testing.T) {
 	t.Run("should delete a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Delete(context.Background(), uint64(1)).Return(nil).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})
@@ -300,7 +301,7 @@ func TestGRPCServer_DeleteSubscription(t *testing.T) {
 
 	t.Run("should return error Internal if deleting subscription fails", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, nil, nil, nil, nil, mockedSubscriptionService)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 
 		mockedSubscriptionService.EXPECT().Delete(context.Background(), uint64(1)).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteSubscription(context.Background(), &sirenv1beta1.DeleteSubscriptionRequest{Id: 1})

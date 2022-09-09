@@ -22,7 +22,7 @@ func migrateCmd() *cobra.Command {
 				return err
 			}
 
-			logger := initLogger(cfg.Log.Level)
+			logger := initLogger(cfg.Log)
 			if err := runPostgresMigrations(logger, cfg); err != nil {
 				return err
 			}

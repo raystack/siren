@@ -36,8 +36,9 @@ func LoadConfig(configFile string) (Config, error) {
 	return cfg, nil
 }
 
-type LogConfig struct {
-	Level string `mapstructure:"level" default:"info"`
+type Log struct {
+	Level         string `mapstructure:"level" default:"info"`
+	GCPCompatible bool   `mapstructure:"gcp_compatible" default:"true"`
 }
 
 type SlackApp struct {
@@ -51,7 +52,7 @@ type Config struct {
 	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
 	SirenService  server.Config            `mapstructure:"siren_service"`
-	Log           LogConfig                `mapstructure:"log"`
+	Log           Log                      `mapstructure:"log"`
 	SlackApp      SlackApp                 `mapstructure:"slack_app"`
 	EncryptionKey string                   `mapstructure:"encryption_key"`
 }
