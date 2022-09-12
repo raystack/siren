@@ -2,67 +2,68 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
+	"github.com/odpf/salt/printer"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
-var (
-	DefaultHost   = "localhost"
-	FileName      = ".siren"
-	FileExtension = "yaml"
-)
-
-type configuration struct {
-	Host string `yaml:"host"`
-}
-
-func configCmd() *cobra.Command {
+func configCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config",
-		Short: "manage siren CLI configuration",
+		Use:   "config <command>",
+		Short: "Manage siren CLI configuration",
+		Example: heredoc.Doc(`
+			$ siren config init
+			$ siren config list
+		`),
 	}
-	cmd.AddCommand(configInitCommand())
+	cmd.AddCommand(configInitCommand(cmdxConfig))
+	cmd.AddCommand(configListCommand(cmdxConfig))
 	return cmd
 }
 
-func configInitCommand() *cobra.Command {
+func configInitCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "init",
-		Short: "initialize CLI configuration",
+		Short: "Initialize CLI configuration",
+		Example: heredoc.Doc(`
+			$ siren config init
+		`),
+		Annotations: map[string]string{
+			"group": "core",
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config := configuration{
-				Host: DefaultHost,
-			}
-
-			b, err := yaml.Marshal(config)
-			if err != nil {
+			if err := cmdxConfig.Init(&ClientConfig{}); err != nil {
 				return err
 			}
 
-			filepath := fmt.Sprintf("%v.%v", FileName, FileExtension)
-			if err := os.WriteFile(filepath, b, 0655); err != nil {
-				return err
-			}
-			fmt.Printf("config created: %v", filepath)
-
+			fmt.Printf("config created: %v\n", cmdxConfig.File())
+			printer.SuccessIcon()
 			return nil
 		},
 	}
 }
 
-func readConfig() (*configuration, error) {
-	var c configuration
-	filepath := fmt.Sprintf("%v.%v", FileName, FileExtension)
-	b, err := os.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
+func configListCommand(cmdxConfig *cmdx.Config) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "list",
+		Short: "List client configuration settings",
+		Example: heredoc.Doc(`
+			$ siren config list
+		`),
+		Annotations: map[string]string{
+			"group": "core",
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			data, err := cmdxConfig.Read()
+			if err != nil {
+				return ErrClientConfigNotFound
+			}
 
-	if err := yaml.Unmarshal(b, &c); err != nil {
-		return nil, err
+			fmt.Println(data)
+			return nil
+		},
 	}
-
-	return &c, nil
+	return cmd
 }

@@ -8,8 +8,6 @@
 # Per default, Siren will look up and load file ~/config.yaml. All configuration keys can be set using environment
 # variables as well.
 #
-
-port: 3000
 db:
   host: localhost
   user: postgres
@@ -23,8 +21,9 @@ newrelic:
   enabled: false
   appname: siren
   license: ____LICENSE_STRING_OF_40_CHARACTERS_____
-siren_service:
+service:
   host: localhost
+  port: 8080
 slack_app:
   client_id: 123.456
   client_secret: xyz

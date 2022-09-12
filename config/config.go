@@ -19,8 +19,8 @@ var (
 	promAMConfigYamlString string
 )
 
-// LoadConfig returns application configuration
-func LoadConfig(configFile string) (Config, error) {
+// Load returns application configuration
+func Load(configFile string) (Config, error) {
 	var cfg Config
 	loader := config.NewLoader(config.WithFile(configFile))
 
@@ -37,13 +37,13 @@ func LoadConfig(configFile string) (Config, error) {
 }
 
 type Log struct {
-	Level         string `mapstructure:"level" default:"info"`
+	Level         string `yaml:"level" mapstructure:"level" default:"info"`
 	GCPCompatible bool   `mapstructure:"gcp_compatible" default:"true"`
 }
 
 type SlackApp struct {
-	ClientID     string `mapstructure:"client_id"`
-	ClientSecret string `mapstructure:"client_secret"`
+	ClientID     string `yaml:"client_id" mapstructure:"client_id"`
+	ClientSecret string `yaml:"client_secret" mapstructure:"client_secret"`
 }
 
 // Config contains the application configuration
@@ -51,8 +51,8 @@ type Config struct {
 	DB            db.Config                `mapstructure:"db"`
 	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
-	SirenService  server.Config            `mapstructure:"siren_service"`
-	Log           Log                      `mapstructure:"log"`
+	Service       server.Config            `mapstructure:"service"`
+	Log           LogConfig                `mapstructure:"log"`
 	SlackApp      SlackApp                 `mapstructure:"slack_app"`
 	EncryptionKey string                   `mapstructure:"encryption_key"`
 }

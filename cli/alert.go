@@ -1,19 +1,19 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/spf13/cobra"
 )
 
-func alertsCmd(c *configuration) *cobra.Command {
+func alertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "alert",
 		Aliases: []string{"alerts"},
@@ -29,15 +29,16 @@ func alertsCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listAlertsCmd(c))
+	cmd.AddCommand(listAlertsCmd(cmdxConfig))
 
 	return cmd
 }
 
-func listAlertsCmd(c *configuration) *cobra.Command {
+func listAlertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var providerName string
 	var providerId uint64
 	var resouceName string
@@ -53,7 +54,16 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -71,6 +81,7 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
+			spinner.Stop()
 			if res.GetAlerts() == nil {
 				return errors.New("no response from server")
 			}
@@ -106,5 +117,6 @@ func listAlertsCmd(c *configuration) *cobra.Command {
 	cmd.Flags().StringVar(&resouceName, "resource-name", "", "resource name")
 	cmd.Flags().Uint64Var(&startTime, "start-time", 0, "start time")
 	cmd.Flags().Uint64Var(&endTime, "end-time", 0, "end time")
+
 	return cmd
 }

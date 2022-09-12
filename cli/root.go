@@ -1,8 +1,7 @@
 package cli
 
 import (
-	"fmt"
-	"os"
+	"context"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/cmdx"
@@ -12,12 +11,12 @@ import (
 
 const serviceName = "siren"
 
-// Execute runs the command line interface
-func Execute() {
+func New(ctx context.Context) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:           "siren <command> <subcommand> [flags]",
-		Short:         "siren",
-		Long:          "Work seemlessly with your observability stack.",
+		Use:   "siren <command> <subcommand> [flags]",
+		Short: "siren",
+		Long: heredoc.Doc(`
+			Work seamlessly with your observability stack.`),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Annotations: map[string]string{
@@ -29,28 +28,34 @@ func Execute() {
 			"help:feedback": heredoc.Doc(`
 				Open an issue here https://github.com/odpf/siren/issues
 			`),
+			"help:environment": heredoc.Doc(`
+				See 'siren help environment' for the list of supported environment variables.
+			`),
 		},
 	}
 
-	cliConfig, err := readConfig()
-	if err != nil {
-		fmt.Println(err)
-	}
+	cmdxConfig := cmdx.SetConfig("siren")
 
+	rootCmd.AddCommand(serverCmd())
+	rootCmd.AddCommand(configCmd(cmdxConfig))
+	rootCmd.AddCommand(providersCmd(cmdxConfig))
+	rootCmd.AddCommand(namespacesCmd(cmdxConfig))
+	rootCmd.AddCommand(receiversCmd(cmdxConfig))
+	rootCmd.AddCommand(templatesCmd(cmdxConfig))
+	rootCmd.AddCommand(rulesCmd(cmdxConfig))
+	rootCmd.AddCommand(alertsCmd(cmdxConfig))
+
+	// Help topics
 	cmdx.SetHelp(rootCmd)
+	rootCmd.AddCommand(cmdx.SetCompletionCmd("siren"))
+	rootCmd.AddCommand(cmdx.SetHelpTopicCmd("environment", envHelp))
+	rootCmd.AddCommand(cmdx.SetRefCmd(rootCmd))
 
-	rootCmd.AddCommand(configCmd())
-	rootCmd.AddCommand(serveCmd())
-	rootCmd.AddCommand(migrateCmd())
-	rootCmd.AddCommand(providersCmd(cliConfig))
-	rootCmd.AddCommand(namespacesCmd(cliConfig))
-	rootCmd.AddCommand(receiversCmd(cliConfig))
-	rootCmd.AddCommand(templatesCmd(cliConfig))
-	rootCmd.AddCommand(rulesCmd(cliConfig))
-	rootCmd.AddCommand(alertsCmd(cliConfig))
+	cmdx.SetClientHook(rootCmd, func(cmd *cobra.Command) {
+		// client config
+		cmd.PersistentFlags().StringP("host", "h", "", "Siren API service to connect to")
+		cmd.MarkPersistentFlagRequired("host")
+	})
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	return rootCmd
 }

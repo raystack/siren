@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
+	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -28,18 +30,70 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func serveCmd() *cobra.Command {
-	var configFile string
-
+func serverCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "serve",
+		Use:     "server <command>",
 		Aliases: []string{"s"},
 		Short:   "Run siren server",
-		Annotations: map[string]string{
-			"group:other": "dev",
-		},
+		Long:    "Server management commands.",
+		Example: heredoc.Doc(`
+			$ siren server init
+			$ siren server start
+			$ siren server start -c ./config.yaml
+			$ siren server migrate
+			$ siren server migrate -c ./config.yaml
+		`),
+	}
+
+	cmd.AddCommand(
+		serverInitCommand(),
+		serverStartCommand(),
+		serverMigrateCommand(),
+	)
+
+	return cmd
+}
+
+func serverInitCommand() *cobra.Command {
+	var configFile string
+	// var resourcesURL string
+	// var rulesURL string
+
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "Initialize server",
+		Long: heredoc.Doc(`
+			Initializing server. Creating a sample of siren server config.
+			Default: ./config.yaml
+		`),
+		Example: "siren server init",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.LoadConfig(configFile)
+			if err := config.Init(configFile); err != nil {
+				return err
+			}
+
+			printer.Successf("Server config created: %s", configFile)
+			printer.Space()
+			printer.SuccessIcon()
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&configFile, "output", "o", "./config.yaml", "Output config file path")
+
+	return cmd
+}
+
+func serverStartCommand() *cobra.Command {
+	var configFile string
+
+	c := &cobra.Command{
+		Use:     "start",
+		Short:   "Start server on default port 8080",
+		Example: "siren server start",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(configFile)
 			if err != nil {
 				return err
 			}
@@ -47,8 +101,32 @@ func serveCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&configFile, "config", "c", "./config.yaml", "Config file path")
-	return cmd
+	c.Flags().StringVarP(&configFile, "config", "c", "config.yaml", "Config file path")
+	return c
+}
+
+func serverMigrateCommand() *cobra.Command {
+	var configFile string
+
+	c := &cobra.Command{
+		Use:     "migrate",
+		Short:   "Run DB Schema Migrations",
+		Example: "siren migrate",
+		RunE: func(c *cobra.Command, args []string) error {
+			cfg, err := config.Load(configFile)
+			if err != nil {
+				return err
+			}
+
+			if err := postgres.Migrate(cfg.DB); err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+
+	c.Flags().StringVarP(&configFile, "config", "c", "", "Config file path")
+	return c
 }
 
 func runServer(cfg config.Config) error {
@@ -134,7 +212,7 @@ func runServer(cfg config.Config) error {
 		SubscriptionService: subscriptionService,
 	}
 	return server.RunServer(
-		cfg.SirenService,
+		cfg.Service,
 		logger,
 		nr,
 		apiDeps,
