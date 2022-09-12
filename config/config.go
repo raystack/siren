@@ -38,7 +38,7 @@ func Load(configFile string) (Config, error) {
 
 type Log struct {
 	Level         string `yaml:"level" mapstructure:"level" default:"info"`
-	GCPCompatible bool   `mapstructure:"gcp_compatible" default:"true"`
+	GCPCompatible bool   `yaml:"gcp_compatible" mapstructure:"gcp_compatible" default:"true"`
 }
 
 type SlackApp struct {
