@@ -21,12 +21,14 @@ require (
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
+	github.com/jackc/pgx/v4 v4.16.1
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.2
+	github.com/mcuadros/go-defaults v1.2.0
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
-	github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca // indirect
+	github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca
 	github.com/ory/dockertest/v3 v3.9.1
-	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
@@ -47,6 +49,4 @@ require (
 	gopkg.in/ini.v1 v1.66.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/driver/postgres v1.3.9
-	gorm.io/gorm v1.23.8
 )

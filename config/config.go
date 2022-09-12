@@ -52,7 +52,7 @@ type Config struct {
 	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
 	Service       server.Config            `mapstructure:"service"`
-	Log           LogConfig                `mapstructure:"log"`
+	Log           Log                      `mapstructure:"log"`
 	SlackApp      SlackApp                 `mapstructure:"slack_app"`
 	EncryptionKey string                   `mapstructure:"encryption_key"`
 }
