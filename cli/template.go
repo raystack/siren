@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -389,7 +388,7 @@ func renderTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 }
 
 func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
-	var fileReader = ioutil.ReadFile
+	var fileReader = os.ReadFile
 	cmd := &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Templates YAML file",

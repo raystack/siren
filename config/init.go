@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/mcuadros/go-defaults"
 	"gopkg.in/yaml.v2"
@@ -17,7 +17,7 @@ func Init(configFile string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(configFile, data, 0655); err != nil {
+	if err := os.WriteFile(configFile, data, 0655); err != nil {
 		return err
 	}
 
