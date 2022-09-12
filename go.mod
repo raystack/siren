@@ -24,7 +24,7 @@ require (
 	github.com/lib/pq v1.10.2
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
-	github.com/odpf/salt v0.1.0
+	github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca // indirect
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939

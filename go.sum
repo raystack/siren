@@ -1530,6 +1530,8 @@ github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229/go.mod h1:0aYX
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/odpf/salt v0.1.0 h1:AY7IT/1rPDN1rfC+Oblqv4XLL+zx0rsdnQfEd10be6o=
 github.com/odpf/salt v0.1.0/go.mod h1:feRjzYXnNypgrON5l6PZTDPpbP+BcV70qqNIACxLHOo=
+github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca h1:fIidiIzdXsM/OVLkgE+CRrIbMi/RfRRSqMJmW2R3NFc=
+github.com/odpf/salt v0.1.1-0.20220912101358-d28f61d005ca/go.mod h1:goInym7R4lIwV0jhfmjybtYvuiApEJ8Yuu8tBGzkQ9I=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/run v1.1.0/go.mod h1:sVPdnTZT1zYwAJeCMu2Th4T21pA3FPOQRfWjQlk7DVU=
