@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/odpf/salt/config"
+	"github.com/odpf/salt/db"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
@@ -48,7 +48,7 @@ type SlackApp struct {
 
 // Config contains the application configuration
 type Config struct {
-	DB            postgres.Config          `mapstructure:"db"`
+	DB            db.Config                `mapstructure:"db"`
 	Cortex        cortex.Config            `mapstructure:"cortex"`
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
 	SirenService  server.Config            `mapstructure:"siren_service"`

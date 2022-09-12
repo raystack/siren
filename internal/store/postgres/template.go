@@ -2,11 +2,36 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 )
+
+const templateUpsertQuery = `
+INSERT INTO templates (name, body, tags, variables, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, now(), now())
+ON CONFLICT (name) 
+DO
+	UPDATE SET body=$2, tags=$3, variables=$4, updated_at=now()
+RETURNING *
+`
+
+const templateDeleteByNameQuery = `
+DELETE from templates where name=$1
+`
+
+var templateListQueryBuilder = sq.Select(
+	"id",
+	"name",
+	"body",
+	"tags",
+	"variables",
+	"created_at",
+	"updated_at",
+).From("templates")
 
 // TemplateRepository talks to the store to read or insert data
 type TemplateRepository struct {
@@ -19,75 +44,96 @@ func NewTemplateRepository(client *Client) *TemplateRepository {
 }
 
 func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) error {
-	modelTemplate := &model.Template{}
-	if err := modelTemplate.FromDomain(tmpl); err != nil {
+	if tmpl == nil {
+		return errors.New("template domain is nil")
+	}
+
+	templateModel := new(model.Template)
+	if err := templateModel.FromDomain(*tmpl); err != nil {
 		return err
 	}
 
-	result := r.client.db.WithContext(ctx).Where("name = ?", modelTemplate.Name).Updates(&modelTemplate)
-	if result.Error != nil {
-		err := checkPostgresError(result.Error)
+	var upsertedTemplate model.Template
+	if err := r.client.db.QueryRowxContext(ctx, templateUpsertQuery,
+		templateModel.Name,
+		templateModel.Body,
+		templateModel.Tags,
+		templateModel.Variables,
+	).StructScan(&upsertedTemplate); err != nil {
+		err = checkPostgresError(err)
 		if errors.Is(err, errDuplicateKey) {
 			return template.ErrDuplicate
 		}
 		return err
 	}
 
-	if result.RowsAffected == 0 {
-		if err := r.client.db.WithContext(ctx).Create(&modelTemplate).Error; err != nil {
-			err = checkPostgresError(err)
-			if errors.Is(err, errDuplicateKey) {
-				return template.ErrDuplicate
-			}
-			return err
-		}
+	newTemplate, err := upsertedTemplate.ToDomain()
+	if err != nil {
+		return err
 	}
+
+	*tmpl = *newTemplate
 
 	return nil
 }
 
 func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]template.Template, error) {
-	var (
-		templates []model.Template
-		result    = r.client.db
-	)
+	var queryBuilder = templateListQueryBuilder
 	if flt.Tag != "" {
-		result = result.Where("tags @>ARRAY[?]", flt.Tag)
-	}
-	result = result.WithContext(ctx).Find(&templates)
-	if result.Error != nil {
-		return nil, result.Error
+		queryBuilder = queryBuilder.Where("tags @>ARRAY[?]", flt.Tag)
 	}
 
-	domainTemplates := make([]template.Template, 0, len(templates))
-	for _, templateModel := range templates {
-		templateDomain, err := templateModel.ToDomain()
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	templatesDomain := []template.Template{}
+	for rows.Next() {
+		var templateModel model.Template
+		if err := rows.StructScan(&templateModel); err != nil {
+			return nil, err
+		}
+		td, err := templateModel.ToDomain()
 		if err != nil {
 			return nil, err
 		}
-		domainTemplates = append(domainTemplates, *templateDomain)
+		templatesDomain = append(templatesDomain, *td)
 	}
-	return domainTemplates, nil
+
+	return templatesDomain, nil
 }
 
 func (r TemplateRepository) GetByName(ctx context.Context, name string) (*template.Template, error) {
+	query, args, err := templateListQueryBuilder.Where("name = ?", name).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
 	var templateModel model.Template
-	result := r.client.db.WithContext(ctx).Where("name = ?", name).Find(&templateModel)
-	if result.Error != nil {
-		return nil, result.Error
+	if err := r.client.db.GetContext(ctx, &templateModel, query, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, template.NotFoundError{Name: name}
+		}
+		return nil, err
 	}
-	if result.RowsAffected == 0 {
-		return nil, template.NotFoundError{Name: name}
-	}
+
 	tmpl, err := templateModel.ToDomain()
 	if err != nil {
 		return nil, err
 	}
+
 	return tmpl, nil
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
-	var template model.Template
-	result := r.client.db.WithContext(ctx).Where("name = ?", name).Delete(&template)
-	return result.Error
+	if _, err := r.client.db.ExecContext(ctx, templateDeleteByNameQuery, name); err != nil {
+		return err
+	}
+	return nil
 }

@@ -3,9 +3,11 @@ module github.com/odpf/siren
 go 1.16
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/MakeNowJust/heredoc v1.0.0
+	github.com/Masterminds/squirrel v1.5.3
 	github.com/benbjohnson/clock v1.3.0 // indirect
+	github.com/briandowns/spinner v1.19.0 // indirect
+	github.com/charmbracelet/glamour v0.5.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.7
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
@@ -26,7 +28,10 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
+	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
+	github.com/schollz/progressbar/v3 v3.9.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/slack-go/slack v0.11.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.0

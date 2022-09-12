@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
@@ -58,7 +59,12 @@ func runServer(cfg config.Config) error {
 
 	logger := initLogger(cfg.Log)
 
-	pgClient, err := postgres.NewClient(logger, cfg.DB)
+	dbClient, err := db.New(cfg.DB)
+	if err != nil {
+		return err
+	}
+
+	pgClient, err := postgres.NewClient(logger, dbClient)
 	if err != nil {
 		return err
 	}

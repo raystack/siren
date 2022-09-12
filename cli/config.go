@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -42,7 +42,7 @@ func configInitCommand() *cobra.Command {
 			}
 
 			filepath := fmt.Sprintf("%v.%v", FileName, FileExtension)
-			if err := ioutil.WriteFile(filepath, b, 0655); err != nil {
+			if err := os.WriteFile(filepath, b, 0655); err != nil {
 				return err
 			}
 			fmt.Printf("config created: %v", filepath)
@@ -55,7 +55,7 @@ func configInitCommand() *cobra.Command {
 func readConfig() (*configuration, error) {
 	var c configuration
 	filepath := fmt.Sprintf("%v.%v", FileName, FileExtension)
-	b, err := ioutil.ReadFile(filepath)
+	b, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

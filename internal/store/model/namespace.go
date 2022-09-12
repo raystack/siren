@@ -7,18 +7,17 @@ import (
 )
 
 type Namespace struct {
-	ID          uint64 `gorm:"primarykey"`
-	Provider    *Provider
-	ProviderID  uint64 `gorm:"uniqueIndex:urn_provider_id_unique"`
-	URN         string `gorm:"uniqueIndex:urn_provider_id_unique"`
-	Name        string
-	Credentials string
-	Labels      StringStringMap `gorm:"type:jsonb" sql:"type:jsonb" `
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint64          `db:"id"`
+	ProviderID  uint64          `db:"provider_id"`
+	URN         string          `db:"urn"`
+	Name        string          `db:"name"`
+	Credentials string          `db:"credentials"`
+	Labels      StringStringMap `db:"labels"`
+	CreatedAt   time.Time       `db:"created_at"`
+	UpdatedAt   time.Time       `db:"updated_at"`
 }
 
-func (ns *Namespace) FromDomain(n *namespace.EncryptedNamespace) {
+func (ns *Namespace) FromDomain(n namespace.EncryptedNamespace) {
 	ns.ID = n.ID
 	ns.URN = n.URN
 	ns.Name = n.Name

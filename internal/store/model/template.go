@@ -10,19 +10,16 @@ import (
 )
 
 type Template struct {
-	ID        uint64 `gorm:"primarykey"`
-	Name      string `gorm:"index:idx_template_name,unique"`
-	Body      string
-	Tags      pq.StringArray `gorm:"type:text[];index:idx_tags,type:gin"`
-	Variables string         `gorm:"type:jsonb" sql:"type:jsonb" `
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        uint64         `db:"id"`
+	Name      string         `db:"name"`
+	Body      string         `db:"body"`
+	Tags      pq.StringArray `db:"tags"`
+	Variables string         `db:"variables"`
+	CreatedAt time.Time      `db:"created_at"`
+	UpdatedAt time.Time      `db:"updated_at"`
 }
 
-func (tmp *Template) FromDomain(t *template.Template) error {
-	if t == nil {
-		return errors.New("template domain is nil")
-	}
+func (tmp *Template) FromDomain(t template.Template) error {
 	tmp.ID = t.ID
 	tmp.CreatedAt = t.CreatedAt
 	tmp.UpdatedAt = t.UpdatedAt

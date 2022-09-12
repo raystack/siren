@@ -190,7 +190,7 @@ func getNamespaceCmd(c *configuration) *cobra.Command {
 				UpdatedAt:   res.GetNamespace().GetUpdatedAt().AsTime(),
 			}
 
-			if err := printer.Text(nspace, format); err != nil {
+			if err := printer.File(nspace, format); err != nil {
 				return fmt.Errorf("failed to format namespace: %v", err)
 			}
 			return nil

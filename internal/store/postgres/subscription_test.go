@@ -99,6 +99,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 							ID: 1,
 						},
 					},
+					Match: map[string]string{},
 				},
 				{
 					ID:        2,
@@ -309,10 +310,8 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.Get(s.ctx, tc.PassedID)
-			if tc.ErrString != "" {
-				if err.Error() != tc.ErrString {
-					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
+			if err != nil && err.Error() != tc.ErrString {
+				s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 			}
 			if !cmp.Equal(got, tc.ExpectedSubscription, cmpopts.IgnoreFields(subscription.Subscription{}, "CreatedAt", "UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedSubscription)
@@ -407,10 +406,8 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			err := s.repository.Update(s.ctx, tc.SubscriptionToUpsert)
-			if tc.ErrString != "" {
-				if err.Error() != tc.ErrString {
-					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
+			if err != nil && err.Error() != tc.ErrString {
+				s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 			}
 		})
 	}
@@ -432,7 +429,7 @@ func (s *SubscriptionRepositoryTestSuite) TestDelete() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.Delete(s.ctx, tc.IDToDelete, 1)
+			err := s.repository.Delete(s.ctx, tc.IDToDelete)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

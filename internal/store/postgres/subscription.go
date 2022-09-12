@@ -2,12 +2,40 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 )
+
+const subscriptionInsertQuery = `
+INSERT INTO subscriptions (namespace_id, urn, receiver, match, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, now(), now())
+RETURNING *
+`
+
+const subscriptionUpdateQuery = `
+UPDATE subscriptions SET namespace_id=$2, urn=$3, receiver=$4, match=$5, updated_at=now()
+WHERE id = $1
+RETURNING *
+`
+
+const subscriptionDeleteQuery = `
+DELETE from subscriptions where id=$1
+`
+
+var subscriptionListQueryBuilder = sq.Select(
+	"id",
+	"namespace_id",
+	"urn",
+	"receiver",
+	"match",
+	"created_at",
+	"updated_at",
+).From("subscriptions")
 
 // SubscriptionRepository talks to the store to read or insert data
 type SubscriptionRepository struct {
@@ -22,24 +50,32 @@ func NewSubscriptionRepository(client *Client) *SubscriptionRepository {
 }
 
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
-	var subscriptionModels []*model.Subscription
-
-	result := r.client.GetDB(ctx).WithContext(ctx)
+	var queryBuilder = subscriptionListQueryBuilder
 	if flt.NamespaceID != 0 {
-		result = result.Where("namespace_id = ?", flt.NamespaceID)
+		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
 	}
 
-	result = result.Find(&subscriptionModels)
-	if result.Error != nil {
-		return nil, result.Error
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
 	}
 
-	var subscriptions []subscription.Subscription
-	for _, s := range subscriptionModels {
-		subscriptions = append(subscriptions, *s.ToDomain())
+	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return subscriptions, nil
+	var subscriptionsDomain []subscription.Subscription
+	for rows.Next() {
+		var subscriptionModel model.Subscription
+		if err := rows.StructScan(&subscriptionModel); err != nil {
+			return nil, err
+		}
+
+		subscriptionsDomain = append(subscriptionsDomain, *subscriptionModel.ToDomain())
+	}
+
+	return subscriptionsDomain, nil
 }
 
 func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.Subscription) error {
@@ -47,11 +83,17 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 		return errors.New("subscription domain is nil")
 	}
 
-	m := new(model.Subscription)
-	m.FromDomain(sub)
+	subscriptionModel := new(model.Subscription)
+	subscriptionModel.FromDomain(*sub)
 
-	if err := r.client.GetDB(ctx).WithContext(ctx).Create(&m).Error; err != nil {
-		err = checkPostgresError(err)
+	var newSubscriptionModel model.Subscription
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, subscriptionInsertQuery,
+		subscriptionModel.NamespaceID,
+		subscriptionModel.URN,
+		subscriptionModel.Receiver,
+		subscriptionModel.Match,
+	).StructScan(&newSubscriptionModel); err != nil {
+		err := checkPostgresError(err)
 		if errors.Is(err, errDuplicateKey) {
 			return subscription.ErrDuplicate
 		}
@@ -61,24 +103,26 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 		return err
 	}
 
-	*sub = *m.ToDomain()
+	*sub = *newSubscriptionModel.ToDomain()
 
 	return nil
 }
 
 func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscription.Subscription, error) {
-	m := new(model.Subscription)
-
-	result := r.client.db.WithContext(ctx).Where(fmt.Sprintf("id = %d", id)).Find(&m)
-	if result.Error != nil {
-		return nil, result.Error
+	query, args, err := subscriptionListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
 	}
 
-	if result.RowsAffected == 0 {
-		return nil, subscription.NotFoundError{ID: id}
+	var subscriptionModel model.Subscription
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(&subscriptionModel); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, subscription.NotFoundError{ID: id}
+		}
+		return nil, err
 	}
 
-	return m.ToDomain(), nil
+	return subscriptionModel.ToDomain(), nil
 }
 
 func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.Subscription) error {
@@ -86,41 +130,44 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 		return errors.New("subscription domain is nil")
 	}
 
-	m := new(model.Subscription)
-	m.FromDomain(sub)
+	subscriptionModel := new(model.Subscription)
+	subscriptionModel.FromDomain(*sub)
 
-	result := r.client.GetDB(ctx).WithContext(ctx).Where("id = ?", m.ID).Updates(&m)
-	if result.Error != nil {
-		err := checkPostgresError(result.Error)
+	var newSubscriptionModel model.Subscription
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, subscriptionUpdateQuery,
+		subscriptionModel.ID,
+		subscriptionModel.NamespaceID,
+		subscriptionModel.URN,
+		subscriptionModel.Receiver,
+		subscriptionModel.Match,
+	).StructScan(&newSubscriptionModel); err != nil {
+		err := checkPostgresError(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return subscription.NotFoundError{ID: subscriptionModel.ID}
+		}
 		if errors.Is(err, errDuplicateKey) {
 			return subscription.ErrDuplicate
 		}
 		if errors.Is(err, errForeignKeyViolation) {
 			return subscription.ErrRelation
 		}
-		return result.Error
+		return err
 	}
 
-	if result.RowsAffected == 0 {
-		return subscription.NotFoundError{ID: m.ID}
-	}
-
-	*sub = *m.ToDomain()
+	*sub = *newSubscriptionModel.ToDomain()
 
 	return nil
 }
 
-func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64, namespaceID uint64) error {
-	result := r.client.GetDB(ctx).WithContext(ctx).Delete(model.Subscription{}, id)
-	if result.Error != nil {
-		return result.Error
+func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
+	if _, err := r.client.GetDB(ctx).QueryxContext(ctx, subscriptionDeleteQuery, id); err != nil {
+		return err
 	}
-
 	return nil
 }
 
 func (r *SubscriptionRepository) WithTransaction(ctx context.Context) context.Context {
-	return r.client.WithTransaction(ctx)
+	return r.client.WithTransaction(ctx, nil)
 }
 
 func (r *SubscriptionRepository) Rollback(ctx context.Context, err error) error {

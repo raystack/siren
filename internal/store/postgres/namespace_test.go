@@ -77,7 +77,7 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 
 	var testCases = []testCase{
 		{
-			Description: "should get all providers",
+			Description: "should get all namespaces",
 			ExpectedNamespaces: []namespace.EncryptedNamespace{
 				{
 					Namespace: &namespace.Namespace{
@@ -85,8 +85,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 						Name:     "odpf",
 						URN:      "odpf",
 						Provider: 1,
+						Labels:   map[string]string{},
 					},
-					Credentials: "&map[secret_key:odpf-secret-key-1]",
+					Credentials: "map[secret_key:odpf-secret-key-1]",
 				},
 				{
 					Namespace: &namespace.Namespace{
@@ -94,8 +95,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 						Name:     "odpf",
 						URN:      "odpf",
 						Provider: 2,
+						Labels:   map[string]string{},
 					},
-					Credentials: "&map[secret_key:odpf-secret-key-2]",
+					Credentials: "map[secret_key:odpf-secret-key-2]",
 				},
 				{
 					Namespace: &namespace.Namespace{
@@ -103,8 +105,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 						Name:     "instance-1",
 						URN:      "instance-1",
 						Provider: 2,
+						Labels:   map[string]string{},
 					},
-					Credentials: "&map[service_key:instance-1-service-key]",
+					Credentials: "map[service_key:instance-1-service-key]",
 				},
 			},
 		},
@@ -118,7 +121,7 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
 			}
-			if !cmp.Equal(got, tc.ExpectedNamespaces, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "CreatedAt", "UpdatedAt")) {
+			if !cmp.Equal(got, tc.ExpectedNamespaces, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "Namespace.CreatedAt", "Namespace.UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespaces)
 			}
 		})
@@ -143,8 +146,9 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 					Name:     "instance-1",
 					URN:      "instance-1",
 					Provider: 2,
+					Labels:   map[string]string{},
 				},
-				Credentials: "&map[service_key:instance-1-service-key]",
+				Credentials: "map[service_key:instance-1-service-key]",
 			},
 		},
 		{
@@ -162,7 +166,7 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
 			}
-			if !cmp.Equal(got, tc.ExpectedNamespace, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "CreatedAt", "UpdatedAt")) {
+			if !cmp.Equal(got, tc.ExpectedNamespace, cmpopts.IgnoreFields(namespace.EncryptedNamespace{}, "Namespace.CreatedAt", "Namespace.UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedNamespace)
 			}
 		})

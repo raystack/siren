@@ -25,17 +25,16 @@ func (list SubscriptionReceivers) Value() (driver.Value, error) {
 }
 
 type Subscription struct {
-	ID          uint64 `gorm:"primarykey"`
-	Namespace   *Namespace
-	NamespaceID uint64
-	URN         string                `gorm:"unique"`
-	Receiver    SubscriptionReceivers `gorm:"type:jsonb" sql:"type:jsonb" `
-	Match       StringStringMap       `gorm:"type:jsonb" sql:"type:jsonb" `
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint64                `db:"id"`
+	NamespaceID uint64                `db:"namespace_id"`
+	URN         string                `db:"urn"`
+	Receiver    SubscriptionReceivers `db:"receiver"`
+	Match       StringStringMap       `db:"match"`
+	CreatedAt   time.Time             `db:"created_at"`
+	UpdatedAt   time.Time             `db:"updated_at"`
 }
 
-func (s *Subscription) FromDomain(sub *subscription.Subscription) {
+func (s *Subscription) FromDomain(sub subscription.Subscription) {
 	s.ID = sub.ID
 	s.URN = sub.URN
 	s.NamespaceID = sub.Namespace

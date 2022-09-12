@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -90,7 +90,7 @@ func (c *Client) auth(ctx context.Context) (Credential, error) {
 	if err != nil {
 		return Credential{}, fmt.Errorf("failure in http call: %w", err)
 	}
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Credential{}, fmt.Errorf("failed to read response body: %w", err)
 	}

@@ -12,8 +12,8 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 	alerts, err := s.alertService.List(ctx, alert.Filter{
 		ResourceName: req.GetResourceName(),
 		ProviderID:   req.GetProviderId(),
-		StartTime:    req.GetStartTime(),
-		EndTime:      req.GetEndTime(),
+		StartTime:    int64(req.GetStartTime()),
+		EndTime:      int64(req.GetEndTime()),
 	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)

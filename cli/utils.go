@@ -3,7 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/odpf/siren/pkg/errors"
@@ -12,7 +12,7 @@ import (
 
 // TODO need to test this
 func parseFile(filePath string, v interface{}) error {
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
 	}

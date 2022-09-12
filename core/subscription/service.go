@@ -184,7 +184,7 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	}
 
 	ctx = s.repository.WithTransaction(ctx)
-	if err := s.repository.Delete(ctx, id, sub.Namespace); err != nil {
+	if err := s.repository.Delete(ctx, id); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}

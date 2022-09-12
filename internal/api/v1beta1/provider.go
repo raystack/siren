@@ -6,8 +6,6 @@ import (
 
 	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -66,30 +64,27 @@ func (s *GRPCServer) CreateProvider(ctx context.Context, req *sirenv1beta1.Creat
 }
 
 func (s *GRPCServer) GetProvider(ctx context.Context, req *sirenv1beta1.GetProviderRequest) (*sirenv1beta1.GetProviderResponse, error) {
-	provider, err := s.providerService.Get(ctx, req.GetId())
-	if provider == nil {
-		return nil, status.Errorf(codes.NotFound, "provider not found")
-	}
+	fetchedProvider, err := s.providerService.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
-	grpcCredentials, err := structpb.NewStruct(provider.Credentials)
+	grpcCredentials, err := structpb.NewStruct(fetchedProvider.Credentials)
 	if err != nil {
 		return nil, s.generateRPCErr(fmt.Errorf("failed to fetch provider credentials: %w", err))
 	}
 
 	return &sirenv1beta1.GetProviderResponse{
 		Provider: &sirenv1beta1.Provider{
-			Id:          provider.ID,
-			Host:        provider.Host,
-			Urn:         provider.URN,
-			Name:        provider.Name,
-			Type:        provider.Type,
+			Id:          fetchedProvider.ID,
+			Host:        fetchedProvider.Host,
+			Urn:         fetchedProvider.URN,
+			Name:        fetchedProvider.Name,
+			Type:        fetchedProvider.Type,
 			Credentials: grpcCredentials,
-			Labels:      provider.Labels,
-			CreatedAt:   timestamppb.New(provider.CreatedAt),
-			UpdatedAt:   timestamppb.New(provider.UpdatedAt),
+			Labels:      fetchedProvider.Labels,
+			CreatedAt:   timestamppb.New(fetchedProvider.CreatedAt),
+			UpdatedAt:   timestamppb.New(fetchedProvider.UpdatedAt),
 		},
 	}, nil
 }

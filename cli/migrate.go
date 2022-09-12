@@ -35,10 +35,5 @@ func migrateCmd() *cobra.Command {
 }
 
 func runPostgresMigrations(logger log.Logger, cfg config.Config) error {
-	client, err := postgres.NewClient(logger, cfg.DB)
-	if err != nil {
-		return err
-	}
-
-	return client.Migrate()
+	return postgres.Migrate(cfg.DB)
 }

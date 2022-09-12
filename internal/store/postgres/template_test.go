@@ -293,17 +293,6 @@ func (s *TemplateRepositoryTestSuite) TestUpsert() {
 			ExpectedID: uint64(1),
 		},
 		{
-			Description: "should return conflict error if try to update same name with different id",
-			TemplateToUpsert: &template.Template{
-				ID:        234,
-				Name:      "zookeeper-pending-syncs",
-				Body:      "new body",
-				Tags:      []string{},
-				Variables: []template.Variable{},
-			},
-			ErrString: "name already exist",
-		},
-		{
 			Description: "should return error if template is nil",
 			ErrString:   "template domain is nil",
 		},

@@ -195,7 +195,7 @@ func getProviderCmd(c *configuration) *cobra.Command {
 				UpdatedAt:   res.GetProvider().GetUpdatedAt().AsTime(),
 			}
 
-			if err := printer.Text(provider, format); err != nil {
+			if err := printer.File(provider, format); err != nil {
 				return fmt.Errorf("failed to format provider: %v", err)
 			}
 			return nil

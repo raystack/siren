@@ -196,11 +196,11 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ProviderService: mockedProviderService})
 
 		mockedProviderService.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), providerId).
-			Return(nil, nil).Once()
+			Return(nil, errors.ErrNotFound).Once()
 
 		res, err := dummyGRPCServer.GetProvider(ctx, dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = NotFound desc = provider not found")
+		assert.EqualError(t, err, "rpc error: code = NotFound desc = requested entity not found")
 	})
 
 	t.Run("should return error Internal if getting provider failed", func(t *testing.T) {
