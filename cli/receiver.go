@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/odpf/salt/cmdx"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/errors"
@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func receiversCmd(c *configuration) *cobra.Command {
+func receiversCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "receiver",
 		Aliases: []string{"receivers"},
@@ -27,20 +27,24 @@ func receiversCmd(c *configuration) *cobra.Command {
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
+			"client":     "true",
 		},
 	}
 
-	cmd.AddCommand(listReceiversCmd(c))
-	cmd.AddCommand(createReceiverCmd(c))
-	cmd.AddCommand(getReceiverCmd(c))
-	cmd.AddCommand(updateReceiverCmd(c))
-	cmd.AddCommand(deleteReceiverCmd(c))
-	cmd.AddCommand(notifyReceiverCmd(c))
+	cmd.AddCommand(
+		listReceiversCmd(cmdxConfig),
+		createReceiverCmd(cmdxConfig),
+		getReceiverCmd(cmdxConfig),
+		updateReceiverCmd(cmdxConfig),
+		deleteReceiverCmd(cmdxConfig),
+		notifyReceiverCmd(cmdxConfig),
+	)
+
 	return cmd
 }
 
-func listReceiversCmd(c *configuration) *cobra.Command {
-	return &cobra.Command{
+func listReceiversCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List receivers",
 		Long: heredoc.Doc(`
@@ -50,7 +54,16 @@ func listReceiversCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -66,6 +79,7 @@ func listReceiversCmd(c *configuration) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
+			spinner.Stop()
 			receivers := res.GetReceivers()
 			report := [][]string{}
 
@@ -85,9 +99,11 @@ func listReceiversCmd(c *configuration) *cobra.Command {
 			return nil
 		},
 	}
+
+	return cmd
 }
 
-func createReceiverCmd(c *configuration) *cobra.Command {
+func createReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var filePath string
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -99,6 +115,16 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var receiverConfig receiver.Receiver
 			if err := parseFile(filePath, &receiverConfig); err != nil {
 				return err
@@ -109,7 +135,6 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -127,7 +152,10 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Receiver created with id: %v\n", res.GetId())
+			spinner.Stop()
+			printer.Successf("Receiver created with id: %v", res.GetId())
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -139,7 +167,7 @@ func createReceiverCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func getReceiverCmd(c *configuration) *cobra.Command {
+func getReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var format string
 	cmd := &cobra.Command{
 		Use:   "view",
@@ -147,7 +175,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 		Long: heredoc.Doc(`
 			View a receiver.
 
-			Display the Id, name, and other information about a receiver.
+			Display the id, name, and other information about a receiver.
 		`),
 		Example: heredoc.Doc(`
 			$ siren receiver view 1
@@ -157,7 +185,16 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -191,6 +228,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				UpdatedAt:      res.GetReceiver().GetUpdatedAt().AsTime(),
 			}
 
+			spinner.Stop()
 			if err := printer.File(receiver, format); err != nil {
 				return fmt.Errorf("failed to format receiver: %v", err)
 			}
@@ -203,7 +241,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func updateReceiverCmd(c *configuration) *cobra.Command {
+func updateReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -216,6 +254,16 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			var receiverConfig receiver.Receiver
 			if err := parseFile(filePath, &receiverConfig); err != nil {
 				return err
@@ -226,7 +274,6 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			ctx := context.Background()
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -244,7 +291,10 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Successfully updated receiver with id %d\n", id)
+			spinner.Stop()
+			printer.Successf("Successfully updated receiver with id %d", id)
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
@@ -258,7 +308,7 @@ func updateReceiverCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func deleteReceiverCmd(c *configuration) *cobra.Command {
+func deleteReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a receiver details",
@@ -270,7 +320,16 @@ func deleteReceiverCmd(c *configuration) *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -289,7 +348,11 @@ func deleteReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully deleted receiver")
+			spinner.Stop()
+			printer.Success("Successfully deleted receiver")
+			printer.Space()
+			printer.SuccessIcon()
+
 			return nil
 		},
 	}
@@ -297,7 +360,7 @@ func deleteReceiverCmd(c *configuration) *cobra.Command {
 	return cmd
 }
 
-func notifyReceiverCmd(c *configuration) *cobra.Command {
+func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -310,7 +373,16 @@ func notifyReceiverCmd(c *configuration) *cobra.Command {
 			"group:core": "true",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx := context.Background()
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+
+			ctx := cmd.Context()
+
+			c, err := loadClientConfig(cmd, cmdxConfig)
+			if err != nil {
+				return err
+			}
+
 			client, cancel, err := createClient(ctx, c.Host)
 			if err != nil {
 				return err
@@ -345,7 +417,10 @@ func notifyReceiverCmd(c *configuration) *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Successfully send receiver notification")
+			spinner.Stop()
+			printer.Success("Successfully send receiver notification")
+			printer.Space()
+			printer.SuccessIcon()
 
 			return nil
 		},
