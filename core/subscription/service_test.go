@@ -676,7 +676,7 @@ func TestService_Delete(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
 				},
 				ErrString: "some error",
@@ -689,7 +689,7 @@ func TestService_Delete(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
 				},
 				ErrString: "some rollback error",
@@ -702,7 +702,7 @@ func TestService_Delete(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil)
 					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
 				},
@@ -716,7 +716,7 @@ func TestService_Delete(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil)
 					sr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 					sr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("some rollback error"))
 				},
@@ -732,7 +732,7 @@ func TestService_Delete(t *testing.T) {
 					}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil)
 					mockSyncToUpstreamSuccess(sr, ns, ps, rs, cc)
 					sr.EXPECT().Commit(ctx).Return(nil)
 				},
@@ -747,7 +747,7 @@ func TestService_Delete(t *testing.T) {
 					}, nil)
 
 					sr.EXPECT().WithTransaction(ctx).Return(ctx)
-					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64")).Return(nil)
+					sr.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil)
 					mockSyncToUpstreamSuccess(sr, ns, ps, rs, cc)
 					sr.EXPECT().Commit(ctx).Return(errors.New("commit error"))
 				},

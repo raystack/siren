@@ -35,7 +35,7 @@ func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]Alert, error) 
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Alert, error) {
 	if flt.EndTime == 0 {
-		flt.EndTime = uint64(time.Now().Unix())
+		flt.EndTime = time.Now().Unix()
 	}
 
 	return s.repository.List(ctx, flt)

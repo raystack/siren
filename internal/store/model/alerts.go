@@ -7,20 +7,19 @@ import (
 )
 
 type Alert struct {
-	ID           uint64 `gorm:"primarykey"`
-	Provider     *Provider
-	ProviderID   uint64
-	ResourceName string
-	MetricName   string
-	MetricValue  string
-	Severity     string
-	Rule         string
-	TriggeredAt  time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           uint64    `db:"id"`
+	ProviderID   uint64    `db:"provider_id"`
+	ResourceName string    `db:"resource_name"`
+	MetricName   string    `db:"metric_name"`
+	MetricValue  string    `db:"metric_value"`
+	Severity     string    `db:"severity"`
+	Rule         string    `db:"rule"`
+	TriggeredAt  time.Time `db:"triggered_at"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }
 
-func (a *Alert) FromDomain(alrt *alert.Alert) {
+func (a *Alert) FromDomain(alrt alert.Alert) {
 	a.ID = alrt.ID
 	a.ProviderID = alrt.ProviderID
 	a.ResourceName = alrt.ResourceName

@@ -2,17 +2,20 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
+	"embed"
 	"fmt"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
+	"github.com/jmoiron/sqlx"
+	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
-	gormpg "gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 )
+
+//go:embed migrations/*.sql
+var fs embed.FS
 
 var (
 	transactionContextKey = struct{}{}
@@ -23,46 +26,20 @@ var (
 )
 
 type Client struct {
-	db     *gorm.DB
+	db     *db.Client
 	logger log.Logger
 }
 
-// New returns the database instance// NewClient initializes database connection
-func NewClient(logger log.Logger, c Config) (*Client, error) {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s dbname=%s port=%s sslmode=%s password=%s ",
-		c.Host,
-		c.User,
-		c.Name,
-		c.Port,
-		c.SSLMode,
-		c.Password,
-	)
-
-	db, err := gorm.Open(gormpg.Open(dsn), &gorm.Config{Logger: gormlogger.Default.LogMode(getLogLevelFromString(logger.Level()))})
-	if err != nil {
-		return nil, err
+// NewClient wraps salt/db client
+func NewClient(logger log.Logger, dbc *db.Client) (*Client, error) {
+	if dbc == nil {
+		return nil, errors.New("error creating postgres client: nil db client")
 	}
 
 	return &Client{
-		db:     db,
+		db:     dbc,
 		logger: logger,
 	}, nil
-}
-
-func getLogLevelFromString(level string) gormlogger.LogLevel {
-	switch level {
-	case "error":
-		return gormlogger.Error
-	case "warn":
-		return gormlogger.Warn
-	case "info":
-		return gormlogger.Info
-	case "debug":
-		return gormlogger.Info
-	default:
-		return gormlogger.Silent
-	}
 }
 
 func checkPostgresError(err error) error {
@@ -80,33 +57,25 @@ func checkPostgresError(err error) error {
 	return err
 }
 
-func (c *Client) Migrate() error {
-	c.logger.Info("migrating postgres...")
-	err := c.db.AutoMigrate(
-		&model.Alert{},
-		&model.Namespace{},
-		&model.Provider{},
-		&model.Receiver{},
-		&model.Rule{},
-		&model.Subscription{},
-		&model.Template{})
-	if err != nil {
+func Migrate(cfg db.Config) error {
+	if err := db.RunMigrations(cfg, fs, "migrations"); err != nil {
 		return err
 	}
-	c.logger.Info("migration done.")
 	return nil
 }
 
-func (c *Client) WithTransaction(ctx context.Context) context.Context {
-	tx := c.db.Begin()
+func (c *Client) WithTransaction(ctx context.Context, opts *sql.TxOptions) context.Context {
+	tx, err := c.db.BeginTxx(ctx, opts)
+	if err != nil {
+		return ctx
+	}
 	return context.WithValue(ctx, transactionContextKey, tx)
 }
 
 func (c *Client) Rollback(ctx context.Context) error {
 	if tx := extractTransaction(ctx); tx != nil {
-		tx = tx.Rollback()
-		if tx.Error != nil {
-			return c.db.Error
+		if err := tx.Rollback(); err != nil {
+			return err
 		}
 		return nil
 	}
@@ -115,25 +84,23 @@ func (c *Client) Rollback(ctx context.Context) error {
 
 func (c *Client) Commit(ctx context.Context) error {
 	if tx := extractTransaction(ctx); tx != nil {
-		tx = tx.Commit()
-		if tx.Error != nil {
-			return c.db.Error
+		if err := tx.Commit(); err != nil {
+			return err
 		}
 		return nil
 	}
 	return errors.New("no transaction")
 }
 
-func (c *Client) GetDB(ctx context.Context) *gorm.DB {
-	db := c.db
+func (c *Client) GetDB(ctx context.Context) sqlx.QueryerContext {
 	if tx := extractTransaction(ctx); tx != nil {
-		db = tx
+		return tx
 	}
-	return db
+	return c.db
 }
 
-func extractTransaction(ctx context.Context) *gorm.DB {
-	if tx, ok := ctx.Value(transactionContextKey).(*gorm.DB); !ok {
+func extractTransaction(ctx context.Context) *sqlx.Tx {
+	if tx, ok := ctx.Value(transactionContextKey).(*sqlx.Tx); !ok {
 		return nil
 	} else {
 		return tx

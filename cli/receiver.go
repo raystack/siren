@@ -191,7 +191,7 @@ func getReceiverCmd(c *configuration) *cobra.Command {
 				UpdatedAt:      res.GetReceiver().GetUpdatedAt().AsTime(),
 			}
 
-			if err := printer.Text(receiver, format); err != nil {
+			if err := printer.File(receiver, format); err != nil {
 				return fmt.Errorf("failed to format receiver: %v", err)
 			}
 			return nil

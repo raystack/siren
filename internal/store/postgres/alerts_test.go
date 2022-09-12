@@ -83,8 +83,8 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 			Filter: alert.Filter{
 				ResourceName: "odpf-kafka-1",
 				ProviderID:   1,
-				StartTime:    uint64(time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
-				EndTime:      uint64(time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				StartTime:    int64(time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				EndTime:      int64(time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 			},
 			ExpectedAlerts: []alert.Alert{
 				{
@@ -112,12 +112,10 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 			Filter: alert.Filter{
 				ResourceName: "odpf-kafka-1",
 				ProviderID:   1,
-				StartTime:    uint64(time.Date(1980, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
-				EndTime:      uint64(time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				StartTime:    int64(time.Date(1980, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
+				EndTime:      int64(time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 			},
-		},
-		{
-			Description: "should return empty if filter is empty",
+			ExpectedAlerts: []alert.Alert{},
 		},
 	}
 
@@ -156,14 +154,6 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 				Rule:         "cpu-usage",
 			},
 			ExpectedID: uint64(4), // autoincrement in db side
-		},
-		{
-			Description: "should return an alert if something wrong in DB",
-			AlertToCreate: &alert.Alert{
-				ID:         1,
-				ProviderID: 1,
-			},
-			ErrString: "ERROR: duplicate key value violates unique constraint \"alerts_pkey\" (SQLSTATE 23505)",
 		},
 		{
 			Description: "should return error foreign key if provider id does not exist",

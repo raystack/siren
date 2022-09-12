@@ -15,7 +15,7 @@ type Repository interface {
 	Create(context.Context, *Subscription) error
 	Get(context.Context, uint64) (*Subscription, error)
 	Update(context.Context, *Subscription) error
-	Delete(context.Context, uint64, uint64) error
+	Delete(context.Context, uint64) error
 }
 
 type Transactor interface {

@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -190,7 +189,7 @@ func updateRuleCmd(c *configuration) *cobra.Command {
 }
 
 func uploadRuleCmd(c *configuration) *cobra.Command {
-	var fileReader = ioutil.ReadFile
+	var fileReader = os.ReadFile
 	return &cobra.Command{
 		Use:   "upload",
 		Short: "Upload Rules YAML file",

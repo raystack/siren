@@ -9,26 +9,22 @@ import (
 )
 
 type Rule struct {
-	ID                    uint64 `gorm:"primarykey"`
-	CreatedAt             time.Time
-	UpdatedAt             time.Time
-	Name                  string `gorm:"index:idx_rule_name,unique"`
-	Namespace             string `gorm:"uniqueIndex:unique_name"`
-	GroupName             string `gorm:"uniqueIndex:unique_name"`
-	Template              string `gorm:"uniqueIndex:unique_name"`
-	Enabled               *bool
-	Variables             string     `gorm:"type:jsonb" sql:"type:jsonb"`
-	ProviderNamespace     uint64     `gorm:"uniqueIndex:unique_name"`
-	ProviderNamespaceInfo *Namespace `gorm:"foreignKey:ProviderNamespace"`
+	ID                uint64    `db:"id"`
+	Name              string    `db:"name"`
+	Namespace         string    `db:"namespace"`
+	GroupName         string    `db:"group_name"`
+	Template          string    `db:"template"`
+	Enabled           bool      `db:"enabled"`
+	Variables         string    `db:"variables"`
+	ProviderNamespace uint64    `db:"provider_namespace"`
+	CreatedAt         time.Time `db:"created_at"`
+	UpdatedAt         time.Time `db:"updated_at"`
 }
 
-func (rl *Rule) FromDomain(r *rule.Rule) error {
-	if r == nil {
-		return errors.New("rule domain is nil")
-	}
+func (rl *Rule) FromDomain(r rule.Rule) error {
 	rl.ID = r.ID
 	rl.Name = r.Name
-	rl.Enabled = &r.Enabled
+	rl.Enabled = r.Enabled
 	rl.GroupName = r.GroupName
 	rl.Namespace = r.Namespace
 	rl.Template = r.Template
@@ -58,7 +54,7 @@ func (rl *Rule) ToDomain() (*rule.Rule, error) {
 	return &rule.Rule{
 		ID:                rl.ID,
 		Name:              rl.Name,
-		Enabled:           *rl.Enabled,
+		Enabled:           rl.Enabled,
 		GroupName:         rl.GroupName,
 		Namespace:         rl.Namespace,
 		Template:          rl.Template,

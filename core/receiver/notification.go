@@ -11,16 +11,17 @@ import (
 type NotificationMessage map[string]interface{}
 
 // ToSlackMessage
-// {
-// 	"receiver_name": "",
-// 	"receiver_type": "",
-// 	"message": "",
-// 	"blocks": [
-//			{
-// 				"": ""
-// 			}
-//		]
-// }
+//
+//	{
+//		"receiver_name": "",
+//		"receiver_type": "",
+//		"message": "",
+//		"blocks": [
+//				{
+//					"": ""
+//				}
+//			]
+//	}
 func (nm NotificationMessage) ToSlackMessage() (*slack.Message, error) {
 	jsonByte, err := json.Marshal(nm)
 	if err != nil {

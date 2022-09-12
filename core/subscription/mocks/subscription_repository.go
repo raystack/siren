@@ -97,13 +97,13 @@ func (_c *SubscriptionRepository_Create_Call) Return(_a0 error) *SubscriptionRep
 	return _c
 }
 
-// Delete provides a mock function with given fields: _a0, _a1, _a2
-func (_m *SubscriptionRepository) Delete(_a0 context.Context, _a1 uint64, _a2 uint64) error {
-	ret := _m.Called(_a0, _a1, _a2)
+// Delete provides a mock function with given fields: _a0, _a1
+func (_m *SubscriptionRepository) Delete(_a0 context.Context, _a1 uint64) error {
+	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -119,14 +119,13 @@ type SubscriptionRepository_Delete_Call struct {
 // Delete is a helper method to define mock.On call
 //  - _a0 context.Context
 //  - _a1 uint64
-//  - _a2 uint64
-func (_e *SubscriptionRepository_Expecter) Delete(_a0 interface{}, _a1 interface{}, _a2 interface{}) *SubscriptionRepository_Delete_Call {
-	return &SubscriptionRepository_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1, _a2)}
+func (_e *SubscriptionRepository_Expecter) Delete(_a0 interface{}, _a1 interface{}) *SubscriptionRepository_Delete_Call {
+	return &SubscriptionRepository_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
 
-func (_c *SubscriptionRepository_Delete_Call) Run(run func(_a0 context.Context, _a1 uint64, _a2 uint64)) *SubscriptionRepository_Delete_Call {
+func (_c *SubscriptionRepository_Delete_Call) Run(run func(_a0 context.Context, _a1 uint64)) *SubscriptionRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64))
+		run(args[0].(context.Context), args[1].(uint64))
 	})
 	return _c
 }

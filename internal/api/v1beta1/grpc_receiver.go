@@ -50,13 +50,11 @@ func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListRece
 }
 
 func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.CreateReceiverResponse, error) {
-	configurations := req.GetConfigurations().AsMap()
-
 	rcv := &receiver.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
-		Configurations: configurations,
+		Configurations: req.GetConfigurations().AsMap(),
 	}
 
 	err := s.receiverService.Create(ctx, rcv)
@@ -100,14 +98,12 @@ func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetRecei
 }
 
 func (s *GRPCServer) UpdateReceiver(ctx context.Context, req *sirenv1beta1.UpdateReceiverRequest) (*sirenv1beta1.UpdateReceiverResponse, error) {
-	configurations := req.GetConfigurations().AsMap()
-
 	rcv := &receiver.Receiver{
 		ID:             req.GetId(),
 		Name:           req.GetName(),
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
-		Configurations: configurations,
+		Configurations: req.GetConfigurations().AsMap(),
 	}
 
 	err := s.receiverService.Update(ctx, rcv)

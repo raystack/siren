@@ -7,17 +7,17 @@ import (
 )
 
 type Receiver struct {
-	ID             uint64 `gorm:"primarykey"`
-	Name           string
-	Type           string
-	Labels         StringStringMap    `gorm:"type:jsonb" sql:"type:jsonb" `
-	Configurations StringInterfaceMap `gorm:"type:jsonb" sql:"type:jsonb" `
-	Data           StringInterfaceMap `gorm:"-"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID             uint64             `db:"id"`
+	Name           string             `db:"name"`
+	Type           string             `db:"type"`
+	Labels         StringStringMap    `db:"labels"`
+	Configurations StringInterfaceMap `db:"configurations"`
+	Data           StringInterfaceMap `db:"-"` //TODO do we need this?
+	CreatedAt      time.Time          `db:"created_at"`
+	UpdatedAt      time.Time          `db:"updated_at"`
 }
 
-func (rcv *Receiver) FromDomain(t *receiver.Receiver) {
+func (rcv *Receiver) FromDomain(t receiver.Receiver) {
 	rcv.ID = t.ID
 	rcv.Name = t.Name
 	rcv.Type = t.Type
