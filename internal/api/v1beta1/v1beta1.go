@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -13,39 +14,33 @@ type GRPCServer struct {
 	newrelic *newrelic.Application
 	logger   log.Logger
 	sirenv1beta1.UnimplementedSirenServiceServer
-	templateService     TemplateService
-	ruleService         RuleService
-	alertService        AlertService
-	providerService     ProviderService
-	namespaceService    NamespaceService
-	receiverService     ReceiverService
-	subscriptionService SubscriptionService
+	templateService     api.TemplateService
+	ruleService         api.RuleService
+	alertService        api.AlertService
+	providerService     api.ProviderService
+	namespaceService    api.NamespaceService
+	receiverService     api.ReceiverService
+	subscriptionService api.SubscriptionService
 }
 
 func NewGRPCServer(
-	nr *newrelic.Application, logger log.Logger,
-	templateService TemplateService,
-	ruleService RuleService,
-	alertService AlertService,
-	providerService ProviderService,
-	namespaceService NamespaceService,
-	receiverService ReceiverService,
-	subscriptionService SubscriptionService) *GRPCServer {
+	nr *newrelic.Application,
+	logger log.Logger,
+	apiDeps *api.Deps) *GRPCServer {
 	return &GRPCServer{
 		newrelic:            nr,
 		logger:              logger,
-		templateService:     templateService,
-		ruleService:         ruleService,
-		alertService:        alertService,
-		providerService:     providerService,
-		namespaceService:    namespaceService,
-		receiverService:     receiverService,
-		subscriptionService: subscriptionService,
+		templateService:     apiDeps.TemplateService,
+		ruleService:         apiDeps.RuleService,
+		alertService:        apiDeps.AlertService,
+		providerService:     apiDeps.ProviderService,
+		namespaceService:    apiDeps.NamespaceService,
+		receiverService:     apiDeps.ReceiverService,
+		subscriptionService: apiDeps.SubscriptionService,
 	}
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
-	s.logger.Error("grpc error", "err", errors.Verbose(e))
 	err := errors.E(e)
 
 	var code codes.Code

@@ -8,15 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
-type SubscriptionService interface {
-	List(context.Context, subscription.Filter) ([]subscription.Subscription, error)
-	Create(context.Context, *subscription.Subscription) error
-	Get(context.Context, uint64) (*subscription.Subscription, error)
-	Update(context.Context, *subscription.Subscription) error
-	Delete(context.Context, uint64) error
-}
-
 func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *sirenv1beta1.ListSubscriptionsRequest) (*sirenv1beta1.ListSubscriptionsResponse, error) {
 	subscriptions, err := s.subscriptionService.List(ctx, subscription.Filter{})
 	if err != nil {

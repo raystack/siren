@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const serviceName = "siren"
+
 func New(ctx context.Context) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "siren <command> <subcommand> [flags]",

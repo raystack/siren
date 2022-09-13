@@ -9,17 +9,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
-type ReceiverService interface {
-	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
-	Create(ctx context.Context, rcv *receiver.Receiver) error
-	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
-	Update(ctx context.Context, rcv *receiver.Receiver) error
-	Delete(ctx context.Context, id uint64) error
-	Notify(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage) error
-	GetSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error)
-}
-
 func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
 	receivers, err := s.receiverService.List(ctx, receiver.Filter{})
 	if err != nil {

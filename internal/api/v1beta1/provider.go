@@ -10,15 +10,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface {
-	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) error
-	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) error
-	Delete(context.Context, uint64) error
-}
-
 func (s *GRPCServer) ListProviders(ctx context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
 	providers, err := s.providerService.List(ctx, provider.Filter{
 		URN:  req.GetUrn(),

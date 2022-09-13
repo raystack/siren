@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/api/v1beta1"
 	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
@@ -30,7 +31,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			StartTime:    100,
 			EndTime:      200,
 		}).Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, nil, nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, nil, &api.Deps{AlertService: mockedAlertService})
 
 		dummyReq := &sirenv1beta1.ListAlertsRequest{
 			ResourceName: "foo",
@@ -52,7 +53,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
 		mockedAlertService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), alert.Filter{
 			ProviderID:   1,
@@ -120,7 +121,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, nil, nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -177,7 +178,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -193,7 +194,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(nil, errors.New("random error")).Once()
@@ -245,7 +246,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Severity:     "CRITICAL",
 			TriggeredAt:  time.Now(),
 		}}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), nil, nil, mockedAlertService, nil, nil, nil, nil)
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
