@@ -81,7 +81,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		mockedNamespaceService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto:\u00a0invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -222,7 +222,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto:\u00a0invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 

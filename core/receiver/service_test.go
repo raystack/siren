@@ -54,9 +54,7 @@ func TestService_ListReceivers(t *testing.T) {
 						"token": "key",
 					}).Return(nil, errors.New("decrypt error"))
 				},
-					}, nil)
-				},
-				Err: errors.New("unsupported receiver type: \"random\""),
+				Err: errors.New("decrypt error"),
 			},
 			{
 				Description: "should return error if type unknown",

@@ -81,7 +81,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 			Return(dummyResult, nil)
 		res, err := dummyGRPCServer.ListReceivers(context.Background(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = proto:\u00a0invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 
@@ -214,7 +214,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = proto:\u00a0invalid UTF-8 in string: \"\\xff\"")
 	})
 
 	t.Run("should return error Internal if data NewStruct conversion of data failed", func(t *testing.T) {
@@ -234,7 +234,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 			Return(payload, nil)
 		res, err := dummyGRPCServer.GetReceiver(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = proto:\u00a0invalid UTF-8 in string: \"\\xff\"")
 	})
 }
 

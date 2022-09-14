@@ -68,7 +68,7 @@ func (ns *NamespaceDetail) FromDomain(n namespace.EncryptedNamespace) {
 	ns.UpdatedAt = n.UpdatedAt
 }
 
-func (ns *Namespace) ToDomain() *namespace.EncryptedNamespace {
+func (ns *NamespaceDetail) ToDomain() *namespace.EncryptedNamespace {
 	return &namespace.EncryptedNamespace{
 		Namespace: &namespace.Namespace{
 			ID:        ns.ID,
