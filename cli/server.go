@@ -203,9 +203,8 @@ func runServer(cfg config.Config) error {
 		subscriptionRepository,
 		namespaceService,
 		receiverService,
-		map[string]subscription.ProviderPlugin{
-			provider.TypeCortex: cortexProviderService,
-		})
+		subscription.RegisterProviderPlugin(provider.TypeCortex, cortexProviderService),
+	)
 
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,

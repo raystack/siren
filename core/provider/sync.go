@@ -1,14 +1,14 @@
 package provider
 
-type SyncMethod string
+type SyncSubscriptionMethod string
 
 const (
-	TypeSyncBatch  SyncMethod = "batch"
-	TypeSyncSingle SyncMethod = "single"
+	TypeSyncBatch  SyncSubscriptionMethod = "batch"
+	TypeSyncSingle SyncSubscriptionMethod = "single"
 )
 
-func (sm SyncMethod) String() string {
+func (sm SyncSubscriptionMethod) String() string {
 	return string(sm)
 }
 
-const DefaultSyncMethod = TypeSyncBatch
+const DefaultSyncSubscriptionMethod = TypeSyncBatch

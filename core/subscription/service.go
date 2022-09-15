@@ -5,18 +5,15 @@ import (
 	"sort"
 
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/errors"
 )
 
-//go:generate mockery --name=ProviderPlugin -r --case underscore --with-expecter --structname ProviderPlugin --filename plugin_provider.go --output=./mocks
+//go:generate mockery --name=ProviderPlugin -r --case underscore --with-expecter --structname ProviderPlugin --filename provider_plugin.go --output=./mocks
 type ProviderPlugin interface {
-	CreateSubscription(ctx context.Context, sub *Subscription, namespaceURN string) error
-	UpdateSubscription(ctx context.Context, sub *Subscription, namespaceURN string) error
-	DeleteSubscription(ctx context.Context, sub *Subscription, namespaceURN string) error
-	SyncSubscriptions(ctx context.Context, subs []Subscription, namespaceURN string) error
-	SyncMethod() provider.SyncMethod
+	CreateSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
+	UpdateSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
+	DeleteSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
 }
 
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
@@ -48,13 +45,19 @@ type Service struct {
 }
 
 // NewService returns service struct
-func NewService(repository Repository, namespaceService NamespaceService, receiverService ReceiverService, subscriptionProviderRegistry map[string]ProviderPlugin) *Service {
-	return &Service{
+func NewService(repository Repository, namespaceService NamespaceService, receiverService ReceiverService, sopts ...ServiceOption) *Service {
+	svc := &Service{
 		repository:                   repository,
 		namespaceService:             namespaceService,
 		receiverService:              receiverService,
-		subscriptionProviderRegistry: subscriptionProviderRegistry,
+		subscriptionProviderRegistry: map[string]ProviderPlugin{},
 	}
+
+	for _, opt := range sopts {
+		opt(svc)
+	}
+
+	return svc
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
@@ -94,22 +97,19 @@ func (s *Service) Create(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
-	switch pluginService.SyncMethod() {
-	case provider.TypeSyncSingle:
-		if err := pluginService.CreateSubscription(ctx, sub, ns.URN); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
-	case provider.TypeSyncBatch:
-	default:
-		if err := s.SyncBatchToUpstream(ctx, ns, pluginService); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+		return err
+	}
+
+	if err := pluginService.CreateSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
+		return err
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
@@ -161,23 +161,21 @@ func (s *Service) Update(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
-	switch pluginService.SyncMethod() {
-	case provider.TypeSyncSingle:
-		if err := pluginService.UpdateSubscription(ctx, sub, ns.URN); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
-	case provider.TypeSyncBatch:
-	default:
-		if err := s.SyncBatchToUpstream(ctx, ns, pluginService); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
-			return err
-		}
+		return err
 	}
+
+	if err := pluginService.UpdateSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
 	if err := s.repository.Commit(ctx); err != nil {
 		return err
 	}
@@ -209,22 +207,19 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	switch pluginService.SyncMethod() {
-	case provider.TypeSyncSingle:
-		if err := pluginService.DeleteSubscription(ctx, sub, ns.URN); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
-	case provider.TypeSyncBatch:
-	default:
-		if err := s.SyncBatchToUpstream(ctx, ns, pluginService); err != nil {
-			if err := s.repository.Rollback(ctx, err); err != nil {
-				return err
-			}
+		return err
+	}
+
+	if err := pluginService.DeleteSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
+		return err
 	}
 
 	if err := s.repository.Commit(ctx); err != nil {
@@ -240,6 +235,95 @@ func (s *Service) getProviderPluginService(providerType string) (ProviderPlugin,
 		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)
 	}
 	return pluginService, nil
+}
+
+func (s *Service) FetchEnrichedSubscriptionsByNamespace(
+	ctx context.Context,
+	ns *namespace.Namespace) ([]Subscription, error) {
+
+	// fetch all subscriptions in this namespace.
+	subscriptionsInNamespace, err := s.repository.List(ctx, Filter{
+		NamespaceID: ns.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	receiversMap, err := CreateReceiversMap(ctx, s.receiverService, subscriptionsInNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionsInNamespace, err = AssignReceivers(s.receiverService, receiversMap, subscriptionsInNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return subscriptionsInNamespace, nil
+}
+
+func CreateReceiversMap(ctx context.Context, receiverService ReceiverService, subscriptions []Subscription) (map[uint64]*receiver.Receiver, error) {
+	receiversMap := map[uint64]*receiver.Receiver{}
+	for _, subs := range subscriptions {
+		for _, rcv := range subs.Receivers {
+			if rcv.ID != 0 {
+				receiversMap[rcv.ID] = nil
+			}
+		}
+	}
+
+	// empty receivers map
+	if len(receiversMap) == 0 {
+		return nil, errors.New("no receivers found in subscription")
+	}
+
+	listOfReceiverIDs := []uint64{}
+	for k := range receiversMap {
+		listOfReceiverIDs = append(listOfReceiverIDs, k)
+	}
+
+	filteredReceivers, err := receiverService.List(ctx, receiver.Filter{
+		ReceiverIDs: listOfReceiverIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for i, rcv := range filteredReceivers {
+		receiversMap[rcv.ID] = &filteredReceivers[i]
+	}
+
+	nilReceivers := []uint64{}
+	for id, rcv := range receiversMap {
+		if rcv == nil {
+			nilReceivers = append(nilReceivers, id)
+			continue
+		}
+	}
+
+	if len(nilReceivers) > 0 {
+		return nil, errors.ErrInvalid.WithMsgf("receiver id %v don't exist", nilReceivers)
+	}
+
+	return receiversMap, nil
+}
+
+func AssignReceivers(receiverService ReceiverService, receiversMap map[uint64]*receiver.Receiver, subscriptions []Subscription) ([]Subscription, error) {
+	for is := range subscriptions {
+		for ir, subsRcv := range subscriptions[is].Receivers {
+			if mappedRcv := receiversMap[subsRcv.ID]; mappedRcv == nil {
+				return nil, errors.ErrInvalid.WithMsgf("receiver id %d not found", subsRcv.ID)
+			}
+			subsConfig, err := receiverService.EnrichSubscriptionConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
+			if err != nil {
+				return nil, errors.ErrInvalid.WithMsgf(err.Error())
+			}
+			subscriptions[is].Receivers[ir].ID = receiversMap[subsRcv.ID].ID
+			subscriptions[is].Receivers[ir].Type = receiversMap[subsRcv.ID].Type
+			subscriptions[is].Receivers[ir].Configuration = subsConfig
+		}
+	}
+
+	return subscriptions, nil
 }
 
 func sortReceivers(sub *Subscription) {

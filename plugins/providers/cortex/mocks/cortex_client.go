@@ -140,59 +140,6 @@ func (_c *CortexClient_DeleteRuleGroup_Call) Return(_a0 error) *CortexClient_Del
 	return _c
 }
 
-// GetAlertmanagerConfig provides a mock function with given fields: ctx
-func (_m *CortexClient) GetAlertmanagerConfig(ctx context.Context) (string, map[string]string, error) {
-	ret := _m.Called(ctx)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 map[string]string
-	if rf, ok := ret.Get(1).(func(context.Context) map[string]string); ok {
-		r1 = rf(ctx)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(map[string]string)
-		}
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context) error); ok {
-		r2 = rf(ctx)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// CortexClient_GetAlertmanagerConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAlertmanagerConfig'
-type CortexClient_GetAlertmanagerConfig_Call struct {
-	*mock.Call
-}
-
-// GetAlertmanagerConfig is a helper method to define mock.On call
-//  - ctx context.Context
-func (_e *CortexClient_Expecter) GetAlertmanagerConfig(ctx interface{}) *CortexClient_GetAlertmanagerConfig_Call {
-	return &CortexClient_GetAlertmanagerConfig_Call{Call: _e.mock.On("GetAlertmanagerConfig", ctx)}
-}
-
-func (_c *CortexClient_GetAlertmanagerConfig_Call) Run(run func(ctx context.Context)) *CortexClient_GetAlertmanagerConfig_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *CortexClient_GetAlertmanagerConfig_Call) Return(_a0 string, _a1 map[string]string, _a2 error) *CortexClient_GetAlertmanagerConfig_Call {
-	_c.Call.Return(_a0, _a1, _a2)
-	return _c
-}
-
 // GetRuleGroup provides a mock function with given fields: _a0, _a1, _a2
 func (_m *CortexClient) GetRuleGroup(_a0 context.Context, _a1 string, _a2 string) (*rwrulefmt.RuleGroup, error) {
 	ret := _m.Called(_a0, _a1, _a2)
