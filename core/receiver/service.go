@@ -6,30 +6,20 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
-//go:generate mockery --name=ReceiverPlugin -r --case underscore --with-expecter --structname ReceiverPlugin --filename plugin_service.go --output=./mocks
-type ReceiverPlugin interface {
-	PopulateDataFromConfigs(ctx context.Context, configs Configurations) (map[string]interface{}, error)
-	Notify(ctx context.Context, configs Configurations, payloadMessage map[string]interface{}) error
-	ValidateConfigurations(configs Configurations) error
-	EnrichSubscriptionConfig(subsConfs map[string]string, configs Configurations) (map[string]string, error)
-	PreHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
-	PostHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
-}
-
 // Service handles business logic
 type Service struct {
-	registry   map[string]ReceiverPlugin
+	registry   map[string]Resolver
 	repository Repository
 }
 
-func NewService(repository Repository, registry map[string]ReceiverPlugin) *Service {
+func NewService(repository Repository, registry map[string]Resolver) *Service {
 	return &Service{
 		repository: repository,
 		registry:   registry,
 	}
 }
 
-func (s *Service) getReceiverPlugin(receiverType string) (ReceiverPlugin, error) {
+func (s *Service) getReceiverPlugin(receiverType string) (Resolver, error) {
 	receiverPlugin, exist := s.registry[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)

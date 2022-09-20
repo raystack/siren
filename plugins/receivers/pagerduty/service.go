@@ -8,9 +8,10 @@ import (
 	"github.com/odpf/siren/plugins"
 )
 
+// PagerDutyService is a receiver plugin service layer for pagerduty
 type PagerDutyService struct{}
 
-// NewReceiverService returns pagerduty service struct
+// NewService returns pagerduty service struct. This service implement [receiver.Resolver] interface.
 func NewReceiverService() *PagerDutyService {
 	return &PagerDutyService{}
 }

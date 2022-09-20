@@ -9,13 +9,6 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
-//go:generate mockery --name=ProviderPlugin -r --case underscore --with-expecter --structname ProviderPlugin --filename provider_plugin.go --output=./mocks
-type ProviderPlugin interface {
-	CreateSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
-	UpdateSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
-	DeleteSubscription(ctx context.Context, sub *Subscription, subscriptionsInNamespace []Subscription, namespaceURN string) error
-}
-
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
@@ -41,7 +34,7 @@ type Service struct {
 	repository                   Repository
 	namespaceService             NamespaceService
 	receiverService              ReceiverService
-	subscriptionProviderRegistry map[string]ProviderPlugin
+	subscriptionProviderRegistry map[string]SubscriptionSyncer
 }
 
 // NewService returns service struct
@@ -50,7 +43,7 @@ func NewService(repository Repository, namespaceService NamespaceService, receiv
 		repository:                   repository,
 		namespaceService:             namespaceService,
 		receiverService:              receiverService,
-		subscriptionProviderRegistry: map[string]ProviderPlugin{},
+		subscriptionProviderRegistry: map[string]SubscriptionSyncer{},
 	}
 
 	for _, opt := range sopts {
@@ -229,7 +222,7 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (s *Service) getProviderPluginService(providerType string) (ProviderPlugin, error) {
+func (s *Service) getProviderPluginService(providerType string) (SubscriptionSyncer, error) {
 	pluginService, exist := s.subscriptionProviderRegistry[providerType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)

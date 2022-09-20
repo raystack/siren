@@ -22,12 +22,13 @@ type SlackClient interface {
 	Notify(ctx context.Context, message *Message, opts ...ClientCallOption) error
 }
 
+// SlackService is a receiver plugin service layer for slack
 type SlackService struct {
 	slackClient  SlackClient
 	cryptoClient Encryptor
 }
 
-// NewService returns slack service struct
+// NewService returns slack service struct. This service implement [receiver.Resolver] interface.
 func NewReceiverService(slackClient SlackClient, cryptoClient Encryptor) *SlackService {
 	return &SlackService{
 		slackClient:  slackClient,

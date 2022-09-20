@@ -13,11 +13,6 @@ const (
 	namePrefix = "siren_api"
 )
 
-//go:generate mockery --name=RuleUploader -r --case underscore --with-expecter --structname RuleUploader --filename rule_uploader.go --output=./mocks
-type RuleUploader interface {
-	UpsertRule(ctx context.Context, rl *Rule, templateToUpdate *template.Template, namespaceURN string) error
-}
-
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)

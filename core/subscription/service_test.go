@@ -119,7 +119,7 @@ func TestService_Create(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.ProviderPlugin)
+		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.SubscriptionSyncer)
 		ErrString    string
 	}
 
@@ -191,14 +191,14 @@ func TestService_Create(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if namespace service get return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return error if provider type not exist",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: "random",
@@ -209,7 +209,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error conflict if create subscription return error duplicate",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -224,7 +224,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if create subscription return error relation",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -239,7 +239,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error if create subscription return some error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -254,7 +254,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return no error if create subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -270,7 +270,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error if transaction commit return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -287,7 +287,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error if create repository return error and rollback return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -302,7 +302,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin create return error and rollback success",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -319,7 +319,7 @@ func TestService_Create(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin create return error and rollback failed",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -343,7 +343,7 @@ func TestService_Create(t *testing.T) {
 				repositoryMock       = new(mocks.SubscriptionRepository)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
-				providerPluginMock   = new(mocks.ProviderPlugin)
+				providerPluginMock   = new(mocks.SubscriptionSyncer)
 			)
 			svc := subscription.NewService(
 				repositoryMock,
@@ -372,7 +372,7 @@ func TestService_Update(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.ProviderPlugin)
+		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.SubscriptionSyncer)
 		ErrString    string
 	}
 	var (
@@ -442,14 +442,14 @@ func TestService_Update(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if namespace service get return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, cc *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, cc *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return error if provider type not exist",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: "random",
@@ -460,7 +460,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error conflict if update subscription return error duplicate",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -475,7 +475,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if update subscription return error relation",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -490,7 +490,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if update subscription return not found error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -505,7 +505,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error if update subscription return some error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -520,7 +520,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error if update subscription return error and rollback return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -535,7 +535,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin update return error and rollback success",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -552,7 +552,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin update return error and rollback failed",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -569,7 +569,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return no error if update subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -585,7 +585,7 @@ func TestService_Update(t *testing.T) {
 			},
 			{
 				Description: "should return error if transaction commit return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
 							Type: testProviderType,
@@ -609,7 +609,7 @@ func TestService_Update(t *testing.T) {
 				repositoryMock       = new(mocks.SubscriptionRepository)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
-				providerPluginMock   = new(mocks.ProviderPlugin)
+				providerPluginMock   = new(mocks.SubscriptionSyncer)
 			)
 			svc := subscription.NewService(
 				repositoryMock,
@@ -638,7 +638,7 @@ func TestService_Delete(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.ProviderPlugin)
+		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService, *mocks.SubscriptionSyncer)
 		ErrString    string
 	}
 	var (
@@ -708,14 +708,14 @@ func TestService_Delete(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if get subscription repository return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return error if namespace service get return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
@@ -723,7 +723,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider type not exist",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -735,7 +735,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if delete subscription return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -751,7 +751,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if delete subscription return error and rollback return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -767,7 +767,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin delete return error and rollback success",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -785,7 +785,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider plugin delete return error and rollback failed",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -803,7 +803,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return no error if delete subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -820,7 +820,7 @@ func TestService_Delete(t *testing.T) {
 			},
 			{
 				Description: "should return error if transaction commit return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.ProviderPlugin) {
+				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService, pp *mocks.SubscriptionSyncer) {
 					sr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -845,7 +845,7 @@ func TestService_Delete(t *testing.T) {
 				repositoryMock       = new(mocks.SubscriptionRepository)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
-				providerPluginMock   = new(mocks.ProviderPlugin)
+				providerPluginMock   = new(mocks.SubscriptionSyncer)
 			)
 			svc := subscription.NewService(
 				repositoryMock,

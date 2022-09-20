@@ -191,7 +191,7 @@ func StartServer(cfg config.Config) error {
 	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
 		receiverRepository,
-		map[string]receiver.ReceiverPlugin{
+		map[string]receiver.Resolver{
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
 			receiver.TypePagerDuty: pagerDutyReceiverService,

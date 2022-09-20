@@ -8,9 +8,10 @@ import (
 	"github.com/odpf/siren/plugins"
 )
 
+// HTTPService is a receiver plugin service layer for http
 type HTTPService struct{}
 
-// NewService returns http service struct
+// NewReceiverService returns httpreceiver service struct. This service implement [receiver.Resolver] interface.
 func NewReceiverService() *HTTPService {
 	return &HTTPService{}
 }
