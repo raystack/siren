@@ -3,6 +3,7 @@ package cortex
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"html/template"
 
 	"github.com/grafana/cortex-tools/pkg/client"
@@ -17,15 +18,16 @@ type CortexCaller interface {
 	DeleteRuleGroup(ctx context.Context, namespace, groupName string) error
 	GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error)
 	ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error)
-	GetAlertmanagerConfig(ctx context.Context) (string, map[string]string, error)
 }
 
+// Client is a wrapper of cortex-tools client
 type Client struct {
 	cortexClient   CortexCaller
 	helperTemplate string
 	configYaml     string
 }
 
+// NewClient creates a new Client
 func NewClient(cfg Config, opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		helperTemplate: HelperTemplateString,
@@ -51,7 +53,10 @@ func NewClient(cfg Config, opts ...ClientOption) (*Client, error) {
 }
 
 // CreateAlertmanagerConfig uploads an alert manager config to cortex
-func (c *Client) CreateAlertmanagerConfig(amConfigs AlertManagerConfig, tenantID string) error {
+// this function merges alertmanager template defined in config/helper.tmpl
+// and a rendered alertmanager config template usually used in
+// subscription flow
+func (c *Client) CreateAlertmanagerConfig(ctx context.Context, amConfigs AlertManagerConfig, tenantID string) error {
 	cfg, err := c.generateAlertmanagerConfig(amConfigs)
 	if err != nil {
 		return err
@@ -60,10 +65,9 @@ func (c *Client) CreateAlertmanagerConfig(amConfigs AlertManagerConfig, tenantID
 		"helper.tmpl": c.helperTemplate,
 	}
 
-	newCtx := NewContext(context.Background(), tenantID)
-	err = c.cortexClient.CreateAlertmanagerConfig(newCtx, cfg, templates)
+	err = c.cortexClient.CreateAlertmanagerConfig(NewContextWithTenantID(ctx, tenantID), cfg, templates)
 	if err != nil {
-		return err
+		return fmt.Errorf("cortex client: %w", err)
 	}
 	return nil
 }
@@ -88,18 +92,33 @@ func (c *Client) generateAlertmanagerConfig(amConfigs AlertManagerConfig) (strin
 	return configStr, nil
 }
 
-func (c *Client) CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error {
-	return c.cortexClient.CreateRuleGroup(ctx, namespace, rg)
+// CreateRuleGroup creates a rule group in a namespace in a tenant
+// in cortex ruler. this will replace the existing rule group if exist
+func (c *Client) CreateRuleGroup(ctx context.Context, tenantID string, namespace string, rg rwrulefmt.RuleGroup) error {
+	err := c.cortexClient.CreateRuleGroup(NewContextWithTenantID(ctx, tenantID), namespace, rg)
+	if err != nil {
+		return fmt.Errorf("cortex client: %w", err)
+	}
+	return nil
 }
 
-func (c *Client) DeleteRuleGroup(ctx context.Context, namespace, groupName string) error {
-	return c.cortexClient.DeleteRuleGroup(ctx, namespace, groupName)
+// DeleteRuleGroup removes a rule group in a namespace in a tenant
+// in cortex ruler
+func (c *Client) DeleteRuleGroup(ctx context.Context, tenantID, namespace, groupName string) error {
+	err := c.cortexClient.DeleteRuleGroup(NewContextWithTenantID(ctx, tenantID), namespace, groupName)
+	if err != nil {
+		return fmt.Errorf("cortex client: %w", err)
+	}
+	return nil
 }
 
-func (c *Client) GetRuleGroup(ctx context.Context, namespace, groupName string) (*rwrulefmt.RuleGroup, error) {
-	return c.cortexClient.GetRuleGroup(ctx, namespace, groupName)
-}
+// GetRuleGroup fetchs a rule group in a namespace in a tenant
+// in cortex ruler
+func (c *Client) GetRuleGroup(ctx context.Context, tenantID, namespace, groupName string) (*rwrulefmt.RuleGroup, error) {
+	results, err := c.cortexClient.GetRuleGroup(ctx, namespace, groupName)
+	if err != nil {
+		return nil, fmt.Errorf("cortex client: %w", err)
+	}
 
-func (c *Client) ListRules(ctx context.Context, namespace string) (map[string][]rwrulefmt.RuleGroup, error) {
-	return c.cortexClient.ListRules(ctx, namespace)
+	return results, nil
 }

@@ -113,6 +113,7 @@ func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var rulesDomain []rule.Rule
 	for rows.Next() {

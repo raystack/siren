@@ -98,7 +98,7 @@ func serverStartCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runServer(cfg)
+			return StartServer(cfg)
 		},
 	}
 
@@ -126,11 +126,11 @@ func serverMigrateCommand() *cobra.Command {
 		},
 	}
 
-	c.Flags().StringVarP(&configFile, "config", "c", "", "Config file path")
+	c.Flags().StringVarP(&configFile, "config", "c", "./config.yaml", "Config file path")
 	return c
 }
 
-func runServer(cfg config.Config) error {
+func StartServer(cfg config.Config) error {
 	nr, err := telemetry.New(cfg.NewRelic)
 	if err != nil {
 		return err

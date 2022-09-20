@@ -64,6 +64,7 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var subscriptionsDomain []subscription.Subscription
 	for rows.Next() {
@@ -159,10 +160,13 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 	return nil
 }
 
+// TODO problem
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.GetDB(ctx).QueryxContext(ctx, subscriptionDeleteQuery, id); err != nil {
+	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, subscriptionDeleteQuery, id)
+	if err != nil {
 		return err
 	}
+	rows.Close()
 	return nil
 }
 

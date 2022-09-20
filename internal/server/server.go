@@ -126,11 +126,10 @@ func RunServer(
 	baseMux.Handle("/", httpGateway)
 
 	logger.Info("server is running", "host", c.Host, "port", c.Port)
-	mux.Serve(runtimeCtx, c.addr(),
-		mux.WithHTTP(&http.Server{Handler: baseMux}),
+
+	return mux.Serve(runtimeCtx, c.addr(),
+		mux.WithHTTP(baseMux),
 		mux.WithGRPC(grpcServer),
 		mux.WithGracePeriod(defaultGracePeriod),
 	)
-
-	return nil
 }

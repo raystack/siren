@@ -66,6 +66,7 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var encryptedNamespaces []namespace.EncryptedNamespace
 	for rows.Next() {

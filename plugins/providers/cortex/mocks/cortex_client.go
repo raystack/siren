@@ -24,13 +24,13 @@ func (_m *CortexClient) EXPECT() *CortexClient_Expecter {
 	return &CortexClient_Expecter{mock: &_m.Mock}
 }
 
-// CreateAlertmanagerConfig provides a mock function with given fields: _a0, _a1
-func (_m *CortexClient) CreateAlertmanagerConfig(_a0 cortex.AlertManagerConfig, _a1 string) error {
-	ret := _m.Called(_a0, _a1)
+// CreateAlertmanagerConfig provides a mock function with given fields: _a0, _a1, _a2
+func (_m *CortexClient) CreateAlertmanagerConfig(_a0 context.Context, _a1 cortex.AlertManagerConfig, _a2 string) error {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(cortex.AlertManagerConfig, string) error); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, cortex.AlertManagerConfig, string) error); ok {
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -44,15 +44,16 @@ type CortexClient_CreateAlertmanagerConfig_Call struct {
 }
 
 // CreateAlertmanagerConfig is a helper method to define mock.On call
-//  - _a0 cortex.AlertManagerConfig
-//  - _a1 string
-func (_e *CortexClient_Expecter) CreateAlertmanagerConfig(_a0 interface{}, _a1 interface{}) *CortexClient_CreateAlertmanagerConfig_Call {
-	return &CortexClient_CreateAlertmanagerConfig_Call{Call: _e.mock.On("CreateAlertmanagerConfig", _a0, _a1)}
+//  - _a0 context.Context
+//  - _a1 cortex.AlertManagerConfig
+//  - _a2 string
+func (_e *CortexClient_Expecter) CreateAlertmanagerConfig(_a0 interface{}, _a1 interface{}, _a2 interface{}) *CortexClient_CreateAlertmanagerConfig_Call {
+	return &CortexClient_CreateAlertmanagerConfig_Call{Call: _e.mock.On("CreateAlertmanagerConfig", _a0, _a1, _a2)}
 }
 
-func (_c *CortexClient_CreateAlertmanagerConfig_Call) Run(run func(_a0 cortex.AlertManagerConfig, _a1 string)) *CortexClient_CreateAlertmanagerConfig_Call {
+func (_c *CortexClient_CreateAlertmanagerConfig_Call) Run(run func(_a0 context.Context, _a1 cortex.AlertManagerConfig, _a2 string)) *CortexClient_CreateAlertmanagerConfig_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(cortex.AlertManagerConfig), args[1].(string))
+		run(args[0].(context.Context), args[1].(cortex.AlertManagerConfig), args[2].(string))
 	})
 	return _c
 }
@@ -62,13 +63,13 @@ func (_c *CortexClient_CreateAlertmanagerConfig_Call) Return(_a0 error) *CortexC
 	return _c
 }
 
-// CreateRuleGroup provides a mock function with given fields: _a0, _a1, _a2
-func (_m *CortexClient) CreateRuleGroup(_a0 context.Context, _a1 string, _a2 rwrulefmt.RuleGroup) error {
-	ret := _m.Called(_a0, _a1, _a2)
+// CreateRuleGroup provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *CortexClient) CreateRuleGroup(_a0 context.Context, _a1 string, _a2 string, _a3 rwrulefmt.RuleGroup) error {
+	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, rwrulefmt.RuleGroup) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, rwrulefmt.RuleGroup) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -84,14 +85,15 @@ type CortexClient_CreateRuleGroup_Call struct {
 // CreateRuleGroup is a helper method to define mock.On call
 //  - _a0 context.Context
 //  - _a1 string
-//  - _a2 rwrulefmt.RuleGroup
-func (_e *CortexClient_Expecter) CreateRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}) *CortexClient_CreateRuleGroup_Call {
-	return &CortexClient_CreateRuleGroup_Call{Call: _e.mock.On("CreateRuleGroup", _a0, _a1, _a2)}
+//  - _a2 string
+//  - _a3 rwrulefmt.RuleGroup
+func (_e *CortexClient_Expecter) CreateRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}) *CortexClient_CreateRuleGroup_Call {
+	return &CortexClient_CreateRuleGroup_Call{Call: _e.mock.On("CreateRuleGroup", _a0, _a1, _a2, _a3)}
 }
 
-func (_c *CortexClient_CreateRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 rwrulefmt.RuleGroup)) *CortexClient_CreateRuleGroup_Call {
+func (_c *CortexClient_CreateRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string, _a3 rwrulefmt.RuleGroup)) *CortexClient_CreateRuleGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(rwrulefmt.RuleGroup))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(rwrulefmt.RuleGroup))
 	})
 	return _c
 }
@@ -101,13 +103,13 @@ func (_c *CortexClient_CreateRuleGroup_Call) Return(_a0 error) *CortexClient_Cre
 	return _c
 }
 
-// DeleteRuleGroup provides a mock function with given fields: _a0, _a1, _a2
-func (_m *CortexClient) DeleteRuleGroup(_a0 context.Context, _a1 string, _a2 string) error {
-	ret := _m.Called(_a0, _a1, _a2)
+// DeleteRuleGroup provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *CortexClient) DeleteRuleGroup(_a0 context.Context, _a1 string, _a2 string, _a3 string) error {
+	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -124,13 +126,14 @@ type CortexClient_DeleteRuleGroup_Call struct {
 //  - _a0 context.Context
 //  - _a1 string
 //  - _a2 string
-func (_e *CortexClient_Expecter) DeleteRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}) *CortexClient_DeleteRuleGroup_Call {
-	return &CortexClient_DeleteRuleGroup_Call{Call: _e.mock.On("DeleteRuleGroup", _a0, _a1, _a2)}
+//  - _a3 string
+func (_e *CortexClient_Expecter) DeleteRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}) *CortexClient_DeleteRuleGroup_Call {
+	return &CortexClient_DeleteRuleGroup_Call{Call: _e.mock.On("DeleteRuleGroup", _a0, _a1, _a2, _a3)}
 }
 
-func (_c *CortexClient_DeleteRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string)) *CortexClient_DeleteRuleGroup_Call {
+func (_c *CortexClient_DeleteRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string, _a3 string)) *CortexClient_DeleteRuleGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -140,13 +143,13 @@ func (_c *CortexClient_DeleteRuleGroup_Call) Return(_a0 error) *CortexClient_Del
 	return _c
 }
 
-// GetRuleGroup provides a mock function with given fields: _a0, _a1, _a2
-func (_m *CortexClient) GetRuleGroup(_a0 context.Context, _a1 string, _a2 string) (*rwrulefmt.RuleGroup, error) {
-	ret := _m.Called(_a0, _a1, _a2)
+// GetRuleGroup provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *CortexClient) GetRuleGroup(_a0 context.Context, _a1 string, _a2 string, _a3 string) (*rwrulefmt.RuleGroup, error) {
+	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 *rwrulefmt.RuleGroup
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *rwrulefmt.RuleGroup); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *rwrulefmt.RuleGroup); ok {
+		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*rwrulefmt.RuleGroup)
@@ -154,8 +157,8 @@ func (_m *CortexClient) GetRuleGroup(_a0 context.Context, _a1 string, _a2 string
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -172,65 +175,19 @@ type CortexClient_GetRuleGroup_Call struct {
 //  - _a0 context.Context
 //  - _a1 string
 //  - _a2 string
-func (_e *CortexClient_Expecter) GetRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}) *CortexClient_GetRuleGroup_Call {
-	return &CortexClient_GetRuleGroup_Call{Call: _e.mock.On("GetRuleGroup", _a0, _a1, _a2)}
+//  - _a3 string
+func (_e *CortexClient_Expecter) GetRuleGroup(_a0 interface{}, _a1 interface{}, _a2 interface{}, _a3 interface{}) *CortexClient_GetRuleGroup_Call {
+	return &CortexClient_GetRuleGroup_Call{Call: _e.mock.On("GetRuleGroup", _a0, _a1, _a2, _a3)}
 }
 
-func (_c *CortexClient_GetRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string)) *CortexClient_GetRuleGroup_Call {
+func (_c *CortexClient_GetRuleGroup_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string, _a3 string)) *CortexClient_GetRuleGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
 func (_c *CortexClient_GetRuleGroup_Call) Return(_a0 *rwrulefmt.RuleGroup, _a1 error) *CortexClient_GetRuleGroup_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// ListRules provides a mock function with given fields: _a0, _a1
-func (_m *CortexClient) ListRules(_a0 context.Context, _a1 string) (map[string][]rwrulefmt.RuleGroup, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 map[string][]rwrulefmt.RuleGroup
-	if rf, ok := ret.Get(0).(func(context.Context, string) map[string][]rwrulefmt.RuleGroup); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string][]rwrulefmt.RuleGroup)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// CortexClient_ListRules_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListRules'
-type CortexClient_ListRules_Call struct {
-	*mock.Call
-}
-
-// ListRules is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 string
-func (_e *CortexClient_Expecter) ListRules(_a0 interface{}, _a1 interface{}) *CortexClient_ListRules_Call {
-	return &CortexClient_ListRules_Call{Call: _e.mock.On("ListRules", _a0, _a1)}
-}
-
-func (_c *CortexClient_ListRules_Call) Run(run func(_a0 context.Context, _a1 string)) *CortexClient_ListRules_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *CortexClient_ListRules_Call) Return(_a0 map[string][]rwrulefmt.RuleGroup, _a1 error) *CortexClient_ListRules_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

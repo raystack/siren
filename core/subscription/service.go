@@ -248,6 +248,11 @@ func (s *Service) FetchEnrichedSubscriptionsByNamespace(
 	if err != nil {
 		return nil, err
 	}
+
+	if len(subscriptionsInNamespace) == 0 {
+		return subscriptionsInNamespace, nil
+	}
+
 	receiversMap, err := CreateReceiversMap(ctx, s.receiverService, subscriptionsInNamespace)
 	if err != nil {
 		return nil, err

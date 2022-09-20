@@ -9,6 +9,7 @@ var (
 	ConfigYamlString string
 )
 
+// Config is a cortex provider config
 type Config struct {
 	Address string `yaml:"address" mapstructure:"address" default:"http://localhost:8080"`
 }

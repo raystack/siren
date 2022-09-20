@@ -93,6 +93,7 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	alertsDomain := []alert.Alert{}
 	for rows.Next() {

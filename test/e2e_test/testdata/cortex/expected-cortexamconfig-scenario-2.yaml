@@ -1,0 +1,81 @@
+template_files:
+  helper.tmpl: |-
+    {{define "__alert_severity_prefix_emoji" -}}
+      {{if ne .Status "firing" -}}
+      :white_check_mark:
+      {{- else if eq .CommonLabels.severity "CRITICAL" -}}
+      :fire:
+      {{- else if eq .CommonLabels.severity "WARNING" -}}
+      :warning:
+      {{- else -}}
+      :question:
+      {{- end}}
+    {{- end}}
+    {{ define "slack.pretext" -}}
+      {{- template "__alert_severity_prefix_emoji" . }} [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}]
+      {{- if eq .Status "resolved" }} ~[{{ .CommonLabels.severity | toUpper }}]~
+      {{- else }} *[{{ .CommonLabels.severity | toUpper }}]*
+      {{- end}} {{ .CommonLabels.alertname }}
+    {{- end }}
+    {{define "slack.color" -}}
+    {{if eq .Status "firing" -}}
+      {{if eq .CommonLabels.severity "WARNING" -}}
+      warning
+      {{- else if eq .CommonLabels.severity "CRITICAL" -}}
+      danger
+      {{- else -}}
+      #439FE0
+      {{- end -}}
+      {{else -}}
+      good
+      {{- end}}
+    {{- end}}
+    {{ define "slack.title" -}}
+      {{$first := true}}{{ range .CommonLabels.SortedPairs}}{{if $first}}{{$first = false}}{{else}}{{` | `}}{{end}}{{ .Value }}{{end }}
+    {{- end }}
+    {{ define "slack.body"}}
+    {{ range .Alerts -}}
+    {{ .Annotations.summary }}
+    {{ end }}
+    {{ end}}
+    {{ define "alertmanager_root_url" }}http://localhost:8080{{ end }}
+    {{ define "slack.warning.name" }}{{ end }}
+    {{ define "slack.warning.webhook_url" }}Not Supported: https://github.com/prometheus/alertmanager/issues/2207{{ end }}
+    {{ define "slack.critical.name" }}{{ end }}
+    {{ define "slack.critical.webhook_url" }}Not Supported: https://github.com/prometheus/alertmanager/issues/2207{{ end }}
+    {{ define "pagerduty.service_key" }}xyz{{ end }}
+    {{ define "slack.default.name" }}none{{ end }}
+    {{ define "silence_url" -}}
+      {{ template "alertmanager_root_url" }}/api/prom/alertmanager/#/silences/new?filter={{ `{` | urlquery -}}
+      {{$first := true}}{{range .CommonLabels.SortedPairs }}{{if $first}}{{$first = false}}{{else}}{{`,` | urlquery }}{{end -}}
+      {{ .Name | urlquery }}{{ `="` | urlquery }}{{ .Value | urlquery }}{{ `"` | urlquery }}{{ end }}
+      {{- `}` | urlquery }}
+    {{- end }}
+    {{define "slack.dashboard"}}
+    {{- if (index .Alerts 0).Annotations.dashboard}}{{(index .Alerts 0).Annotations.dashboard}}{{else}}https://radar.golabs.io{{end}}
+    {{- end -}}
+    {{define "slack.runbook"}}
+    {{- if (index .Alerts 0).Annotations.playbook}}{{(index .Alerts 0).Annotations.playbook}}{{end}}
+    {{- end -}}
+alertmanager_config: |-
+  templates:
+    - 'helper.tmpl'
+  global:
+    pagerduty_url: https://events.pagerduty.com/v2/enqueue
+    resolve_timeout: 5m
+    slack_api_url: https://slack.com/api/chat.postMessage
+  receivers:
+    - name: default
+  route:
+    group_by:
+      - alertname
+      - severity
+      - owner
+      - service_name
+      - time_stamp
+      - identifier
+    group_wait: 30s
+    group_interval: 30m
+    repeat_interval: 4h
+    receiver: default
+    routes:

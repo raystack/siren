@@ -142,7 +142,7 @@ func TestCortexService_UpsertRule(t *testing.T) {
 		{
 			name: "should return error if getting rule group from cortex return error",
 			setup: func(cc *mocks.CortexClient) {
-				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
+				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 			},
 			args: args{
 				rl:               &sampleRule,
@@ -151,15 +151,11 @@ func TestCortexService_UpsertRule(t *testing.T) {
 			},
 			err: errors.New("cannot get rule group from cortex when upserting rules"),
 		},
-		// {
-		// 	name:    "should return error if merge rule nodes return error",
-		// 	wantErr: true,
-		// },
 		{
 			name: "should return error if merge rule nodes return empty and delete rule group return error",
 			setup: func(cc *mocks.CortexClient) {
-				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
-				cc.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
+				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
+				cc.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
 			},
 			args: args{
 				rl: func() *rule.Rule {
@@ -175,8 +171,8 @@ func TestCortexService_UpsertRule(t *testing.T) {
 		{
 			name: "should return nil if create rule group return error",
 			setup: func(cc *mocks.CortexClient) {
-				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
-				cc.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(errors.New("some error"))
+				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
+				cc.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(errors.New("some error"))
 			},
 			args: args{
 				rl:               &sampleRule,
@@ -188,8 +184,8 @@ func TestCortexService_UpsertRule(t *testing.T) {
 		{
 			name: "should return nil if create rule group return no error",
 			setup: func(cc *mocks.CortexClient) {
-				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
-				cc.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(nil)
+				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
+				cc.EXPECT().CreateRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("rwrulefmt.RuleGroup")).Return(nil)
 			},
 			args: args{
 				rl:               &sampleRule,

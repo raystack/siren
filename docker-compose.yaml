@@ -10,63 +10,78 @@ services:
     environment:
       POSTGRES_DB: "siren_dev"
       POSTGRES_HOST_AUTH_METHOD: "trust"
-  consul:
-    image: consul
-    ports:
-      - "8500:8500"
-  cortex:
+  cortex-am:
     image: quay.io/cortexproject/cortex:master-63703f5
-    container_name: "siren_cortex"
-    command: cortex -config.file=/etc/single-process-config.yaml \
-      -ring.store=consul \
-      -consul.hostname=consul:8500
+    container_name: "siren_cortex_am"
+    command: -target=alertmanager -config.file=/etc/single-process-config.yaml
     ports:
-      - "9009:9009"
+      - "9008:9009"
     environment:
       minio_host: siren_nginx_1
     volumes:
       - ./docker/single_process_cortex.yaml:/etc/single-process-config.yaml
+      - ./tmp/cortex/alertmanager/fake:/tmp/cortex/alertmanager/fake
     extra_hosts:
       - "cortex.siren_nginx_1:127.0.0.1"
     networks:
       - siren
     depends_on:
       - minio1
+  cortex-all:
+    image: quay.io/cortexproject/cortex:master-63703f5
+    container_name: "siren_cortex_all"
+    command: -target=all -config.file=/etc/single-process-config.yaml
+    ports:
+      - "9009:9009"
+    environment:
+      minio_host: siren_nginx_1
+    volumes:
+      - ./docker/single_process_cortex.yaml:/etc/single-process-config.yaml
+      - ./tmp/cortex/rules/fake:/tmp/cortex/rules/fake
+    extra_hosts:
+      - "cortex.siren_nginx_1:127.0.0.1"
+    networks:
+      - siren
+    depends_on:
+      - minio1
+      - cortex-am
   minio1:
-    image: minio/minio:RELEASE.2021-04-22T15-44-28Z
+    image: quay.io/minio/minio:RELEASE.2022-09-07T22-25-02Z
     volumes:
       - data1-1:/data1
     ports:
       - "9000:9000"
+      - "9001:9001"
     networks:
       - siren
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
       MINIO_DOMAIN: localhost
-    command: server /data1
+    command: server /data1 --console-address ":9001"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:9000/minio/health/live"
+        ]
       interval: 30s
       timeout: 20s
       retries: 3
   createbuckets:
-    image: minio/mc
+    image: minio/mc:RELEASE.2022-08-28T20-08-11Z
     networks:
       - siren
     depends_on:
       - minio1
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio1:9000 minio minio123;
-      /usr/bin/mc rm -r --force myminio/cortex;
-      /usr/bin/mc mb myminio/cortex;
-      /usr/bin/mc policy download myminio/cortex;
-      exit 0;
-      "
+      /bin/sh -c " /usr/bin/mc alias set myminio http://minio1:9000 minio minio123; /usr/bin/mc rm -r --force cortex; /usr/bin/mc mb myminio/cortex; /usr/bin/mc ls myminio/cortex; /usr/bin/mc policy get myminio/cortex; "
 volumes:
   siren_dbdata:
   data1-1:
+
 
 networks:
   siren:
