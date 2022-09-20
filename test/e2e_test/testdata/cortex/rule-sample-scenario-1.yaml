@@ -2,7 +2,7 @@ apiVersion: v2
 type: rule
 namespace: system
 provider: cortex-test
-providerNamespace: odpf
+providerNamespace: fake
 rules:
   cpu-usage:
     template: cpu-usage

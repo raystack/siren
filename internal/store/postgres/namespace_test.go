@@ -6,11 +6,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/db"
+	"github.com/odpf/salt/dockertest"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -27,12 +28,30 @@ func (s *NamespaceRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	s.client, s.pool, s.resource, err = newTestClient(logger)
+	dpg, err := dockertest.CreatePostgres(
+		dockertest.PostgresWithDetail(
+			pgUser, pgPass, pgDBName,
+		),
+	)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
+	s.pool = dpg.GetPool()
+	s.resource = dpg.GetResource()
+
+	dbConfig.URL = dpg.GetExternalConnString()
+	dbc, err := db.New(dbConfig)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.client, err = postgres.NewClient(logger, dbc)
+	if err != nil {
+		s.T().Fatal(err)
+	}
 	s.ctx = context.TODO()
+	migrate(s.ctx, logger, s.client, dbConfig)
 	s.repository = postgres.NewNamespaceRepository(s.client)
 
 	_, err = bootstrapProvider(s.client)

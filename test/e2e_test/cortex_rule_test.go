@@ -40,6 +40,8 @@ func (s *CortexRuleTestSuite) SetupTest() {
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
 
+	// override address to use ruler (all)
+	s.appConfig.Cortex.Address = fmt.Sprintf("http://%s", s.testBench.CortexAllHost)
 	StartSiren(*s.appConfig)
 
 	ctx := context.Background()

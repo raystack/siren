@@ -16,6 +16,9 @@ build: ## Build the siren binary
 test: ## Run the tests
 	go test ./... -race -covermode=atomic -coverprofile=coverage.out
 
+e2e-test: ## Run all e2e tests
+	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out
+
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
 

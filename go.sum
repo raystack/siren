@@ -1605,6 +1605,14 @@ github.com/odpf/salt v0.2.2-0.20220920081858-034222596f4f h1:UVtU11v/jrNHef0j6Vr
 github.com/odpf/salt v0.2.2-0.20220920081858-034222596f4f/go.mod h1:/kz6MruyhyQcgSNW552a5P6K0vPpl+ZBbU0ea/qzns0=
 github.com/odpf/salt v0.2.2-0.20220920082911-f034e1f94b23 h1:OcnOjQ3VT+c07LzyiqVB3nKN98BXsA8/OJN9Pn9TUvo=
 github.com/odpf/salt v0.2.2-0.20220920082911-f034e1f94b23/go.mod h1:/kz6MruyhyQcgSNW552a5P6K0vPpl+ZBbU0ea/qzns0=
+github.com/odpf/salt v0.2.2-0.20220920083829-52cfe0c9c1c3 h1:H2suCYR+WFBma5lZe+JgROSL//k7o/xtMs8F+FVwZQI=
+github.com/odpf/salt v0.2.2-0.20220920083829-52cfe0c9c1c3/go.mod h1:/kz6MruyhyQcgSNW552a5P6K0vPpl+ZBbU0ea/qzns0=
+github.com/odpf/salt v0.2.2-0.20220920084554-a6f6479ee67e h1:T5w2JVYa2QNoXowjcDzRjjSkyfgMwjksvAguo16xp7s=
+github.com/odpf/salt v0.2.2-0.20220920084554-a6f6479ee67e/go.mod h1:/kz6MruyhyQcgSNW552a5P6K0vPpl+ZBbU0ea/qzns0=
+github.com/odpf/salt v0.2.2-0.20220920084750-b6c0c403a7ad h1:g8Y7cw5fqLPead4OmMePGAMF0fBm7Y2wVFms6y5Nz9M=
+github.com/odpf/salt v0.2.2-0.20220920084750-b6c0c403a7ad/go.mod h1:mFwDR5RFcOe8o6HlEJS3tJv4nlM/vEkj3CPVh4Pix4Q=
+github.com/odpf/salt v0.2.2-0.20220920085528-6d95c350af71 h1:2s+rYhMMrPzyPcOyP7ivWjNJNk81oK+I11L+75L3C7E=
+github.com/odpf/salt v0.2.2-0.20220920085528-6d95c350af71/go.mod h1:mFwDR5RFcOe8o6HlEJS3tJv4nlM/vEkj3CPVh4Pix4Q=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/run v1.1.0/go.mod h1:sVPdnTZT1zYwAJeCMu2Th4T21pA3FPOQRfWjQlk7DVU=

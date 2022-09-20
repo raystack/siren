@@ -15,8 +15,7 @@ import (
 	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	orydockertest "github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
+	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -27,17 +26,17 @@ type CortexTest struct {
 	CortexAMHost      string
 	CortexAllHost     string
 	bridgeNetworkName string
-	pool              *orydockertest.Pool
+	pool              *dockertest.Pool
 	network           *docker.Network
-	resources         []*orydockertest.Resource
+	resources         []*dockertest.Resource
 }
 
 func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1beta1.SirenServiceClient, cortexProviderHost string) {
 	// add provider cortex
 	_, err := client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
 		Host: fmt.Sprintf("http://%s", cortexProviderHost),
-		Urn:  "cortex-all-test",
-		Name: "cortex-all-test",
+		Urn:  "cortex-test",
+		Name: "cortex-test",
 		Type: "cortex",
 	})
 	s.Require().NoError(err)
@@ -116,10 +115,10 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	ct := &CortexTest{
 		bridgeNetworkName: fmt.Sprintf("bridge-%s", uuid.New().String()),
-		resources:         []*orydockertest.Resource{},
+		resources:         []*dockertest.Resource{},
 	}
 
-	ct.pool, err = orydockertest.NewPool("")
+	ct.pool, err = dockertest.NewPool("")
 	if err != nil {
 		return nil, err
 	}

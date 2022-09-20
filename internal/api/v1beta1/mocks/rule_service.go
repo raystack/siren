@@ -51,8 +51,8 @@ type RuleService_List_Call struct {
 }
 
 // List is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 rule.Filter
+//   - _a0 context.Context
+//   - _a1 rule.Filter
 func (_e *RuleService_Expecter) List(_a0 interface{}, _a1 interface{}) *RuleService_List_Call {
 	return &RuleService_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
@@ -89,8 +89,8 @@ type RuleService_Upsert_Call struct {
 }
 
 // Upsert is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 *rule.Rule
+//   - _a0 context.Context
+//   - _a1 *rule.Rule
 func (_e *RuleService_Expecter) Upsert(_a0 interface{}, _a1 interface{}) *RuleService_Upsert_Call {
 	return &RuleService_Upsert_Call{Call: _e.mock.On("Upsert", _a0, _a1)}
 }

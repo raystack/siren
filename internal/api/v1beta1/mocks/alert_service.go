@@ -52,8 +52,8 @@ type AlertService_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 []*alert.Alert
+//   - _a0 context.Context
+//   - _a1 []*alert.Alert
 func (_e *AlertService_Expecter) Create(_a0 interface{}, _a1 interface{}) *AlertService_Create_Call {
 	return &AlertService_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
 }
@@ -99,8 +99,8 @@ type AlertService_List_Call struct {
 }
 
 // List is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 alert.Filter
+//   - _a0 context.Context
+//   - _a1 alert.Filter
 func (_e *AlertService_Expecter) List(_a0 interface{}, _a1 interface{}) *AlertService_List_Call {
 	return &AlertService_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }

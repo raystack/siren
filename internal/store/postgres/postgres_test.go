@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/odpf/salt/db"
+	"github.com/odpf/salt/dockertest"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -18,8 +18,6 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
 )
 
 const (
@@ -39,101 +37,6 @@ var (
 	}
 )
 
-func newTestClient(logger log.Logger) (*postgres.Client, *dockertest.Pool, *dockertest.Resource, error) {
-
-	opts := &dockertest.RunOptions{
-		Repository: "postgres",
-		Tag:        "12",
-		Env: []string{
-			"POSTGRES_PASSWORD=" + pgPass,
-			"POSTGRES_USER=" + pgUser,
-			"POSTGRES_DB=" + pgDBName,
-		},
-	}
-
-	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("could not create dockertest pool: %w", err)
-	}
-
-	// pulls an image, creates a container based on it and runs it
-	resource, err := pool.RunWithOptions(opts, func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
-	})
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("could not start resource: %w", err)
-	}
-
-	pgPort := resource.GetPort("5432/tcp")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("cannot parse external port of container to int: %w", err)
-	}
-
-	// attach terminal logger to container if exists
-	// for debugging purpose
-	if logger.Level() == logLevelDebug {
-		logWaiter, err := pool.Client.AttachToContainerNonBlocking(docker.AttachToContainerOptions{
-			Container:    resource.Container.ID,
-			OutputStream: logger.Writer(),
-			ErrorStream:  logger.Writer(),
-			Stderr:       true,
-			Stdout:       true,
-			Stream:       true,
-		})
-		if err != nil {
-			logger.Fatal("could not connect to postgres container log output", "error", err)
-		}
-		defer func() {
-			err = logWaiter.Close()
-			if err != nil {
-				logger.Fatal("could not close container log", "error", err)
-			}
-
-			err = logWaiter.Wait()
-			if err != nil {
-				logger.Fatal("could not wait for container log to close", "error", err)
-			}
-		}()
-	}
-
-	// Tell docker to hard kill the container in 120 seconds
-	if err := resource.Expire(120); err != nil {
-		return nil, nil, nil, err
-	}
-
-	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-	pool.MaxWait = 60 * time.Second
-
-	var dbClient *db.Client
-	if err = pool.Retry(func() error {
-		dbConfig.URL = fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", pgUser, pgPass, pgPort, pgDBName)
-		dbc, err := db.New(dbConfig)
-		if err != nil {
-			return err
-		}
-
-		dbClient = dbc
-
-		return nil
-	}); err != nil {
-		return nil, nil, nil, fmt.Errorf("could not connect to docker: %w", err)
-	}
-
-	pgClient, err := postgres.NewClient(logger, dbClient)
-	if err != nil {
-		logger.Fatal("failed to create postgres client", "error", err)
-	}
-
-	if err = setup(context.Background(), logger, pgClient, dbConfig); err != nil {
-		logger.Fatal("failed to setup and migrate DB", "error", err)
-	}
-
-	return pgClient, pool, resource, nil
-}
-
 func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	if err := pool.Purge(resource); err != nil {
 		return fmt.Errorf("could not purge resource: %w", err)
@@ -141,7 +44,7 @@ func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	return nil
 }
 
-func setup(ctx context.Context, logger log.Logger, client *postgres.Client, dbConf db.Config) (err error) {
+func migrate(ctx context.Context, logger log.Logger, client *postgres.Client, dbConf db.Config) (err error) {
 	var queries = []string{
 		"DROP SCHEMA public CASCADE",
 		"CREATE SCHEMA public",

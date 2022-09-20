@@ -42,8 +42,8 @@ type ReceiverService_Create_Call struct {
 }
 
 // Create is a helper method to define mock.On call
-//  - ctx context.Context
-//  - rcv *receiver.Receiver
+//   - ctx context.Context
+//   - rcv *receiver.Receiver
 func (_e *ReceiverService_Expecter) Create(ctx interface{}, rcv interface{}) *ReceiverService_Create_Call {
 	return &ReceiverService_Create_Call{Call: _e.mock.On("Create", ctx, rcv)}
 }
@@ -80,8 +80,8 @@ type ReceiverService_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//  - ctx context.Context
-//  - id uint64
+//   - ctx context.Context
+//   - id uint64
 func (_e *ReceiverService_Expecter) Delete(ctx interface{}, id interface{}) *ReceiverService_Delete_Call {
 	return &ReceiverService_Delete_Call{Call: _e.mock.On("Delete", ctx, id)}
 }
@@ -127,8 +127,8 @@ type ReceiverService_EnrichSubscriptionConfig_Call struct {
 }
 
 // EnrichSubscriptionConfig is a helper method to define mock.On call
-//  - subsConfs map[string]string
-//  - rcv *receiver.Receiver
+//   - subsConfs map[string]string
+//   - rcv *receiver.Receiver
 func (_e *ReceiverService_Expecter) EnrichSubscriptionConfig(subsConfs interface{}, rcv interface{}) *ReceiverService_EnrichSubscriptionConfig_Call {
 	return &ReceiverService_EnrichSubscriptionConfig_Call{Call: _e.mock.On("EnrichSubscriptionConfig", subsConfs, rcv)}
 }
@@ -174,8 +174,8 @@ type ReceiverService_Get_Call struct {
 }
 
 // Get is a helper method to define mock.On call
-//  - ctx context.Context
-//  - id uint64
+//   - ctx context.Context
+//   - id uint64
 func (_e *ReceiverService_Expecter) Get(ctx interface{}, id interface{}) *ReceiverService_Get_Call {
 	return &ReceiverService_Get_Call{Call: _e.mock.On("Get", ctx, id)}
 }
@@ -221,8 +221,8 @@ type ReceiverService_List_Call struct {
 }
 
 // List is a helper method to define mock.On call
-//  - ctx context.Context
-//  - flt receiver.Filter
+//   - ctx context.Context
+//   - flt receiver.Filter
 func (_e *ReceiverService_Expecter) List(ctx interface{}, flt interface{}) *ReceiverService_List_Call {
 	return &ReceiverService_List_Call{Call: _e.mock.On("List", ctx, flt)}
 }
@@ -259,9 +259,9 @@ type ReceiverService_Notify_Call struct {
 }
 
 // Notify is a helper method to define mock.On call
-//  - ctx context.Context
-//  - id uint64
-//  - payloadMessage map[string]interface{}
+//   - ctx context.Context
+//   - id uint64
+//   - payloadMessage map[string]interface{}
 func (_e *ReceiverService_Expecter) Notify(ctx interface{}, id interface{}, payloadMessage interface{}) *ReceiverService_Notify_Call {
 	return &ReceiverService_Notify_Call{Call: _e.mock.On("Notify", ctx, id, payloadMessage)}
 }
@@ -298,8 +298,8 @@ type ReceiverService_Update_Call struct {
 }
 
 // Update is a helper method to define mock.On call
-//  - ctx context.Context
-//  - rcv *receiver.Receiver
+//   - ctx context.Context
+//   - rcv *receiver.Receiver
 func (_e *ReceiverService_Expecter) Update(ctx interface{}, rcv interface{}) *ReceiverService_Update_Call {
 	return &ReceiverService_Update_Call{Call: _e.mock.On("Update", ctx, rcv)}
 }
