@@ -10,6 +10,7 @@ import (
 	goslack "github.com/slack-go/slack"
 )
 
+// Message is the contract of slack message
 type Message struct {
 	ReceiverName string         `json:"receiver_name" validate:"required"`
 	ReceiverType string         `json:"receiver_type" validate:"required,oneof=user channel"`
@@ -17,6 +18,7 @@ type Message struct {
 	Blocks       goslack.Blocks `json:"blocks"`
 }
 
+// Validate checks whether the message is valid or not
 func (sm *Message) Validate() error {
 	v := validator.New()
 

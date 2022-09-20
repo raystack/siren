@@ -13,6 +13,38 @@ import (
 	goslack "github.com/slack-go/slack"
 )
 
+const (
+	oAuthServerEndpoint = "https://slack.com/api/oauth.v2.access"
+
+	TypeReceiverChannel = "channel"
+	TypeReceiverUser    = "user"
+)
+
+//go:generate mockery --name=GoSlackCaller -r --case underscore --with-expecter --structname GoSlackCaller --filename goslack_caller.go --output=./mocks
+type GoSlackCaller interface {
+	GetConversationsForUserContext(ctx context.Context, params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
+	GetUserByEmailContext(ctx context.Context, email string) (*goslack.User, error)
+	SendMessageContext(ctx context.Context, channel string, options ...goslack.MsgOption) (string, string, string, error)
+}
+
+type codeExchangeHTTPResponse struct {
+	AccessToken string `json:"access_token"`
+	Team        struct {
+		Name string `json:"name"`
+	} `json:"team"`
+	Ok bool `json:"ok"`
+}
+
+type Channel struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type Credential struct {
+	AccessToken string
+	TeamName    string
+}
+
 type Client struct {
 	httpClient *http.Client
 	data       *clientData
@@ -27,6 +59,8 @@ type clientData struct {
 	goslackClient GoSlackCaller
 }
 
+// NewClient is a constructor to create slack client.
+// this version uses go-slack client and this construction wraps the client.
 func NewClient(opts ...ClientOption) *Client {
 	c := &Client{}
 	for _, opt := range opts {
@@ -73,6 +107,7 @@ func (c *Client) createGoSlackClient(ctx context.Context, opts ...ClientCallOpti
 	return c.data.goslackClient, nil
 }
 
+// ExchangeAuth submits client ID, client secret, and auth code and retrieve acces token and team name
 func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSecret string) (Credential, error) {
 	data := url.Values{}
 	data.Set("code", authCode)
@@ -108,6 +143,7 @@ func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSec
 	}, nil
 }
 
+// GetWorkspaceChannels fetches list of joined channel of a client
 func (c *Client) GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOption) ([]Channel, error) {
 	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
@@ -129,6 +165,7 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOpt
 	return result, nil
 }
 
+// Notify sends message to a specific slack channel
 func (c *Client) Notify(ctx context.Context, message *Message, opts ...ClientCallOption) error {
 	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
