@@ -155,7 +155,7 @@ func TestCortexService_UpsertRule(t *testing.T) {
 			name: "should return error if merge rule nodes return empty and delete rule group return error",
 			setup: func(cc *mocks.CortexClient) {
 				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
-				cc.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
+				cc.EXPECT().DeleteRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(errors.New("some error"))
 			},
 			args: args{
 				rl: func() *rule.Rule {

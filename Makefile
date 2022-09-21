@@ -14,7 +14,7 @@ build: ## Build the siren binary
 	@echo " - build complete"
 
 test: ## Run the tests
-	go test ./... -race -covermode=atomic -coverprofile=coverage.out
+	go test -race $(shell go list ./... | grep -v /test/) -covermode=atomic -coverprofile=coverage.out
 
 e2e-test: ## Run all e2e tests
 	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out
