@@ -97,7 +97,7 @@ func TestGRPCServer_ListTemplates(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListTemplates(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedTemplateService.AssertExpectations(t)
 	})
 }
@@ -159,7 +159,7 @@ func TestGRPCServer_GetTemplate(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.GetTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedTemplateService.AssertExpectations(t)
 	})
 }
@@ -223,7 +223,7 @@ func TestGRPCServer_UpsertTemplate(t *testing.T) {
 		mockedTemplateService.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), tmpl).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.UpsertTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedTemplateService.AssertExpectations(t)
 	})
 }
@@ -254,7 +254,7 @@ func TestGRPCServer_DeleteTemplate(t *testing.T) {
 			Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteTemplate(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedTemplateService.AssertExpectations(t)
 	})
 }
@@ -286,7 +286,7 @@ func TestGRPCServer_RenderTemplate(t *testing.T) {
 			Return("", errors.New("random error")).Once()
 		res, err := dummyGRPCServer.RenderTemplate(context.Background(), dummyReq)
 		assert.Empty(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedTemplateService.AssertExpectations(t)
 	})
 }

@@ -41,7 +41,8 @@ func NewGRPCServer(
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
-	var err = e
+	var err = errors.E(e)
+
 	var code codes.Code
 	switch {
 	case errors.Is(err, errors.ErrNotFound):
@@ -54,16 +55,11 @@ func (s *GRPCServer) generateRPCErr(e error) error {
 		code = codes.InvalidArgument
 
 	default:
+		// TODO This will create 2 logs, grpc log and
+		// the error detail (Message & Cause) log
+		// there might be a better approach to solve this
 		code = codes.Internal
-	}
-
-	if code == codes.Internal {
-		// This will return the error detail (Message & Cause)
-		// we might want to use errors.E(e) if we want to hide
-		// the error
-		err = errors.Verbose(err)
-	} else {
-		err = errors.E(e)
+		s.logger.Error(errors.Verbose(err).Error())
 	}
 
 	return status.Error(code, err.Error())

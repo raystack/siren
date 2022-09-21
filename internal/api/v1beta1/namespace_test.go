@@ -58,7 +58,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		mockedNamespaceService.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return(dummyResult, nil).Once()
 		res, err := dummyGRPCServer.ListNamespaces(context.Background(), &sirenv1beta1.ListNamespacesRequest{})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -125,7 +125,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 		mockedNamespaceService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.CreateNamespace(context.Background(), request)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return error Invalid Argument if create service return err invalid", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
@@ -222,7 +222,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		res, err := dummyGRPCServer.GetNamespace(context.Background(),
 			&sirenv1beta1.GetNamespaceRequest{Id: uint64(1)})
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = failed to fetch namespace credentials: proto: invalid UTF-8 in string: \"\\xff\"")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -290,7 +290,7 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 		res, err := dummyGRPCServer.UpdateNamespace(context.Background(), request)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		mockedNamespaceService.AssertExpectations(t)
 	})
 }
@@ -317,6 +317,6 @@ func TestGRPCServer_DeleteNamespace(t *testing.T) {
 		mockedNamespaceService.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), namespaceId).Return(errors.New("random error")).Once()
 		res, err := dummyGRPCServer.DeleteNamespace(context.Background(), dummyReq)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }

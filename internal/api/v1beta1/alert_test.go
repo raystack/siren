@@ -69,7 +69,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			EndTime:      200,
 		}
 		res, err := dummyGRPCServer.ListAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
 		mockedAlertService.AssertExpectations(t)
 	})
@@ -200,7 +200,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Return(nil, errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
 		mockedAlertService.AssertExpectations(t)
 	})

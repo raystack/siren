@@ -83,7 +83,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		}).Return(nil, errors.New("random error")).Once()
 		res, err := dummyGRPCServer.ListRules(ctx, dummyPayload)
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
 
@@ -163,6 +163,6 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 
 		assert.Nil(t, res)
-		assert.EqualError(t, err, "rpc error: code = Internal desc = random error")
+		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 	})
 }
