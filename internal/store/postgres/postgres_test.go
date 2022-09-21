@@ -21,10 +21,9 @@ import (
 )
 
 const (
-	logLevelDebug = "debug"
-	pgUser        = "test_user"
-	pgPass        = "test_pass"
-	pgDBName      = "test_db"
+	pgUser   = "test_user"
+	pgPass   = "test_pass"
+	pgDBName = "test_db"
 )
 
 var (

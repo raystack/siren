@@ -94,7 +94,7 @@ func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 				Err: errors.New("template: alertmanagerConfigTemplate:1: unclosed action"),
 			},
 			{
-				Description: "return error if error CreateAlertmanagerConfig with cortex client",
+				Description: "return error if CreateAlertmanagerConfig returns error",
 				Setup: func(cc *mocks.CortexCaller) *cortex.Client {
 					configYaml, err := os.ReadFile("./testdata/config.goyaml")
 					require.NoError(t, err)
@@ -106,14 +106,16 @@ func TestClient_CreateAlertmanagerConfig(t *testing.T) {
 					cc.EXPECT().CreateAlertmanagerConfig(mock.AnythingOfType("*context.valueCtx"), string(expectedConfigYaml), map[string]string{
 						"helper.tmpl": string(helperTemplate),
 					}).Return(errors.New("some error"))
+
 					c, err := cortex.NewClient(cortex.Config{},
 						cortex.WithCortexClient(cc),
 						cortex.WithHelperTemplate(string(configYaml), string(helperTemplate)))
 					require.NoError(t, err)
+
 					return c
 				},
 				AMConfig: amConfig,
-				Err:      errors.New("some error"),
+				Err:      errors.New("cortex client: some error"),
 			},
 			{
 				Description: "return nil error if succeed",
@@ -235,7 +237,7 @@ func TestClient_GetRuleGroup(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, c)
 
-		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
+		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 
 		rg, err := c.GetRuleGroup(context.TODO(), testTenantID, "namespace", "groupname")
 		assert.NotNil(t, err)
@@ -251,7 +253,7 @@ func TestClient_GetRuleGroup(t *testing.T) {
 		require.Nil(t, err)
 		require.NotNil(t, c)
 
-		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
+		cortexCallerMock.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(&rwrulefmt.RuleGroup{}, nil)
 
 		rg, err := c.GetRuleGroup(context.TODO(), testTenantID, "namespace", "groupname")
 		assert.Nil(t, err)
