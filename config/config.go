@@ -7,16 +7,9 @@ import (
 	"github.com/odpf/salt/config"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
-)
-
-var (
-	//go:embed prometheus_alert_manager_helper.tmpl
-	promAMHelperTemplateString string
-	//go:embed prometheus_alert_manager_config.goyaml
-	promAMConfigYamlString string
+	"github.com/odpf/siren/plugins/providers/cortex"
 )
 
 // Load returns application configuration
@@ -31,8 +24,7 @@ func Load(configFile string) (Config, error) {
 		}
 		return cfg, err
 	}
-	cfg.Cortex.PrometheusAlertManagerConfigYaml = promAMConfigYamlString
-	cfg.Cortex.PrometheusAlertManagerHelperTemplate = promAMHelperTemplateString
+
 	return cfg, nil
 }
 

@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"fmt"
 
 	"github.com/jackc/pgconn"
@@ -11,11 +10,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/pkg/errors"
 )
-
-//go:embed migrations/*.sql
-var fs embed.FS
 
 var (
 	transactionContextKey = struct{}{}
@@ -58,7 +55,7 @@ func checkPostgresError(err error) error {
 }
 
 func Migrate(cfg db.Config) error {
-	if err := db.RunMigrations(cfg, fs, "migrations"); err != nil {
+	if err := db.RunMigrations(cfg, migrations.FS, migrations.ResourcePath); err != nil {
 		return err
 	}
 	return nil

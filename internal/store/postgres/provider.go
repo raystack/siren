@@ -68,6 +68,7 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]pr
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	providersDomain := []provider.Provider{}
 	for rows.Next() {

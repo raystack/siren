@@ -21,6 +21,17 @@ type Repository interface {
 	Delete(context.Context, uint64) error
 }
 
+type Receiver struct {
+	ID             uint64                 `json:"id"`
+	Name           string                 `json:"name"`
+	Type           string                 `json:"type"`
+	Labels         map[string]string      `json:"labels"`
+	Configurations map[string]interface{} `json:"configurations"`
+	Data           map[string]interface{} `json:"data"`
+	CreatedAt      time.Time              `json:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at"`
+}
+
 type Configurations map[string]interface{}
 
 func (c Configurations) GetString(key string) (string, error) {
@@ -33,15 +44,4 @@ func (c Configurations) GetString(key string) (string, error) {
 		return "", fmt.Errorf("wrong type for configurations map key %q: expected type string, got value %v of type %T", key, val, val)
 	}
 	return typedVal, nil
-}
-
-type Receiver struct {
-	ID             uint64                 `json:"id"`
-	Name           string                 `json:"name"`
-	Type           string                 `json:"type"`
-	Labels         map[string]string      `json:"labels"`
-	Configurations Configurations         `json:"configurations"`
-	Data           map[string]interface{} `json:"data"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
 }

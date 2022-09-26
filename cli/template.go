@@ -17,24 +17,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type templatedRule struct {
-	Record      string            `yaml:"record,omitempty"`
-	Alert       string            `yaml:"alert,omitempty"`
-	Expr        string            `yaml:"expr"`
-	For         string            `yaml:"for,omitempty"`
-	Labels      map[string]string `yaml:"labels,omitempty"`
-	Annotations map[string]string `yaml:"annotations,omitempty"`
-}
-
-type templateStruct struct {
-	Name       string              `yaml:"name"`
-	ApiVersion string              `yaml:"apiVersion"`
-	Type       string              `yaml:"type"`
-	Body       []templatedRule     `yaml:"body"`
-	Tags       []string            `yaml:"tags"`
-	Variables  []template.Variable `yaml:"variables"`
-}
-
 func templatesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "template",
@@ -428,7 +410,7 @@ func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			}
 
 			if strings.ToLower(yamlObject.Type) == "template" {
-				templateID, err := uploadTemplate(client, yamlFile)
+				templateID, err := UploadTemplate(client, yamlFile)
 				if err != nil {
 					return err
 				}
@@ -444,8 +426,8 @@ func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	return cmd
 }
 
-func uploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (uint64, error) {
-	var t templateStruct
+func UploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (uint64, error) {
+	var t template.TemplateFile
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
 		return 0, err

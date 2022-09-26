@@ -7,9 +7,10 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -28,8 +29,10 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := []namespace.Namespace{
 			{
-				ID:          1,
-				Provider:    2,
+				ID: 1,
+				Provider: provider.Provider{
+					ID: 2,
+				},
 				Name:        "foo",
 				Credentials: credentials,
 				Labels:      labels,
@@ -64,8 +67,10 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := []namespace.Namespace{
 			{
-				ID:          1,
-				Provider:    2,
+				ID: 1,
+				Provider: provider.Provider{
+					ID: 2,
+				},
 				Name:        "foo",
 				Credentials: credentials,
 				Labels:      labels,
@@ -89,7 +94,9 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
-		Provider:    2,
+		Provider: provider.Provider{
+			ID: 2,
+		},
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -154,8 +161,10 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		mockedNamespaceService := &mocks.NamespaceService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		dummyResult := &namespace.Namespace{
-			ID:          1,
-			Provider:    2,
+			ID: 1,
+			Provider: provider.Provider{
+				ID: 2,
+			},
 			Name:        "foo",
 			Credentials: credentials,
 			Labels:      labels,
@@ -199,8 +208,10 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NamespaceService: mockedNamespaceService})
 		credentials["bar"] = string([]byte{0xff})
 		dummyResult := &namespace.Namespace{
-			ID:          1,
-			Provider:    2,
+			ID: 1,
+			Provider: provider.Provider{
+				ID: 2,
+			},
 			Name:        "foo",
 			Credentials: credentials,
 			Labels:      labels,
@@ -223,8 +234,10 @@ func TestGRPCServer_UpdateNamespace(t *testing.T) {
 
 	credentialsData, _ := structpb.NewStruct(credentials)
 	payload := &namespace.Namespace{
-		ID:          1,
-		Provider:    2,
+		ID: 1,
+		Provider: provider.Provider{
+			ID: 2,
+		},
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,

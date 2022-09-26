@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/namespace/mocks"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
@@ -39,8 +40,10 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								ID:        1,
-								Provider:  1,
+								ID: 1,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -50,8 +53,10 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								ID:        2,
-								Provider:  1,
+								ID: 2,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -70,8 +75,10 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								ID:        1,
-								Provider:  1,
+								ID: 1,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -81,8 +88,10 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								ID:        2,
-								Provider:  1,
+								ID: 2,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -101,8 +110,10 @@ func TestService_ListNamespaces(t *testing.T) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx")).Return([]namespace.EncryptedNamespace{
 						{
 							Namespace: &namespace.Namespace{
-								ID:        1,
-								Provider:  1,
+								ID: 1,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -112,8 +123,10 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						{
 							Namespace: &namespace.Namespace{
-								ID:        2,
-								Provider:  1,
+								ID: 2,
+								Provider: provider.Provider{
+									ID: 1,
+								},
 								Name:      "foo",
 								Labels:    map[string]string{"foo": "bar"},
 								CreatedAt: timeNow,
@@ -126,10 +139,12 @@ func TestService_ListNamespaces(t *testing.T) {
 				},
 				ExpectedNamespaces: []namespace.Namespace{
 					{
-						ID:       1,
-						Provider: 1,
-						Name:     "foo",
-						Labels:   map[string]string{"foo": "bar"},
+						ID: 1,
+						Provider: provider.Provider{
+							ID: 1,
+						},
+						Name:   "foo",
+						Labels: map[string]string{"foo": "bar"},
 						Credentials: map[string]interface{}{
 							"name": "a",
 						},
@@ -137,10 +152,12 @@ func TestService_ListNamespaces(t *testing.T) {
 						UpdatedAt: timeNow,
 					},
 					{
-						ID:       2,
-						Provider: 1,
-						Name:     "foo",
-						Labels:   map[string]string{"foo": "bar"},
+						ID: 2,
+						Provider: provider.Provider{
+							ID: 1,
+						},
+						Name:   "foo",
+						Labels: map[string]string{"foo": "bar"},
 						Credentials: map[string]interface{}{
 							"name": "a",
 						},

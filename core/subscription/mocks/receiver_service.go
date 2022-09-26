@@ -98,6 +98,53 @@ func (_c *ReceiverService_Delete_Call) Return(_a0 error) *ReceiverService_Delete
 	return _c
 }
 
+// EnrichSubscriptionConfig provides a mock function with given fields: subsConfig, rcv
+func (_m *ReceiverService) EnrichSubscriptionConfig(subsConfig map[string]string, rcv *receiver.Receiver) (map[string]string, error) {
+	ret := _m.Called(subsConfig, rcv)
+
+	var r0 map[string]string
+	if rf, ok := ret.Get(0).(func(map[string]string, *receiver.Receiver) map[string]string); ok {
+		r0 = rf(subsConfig, rcv)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]string, *receiver.Receiver) error); ok {
+		r1 = rf(subsConfig, rcv)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReceiverService_EnrichSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrichSubscriptionConfig'
+type ReceiverService_EnrichSubscriptionConfig_Call struct {
+	*mock.Call
+}
+
+// EnrichSubscriptionConfig is a helper method to define mock.On call
+//  - subsConfig map[string]string
+//  - rcv *receiver.Receiver
+func (_e *ReceiverService_Expecter) EnrichSubscriptionConfig(subsConfig interface{}, rcv interface{}) *ReceiverService_EnrichSubscriptionConfig_Call {
+	return &ReceiverService_EnrichSubscriptionConfig_Call{Call: _e.mock.On("EnrichSubscriptionConfig", subsConfig, rcv)}
+}
+
+func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Run(run func(subsConfig map[string]string, rcv *receiver.Receiver)) *ReceiverService_EnrichSubscriptionConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(map[string]string), args[1].(*receiver.Receiver))
+	})
+	return _c
+}
+
+func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *ReceiverService_EnrichSubscriptionConfig_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *ReceiverService) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
 	ret := _m.Called(ctx, id)
@@ -141,53 +188,6 @@ func (_c *ReceiverService_Get_Call) Run(run func(ctx context.Context, id uint64)
 }
 
 func (_c *ReceiverService_Get_Call) Return(_a0 *receiver.Receiver, _a1 error) *ReceiverService_Get_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// GetSubscriptionConfig provides a mock function with given fields: subsConfs, rcv
-func (_m *ReceiverService) GetSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error) {
-	ret := _m.Called(subsConfs, rcv)
-
-	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(map[string]string, *receiver.Receiver) map[string]string); ok {
-		r0 = rf(subsConfs, rcv)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]string)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]string, *receiver.Receiver) error); ok {
-		r1 = rf(subsConfs, rcv)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ReceiverService_GetSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSubscriptionConfig'
-type ReceiverService_GetSubscriptionConfig_Call struct {
-	*mock.Call
-}
-
-// GetSubscriptionConfig is a helper method to define mock.On call
-//  - subsConfs map[string]string
-//  - rcv *receiver.Receiver
-func (_e *ReceiverService_Expecter) GetSubscriptionConfig(subsConfs interface{}, rcv interface{}) *ReceiverService_GetSubscriptionConfig_Call {
-	return &ReceiverService_GetSubscriptionConfig_Call{Call: _e.mock.On("GetSubscriptionConfig", subsConfs, rcv)}
-}
-
-func (_c *ReceiverService_GetSubscriptionConfig_Call) Run(run func(subsConfs map[string]string, rcv *receiver.Receiver)) *ReceiverService_GetSubscriptionConfig_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]string), args[1].(*receiver.Receiver))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_GetSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *ReceiverService_GetSubscriptionConfig_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
@@ -240,11 +240,11 @@ func (_c *ReceiverService_List_Call) Return(_a0 []receiver.Receiver, _a1 error) 
 }
 
 // Notify provides a mock function with given fields: ctx, id, payloadMessage
-func (_m *ReceiverService) Notify(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage) error {
+func (_m *ReceiverService) Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error {
 	ret := _m.Called(ctx, id, payloadMessage)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, receiver.NotificationMessage) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, map[string]interface{}) error); ok {
 		r0 = rf(ctx, id, payloadMessage)
 	} else {
 		r0 = ret.Error(0)
@@ -261,14 +261,14 @@ type ReceiverService_Notify_Call struct {
 // Notify is a helper method to define mock.On call
 //  - ctx context.Context
 //  - id uint64
-//  - payloadMessage receiver.NotificationMessage
+//  - payloadMessage map[string]interface{}
 func (_e *ReceiverService_Expecter) Notify(ctx interface{}, id interface{}, payloadMessage interface{}) *ReceiverService_Notify_Call {
 	return &ReceiverService_Notify_Call{Call: _e.mock.On("Notify", ctx, id, payloadMessage)}
 }
 
-func (_c *ReceiverService_Notify_Call) Run(run func(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage)) *ReceiverService_Notify_Call {
+func (_c *ReceiverService_Notify_Call) Run(run func(ctx context.Context, id uint64, payloadMessage map[string]interface{})) *ReceiverService_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(receiver.NotificationMessage))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(map[string]interface{}))
 	})
 	return _c
 }

@@ -92,6 +92,7 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	templatesDomain := []template.Template{}
 	for rows.Next() {

@@ -34,7 +34,7 @@ func (rcv *Receiver) ToDomain() *receiver.Receiver {
 		Name:           rcv.Name,
 		Type:           rcv.Type,
 		Labels:         rcv.Labels,
-		Configurations: receiver.Configurations(rcv.Configurations),
+		Configurations: rcv.Configurations,
 		Data:           rcv.Data,
 		CreatedAt:      rcv.CreatedAt,
 		UpdatedAt:      rcv.UpdatedAt,

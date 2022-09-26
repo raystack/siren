@@ -42,8 +42,8 @@ type TemplateService_Delete_Call struct {
 }
 
 // Delete is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 string
+//   - _a0 context.Context
+//   - _a1 string
 func (_e *TemplateService_Expecter) Delete(_a0 interface{}, _a1 interface{}) *TemplateService_Delete_Call {
 	return &TemplateService_Delete_Call{Call: _e.mock.On("Delete", _a0, _a1)}
 }
@@ -89,8 +89,8 @@ type TemplateService_GetByName_Call struct {
 }
 
 // GetByName is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 string
+//   - _a0 context.Context
+//   - _a1 string
 func (_e *TemplateService_Expecter) GetByName(_a0 interface{}, _a1 interface{}) *TemplateService_GetByName_Call {
 	return &TemplateService_GetByName_Call{Call: _e.mock.On("GetByName", _a0, _a1)}
 }
@@ -136,8 +136,8 @@ type TemplateService_List_Call struct {
 }
 
 // List is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 template.Filter
+//   - _a0 context.Context
+//   - _a1 template.Filter
 func (_e *TemplateService_Expecter) List(_a0 interface{}, _a1 interface{}) *TemplateService_List_Call {
 	return &TemplateService_List_Call{Call: _e.mock.On("List", _a0, _a1)}
 }
@@ -181,9 +181,9 @@ type TemplateService_Render_Call struct {
 }
 
 // Render is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 string
-//  - _a2 map[string]string
+//   - _a0 context.Context
+//   - _a1 string
+//   - _a2 map[string]string
 func (_e *TemplateService_Expecter) Render(_a0 interface{}, _a1 interface{}, _a2 interface{}) *TemplateService_Render_Call {
 	return &TemplateService_Render_Call{Call: _e.mock.On("Render", _a0, _a1, _a2)}
 }
@@ -220,8 +220,8 @@ type TemplateService_Upsert_Call struct {
 }
 
 // Upsert is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 *template.Template
+//   - _a0 context.Context
+//   - _a1 *template.Template
 func (_e *TemplateService_Expecter) Upsert(_a0 interface{}, _a1 interface{}) *TemplateService_Upsert_Call {
 	return &TemplateService_Upsert_Call{Call: _e.mock.On("Upsert", _a0, _a1)}
 }

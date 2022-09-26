@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -29,7 +30,7 @@ func (s *GRPCServer) ListNamespaces(ctx context.Context, _ *sirenv1beta1.ListNam
 			Name:        namespace.Name,
 			Credentials: credentials,
 			Labels:      namespace.Labels,
-			Provider:    namespace.Provider,
+			Provider:    namespace.Provider.ID,
 			CreatedAt:   timestamppb.New(namespace.CreatedAt),
 			UpdatedAt:   timestamppb.New(namespace.UpdatedAt),
 		}
@@ -42,7 +43,9 @@ func (s *GRPCServer) ListNamespaces(ctx context.Context, _ *sirenv1beta1.ListNam
 
 func (s *GRPCServer) CreateNamespace(ctx context.Context, req *sirenv1beta1.CreateNamespaceRequest) (*sirenv1beta1.CreateNamespaceResponse, error) {
 	ns := &namespace.Namespace{
-		Provider:    req.GetProvider(),
+		Provider: provider.Provider{
+			ID: req.GetProvider(),
+		},
 		URN:         req.GetUrn(),
 		Name:        req.GetName(),
 		Credentials: req.GetCredentials().AsMap(),
@@ -76,7 +79,7 @@ func (s *GRPCServer) GetNamespace(ctx context.Context, req *sirenv1beta1.GetName
 			Name:        namespace.Name,
 			Credentials: credentials,
 			Labels:      namespace.Labels,
-			Provider:    namespace.Provider,
+			Provider:    namespace.Provider.ID,
 			CreatedAt:   timestamppb.New(namespace.CreatedAt),
 			UpdatedAt:   timestamppb.New(namespace.UpdatedAt),
 		},
@@ -85,8 +88,10 @@ func (s *GRPCServer) GetNamespace(ctx context.Context, req *sirenv1beta1.GetName
 
 func (s *GRPCServer) UpdateNamespace(ctx context.Context, req *sirenv1beta1.UpdateNamespaceRequest) (*sirenv1beta1.UpdateNamespaceResponse, error) {
 	ns := &namespace.Namespace{
-		ID:          req.GetId(),
-		Provider:    req.GetProvider(),
+		ID: req.GetId(),
+		Provider: provider.Provider{
+			ID: req.GetProvider(),
+		},
 		Name:        req.GetName(),
 		Credentials: req.GetCredentials().AsMap(),
 		Labels:      req.GetLabels(),

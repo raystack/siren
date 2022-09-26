@@ -6,10 +6,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/odpf/salt/db"
+	"github.com/odpf/salt/dockertest"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -26,12 +27,30 @@ func (s *ReceiverRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	s.client, s.pool, s.resource, err = newTestClient(logger)
+	dpg, err := dockertest.CreatePostgres(
+		dockertest.PostgresWithDetail(
+			pgUser, pgPass, pgDBName,
+		),
+	)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
+	s.pool = dpg.GetPool()
+	s.resource = dpg.GetResource()
+
+	dbConfig.URL = dpg.GetExternalConnString()
+	dbc, err := db.New(dbConfig)
+	if err != nil {
+		s.T().Fatal(err)
+	}
+
+	s.client, err = postgres.NewClient(logger, dbc)
+	if err != nil {
+		s.T().Fatal(err)
+	}
 	s.ctx = context.TODO()
+	migrate(s.ctx, logger, s.client, dbConfig)
 	s.repository = postgres.NewReceiverRepository(s.client)
 }
 
@@ -82,7 +101,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"token":     "xxxxxxxxxx",
 						"workspace": "Odpf",
 					},
@@ -94,7 +113,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b,org-c",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -106,7 +125,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "odpf",
 						"team":   "siren-odpf",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -125,7 +144,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "odpf,org-a,org-b,org-c",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -137,7 +156,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "odpf",
 						"team":   "siren-odpf",
 					},
-					Configurations: receiver.Configurations{
+					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -180,7 +199,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 					"entity": "odpf",
 					"team":   "siren-odpf",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"service_key": "1212121212121212121212121",
 				},
 			},
@@ -225,7 +244,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 					"entity": "neworg",
 					"team":   "siren-neworg",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"service_key": "000999",
 				},
 			},
@@ -267,7 +286,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 				Labels: map[string]string{
 					"entity": "odpf",
 				},
-				Configurations: receiver.Configurations{
+				Configurations: map[string]interface{}{
 					"url": "http://siren.odpf.io/v2/alerts/cortex",
 				},
 			},

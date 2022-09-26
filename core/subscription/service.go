@@ -2,13 +2,10 @@ package subscription
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/cortex"
 	"github.com/odpf/siren/pkg/errors"
 )
 
@@ -28,39 +25,32 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
-	Notify(ctx context.Context, id uint64, payloadMessage receiver.NotificationMessage) error
-	GetSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error)
-}
-
-//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
-type ProviderService interface {
-	List(context.Context, provider.Filter) ([]provider.Provider, error)
-	Create(context.Context, *provider.Provider) error
-	Get(context.Context, uint64) (*provider.Provider, error)
-	Update(context.Context, *provider.Provider) error
-	Delete(context.Context, uint64) error
+	Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error
+	EnrichSubscriptionConfig(subsConfig map[string]string, rcv *receiver.Receiver) (map[string]string, error)
 }
 
 // Service handles business logic
 type Service struct {
-	repository       Repository
-	providerService  ProviderService
-	namespaceService NamespaceService
-	receiverService  ReceiverService
-	cortexClient     CortexClient
+	repository                   Repository
+	namespaceService             NamespaceService
+	receiverService              ReceiverService
+	subscriptionProviderRegistry map[string]SubscriptionSyncer
 }
 
 // NewService returns service struct
-func NewService(repository Repository, providerService ProviderService, namespaceService NamespaceService,
-	receiverService ReceiverService, cortexClient CortexClient) *Service {
-
-	return &Service{
-		repository:       repository,
-		providerService:  providerService,
-		namespaceService: namespaceService,
-		receiverService:  receiverService,
-		cortexClient:     cortexClient,
+func NewService(repository Repository, namespaceService NamespaceService, receiverService ReceiverService, sopts ...ServiceOption) *Service {
+	svc := &Service{
+		repository:                   repository,
+		namespaceService:             namespaceService,
+		receiverService:              receiverService,
+		subscriptionProviderRegistry: map[string]SubscriptionSyncer{},
 	}
+
+	for _, opt := range sopts {
+		opt(svc)
+	}
+
+	return svc
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
@@ -72,19 +62,19 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Subscription, error) 
 	return subscriptions, nil
 }
 
-func (s Service) Create(ctx context.Context, sub *Subscription) error {
+func (s *Service) Create(ctx context.Context, sub *Subscription) error {
 	// check provider type of the namespace
 	ns, err := s.namespaceService.Get(ctx, sub.Namespace)
 	if err != nil {
 		return err
 	}
 
-	prov, err := s.providerService.Get(ctx, ns.Provider)
+	sortReceivers(sub)
+
+	pluginService, err := s.getProviderPluginService(ns.Provider.Type)
 	if err != nil {
 		return err
 	}
-
-	sortReceivers(sub)
 
 	ctx = s.repository.WithTransaction(ctx)
 	if err = s.repository.Create(ctx, sub); err != nil {
@@ -100,7 +90,15 @@ func (s Service) Create(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
-	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := pluginService.CreateSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
@@ -131,12 +129,13 @@ func (s *Service) Update(ctx context.Context, sub *Subscription) error {
 	if err != nil {
 		return err
 	}
-	prov, err := s.providerService.Get(ctx, ns.Provider)
+
+	sortReceivers(sub)
+
+	pluginService, err := s.getProviderPluginService(ns.Provider.Type)
 	if err != nil {
 		return err
 	}
-
-	sortReceivers(sub)
 
 	ctx = s.repository.WithTransaction(ctx)
 	if err = s.repository.Update(ctx, sub); err != nil {
@@ -155,7 +154,15 @@ func (s *Service) Update(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 
-	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := pluginService.UpdateSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
@@ -173,12 +180,14 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+
 	// check provider type of the namespace
 	ns, err := s.namespaceService.Get(ctx, sub.Namespace)
 	if err != nil {
 		return err
 	}
-	prov, err := s.providerService.Get(ctx, ns.Provider)
+
+	pluginService, err := s.getProviderPluginService(ns.Provider.Type)
 	if err != nil {
 		return err
 	}
@@ -191,7 +200,15 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	if err = s.SyncToUpstream(ctx, ns, prov); err != nil {
+	subscriptionsInNamespace, err := s.FetchEnrichedSubscriptionsByNamespace(ctx, ns)
+	if err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if err := pluginService.DeleteSubscription(ctx, sub, subscriptionsInNamespace, ns.URN); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
@@ -205,47 +222,41 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (s *Service) SyncToUpstream(
+func (s *Service) getProviderPluginService(providerType string) (SubscriptionSyncer, error) {
+	pluginService, exist := s.subscriptionProviderRegistry[providerType]
+	if !exist {
+		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)
+	}
+	return pluginService, nil
+}
+
+func (s *Service) FetchEnrichedSubscriptionsByNamespace(
 	ctx context.Context,
-	ns *namespace.Namespace,
-	prov *provider.Provider) error {
+	ns *namespace.Namespace) ([]Subscription, error) {
 
 	// fetch all subscriptions in this namespace.
 	subscriptionsInNamespace, err := s.repository.List(ctx, Filter{
 		NamespaceID: ns.ID,
 	})
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if len(subscriptionsInNamespace) == 0 {
+		return subscriptionsInNamespace, nil
 	}
 
 	receiversMap, err := CreateReceiversMap(ctx, s.receiverService, subscriptionsInNamespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	subscriptions, err := AssignReceivers(s.receiverService, receiversMap, subscriptionsInNamespace)
+	subscriptionsInNamespace, err = AssignReceivers(s.receiverService, receiversMap, subscriptionsInNamespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// do upstream call to create subscriptions as per provider type
-	switch prov.Type {
-	case "cortex":
-		amConfig := make([]cortex.ReceiverConfig, 0)
-		for _, item := range subscriptions {
-			amConfig = append(amConfig, item.ToAlertManagerReceiverConfig()...)
-		}
-
-		err = s.cortexClient.CreateAlertmanagerConfig(cortex.AlertManagerConfig{
-			Receivers: amConfig,
-		}, ns.URN)
-		if err != nil {
-			return fmt.Errorf("error calling cortex: %w", err)
-		}
-	default:
-		return fmt.Errorf("subscriptions for provider type '%s' not supported", prov.Type)
-	}
-	return nil
+	return subscriptionsInNamespace, nil
 }
 
 func CreateReceiversMap(ctx context.Context, receiverService ReceiverService, subscriptions []Subscription) (map[uint64]*receiver.Receiver, error) {
@@ -300,7 +311,7 @@ func AssignReceivers(receiverService ReceiverService, receiversMap map[uint64]*r
 			if mappedRcv := receiversMap[subsRcv.ID]; mappedRcv == nil {
 				return nil, errors.ErrInvalid.WithMsgf("receiver id %d not found", subsRcv.ID)
 			}
-			subsConfig, err := receiverService.GetSubscriptionConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
+			subsConfig, err := receiverService.EnrichSubscriptionConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
 			if err != nil {
 				return nil, errors.ErrInvalid.WithMsgf(err.Error())
 			}

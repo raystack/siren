@@ -62,6 +62,7 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	receiversDomain := []receiver.Receiver{}
 	for rows.Next() {

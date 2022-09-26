@@ -19,12 +19,13 @@ import (
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/cortex"
-	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/secret"
-	"github.com/odpf/siren/pkg/slack"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/zaputil"
+	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/receivers/httpreceiver"
+	"github.com/odpf/siren/plugins/receivers/pagerduty"
+	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -97,7 +98,7 @@ func serverStartCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return runServer(cfg)
+			return StartServer(cfg)
 		},
 	}
 
@@ -125,11 +126,11 @@ func serverMigrateCommand() *cobra.Command {
 		},
 	}
 
-	c.Flags().StringVarP(&configFile, "config", "c", "", "Config file path")
+	c.Flags().StringVarP(&configFile, "config", "c", "./config.yaml", "Config file path")
 	return c
 }
 
-func runServer(cfg config.Config) error {
+func StartServer(cfg config.Config) error {
 	nr, err := telemetry.New(cfg.NewRelic)
 	if err != nil {
 		return err
@@ -165,34 +166,32 @@ func runServer(cfg config.Config) error {
 	namespaceRepository := postgres.NewNamespaceRepository(pgClient)
 	namespaceService := namespace.NewService(encryptor, namespaceRepository)
 
-	if cfg.Cortex.PrometheusAlertManagerConfigYaml == "" || cfg.Cortex.PrometheusAlertManagerHelperTemplate == "" {
-		return errors.New("empty prometheus alert manager config template")
-	}
-
-	cortexClient, err := cortex.NewClient(cortex.Config{Address: cfg.Cortex.Address},
-		cortex.WithHelperTemplate(cfg.Cortex.PrometheusAlertManagerConfigYaml, cfg.Cortex.PrometheusAlertManagerHelperTemplate),
-	)
+	cortexClient, err := cortex.NewClient(cortex.Config{Address: cfg.Cortex.Address})
 	if err != nil {
 		return fmt.Errorf("failed to init cortex client: %w", err)
 	}
+	cortexProviderService := cortex.NewProviderService(cortexClient)
 
 	ruleRepository := postgres.NewRuleRepository(pgClient)
 	ruleService := rule.NewService(
 		ruleRepository,
 		templateService,
 		namespaceService,
-		providerService,
-		cortexClient,
+		map[string]rule.RuleUploader{
+			provider.TypeCortex: cortexProviderService,
+		},
 	)
 
+	// plugin receiver services
 	slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
-	slackReceiverService := receiver.NewSlackService(slackClient, encryptor)
-	httpReceiverService := receiver.NewHTTPService()
-	pagerDutyReceiverService := receiver.NewPagerDutyService()
+	slackReceiverService := slack.NewReceiverService(slackClient, encryptor)
+	httpReceiverService := httpreceiver.NewReceiverService()
+	pagerDutyReceiverService := pagerduty.NewReceiverService()
+
 	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
 		receiverRepository,
-		map[string]receiver.TypeService{
+		map[string]receiver.Resolver{
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
 			receiver.TypePagerDuty: pagerDutyReceiverService,
@@ -200,7 +199,12 @@ func runServer(cfg config.Config) error {
 	)
 
 	subscriptionRepository := postgres.NewSubscriptionRepository(pgClient)
-	subscriptionService := subscription.NewService(subscriptionRepository, providerService, namespaceService, receiverService, cortexClient)
+	subscriptionService := subscription.NewService(
+		subscriptionRepository,
+		namespaceService,
+		receiverService,
+		subscription.RegisterProviderPlugin(provider.TypeCortex, cortexProviderService),
+	)
 
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,

@@ -41,7 +41,7 @@ func NewGRPCServer(
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
-	err := errors.E(e)
+	var err = errors.E(e)
 
 	var code codes.Code
 	switch {
@@ -55,7 +55,12 @@ func (s *GRPCServer) generateRPCErr(e error) error {
 		code = codes.InvalidArgument
 
 	default:
+		// TODO This will create 2 logs, grpc log and
+		// the error detail (Message & Cause) log
+		// there might be a better approach to solve this
 		code = codes.Internal
+		s.logger.Error(errors.Verbose(err).Error())
 	}
+
 	return status.Error(code, err.Error())
 }

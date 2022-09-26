@@ -18,25 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type variables struct {
-	Name  string `yaml:"name"`
-	Value string `yaml:"value"`
-}
-
-type ruleYaml struct {
-	ApiVersion        string `yaml:"apiVersion"`
-	Entity            string `yaml:"entity"`
-	Type              string `yaml:"type"`
-	Namespace         string `yaml:"namespace"`
-	Provider          string `yaml:"provider"`
-	ProviderNamespace string `yaml:"providerNamespace"`
-	Rules             map[string]struct {
-		Template  string      `yaml:"template"`
-		Enabled   bool        `yaml:"enabled"`
-		Variables []variables `yaml:"variables"`
-	} `yaml:"rules"`
-}
-
 func rulesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "rule",
@@ -254,7 +235,7 @@ func uploadRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			}
 
 			if strings.ToLower(yamlObject.Type) == "rule" {
-				rulesID, err := uploadRules(client, yamlFile)
+				rulesID, err := UploadRules(client, yamlFile)
 				if err != nil {
 					return err
 				}
@@ -271,8 +252,8 @@ func uploadRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	return cmd
 }
 
-func uploadRules(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]uint64, error) {
-	var yamlBody ruleYaml
+func UploadRules(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]uint64, error) {
+	var yamlBody rule.RuleFile
 	err := yaml.Unmarshal(yamlFile, &yamlBody)
 	if err != nil {
 		return nil, err

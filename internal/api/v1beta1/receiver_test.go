@@ -8,8 +8,8 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/api"
+	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/internal/api/v1beta1/mocks"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
@@ -399,7 +399,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 
 		mockedReceiverService.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"),
 			uint64(1),
-			receiver.NotificationMessage{
+			map[string]interface{}{
 				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
 				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
 				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
@@ -419,7 +419,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 		mockedReceiverService.EXPECT().Notify(
 			mock.AnythingOfType("*context.emptyCtx"),
 			uint64(1),
-			receiver.NotificationMessage{
+			map[string]interface{}{
 				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
 				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
 				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
@@ -439,7 +439,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 		mockedReceiverService.EXPECT().Notify(
 			mock.AnythingOfType("*context.emptyCtx"),
 			uint64(1),
-			receiver.NotificationMessage{
+			map[string]interface{}{
 				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
 				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
 				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),

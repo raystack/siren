@@ -14,7 +14,10 @@ build: ## Build the siren binary
 	@echo " - build complete"
 
 test: ## Run the tests
-	go test ./... -race -covermode=atomic -coverprofile=coverage.out
+	go test -race $(shell go list ./... | grep -v /test/) -covermode=atomic -coverprofile=coverage.out
+
+e2e-test: ## Run all e2e tests
+	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out
 
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
@@ -38,13 +41,13 @@ install: ## install required dependencies
 	@echo "> installing dependencies"
 	go mod tidy
 	go get -d github.com/vektra/mockery/v2@v2.13.1
-	go get -d google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
-	go get google.golang.org/protobuf/proto@v1.28.0
-	go get google.golang.org/grpc@v1.47.0
+	go get -d google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+	go get google.golang.org/protobuf/proto@v1.28.1
+	go get google.golang.org/grpc@v1.49.0
 	go get -d google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
-	go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.10.3
-	go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.10.3
-	go get -d github.com/bufbuild/buf/cmd/buf@v1.5.0
+	go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.11.3
+	go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.11.3
+	go get -d github.com/bufbuild/buf/cmd/buf@v1.7.0
 	go get github.com/envoyproxy/protoc-gen-validate@v0.6.7
 
 help: ## Display this help message

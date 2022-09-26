@@ -1,0 +1,33 @@
+apiVersion: v2
+type: template
+name: cpu-usage-very-critical
+body:
+  - alert: cpu very high critical
+    expr: avg by (host, environment) (cpu_usage_user{cpu="cpu-total"}) > [[.critical]]
+    for: "[[.for]]"
+    labels:
+      severity: CRITICAL
+      alertname: CPU usage has been above [[.critical]] for last [[.for]] {{ $labels.host }}
+      environment: "{{ $labels.environment }}"
+      team: "[[.team]]"
+    annotations:
+      dashboard: https://dashboard.odpf.io/xxx
+      summary: CPU usage has been {{ printf "%0.2f" $value }} for last [[.for]] on host {{ $labels.host }}
+      resource: "{{ $labels.host }}"
+      template: cpu-usage
+      metric_name: cpu_usage_user
+      metric_value: '{{ printf "%0.2f" $value }}'
+variables:
+  - name: for
+    type: string
+    description: For eg 5m, 2h; Golang duration format
+    default: 5m
+  - name: critical
+    type: int
+    default: 90
+  - name: team
+    type: string
+    description: For eg team name which the alert should go to
+    default: odpf-infra
+tags:
+  - systems
