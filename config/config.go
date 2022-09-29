@@ -6,6 +6,7 @@ import (
 
 	"github.com/odpf/salt/config"
 	"github.com/odpf/salt/db"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
@@ -30,17 +31,17 @@ func Load(configFile string) (Config, error) {
 }
 
 type Log struct {
-	Level         string `yaml:"level" mapstructure:"level" default:"info"`
-	GCPCompatible bool   `yaml:"gcp_compatible" mapstructure:"gcp_compatible" default:"true"`
+	Level         string `mapstructure:"level" default:"info"`
+	GCPCompatible bool   `mapstructure:"gcp_compatible" default:"true"`
 }
 
 // Config contains the application configuration
 type Config struct {
-	DB            db.Config                `mapstructure:"db"`
-	Cortex        cortex.Config            `mapstructure:"cortex"`
-	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
-	Service       server.Config            `mapstructure:"service"`
-	Log           Log                      `mapstructure:"log"`
-	EncryptionKey string                   `mapstructure:"encryption_key"`
-	Receivers     receivers.Config         `mapstructure:"receivers"`
+	DB           db.Config                `mapstructure:"db"`
+	Cortex       cortex.Config            `mapstructure:"cortex"`
+	NewRelic     telemetry.NewRelicConfig `mapstructure:"newrelic"`
+	Service      server.Config            `mapstructure:"service"`
+	Log          Log                      `mapstructure:"log"`
+	Receivers    receivers.Config         `mapstructure:"receivers"`
+	Notification notification.Config      `mapstructure:"notification"`
 }

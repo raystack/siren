@@ -22,13 +22,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		n       notification.Notification
 		wantErr bool
 	}{
-		{
-			name: "should return error if there is an error when fetching receiver",
-			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
-				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
-			},
-			wantErr: true,
-		},
+
 		{
 			name: "should return error if failed to transform notification to messages",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
@@ -40,6 +34,26 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "should return error if there is an error when fetching receiver",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error if prehook transform config return error",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					Type: testPluginType,
+					Configurations: map[string]interface{}{
+						"key": "value",
+					},
+				}, nil)
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
+			},
+			wantErr: true,
+		},
+		{
 			name: "should return error if enqueue error",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
@@ -47,6 +61,9 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 					Configurations: map[string]interface{}{
 						"key": "value",
 					},
+				}, nil)
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
@@ -60,6 +77,9 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 					Configurations: map[string]interface{}{
 						"key": "value",
 					},
+				}, nil)
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
@@ -169,7 +189,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(errors.New("invalid config"))
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
 			},
 			wantErr: true,
 		},
@@ -190,7 +210,9 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(nil)
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+					"key": "value",
+				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
@@ -212,7 +234,9 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(nil)
+				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+					"key": "value",
+				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,

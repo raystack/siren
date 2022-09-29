@@ -63,8 +63,8 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 		alrt := &alert.Alert{
 			ProviderID:   req.GetProviderId(),
 			ResourceName: fmt.Sprintf("%v", item.GetAnnotations()["resource"]),
-			MetricName:   fmt.Sprintf("%v", item.GetAnnotations()["metric_name"]),
-			MetricValue:  fmt.Sprintf("%v", item.GetAnnotations()["metric_value"]),
+			MetricName:   fmt.Sprintf("%v", item.GetAnnotations()["metricName"]),
+			MetricValue:  fmt.Sprintf("%v", item.GetAnnotations()["metricValue"]),
 			Severity:     severity,
 			Rule:         fmt.Sprintf("%v", item.GetAnnotations()["template"]),
 			TriggeredAt:  item.GetStartsAt().AsTime(),
@@ -138,9 +138,9 @@ func CortexAlertPBToNotification(
 	}
 
 	data["status"] = a.GetStatus()
-	data["generator_url"] = a.GetGeneratorUrl()
-	data["num_alerts_firing"] = firingLen
-	data["group_key"] = groupKey
+	data["generatorUrl"] = a.GetGeneratorUrl()
+	data["numAlertsFiring"] = firingLen
+	data["groupKey"] = groupKey
 
 	return notification.Notification{
 		ID:        "cortex-" + a.GetFingerprint(),

@@ -12,6 +12,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/httpclient"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/pkg/secret"
 	goslack "github.com/slack-go/slack"
 )
 
@@ -28,7 +29,7 @@ type GoSlackCaller interface {
 }
 
 type codeExchangeHTTPResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken secret.MaskableString `json:"access_token"`
 	Team        struct {
 		Name string `json:"name"`
 	} `json:"team"`
@@ -41,7 +42,7 @@ type Channel struct {
 }
 
 type Credential struct {
-	AccessToken string
+	AccessToken secret.MaskableString
 	TeamName    string
 }
 
@@ -115,12 +116,8 @@ func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSec
 }
 
 // GetWorkspaceChannels fetches list of joined channel of a client
-func (c *Client) GetWorkspaceChannels(ctx context.Context, token string) ([]Channel, error) {
-	// gsc, err := c.createGoSlackClient(ctx, opts...)
-	gsc := goslack.New(token, goslack.OptionAPIURL(c.cfg.APIHost))
-	// if err != nil {
-	// 	return nil, fmt.Errorf("goslack client creation failure: %w", err)
-	// }
+func (c *Client) GetWorkspaceChannels(ctx context.Context, token secret.MaskableString) ([]Channel, error) {
+	gsc := goslack.New(token.UnmaskedString(), goslack.OptionAPIURL(c.cfg.APIHost))
 
 	joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 	if err != nil {
@@ -139,7 +136,7 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, token string) ([]Chan
 
 // Notify sends message to a specific slack channel
 func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Message) error {
-	gsc := goslack.New(conf.ReceiverConfig.Token, goslack.OptionAPIURL(c.cfg.APIHost))
+	gsc := goslack.New(conf.ReceiverConfig.Token.UnmaskedString(), goslack.OptionAPIURL(c.cfg.APIHost))
 
 	var channelID string
 	switch conf.ChannelType {

@@ -1,5 +1,5 @@
 [[define "__alert_severity_prefix_emoji" -]]
-  [[if ne .Variables.status "firing" -]]
+  [[if ne .Data.status "firing" -]]
   :white_check_mark:
   [[- else if eq .Labels.severity "CRITICAL" -]]
   :fire:
@@ -10,13 +10,13 @@
   [[- end]]
 [[- end]]
 [[ define "slack.pretext" -]]
-  [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Variables.status | toUpper ]][[ if eq .Variables.status "firing" ]]:[[ .Variables.num_alerts_firing ]][[ end ]])
-  [[- if eq .Variables.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
+  [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.numAlertsFiring ]][[ end ]])
+  [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
   [[- else ]] *([[ .Labels.severity | toUpper ]])*
   [[- end]] [[ .Labels.alertname ]]
 [[- end ]]
 [[define "slack.color" -]]
-[[if eq .Variables.status "firing" -]]
+[[if eq .Data.status "firing" -]]
   [[if eq .Labels.severity "WARNING" -]]
   warning
   [[- else if eq .Labels.severity "CRITICAL" -]]
@@ -28,14 +28,14 @@
   good
   [[- end]]
 [[- end]]
-[[ define "slack.body"]]
-[[- .Variables.summary -]]
+[[define "slack.body"]]
+[[- .Labels.summary -]]
 [[ end]]
 [[define "slack.dashboard"]]
-[[- if .Variables.dashboard]][[.Variables.dashboard]][[else]]https://radar.odpf.io[[end]]
+[[- if .Data.dashboard]][[.Data.dashboard]][[else]][[.Data.defaultDashboard]][[end]]
 [[- end -]]
 [[define "slack.runbook"]]
-[[- if .Variables.playbook]][[.Variables.playbook]][[end]]
+[[- if .Data.playbook]][[.Data.playbook]][[end]]
 [[- end -]]
 username: "Siren"
 icon_emoji: ":eagle:"
@@ -43,7 +43,7 @@ link_names: false
 attachments:
   - title: ""
     pretext: "[[template "slack.pretext" . ]]"
-    text: "[[ template "slack.body" . ]]"
+    text: "[[template "slack.body" . ]]"
     color: "[[template "slack.color" . ]]"
     actions:
     - type: button

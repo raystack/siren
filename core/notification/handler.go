@@ -2,48 +2,63 @@ package notification
 
 import (
 	"context"
-	"sync"
+	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
 )
 
 const (
-	defaultPollDuration = 5 * time.Second
-	defaultBatchSize    = 1
+	defaultBatchSize = 1
 )
 
 // Handler is a process to handle message publishing
 type Handler struct {
-	id                     string
 	logger                 log.Logger
 	q                      Queuer
+	identifier             string
 	notifierRegistry       map[string]Notifier
 	supportedReceiverTypes []string
 
-	batchSize    int
-	pollDuration time.Duration
+	batchSize int
 }
 
 // NewHandler creates a new handler with some supported type of Notifiers
-func NewHandler(logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
+func NewHandler(cfg HandlerConfig, logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
-		id:           uuid.NewString(),
-		batchSize:    defaultBatchSize,
-		pollDuration: defaultPollDuration,
+		batchSize: defaultBatchSize,
 
 		logger:           logger,
 		notifierRegistry: registry,
 		q:                q,
 	}
 
-	keys := make([]string, 0, len(h.notifierRegistry))
-	for k := range h.notifierRegistry {
-		keys = append(keys, k)
+	if cfg.BatchSize != 0 {
+		h.batchSize = cfg.BatchSize
 	}
-	h.supportedReceiverTypes = keys
+	registeredReceivers := make([]string, 0, len(h.notifierRegistry))
+	for k := range h.notifierRegistry {
+		registeredReceivers = append(registeredReceivers, k)
+	}
+	h.supportedReceiverTypes = registeredReceivers
+
+	if len(cfg.ReceiverTypes) != 0 {
+		newSupportedReceiverTypes := []string{}
+		for _, rt := range cfg.ReceiverTypes {
+			found := false
+			for _, k := range registeredReceivers {
+				if rt == k {
+					found = true
+					break
+				}
+			}
+			if found {
+				newSupportedReceiverTypes = append(newSupportedReceiverTypes, rt)
+			}
+		}
+		h.supportedReceiverTypes = newSupportedReceiverTypes
+	}
 
 	for _, opt := range opts {
 		opt(h)
@@ -55,37 +70,26 @@ func NewHandler(logger log.Logger, q Queuer, registry map[string]Notifier, opts 
 func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 	receiverPlugin, exist := h.notifierRegistry[receiverType]
 	if !exist {
-		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
+		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q on handler %s", receiverType, h.identifier)
 	}
 	return receiverPlugin, nil
 }
 
-func (h *Handler) RunHandler(ctx context.Context, wg *sync.WaitGroup, cancelChan chan struct{}) {
-	defer wg.Done()
-
-	ticker := time.NewTicker(h.pollDuration)
-	defer ticker.Stop()
-
-	h.logger.Info("running handler", "id", h.id)
-
-	for {
-		select {
-		case <-cancelChan:
-			h.logger.Info("stopping handler", "id", h.id)
-			return
-
-		case t := <-ticker.C:
-			receiverTypes := h.supportedReceiverTypes
-			if len(receiverTypes) == 0 {
-				h.logger.Warn("no receiver type plugin registered, skipping dequeue", "scope", "notification.handler")
+func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
+	receiverTypes := h.supportedReceiverTypes
+	if len(receiverTypes) == 0 {
+		return errors.New("no receiver type plugin registered, skipping dequeue")
+	} else {
+		h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", runAt, "id", h.identifier)
+		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
+			if errors.Is(err, ErrNoMessage) {
+				h.logger.Debug(err.Error(), "id", h.identifier)
 			} else {
-				h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", t)
-				if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil && err != ErrNoMessage {
-					h.logger.Error("dequeue failed", "scope", "notification.handler", "error", err)
-				}
+				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
 			}
 		}
 	}
+	return nil
 }
 
 // MessageHandler is a function to handler dequeued message
@@ -98,11 +102,22 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
+		newConfig, err := notifier.PostHookTransformConfigs(ctx, message.Configs)
+		if err != nil {
+			message.MarkFailed(time.Now(), false, err)
+
+			if err := h.q.ErrorCallback(ctx, message); err != nil {
+				return err
+			}
+			return err
+		}
+		message.Configs = newConfig
+
 		if retryable, err := notifier.Publish(ctx, message); err != nil {
 
 			message.MarkFailed(time.Now(), retryable, err)
 
-			if err := h.q.ErrorHandler(ctx, message); err != nil {
+			if err := h.q.ErrorCallback(ctx, message); err != nil {
 				return err
 			}
 			return err
@@ -110,7 +125,7 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPublished(time.Now())
 
-		if err := h.q.SuccessHandler(ctx, message); err != nil {
+		if err := h.q.SuccessCallback(ctx, message); err != nil {
 			return err
 		}
 

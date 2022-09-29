@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
@@ -19,13 +20,15 @@ const (
 
 // SlackNotificationService is a notification plugin service layer for slack
 type SlackNotificationService struct {
-	client SlackCaller
+	cryptoClient Encryptor
+	client       SlackCaller
 }
 
 // NewNotificationService returns slack service struct. This service implement [receiver.Notifier] interface.
-func NewNotificationService(client SlackCaller) *SlackNotificationService {
+func NewNotificationService(client SlackCaller, cryptoClient Encryptor) *SlackNotificationService {
 	return &SlackNotificationService{
-		client: client,
+		client:       client,
+		cryptoClient: cryptoClient,
 	}
 }
 
@@ -69,6 +72,46 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	}
 
 	return false, nil
+}
+
+func (s *SlackNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	notificationConfig := &NotificationConfig{}
+	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
+	}
+
+	if err := notificationConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	cipher, err := s.cryptoClient.Encrypt(notificationConfig.Token)
+	if err != nil {
+		return nil, fmt.Errorf("slack token encryption failed: %w", err)
+	}
+
+	notificationConfig.Token = cipher
+
+	return notificationConfig.AsMap(), nil
+}
+
+func (s *SlackNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	notificationConfig := &NotificationConfig{}
+	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to notification config: %w", err)
+	}
+
+	if err := notificationConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	token, err := s.cryptoClient.Decrypt(notificationConfig.Token)
+	if err != nil {
+		return nil, fmt.Errorf("slack token decryption failed: %w", err)
+	}
+
+	notificationConfig.Token = token
+
+	return notificationConfig.AsMap(), nil
 }
 
 func (s *SlackNotificationService) DefaultTemplateOfProvider(templateName string) string {

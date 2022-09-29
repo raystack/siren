@@ -25,7 +25,7 @@ func TestMessage_Initialize(t *testing.T) {
 		wantErr             bool
 	}{
 		{
-			name: "all notification labels and variables should be merged to message detail and variable takes precedence if key conflict",
+			name: "all notification labels and data should be merged to message detail and data takes precedence if key conflict",
 			n: notification.Notification{
 				Labels: map[string]string{
 					"labelkey1": "value1",
@@ -54,7 +54,9 @@ func TestMessage_Initialize(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &notification.Message{}
-			m.Initialize(tc.n, tc.receiverType, tc.notificationConfigs,
+			m.Initialize(tc.n,
+				tc.receiverType,
+				tc.notificationConfigs,
 				notification.InitWithID(testID),
 				notification.InitWithCreateTime(testTimeNow),
 				notification.InitWithExpiryDuration(testExpiryDuration),

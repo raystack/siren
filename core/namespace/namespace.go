@@ -18,7 +18,7 @@ type Repository interface {
 
 type EncryptedNamespace struct {
 	*Namespace
-	Credentials string
+	CredentialString string
 }
 
 type Namespace struct {

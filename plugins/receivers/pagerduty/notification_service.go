@@ -58,6 +58,14 @@ func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificatio
 	return false, nil
 }
 
+func (pd *PagerDutyNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	return notificationConfigMap, nil
+}
+
+func (pd *PagerDutyNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	return notificationConfigMap, nil
+}
+
 func (pd *PagerDutyNotificationService) DefaultTemplateOfProvider(providerType string) string {
 	switch providerType {
 	case provider.TypeCortex:

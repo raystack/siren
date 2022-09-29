@@ -24,7 +24,7 @@ newrelic:
 service:
   host: localhost
   port: 8080
-encryption_key:  ____STRING_OF_32_CHARACTERS_____
+  encryption_key:  ____STRING_OF_32_CHARACTERS_____
 receivers:
   slack:
     api_host:
@@ -33,3 +33,13 @@ receivers:
       wait_duration: 20ms
     http_client:
       timeout_ms: 500
+notification:
+  queue:
+    kind: postgres
+  message_handler:
+    enabled: true
+    receiver_types: slack,http,pagerduty
+    poll_duration: 5s
+    batch_size: 1
+  dlq_handler:
+    enabled: true

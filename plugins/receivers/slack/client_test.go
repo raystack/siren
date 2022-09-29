@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/plugins/receivers/slack"
 	goslack "github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_GetWorkspaceChannels(t *testing.T) {
-	var token = "test-token"
+	var token = secret.MaskableString("test-token")
 
 	t.Run("return error when failed to fetch joined channel list", func(t *testing.T) {
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,7 @@ func TestClient_GetWorkspaceChannels(t *testing.T) {
 }
 
 func TestClient_NotifyChannel(t *testing.T) {
-	var token = "test-token"
+	var token = secret.MaskableString("test-token")
 
 	t.Run("return error when message receiver type is wrong", func(t *testing.T) {
 		c := slack.NewClient(slack.AppConfig{})
@@ -242,7 +243,7 @@ func TestClient_NotifyChannel(t *testing.T) {
 }
 
 func TestClient_NotifyUser(t *testing.T) {
-	var token = "test-token"
+	var token = secret.MaskableString("test-token")
 
 	t.Run("return error when failed to get user for an email", func(t *testing.T) {
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -322,7 +323,7 @@ func TestClient_NotifyUser(t *testing.T) {
 func TestClient_NotifyWithRetrier(t *testing.T) {
 	var (
 		expectedCounter = 4
-		token           = "test-token"
+		token           = secret.MaskableString("test-token")
 	)
 
 	t.Run("when 429 is returned", func(t *testing.T) {

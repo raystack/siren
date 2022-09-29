@@ -7,17 +7,17 @@ import (
 
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/provider/mocks"
-	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgtype"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestList(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(model.StringInterfaceMap)
+	credentials := make(pgtype.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(pgtype.StringStringMap)
 	labels["foo"] = "bar"
 
 	t.Run("should call repository List method and return result in domain's type", func(t *testing.T) {
@@ -56,9 +56,9 @@ func TestList(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(model.StringInterfaceMap)
+	credentials := make(pgtype.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(pgtype.StringStringMap)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProviderID := uint64(10)
@@ -104,9 +104,9 @@ func TestCreate(t *testing.T) {
 func TestGetProvider(t *testing.T) {
 	ctx := context.TODO()
 	dummyProviderID := uint64(10)
-	credentials := make(model.StringInterfaceMap)
+	credentials := make(pgtype.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(pgtype.StringStringMap)
 	labels["foo"] = "bar"
 	timenow := time.Now()
 	dummyProvider := &provider.Provider{
@@ -155,9 +155,9 @@ func TestUpdateProvider(t *testing.T) {
 	ctx := context.TODO()
 	dummyProviderID := uint64(10)
 	timenow := time.Now()
-	credentials := make(model.StringInterfaceMap)
+	credentials := make(pgtype.StringInterfaceMap)
 	credentials["foo"] = "bar"
-	labels := make(model.StringStringMap)
+	labels := make(pgtype.StringStringMap)
 	labels["foo"] = "bar"
 	dummyProvider := &provider.Provider{
 		ID:          dummyProviderID,

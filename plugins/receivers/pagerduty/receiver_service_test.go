@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/plugins/receivers/pagerduty"
 )
 
@@ -55,10 +56,10 @@ func TestPagerDutyService_BuildNotificationConfig(t *testing.T) {
 			{
 				Description: "should return configs with service_key if receiver 'service_key' exist in string",
 				ReceiverConfigs: map[string]interface{}{
-					"service_key": "service_key",
+					"service_key": secret.MaskableString("service_key"),
 				},
 				ExpectedConfigMap: map[string]interface{}{
-					"service_key": "service_key",
+					"service_key": secret.MaskableString("service_key"),
 				},
 			},
 		}

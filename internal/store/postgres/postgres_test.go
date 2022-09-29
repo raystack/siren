@@ -111,23 +111,11 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 		return nil, err
 	}
 
-	// encryptService, err := secret.New(testEncryptionKey)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	for _, d := range data {
-		// plainTextCredentials, err := json.Marshal(d.Credentials)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// cipherTextCredentials, err := encryptService.Encrypt(string(plainTextCredentials))
-		// if err != nil {
-		// 	return nil, err
-		// }
+
 		encryptedNS := namespace.EncryptedNamespace{
-			Namespace:   &d,
-			Credentials: fmt.Sprintf("%+v", d.Credentials),
+			Namespace:        &d,
+			CredentialString: fmt.Sprintf("%+v", d.Credentials),
 		}
 		if err := repo.Create(context.Background(), &encryptedNS); err != nil {
 			return nil, err

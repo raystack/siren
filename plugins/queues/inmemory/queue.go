@@ -7,6 +7,8 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/plugins"
+	"github.com/odpf/siren/plugins/queues"
 )
 
 // Queue simulates queue inmemory, this is for testing only
@@ -71,16 +73,20 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 	return nil
 }
 
-// SuccessHandler is a callback that will be called once the message is succesfully handled by handlerFn
-func (q *Queue) SuccessHandler(ctx context.Context, ms notification.Message) error {
-	q.logger.Debug("successfully sending message", "scope", "queues.inmemory.success_handler", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details)
+// SuccessCallback is a callback that will be called once the message is succesfully handled by handlerFn
+func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) error {
+	q.logger.Debug("successfully sending message", "scope", "queues.inmemory.success_callback", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details)
 	return nil
 }
 
-// ErrorHandler is a callback that will be called once the message is failed to be handled by handlerFn
-func (q *Queue) ErrorHandler(ctx context.Context, ms notification.Message) error {
-	q.logger.Error("failed sending message", "scope", "queues.inmemory.error_handler", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details, "last_error", ms.LastError)
+// ErrorCallback is a callback that will be called once the message is failed to be handled by handlerFn
+func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) error {
+	q.logger.Error("failed sending message", "scope", "queues.inmemory.error_callback", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details, "last_error", ms.LastError)
 	return nil
+}
+
+func (q *Queue) Cleanup(ctx context.Context, filter queues.FilterCleanup) error {
+	return plugins.ErrNotImplemented
 }
 
 // Stop is a inmemmory queue function

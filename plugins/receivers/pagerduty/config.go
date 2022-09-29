@@ -6,6 +6,7 @@ import (
 
 	"github.com/odpf/siren/pkg/httpclient"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/pkg/secret"
 )
 
 // AppConfig is a config loaded when siren is started
@@ -24,7 +25,7 @@ func (c AppConfig) Validate() error {
 
 // TODO need to support versioning later v1 and v2
 type ReceiverConfig struct {
-	ServiceKey string `mapstructure:"service_key"`
+	ServiceKey secret.MaskableString `mapstructure:"service_key"`
 }
 
 func (c *ReceiverConfig) Validate() error {

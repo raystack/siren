@@ -1,8 +1,10 @@
 package pagerduty
 
+import "github.com/odpf/siren/pkg/secret"
+
 // https://developer.pagerduty.com/docs/ZG9jOjExMDI5NTc4-send-a-v1-event
 type MessageV1 struct {
-	ServiceKey  string                 `mapstructure:"service_key" yaml:"service_key,omitempty" json:"service_key,omitempty"`
+	ServiceKey  secret.MaskableString  `mapstructure:"service_key" yaml:"service_key,omitempty" json:"service_key,omitempty"`
 	EventType   string                 `mapstructure:"event_type" yaml:"event_type,omitempty" json:"event_type,omitempty"`
 	IncidentKey string                 `mapstructure:"incident_key" yaml:"incident_key,omitempty" json:"incident_key,omitempty"`
 	Description string                 `mapstructure:"description" yaml:"description,omitempty" json:"description,omitempty"`

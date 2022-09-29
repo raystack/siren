@@ -2,11 +2,13 @@ package slack_test
 
 import (
 	"context"
-	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/plugins/receivers/slack"
 	"github.com/odpf/siren/plugins/receivers/slack/mocks"
 	"github.com/stretchr/testify/mock"
@@ -79,7 +81,7 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 				tt.setup(mockSlackClient)
 			}
 
-			s := slack.NewNotificationService(mockSlackClient)
+			s := slack.NewNotificationService(mockSlackClient, nil)
 
 			got, err := s.Publish(context.Background(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
@@ -88,6 +90,148 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 			}
 			if got != tt.wantRetryable {
 				t.Errorf("SlackNotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
+			}
+		})
+	}
+}
+
+func TestSlackNotificationService_PreHookTransformConfigs(t *testing.T) {
+	tests := []struct {
+		name                  string
+		setup                 func(*mocks.Encryptor)
+		notificationConfigMap map[string]interface{}
+		want                  map[string]interface{}
+		wantErr               bool
+	}{
+		{
+			name:                  "should return error if failed to parse configmap to notification config",
+			notificationConfigMap: nil,
+			wantErr:               true,
+		},
+		{
+			name: "should return error if validate notification config failed",
+			notificationConfigMap: map[string]interface{}{
+				"token": 123,
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error if slack token encryption failed",
+			notificationConfigMap: map[string]interface{}{
+				"token": secret.MaskableString("a token"),
+			},
+			setup: func(e *mocks.Encryptor) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return encrypted slack token if succeed",
+
+			notificationConfigMap: map[string]interface{}{
+				"workspace":    "a workspace",
+				"token":        secret.MaskableString("a token"),
+				"channel_name": "channel",
+			},
+			setup: func(e *mocks.Encryptor) {
+				e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
+			},
+			want: map[string]interface{}{
+				"workspace":    "a workspace",
+				"token":        secret.MaskableString("maskable-token"),
+				"channel_name": "channel",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockEncryptor = new(mocks.Encryptor)
+			)
+
+			if tt.setup != nil {
+				tt.setup(mockEncryptor)
+			}
+
+			s := slack.NewNotificationService(nil, mockEncryptor)
+			got, err := s.PreHookTransformConfigs(context.TODO(), tt.notificationConfigMap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SlackNotificationService.PreHookTransformConfigs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SlackNotificationService.PreHookTransformConfigs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSlackNotificationService_PostHookTransformConfigs(t *testing.T) {
+	tests := []struct {
+		name                  string
+		setup                 func(*mocks.Encryptor)
+		notificationConfigMap map[string]interface{}
+		want                  map[string]interface{}
+		wantErr               bool
+	}{
+		{
+			name:                  "should return error if failed to parse configmap to notification config",
+			notificationConfigMap: nil,
+			wantErr:               true,
+		},
+		{
+			name: "should return error if validate notification config failed",
+			notificationConfigMap: map[string]interface{}{
+				"token": 123,
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error if slack token decryption failed",
+			notificationConfigMap: map[string]interface{}{
+				"token": secret.MaskableString("a token"),
+			},
+			setup: func(e *mocks.Encryptor) {
+				e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return encrypted slack token if succeed",
+
+			notificationConfigMap: map[string]interface{}{
+				"workspace":    "a workspace",
+				"token":        secret.MaskableString("a token"),
+				"channel_name": "channel",
+			},
+			setup: func(e *mocks.Encryptor) {
+				e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
+			},
+			want: map[string]interface{}{
+				"workspace":    "a workspace",
+				"token":        secret.MaskableString("maskable-token"),
+				"channel_name": "channel",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockEncryptor = new(mocks.Encryptor)
+			)
+
+			if tt.setup != nil {
+				tt.setup(mockEncryptor)
+			}
+
+			s := slack.NewNotificationService(nil, mockEncryptor)
+			got, err := s.PostHookTransformConfigs(context.TODO(), tt.notificationConfigMap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SlackNotificationService.PostHookTransformConfigs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SlackNotificationService.PostHookTransformConfigs() = %v, want %v", got, tt.want)
 			}
 		})
 	}

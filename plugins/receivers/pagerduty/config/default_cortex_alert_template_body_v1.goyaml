@@ -1,7 +1,7 @@
 [[define "pagerduty.event_type" -]]
-  [[if eq .Variables.status "firing" -]]
+  [[if eq .Data.status "firing" -]]
   trigger
-  [[- else if eq .Variables.status "resolved" -]]
+  [[- else if eq .Data.status "resolved" -]]
   resolve
   [[- else -]]
   unknown
@@ -12,12 +12,12 @@ Labels:\n
 [[ range $index, $element := .Labels ]]- [[ $index ]] = [[ $element ]]\n
 [[ end ]]
 Annotations:\n
-[[ range $index, $element := .Variables ]]- [[ $index  ]] = [[ $element ]]\n
-[[ end ]][[if .Variables.generator_url ]]Source: [[ .Variables.generator_url ]][[ end ]]
+[[ range $index, $element := .Data ]]- [[ $index  ]] = [[ $element ]]\n
+[[ end ]][[if .Data.generatorUrl ]]Source: [[ .Data.generatorUrl ]][[ end ]]
 [[ end ]]
 event_type: "[[template "pagerduty.event_type" . ]]"
-[[if .Variables.incident_key]]incident_key: "[[.Variables.incident_key]]"[[ end ]]
-description: ([[ .Variables.status | toUpper ]][[ if .Variables.num_alerts_firing ]][[ if eq .Variables.status "firing" ]]:[[ .Variables.num_alerts_firing ]][[ end ]][[ end ]]) [[ .Labels | joinStringValues " " ]]
+[[if .Data.incidentKey]]incident_key: "[[.Data.incidentKey]]"[[ end ]]
+description: ([[ .Data.status | toUpper ]][[ if .Data.numAlertsFiring ]][[ if eq .Data.status "firing" ]]:[[ .Data.numAlertsFiring ]][[ end ]][[ end ]]) [[ .Labels | joinStringValues " " ]]
 client: "Siren"
 details:
-  [[ .Variables.status ]]: "[[template "pagerduty.details" . ]]"
+  [[ .Data.status ]]: "[[template "pagerduty.details" . ]]"

@@ -5,11 +5,13 @@ import (
 	"time"
 
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/plugins/queues"
 )
 
 //go:generate mockery --name=Notifier -r --case underscore --with-expecter --structname Notifier --filename notifier.go --output=./mocks
 type Notifier interface {
-	ValidateConfigMap(notificationConfigMap map[string]interface{}) error
+	PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error)
+	PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error)
 	DefaultTemplateOfProvider(templateName string) string
 	Publish(ctx context.Context, message Message) (bool, error)
 }
@@ -18,8 +20,9 @@ type Notifier interface {
 type Queuer interface {
 	Enqueue(ctx context.Context, ms ...Message) error
 	Dequeue(ctx context.Context, receiverTypes []string, batchSize int, handlerFn func(context.Context, []Message) error) error
-	SuccessHandler(ctx context.Context, ms Message) error
-	ErrorHandler(ctx context.Context, ms Message) error
+	SuccessCallback(ctx context.Context, ms Message) error
+	ErrorCallback(ctx context.Context, ms Message) error
+	Cleanup(ctx context.Context, filter queues.FilterCleanup) error
 	Stop(ctx context.Context) error
 }
 

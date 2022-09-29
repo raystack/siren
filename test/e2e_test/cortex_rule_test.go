@@ -32,9 +32,9 @@ func (s *CortexRuleTestSuite) SetupTest() {
 			Level: "debug",
 		},
 		Service: server.Config{
-			Port: apiPort,
+			Port:          apiPort,
+			EncryptionKey: testEncryptionKey,
 		},
-		EncryptionKey: testEncryptionKey,
 	}
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)

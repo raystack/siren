@@ -34,8 +34,9 @@ import (
 const defaultGracePeriod = 5 * time.Second
 
 type Config struct {
-	Host string `mapstructure:"host" default:"localhost"`
-	Port int    `mapstructure:"port" default:"8080"`
+	Host          string `mapstructure:"host" default:"localhost"`
+	Port          int    `mapstructure:"port" default:"8080"`
+	EncryptionKey string `mapstructure:"encryption_key"`
 }
 
 func (cfg Config) addr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
