@@ -10,9 +10,9 @@ import (
 
 // AppConfig is a config loaded when siren is started
 type AppConfig struct {
-	APIHost    string            `mapstructure:"api_host" yaml:"api_host"`
-	Retry      retry.Config      `mapstructure:"retry" yaml:"retry"`
-	HTTPClient httpclient.Config `mapstructure:"http_client" yaml:"http_client"`
+	APIHost    string            `mapstructure:"api_host"`
+	Retry      retry.Config      `mapstructure:"retry"`
+	HTTPClient httpclient.Config `mapstructure:"http_client"`
 }
 
 // SlackCredentialConfig is config that needs to be passed when a new slack

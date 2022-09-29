@@ -9,17 +9,6 @@ import (
 )
 
 func TestHTTPService_Functions(t *testing.T) {
-	t.Run("should return error not implemented if notify is called", func(t *testing.T) {
-		svc := httpreceiver.NewReceiverService()
-
-		expectedErrorString := "operation not supported"
-		err := svc.Notify(context.TODO(), map[string]interface{}{}, map[string]interface{}{})
-
-		if err.Error() != expectedErrorString {
-			t.Fatalf("got error %s, expected was %s", err.Error(), expectedErrorString)
-		}
-	})
-
 	t.Run("should return as-is if populate receiver is called", func(t *testing.T) {
 		svc := httpreceiver.NewReceiverService()
 
@@ -35,7 +24,7 @@ func TestHTTPService_Functions(t *testing.T) {
 	})
 }
 
-func TestHTTPReceiverService_GetSubscriptionConfig(t *testing.T) {
+func TestReceiverService_GetSubscriptionConfig(t *testing.T) {
 	type testCase struct {
 		Description         string
 		SubscriptionConfigs map[string]interface{}

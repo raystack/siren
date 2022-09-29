@@ -361,6 +361,11 @@ func deleteReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 }
 
 func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
+
+	type notifyReceiverRequest struct {
+		Payload map[string]interface{} `mapstructure:"payload" yaml:"payload"`
+	}
+
 	var id uint64
 	var filePath string
 	cmd := &cobra.Command{
@@ -400,19 +405,22 @@ func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 				return errors.New("no response from server")
 			}
 
-			notifyReceiverReq := &sirenv1beta1.NotifyReceiverRequest{}
-			notifyReceiverReq.Id = rcv.GetReceiver().GetId()
-			switch rcv.GetReceiver().GetType() {
-			case "slack":
-				var slackConfig *structpb.Struct
-				if err := parseFile(filePath, &slackConfig); err != nil {
-					return err
-				}
-
-				notifyReceiverReq.Payload = slackConfig
+			notifyReceiverReq := &notifyReceiverRequest{}
+			if err := parseFile(filePath, &notifyReceiverReq); err != nil {
+				return err
 			}
 
-			_, err = client.NotifyReceiver(ctx, notifyReceiverReq)
+			payloadPB, err := structpb.NewStruct(notifyReceiverReq.Payload)
+			if err != nil {
+				return err
+			}
+
+			notifyReceiverReqPB := &sirenv1beta1.NotifyReceiverRequest{
+				Id:      id,
+				Payload: payloadPB,
+			}
+
+			_, err = client.NotifyReceiver(ctx, notifyReceiverReqPB)
 			if err != nil {
 				return err
 			}
@@ -428,7 +436,7 @@ func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 
 	cmd.Flags().Uint64Var(&id, "id", 0, "receiver id")
 	cmd.MarkFlagRequired("id")
-	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the receiver notification config")
+	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the receiver notification message")
 	cmd.MarkFlagRequired("file")
 
 	return cmd

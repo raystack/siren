@@ -115,6 +115,9 @@ func serverMigrateCommand() *cobra.Command {
 			if err := postgres.Migrate(cfg.DB); err != nil {
 				return err
 			}
+			printer.Success("Migration done")
+			printer.Space()
+			printer.SuccessIcon()
 			return nil
 		},
 	}

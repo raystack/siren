@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestHTTPNotificationService_Publish(t *testing.T) {
+func TestNotificationService_Publish(t *testing.T) {
 	tests := []struct {
 		name                string
 		setup               func(*mocks.HTTPCaller)
@@ -79,15 +79,15 @@ func TestHTTPNotificationService_Publish(t *testing.T) {
 				tt.setup(mockHTTPCaller)
 			}
 
-			pd := httpreceiver.NewNotificationService(mockHTTPCaller)
+			hr := httpreceiver.NewNotificationService(mockHTTPCaller)
 
-			got, err := pd.Publish(context.Background(), tt.notificationMessage)
+			got, err := hr.Publish(context.Background(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("HTTPNotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.wantRetryable {
-				t.Errorf("HTTPNotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
+				t.Errorf("NotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
 			}
 		})
 	}

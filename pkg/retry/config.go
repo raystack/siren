@@ -10,6 +10,6 @@ type Config struct {
 	// number of times that will be retried in case of error
 	// before returning the error itself.
 	MaxTries int `mapstructure:"max_retry" yaml:"max_tries" default:"3"`
-	// short circuit the retrier
-	Disable bool `mapstructure:"disable" yaml:"disable" default:"false"`
+	// short circuit the retrier if false
+	Enable bool `mapstructure:"enable" yaml:"enable" default:"true"`
 }

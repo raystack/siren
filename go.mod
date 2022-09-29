@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Masterminds/squirrel v1.5.3
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/briandowns/spinner v1.19.0 // indirect
 	github.com/charmbracelet/glamour v0.5.0 // indirect
@@ -28,7 +29,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
-	github.com/odpf/salt v0.2.2-0.20220920085528-6d95c350af71
+	github.com/odpf/salt v0.2.5-0.20221019092709-83b91cba3daf
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939

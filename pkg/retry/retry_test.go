@@ -39,6 +39,7 @@ func TestRetrier_Error(t *testing.T) {
 			},
 			cfg: retry.Config{
 				MaxTries: 4,
+				Enable:   true,
 			},
 			expectedNumExecution: 5,
 		},
@@ -50,6 +51,7 @@ func TestRetrier_Error(t *testing.T) {
 			},
 			cfg: retry.Config{
 				MaxTries: 4,
+				Enable:   true,
 			},
 			expectedNumExecution: 1,
 		},
@@ -61,7 +63,6 @@ func TestRetrier_Error(t *testing.T) {
 			},
 			cfg: retry.Config{
 				MaxTries: 4,
-				Disable:  true,
 			},
 			expectedNumExecution: 1,
 		},
@@ -106,6 +107,7 @@ func TestRetrier_RetryWithoutBackoff(t *testing.T) {
 				MaxTries:      4,
 				EnableBackoff: true,
 				WaitDuration:  10 * time.Millisecond,
+				Enable:        true,
 			},
 			expectedWaitTimes: []time.Duration{
 				10 * time.Millisecond,
@@ -120,6 +122,7 @@ func TestRetrier_RetryWithoutBackoff(t *testing.T) {
 				MaxTries:      2,
 				EnableBackoff: false,
 				WaitDuration:  30 * time.Millisecond,
+				Enable:        true,
 			},
 			expectedWaitTimes: []time.Duration{
 				30 * time.Millisecond,

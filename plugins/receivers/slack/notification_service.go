@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/plugins/receivers/base"
 )
 
 const (
@@ -18,34 +19,22 @@ const (
 	defaultChannelType = TypeChannelChannel
 )
 
-// SlackNotificationService is a notification plugin service layer for slack
-type SlackNotificationService struct {
+// NotificationService is a notification plugin service layer for slack
+type NotificationService struct {
+	base.UnimplementedNotificationService
 	cryptoClient Encryptor
 	client       SlackCaller
 }
 
 // NewNotificationService returns slack service struct. This service implement [receiver.Notifier] interface.
-func NewNotificationService(client SlackCaller, cryptoClient Encryptor) *SlackNotificationService {
-	return &SlackNotificationService{
+func NewNotificationService(client SlackCaller, cryptoClient Encryptor) *NotificationService {
+	return &NotificationService{
 		client:       client,
 		cryptoClient: cryptoClient,
 	}
 }
 
-func (s *SlackNotificationService) ValidateConfigMap(notificationConfigMap map[string]interface{}) error {
-	notificationConfig := &NotificationConfig{}
-	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
-		return err
-	}
-
-	if err := notificationConfig.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *SlackNotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
+func (s *NotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationMessage.Configs, notificationConfig); err != nil {
 		return false, err
@@ -74,7 +63,7 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	return false, nil
 }
 
-func (s *SlackNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *NotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
@@ -94,7 +83,7 @@ func (s *SlackNotificationService) PreHookTransformConfigs(ctx context.Context, 
 	return notificationConfig.AsMap(), nil
 }
 
-func (s *SlackNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *NotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to notification config: %w", err)
@@ -114,7 +103,7 @@ func (s *SlackNotificationService) PostHookTransformConfigs(ctx context.Context,
 	return notificationConfig.AsMap(), nil
 }
 
-func (s *SlackNotificationService) DefaultTemplateOfProvider(templateName string) string {
+func (s *NotificationService) DefaultTemplateOfProvider(templateName string) string {
 	switch templateName {
 	case template.ReservedName_DefaultCortex:
 		return defaultCortexAlertTemplateBody

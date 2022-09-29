@@ -2,7 +2,7 @@ NAME="github.com/odpf/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "9ece66237001172a087325bd536ad6d944c801d9"
+PROTON_COMMIT := "f3654990b4e82d50daa25a3c41b7de37060807d9"
 
 .PHONY: all build test clean dist vet proto install
 
@@ -37,6 +37,10 @@ proto: ## Generate the protobuf files
 clean: ## Clean the build artifacts
 	rm -rf siren dist/
 
+update-swagger-md:
+	@echo "> updating reference api docs"
+	@npx swagger-markdown -i proto/siren.swagger.yaml -o docs/docs/reference/api.md
+
 install: ## install required dependencies
 	@echo "> installing dependencies"
 	go mod tidy
@@ -49,6 +53,17 @@ install: ## install required dependencies
 	go get -d github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.11.3
 	go get -d github.com/bufbuild/buf/cmd/buf@v1.7.0
 	go get github.com/envoyproxy/protoc-gen-validate@v0.6.7
+
+clean-doc:
+	@echo "> cleaning up auto-generated docs"
+	@rm -rf ./docs/docs/reference/cli
+	@rm -f ./docs/docs/reference/api.md
+
+# Generates the config file documentation.
+# remove ansi color & escape html
+doc: clean-doc update-swagger-md
+	@echo "> generate cli docs"
+	@go run . reference -s=false | sed '1 s,.*,# CLI,' > ./docs/docs/reference/cli.md
 
 help: ## Display this help message
 	@cat $(MAKEFILE_LIST) | grep -e "^[a-zA-Z_\-]*: *.*## *" | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

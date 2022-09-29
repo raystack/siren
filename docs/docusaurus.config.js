@@ -13,7 +13,10 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'odpf',
   projectName: 'siren',
-
+  customFields: {
+    apiVersion: 'v1beta1',
+    defaultHost: 'http://localhost:8080'
+  },
   themeConfig: {
     colorMode: {
       defaultMode: 'light',
@@ -75,7 +78,7 @@ module.exports = {
           ],
         },
       ],
-      copyright: `Copyright © 2020-${new Date().getFullYear()} ODPF`,
+      copyright: `Copyright © 2022-${new Date().getFullYear()} ODPF`,
     },
     prism: {
       theme: lightCodeTheme,

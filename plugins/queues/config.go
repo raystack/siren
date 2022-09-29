@@ -12,7 +12,7 @@ func (k Kind) String() string {
 }
 
 type Config struct {
-	Kind Kind `mapstructure:"kind" default:"inmemory"`
+	Kind Kind `mapstructure:"kind" yaml:"kind" default:"inmemory"`
 }
 
 type FilterCleanup struct {

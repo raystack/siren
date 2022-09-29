@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestSlackReceiverService_BuildData(t *testing.T) {
+func TestReceiverService_BuildData(t *testing.T) {
 	type testCase struct {
 		Description string
 		Setup       func(sc *mocks.SlackCaller, e *mocks.Encryptor)
@@ -81,7 +81,7 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 	}
 }
 
-func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
+func TestReceiverService_BuildNotificationConfig(t *testing.T) {
 	type testCase struct {
 		Description         string
 		SubscriptionConfigs map[string]interface{}

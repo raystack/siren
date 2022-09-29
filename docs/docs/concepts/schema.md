@@ -3,9 +3,6 @@
 Siren stores providers, namespaces, templates, rules and triggered alerts history, receivers and subscriptions in
 PostgresDB.
 
-We use GORM to handle database interactions and running migrations. GORM make it easier to create tables from Golang
-Struct declaration.
-
 ![Siren Architecture](../../static/img/siren_schema.svg)
 
 There are the tables as of now as described below:
@@ -22,12 +19,12 @@ There are the tables as of now as described below:
 
 - **receivers:** Stores the info of notification mediums e.g. Slack, HTTP Webhook, Pagerduty etc.
 
-- **subscriptions:** Stores alert routing logic based on matching conditions
+- **subscriptions:** Stores notification routing logic based on matching conditions
 
-**Providers table:**
+## Providers table
 
 | Column      | Type                     | Description                                                        | Example                            |
-|-------------|--------------------------|--------------------------------------------------------------------|------------------------------------|
+| ----------- | ------------------------ | ------------------------------------------------------------------ | ---------------------------------- |
 | id          | bigint                   | Primary key                                                        | 1                                  |
 | created_at  | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30` |
 | updated_at  | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30` |
@@ -37,10 +34,10 @@ There are the tables as of now as described below:
 | labels      | jsonb                    | generic kv pair that can be used for searching for appropriate row | `{"org":"odpf"}`                   |
 | credentials | jsonb                    | any configuration data for that provider e.g. auth                 | `{"bearer_token": "abcd"}`         |
 
-**Namespace table:**
+## Namespace table
 
 | Column      | Type                     | Description                                                        | Example                            |
-|-------------|--------------------------|--------------------------------------------------------------------|------------------------------------|
+| ----------- | ------------------------ | ------------------------------------------------------------------ | ---------------------------------- |
 | id          | bigint                   | Primary key                                                        | 1                                  |
 | created_at  | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30` |
 | updated_at  | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30` |
@@ -50,7 +47,7 @@ There are the tables as of now as described below:
 | credentials | jsonb                    | any configuration data for that namespace e.g. auth                | `{"bearer_token": "abcd"}`         |
 | provider_id | int                      | foreign key of provider to which this namespace belongs            | 4                                  |
 
-**Templates table:**
+## Templates table
 
 | Column     | Type                     | Description                                                                                          | Example                                                                                |
 | ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -59,16 +56,16 @@ There are the tables as of now as described below:
 | updated_at | timestamp with time zone | Last update timestamp                                                                                | `2021-03-05 12:37:56.905618+05:30`                                                     |
 | name       | text                     | name of the template, should be unique                                                               | `cpuHigh`                                                                              |
 | tags       | text[]                   | Tags array represented which resource types can use this template                                    | `{kafka, airflow}`                                                                     |
-| body       | text                     | Alert or recording rule body                                                                         | See examples body in [here](../guides/templates.md)                                    |
+| body       | text                     | Alert or recording rule body                                                                         | See examples body in [here](../guides/template.md)                                    |
 | variables  | jsonb                    | JSON variable listing all variables in the body with their data type, description and default value. | `[{"name": "for", "type": "string", "default": "bar", "description": "group period"}]` |
 
-**Rules Table:**
+## Rules Table
 
 Rules belong to a provider namespace, identified using an optional namespace, optional group_name and mandatory template
 and variables and status.
 
 | Column            | Type                     | Description                                                                                                                                                                                     | Example                                                   |
-|-------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+| ----------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | id                | bigint                   | Primary key                                                                                                                                                                                     | 1                                                         |
 | created_at        | timestamp with time zone | Creation timestamp                                                                                                                                                                              | `2021-03-05 12:37:56.905618+05:30`                        |
 | updated_at        | timestamp with time zone | Last update timestamp                                                                                                                                                                           | `2021-03-05 12:37:56.905618+05:30`                        |
@@ -82,7 +79,7 @@ and variables and status.
 **Alerts table:**
 
 | Column        | Type                     | Description                                            | Example                            |
-|---------------|--------------------------|--------------------------------------------------------|------------------------------------|
+| ------------- | ------------------------ | ------------------------------------------------------ | ---------------------------------- |
 | id            | bigint                   | Primary key                                            | 1                                  |
 | triggerd_at   | timestamp with time zone | Triggered timestamp                                    | `2021-03-05 12:37:56.905618+05:30` |
 | updated_at    | timestamp with time zone | Last update timestamp                                  | `2021-03-05 12:37:56.905618+05:30` |
@@ -93,10 +90,10 @@ and variables and status.
 | metric_value  | text                     | value of above metric on which the alert was triggered | `95%`                              |
 | severity      | text                     | severity level of alert (CRITICAL, WARNING, RESOLVED)  | `CRITICAL`                         |
 
-**Receivers:**
+## Receivers
 
 | Column        | Type                     | Description                                                        | Example                                  |
-|---------------|--------------------------|--------------------------------------------------------------------|------------------------------------------|
+| ------------- | ------------------------ | ------------------------------------------------------------------ | ---------------------------------------- |
 | id            | bigint                   | Primary key                                                        | 1                                        |
 | created_at    | timestamp with time zone | Creation timestamp                                                 | `2021-03-05 12:37:56.905618+05:30`       |
 | updated_at    | timestamp with time zone | Last update timestamp                                              | `2021-03-05 12:37:56.905618+05:30`       |
@@ -105,10 +102,10 @@ and variables and status.
 | labels        | jsonb                    | generic kv pair that can be used for searching for appropriate row | `{"team":"siren-devs"}`                  |
 | configuration | jsonb                    | configuration data for that receiver(depends on the type)          | `{"token": "abcd", "workspace": "Odpf"}` |
 
-**Subscriptions**
+## Subscriptions
 
 | Column       | Type                     | Description                                                                                             | Example                                                              |
-|--------------|--------------------------|---------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| ------------ | ------------------------ | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | id           | bigint                   | Primary key                                                                                             | 1                                                                    |
 | created_at   | timestamp with time zone | Creation timestamp                                                                                      | `2021-03-05 12:37:56.905618+05:30`                                   |
 | updated_at   | timestamp with time zone | Last update timestamp                                                                                   | `2021-03-05 12:37:56.905618+05:30`                                   |
