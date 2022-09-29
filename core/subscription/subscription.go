@@ -22,9 +22,9 @@ type Transactor interface {
 }
 
 type Receiver struct {
-	ID            uint64            `json:"id"`
-	Type          string            `json:"type"`
-	Configuration map[string]string `json:"configuration"`
+	ID            uint64                 `json:"id"`
+	Type          string                 `json:"type"`
+	Configuration map[string]interface{} `json:"configuration"`
 }
 
 type Subscription struct {

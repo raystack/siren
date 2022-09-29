@@ -8,10 +8,9 @@ import "context"
 //
 //go:generate mockery --name=Resolver -r --case underscore --with-expecter --structname Resolver --filename resolver.go --output=./mocks
 type Resolver interface {
-	PopulateDataFromConfigs(ctx context.Context, configs Configurations) (map[string]interface{}, error)
-	Notify(ctx context.Context, configs Configurations, payloadMessage map[string]interface{}) error
-	ValidateConfigurations(configs Configurations) error
-	EnrichSubscriptionConfig(subsConfs map[string]string, configs Configurations) (map[string]string, error)
-	PreHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
-	PostHookTransformConfigs(ctx context.Context, configs Configurations) (Configurations, error)
+	BuildData(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
+	Notify(ctx context.Context, configs map[string]interface{}, payloadMessage map[string]interface{}) error
+	BuildNotificationConfig(subscriptionConfigMap map[string]interface{}, receiverConfigMap map[string]interface{}) (map[string]interface{}, error)
+	PreHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
+	PostHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
 }

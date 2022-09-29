@@ -12,7 +12,7 @@ func TestNotification_ToSlackMessage(t *testing.T) {
 	type testCase struct {
 		Description          string
 		Message              map[string]interface{}
-		ExpectedSlackMessage *slack.Message
+		ExpectedSlackMessage *slack.MessageGoSlack
 		ExpectedErrString    string
 	}
 
@@ -59,7 +59,7 @@ func TestNotification_ToSlackMessage(t *testing.T) {
 					},
 				},
 			},
-			ExpectedSlackMessage: &slack.Message{
+			ExpectedSlackMessage: &slack.MessageGoSlack{
 				ReceiverName: "receiver_name",
 				ReceiverType: "channel",
 				Message:      "message",

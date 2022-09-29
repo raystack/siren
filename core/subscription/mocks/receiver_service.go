@@ -22,6 +22,53 @@ func (_m *ReceiverService) EXPECT() *ReceiverService_Expecter {
 	return &ReceiverService_Expecter{mock: &_m.Mock}
 }
 
+// BuildNotificationConfig provides a mock function with given fields: subsConfig, rcv
+func (_m *ReceiverService) BuildNotificationConfig(subsConfig map[string]interface{}, rcv *receiver.Receiver) (map[string]interface{}, error) {
+	ret := _m.Called(subsConfig, rcv)
+
+	var r0 map[string]interface{}
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, *receiver.Receiver) map[string]interface{}); ok {
+		r0 = rf(subsConfig, rcv)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, *receiver.Receiver) error); ok {
+		r1 = rf(subsConfig, rcv)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReceiverService_BuildNotificationConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildNotificationConfig'
+type ReceiverService_BuildNotificationConfig_Call struct {
+	*mock.Call
+}
+
+// BuildNotificationConfig is a helper method to define mock.On call
+//  - subsConfig map[string]interface{}
+//  - rcv *receiver.Receiver
+func (_e *ReceiverService_Expecter) BuildNotificationConfig(subsConfig interface{}, rcv interface{}) *ReceiverService_BuildNotificationConfig_Call {
+	return &ReceiverService_BuildNotificationConfig_Call{Call: _e.mock.On("BuildNotificationConfig", subsConfig, rcv)}
+}
+
+func (_c *ReceiverService_BuildNotificationConfig_Call) Run(run func(subsConfig map[string]interface{}, rcv *receiver.Receiver)) *ReceiverService_BuildNotificationConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(map[string]interface{}), args[1].(*receiver.Receiver))
+	})
+	return _c
+}
+
+func (_c *ReceiverService_BuildNotificationConfig_Call) Return(_a0 map[string]interface{}, _a1 error) *ReceiverService_BuildNotificationConfig_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
 // Create provides a mock function with given fields: ctx, rcv
 func (_m *ReceiverService) Create(ctx context.Context, rcv *receiver.Receiver) error {
 	ret := _m.Called(ctx, rcv)
@@ -95,53 +142,6 @@ func (_c *ReceiverService_Delete_Call) Run(run func(ctx context.Context, id uint
 
 func (_c *ReceiverService_Delete_Call) Return(_a0 error) *ReceiverService_Delete_Call {
 	_c.Call.Return(_a0)
-	return _c
-}
-
-// EnrichSubscriptionConfig provides a mock function with given fields: subsConfig, rcv
-func (_m *ReceiverService) EnrichSubscriptionConfig(subsConfig map[string]string, rcv *receiver.Receiver) (map[string]string, error) {
-	ret := _m.Called(subsConfig, rcv)
-
-	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(map[string]string, *receiver.Receiver) map[string]string); ok {
-		r0 = rf(subsConfig, rcv)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]string)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]string, *receiver.Receiver) error); ok {
-		r1 = rf(subsConfig, rcv)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ReceiverService_EnrichSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrichSubscriptionConfig'
-type ReceiverService_EnrichSubscriptionConfig_Call struct {
-	*mock.Call
-}
-
-// EnrichSubscriptionConfig is a helper method to define mock.On call
-//  - subsConfig map[string]string
-//  - rcv *receiver.Receiver
-func (_e *ReceiverService_Expecter) EnrichSubscriptionConfig(subsConfig interface{}, rcv interface{}) *ReceiverService_EnrichSubscriptionConfig_Call {
-	return &ReceiverService_EnrichSubscriptionConfig_Call{Call: _e.mock.On("EnrichSubscriptionConfig", subsConfig, rcv)}
-}
-
-func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Run(run func(subsConfig map[string]string, rcv *receiver.Receiver)) *ReceiverService_EnrichSubscriptionConfig_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]string), args[1].(*receiver.Receiver))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *ReceiverService_EnrichSubscriptionConfig_Call {
-	_c.Call.Return(_a0, _a1)
 	return _c
 }
 

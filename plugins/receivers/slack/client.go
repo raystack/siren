@@ -75,7 +75,9 @@ func NewClient(opts ...ClientOption) *Client {
 }
 
 // createClient create slack client with 3 options
-// goslack Client, token / client secret
+// - goslack Client
+// - token
+// - client secret
 // the order that took precedence
 // goslackClient - token - client secret
 // e.g. if user passes goslackClient, it will ignore the others
@@ -166,7 +168,7 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOpt
 }
 
 // Notify sends message to a specific slack channel
-func (c *Client) Notify(ctx context.Context, message *Message, opts ...ClientCallOption) error {
+func (c *Client) Notify(ctx context.Context, message *MessageGoSlack, opts ...ClientCallOption) error {
 	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
 		return fmt.Errorf("goslack client creation failure: %w", err)

@@ -2,50 +2,55 @@ package httpreceiver
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/odpf/siren/core/receiver"
+	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/plugins"
 )
 
-// HTTPService is a receiver plugin service layer for http
-type HTTPService struct{}
+// HTTPReceiverService is a receiver plugin service layer for http
+type HTTPReceiverService struct{}
 
 // NewReceiverService returns httpreceiver service struct. This service implement [receiver.Resolver] interface.
-func NewReceiverService() *HTTPService {
-	return &HTTPService{}
+func NewReceiverService() *HTTPReceiverService {
+	return &HTTPReceiverService{}
 }
 
-func (s *HTTPService) Notify(ctx context.Context, configurations receiver.Configurations, payloadMessage map[string]interface{}) error {
+func (s *HTTPReceiverService) Notify(ctx context.Context, configurations map[string]interface{}, payloadMessage map[string]interface{}) error {
 	return plugins.ErrNotImplemented
 }
 
-func (s *HTTPService) PreHookTransformConfigs(ctx context.Context, configurations receiver.Configurations) (receiver.Configurations, error) {
+func (s *HTTPReceiverService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+	receiverConfig := &ReceiverConfig{}
+	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
+	}
+
+	if err := receiverConfig.Validate(); err != nil {
+		return nil, errors.ErrInvalid.WithMsgf(err.Error())
+	}
+
 	return configurations, nil
 }
 
-func (s *HTTPService) PostHookTransformConfigs(ctx context.Context, configurations receiver.Configurations) (receiver.Configurations, error) {
+func (s *HTTPReceiverService) PostHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	return configurations, nil
 }
 
-func (s *HTTPService) PopulateDataFromConfigs(ctx context.Context, configurations receiver.Configurations) (map[string]interface{}, error) {
+func (s *HTTPReceiverService) BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	return map[string]interface{}{}, nil
 }
 
-func (s *HTTPService) ValidateConfigurations(configurations receiver.Configurations) error {
-	_, err := configurations.GetString("url")
-	if err != nil {
-		return err
+func (s *HTTPReceiverService) BuildNotificationConfig(subsConfs map[string]interface{}, receiverConfs map[string]interface{}) (map[string]interface{}, error) {
+	receiverConfig := &ReceiverConfig{}
+	if err := mapstructure.Decode(receiverConfig, receiverConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
 	}
-	return nil
-}
 
-func (s *HTTPService) EnrichSubscriptionConfig(subsConfs map[string]string, receiverConfs receiver.Configurations) (map[string]string, error) {
-	mapConf := make(map[string]string)
-	if val, ok := receiverConfs["url"]; ok {
-		if mapConf["url"], ok = val.(string); !ok {
-			return nil, errors.New("url config from receiver should be in string")
-		}
+	notificationConfig := NotificationConfig{
+		ReceiverConfig: *receiverConfig,
 	}
-	return mapConf, nil
+
+	return notificationConfig.AsMap(), nil
 }

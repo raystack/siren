@@ -98,53 +98,6 @@ func (_c *ReceiverService_Delete_Call) Return(_a0 error) *ReceiverService_Delete
 	return _c
 }
 
-// EnrichSubscriptionConfig provides a mock function with given fields: subsConfs, rcv
-func (_m *ReceiverService) EnrichSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error) {
-	ret := _m.Called(subsConfs, rcv)
-
-	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(map[string]string, *receiver.Receiver) map[string]string); ok {
-		r0 = rf(subsConfs, rcv)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]string)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]string, *receiver.Receiver) error); ok {
-		r1 = rf(subsConfs, rcv)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ReceiverService_EnrichSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrichSubscriptionConfig'
-type ReceiverService_EnrichSubscriptionConfig_Call struct {
-	*mock.Call
-}
-
-// EnrichSubscriptionConfig is a helper method to define mock.On call
-//  - subsConfs map[string]string
-//  - rcv *receiver.Receiver
-func (_e *ReceiverService_Expecter) EnrichSubscriptionConfig(subsConfs interface{}, rcv interface{}) *ReceiverService_EnrichSubscriptionConfig_Call {
-	return &ReceiverService_EnrichSubscriptionConfig_Call{Call: _e.mock.On("EnrichSubscriptionConfig", subsConfs, rcv)}
-}
-
-func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Run(run func(subsConfs map[string]string, rcv *receiver.Receiver)) *ReceiverService_EnrichSubscriptionConfig_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]string), args[1].(*receiver.Receiver))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_EnrichSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *ReceiverService_EnrichSubscriptionConfig_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
 // Get provides a mock function with given fields: ctx, id
 func (_m *ReceiverService) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
 	ret := _m.Called(ctx, id)

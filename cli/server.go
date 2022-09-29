@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
@@ -23,6 +25,7 @@ import (
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/zaputil"
 	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/queues/inmemory"
 	"github.com/odpf/siren/plugins/receivers/httpreceiver"
 	"github.com/odpf/siren/plugins/receivers/pagerduty"
 	"github.com/odpf/siren/plugins/receivers/slack"
@@ -57,8 +60,6 @@ func serverCmd() *cobra.Command {
 
 func serverInitCommand() *cobra.Command {
 	var configFile string
-	// var resourcesURL string
-	// var rulesURL string
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -98,7 +99,7 @@ func serverStartCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return StartServer(cfg)
+			return StartServer(cmd.Context(), cfg)
 		},
 	}
 
@@ -130,7 +131,7 @@ func serverMigrateCommand() *cobra.Command {
 	return c
 }
 
-func StartServer(cfg config.Config) error {
+func StartServer(ctx context.Context, cfg config.Config) error {
 	nr, err := telemetry.New(cfg.NewRelic)
 	if err != nil {
 		return err
@@ -206,6 +207,12 @@ func StartServer(cfg config.Config) error {
 		subscription.RegisterProviderPlugin(provider.TypeCortex, cortexProviderService),
 	)
 
+	slackNotificationService := slack.NewNotificationService(slackClient)
+	queue := inmemory.New(logger)
+	notificationService := notification.NewService(logger, queue, subscriptionService, map[string]notification.Notifier{
+		receiver.TypeSlack: slackNotificationService,
+	})
+
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,
 		RuleService:         ruleService,
@@ -214,8 +221,23 @@ func StartServer(cfg config.Config) error {
 		NamespaceService:    namespaceService,
 		ReceiverService:     receiverService,
 		SubscriptionService: subscriptionService,
+		NotificationService: notificationService,
 	}
+
+	// run worker
+	notificationHandler := notification.NewHandler(logger, queue,
+		map[string]notification.Notifier{
+			receiver.TypeSlack: slackNotificationService,
+		})
+	notificationWorker := notification.NewWorker(logger, []*notification.Handler{notificationHandler}...)
+	go func(ctx context.Context) {
+		if err := notificationWorker.Run(ctx); err != nil {
+			logger.Error("worker error", "error", err)
+		}
+	}(ctx)
+
 	return server.RunServer(
+		ctx,
 		cfg.Service,
 		logger,
 		nr,

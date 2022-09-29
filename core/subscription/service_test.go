@@ -143,7 +143,7 @@ func TestService_Create(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -170,7 +170,7 @@ func TestService_Create(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -186,7 +186,7 @@ func TestService_Create(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]string{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
 		testCases = []testCase{
 			{
@@ -394,7 +394,7 @@ func TestService_Update(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -421,7 +421,7 @@ func TestService_Update(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -437,7 +437,7 @@ func TestService_Update(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]string{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
 		testCases = []testCase{
 			{
@@ -660,7 +660,7 @@ func TestService_Delete(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -687,7 +687,7 @@ func TestService_Delete(t *testing.T) {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -703,7 +703,7 @@ func TestService_Delete(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]string{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
 		testCases = []testCase{
 			{
@@ -981,13 +981,13 @@ func TestAssignReceivers(t *testing.T) {
 			Receivers: []subscription.Receiver{
 				{
 					ID: 1,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"token": "abcabc",
 					},
 				},
 				{
 					ID: 2,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"token": "abcabc",
 					},
 				},
@@ -997,13 +997,13 @@ func TestAssignReceivers(t *testing.T) {
 			Receivers: []subscription.Receiver{
 				{
 					ID: 3,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"token": "abcabc",
 					},
 				},
 				{
 					ID: 4,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"token": "abcabc",
 					},
 				},
@@ -1035,7 +1035,7 @@ func TestAssignReceivers(t *testing.T) {
 				4: {ID: 4, Type: receiver.TypeSlack},
 			},
 			Setup: func(rs *mocks.ReceiverService) {
-				rs.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
+				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
 			},
 			ErrString: "some error",
 		},
@@ -1054,7 +1054,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   1,
 							Type: receiver.TypeHTTP,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -1062,7 +1062,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   2,
 							Type: receiver.TypePagerDuty,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -1074,7 +1074,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   3,
 							Type: receiver.TypeSlack,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -1082,7 +1082,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   4,
 							Type: receiver.TypeSlack,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -1091,7 +1091,7 @@ func TestAssignReceivers(t *testing.T) {
 				},
 			},
 			Setup: func(rs *mocks.ReceiverService) {
-				rs.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]string{
+				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{
 					"token":  "abcabc",
 					"newkey": "newvalue",
 				}, nil)

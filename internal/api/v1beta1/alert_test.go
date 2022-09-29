@@ -93,14 +93,14 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		Alerts: []*sirenv1beta1.CortexAlert{
 			{
 				Status: "foo",
-				Labels: &sirenv1beta1.Labels{
-					Severity: "CRITICAL",
+				Labels: map[string]string{
+					"severity": "CRITICAL",
 				},
-				Annotations: &sirenv1beta1.Annotations{
-					Resource:    "foo",
-					Template:    "random",
-					MetricName:  "bar",
-					MetricValue: "30",
+				Annotations: map[string]string{
+					"resource":     "foo",
+					"template":     "random",
+					"metric_name":  "bar",
+					"metric_value": "30",
 				},
 				StartsAt: timenow,
 			},
@@ -142,14 +142,14 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Alerts: []*sirenv1beta1.CortexAlert{
 				{
 					Status: "resolved",
-					Labels: &sirenv1beta1.Labels{
-						Severity: "CRITICAL",
+					Labels: map[string]string{
+						"severity": "CRITICAL",
 					},
-					Annotations: &sirenv1beta1.Annotations{
-						Resource:    "foo",
-						Template:    "random",
-						MetricName:  "bar",
-						MetricValue: "30",
+					Annotations: map[string]string{
+						"resource":     "foo",
+						"template":     "random",
+						"metric_name":  "bar",
+						"metric_value": "30",
 					},
 					StartsAt: timenow,
 				},
@@ -212,26 +212,26 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Alerts: []*sirenv1beta1.CortexAlert{
 				{
 					Status: "foo",
-					Labels: &sirenv1beta1.Labels{
-						Severity: "CRITICAL",
+					Labels: map[string]string{
+						"severity": "CRITICAL",
 					},
-					Annotations: &sirenv1beta1.Annotations{
-						Resource:    "foo",
-						MetricName:  "bar",
-						MetricValue: "30",
+					Annotations: map[string]string{
+						"resource":     "foo",
+						"metric_name":  "bar",
+						"metric_value": "30",
 					},
 					StartsAt: timenow,
 				},
 				{
 					Status: "foo",
-					Labels: &sirenv1beta1.Labels{
-						Severity: "CRITICAL",
+					Labels: map[string]string{
+						"severity": "CRITICAL",
 					},
-					Annotations: &sirenv1beta1.Annotations{
-						Resource:    "foo",
-						Template:    "random",
-						MetricName:  "bar",
-						MetricValue: "30",
+					Annotations: map[string]string{
+						"resource":     "foo",
+						"template":     "random",
+						"metric_name":  "bar",
+						"metric_value": "30",
 					},
 					StartsAt: timenow,
 				},

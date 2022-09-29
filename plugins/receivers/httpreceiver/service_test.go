@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/plugins/receivers/httpreceiver"
 )
 
@@ -14,7 +13,7 @@ func TestHTTPService_Functions(t *testing.T) {
 		svc := httpreceiver.NewReceiverService()
 
 		expectedErrorString := "operation not supported"
-		err := svc.Notify(context.TODO(), receiver.Configurations{}, map[string]interface{}{})
+		err := svc.Notify(context.TODO(), map[string]interface{}{}, map[string]interface{}{})
 
 		if err.Error() != expectedErrorString {
 			t.Fatalf("got error %s, expected was %s", err.Error(), expectedErrorString)
@@ -24,7 +23,7 @@ func TestHTTPService_Functions(t *testing.T) {
 	t.Run("should return as-is if populate receiver is called", func(t *testing.T) {
 		svc := httpreceiver.NewReceiverService()
 
-		got, err := svc.PopulateDataFromConfigs(context.TODO(), make(receiver.Configurations))
+		got, err := svc.BuildData(context.TODO(), make(map[string]interface{}))
 
 		if err != nil {
 			t.Fatalf("got error %s, expected was nil", err.Error())
@@ -36,48 +35,48 @@ func TestHTTPService_Functions(t *testing.T) {
 	})
 }
 
-func TestHTTPReceiverService_ValidateConfigurations(t *testing.T) {
-	type testCase struct {
-		Description string
-		Confs       receiver.Configurations
-		ErrString   string
-	}
+// func TestHTTPReceiverService_ValidateConfigurations(t *testing.T) {
+// 	type testCase struct {
+// 		Description string
+// 		Confs       map[string]interface{}
+// 		ErrString   string
+// 	}
 
-	var (
-		testCases = []testCase{
-			{
-				Description: "should return error if 'url' is empty",
-				Confs:       receiver.Configurations{},
-				ErrString:   "no value supplied for required configurations map key \"url\"",
-			},
-			{
-				Description: "should return nil error if all configurations are valid",
-				Confs: receiver.Configurations{
-					"url": "url",
-				},
-			},
-		}
-	)
+// 	var (
+// 		testCases = []testCase{
+// 			{
+// 				Description: "should return error if 'url' is empty",
+// 				Confs:       map[string]interface{}{},
+// 				ErrString:   "no value supplied for required configurations map key \"url\"",
+// 			},
+// 			{
+// 				Description: "should return nil error if all configurations are valid",
+// 				Confs: map[string]interface{}{
+// 					"url": "url",
+// 				},
+// 			},
+// 		}
+// 	)
 
-	for _, tc := range testCases {
-		t.Run(tc.Description, func(t *testing.T) {
-			svc := httpreceiver.NewReceiverService()
+// 	for _, tc := range testCases {
+// 		t.Run(tc.Description, func(t *testing.T) {
+// 			svc := httpreceiver.NewReceiverService()
 
-			err := svc.ValidateConfigurations(tc.Confs)
-			if err != nil {
-				if tc.ErrString != err.Error() {
-					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
-			}
-		})
-	}
-}
+// 			err := svc.ValidateConfigurations(tc.Confs)
+// 			if err != nil {
+// 				if tc.ErrString != err.Error() {
+// 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+// 				}
+// 			}
+// 		})
+// 	}
+// }
 
 func TestHTTPReceiverService_GetSubscriptionConfig(t *testing.T) {
 	type testCase struct {
 		Description         string
-		SubscriptionConfigs map[string]string
-		ReceiverConfigs     receiver.Configurations
+		SubscriptionConfigs map[string]interface{}
+		ReceiverConfigs     map[string]interface{}
 		ExpectedConfigMap   map[string]string
 		ErrString           string
 	}
@@ -86,7 +85,7 @@ func TestHTTPReceiverService_GetSubscriptionConfig(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if receiver 'url' exist but it is not string",
-				ReceiverConfigs: receiver.Configurations{
+				ReceiverConfigs: map[string]interface{}{
 					"url": 123,
 				},
 				ErrString: "url config from receiver should be in string",
@@ -97,7 +96,7 @@ func TestHTTPReceiverService_GetSubscriptionConfig(t *testing.T) {
 			},
 			{
 				Description: "should return configs with token if receiver 'url' exist in string",
-				ReceiverConfigs: receiver.Configurations{
+				ReceiverConfigs: map[string]interface{}{
 					"url": "url",
 				},
 				ExpectedConfigMap: map[string]string{
@@ -111,7 +110,7 @@ func TestHTTPReceiverService_GetSubscriptionConfig(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			svc := httpreceiver.NewReceiverService()
 
-			got, err := svc.EnrichSubscriptionConfig(tc.SubscriptionConfigs, tc.ReceiverConfigs)
+			got, err := svc.BuildNotificationConfig(tc.SubscriptionConfigs, tc.ReceiverConfigs)
 			if tc.ErrString != "" {
 				if tc.ErrString != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

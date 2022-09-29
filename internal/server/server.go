@@ -42,6 +42,7 @@ func (cfg Config) addr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port
 
 // RunServer runs the application server
 func RunServer(
+	ctx context.Context,
 	c Config,
 	logger log.Logger,
 	nr *newrelic.Application,
@@ -76,7 +77,7 @@ func RunServer(
 	)
 
 	// init http proxy
-	grpcDialCtx, grpcDialCancel := context.WithTimeout(context.Background(), time.Second*5)
+	grpcDialCtx, grpcDialCancel := context.WithTimeout(ctx, time.Second*5)
 	defer grpcDialCancel()
 
 	grpcConn, err := grpc.DialContext(grpcDialCtx, c.addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -101,7 +102,7 @@ func RunServer(
 
 	reflection.Register(grpcServer)
 
-	runtimeCtx, runtimeCancel := context.WithCancel(context.Background())
+	runtimeCtx, runtimeCancel := context.WithCancel(ctx)
 	defer runtimeCancel()
 
 	sirenServiceRPC := v1beta1.NewGRPCServer(

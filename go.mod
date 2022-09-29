@@ -16,7 +16,6 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
-	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/grafana/cortex-tools v0.7.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
@@ -27,10 +26,10 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.4
 	github.com/mcuadros/go-defaults v1.2.0
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
 	github.com/odpf/salt v0.2.2-0.20220920085528-6d95c350af71
-	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939

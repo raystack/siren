@@ -2,8 +2,9 @@ package pagerduty
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/odpf/siren/core/receiver"
+	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/plugins"
 )
@@ -16,37 +17,40 @@ func NewReceiverService() *PagerDutyService {
 	return &PagerDutyService{}
 }
 
-func (s *PagerDutyService) Notify(ctx context.Context, configurations receiver.Configurations, payloadMessage map[string]interface{}) error {
+func (s *PagerDutyService) Notify(ctx context.Context, configurations map[string]interface{}, payloadMessage map[string]interface{}) error {
 	return plugins.ErrNotImplemented
 }
 
-func (s *PagerDutyService) PreHookTransformConfigs(ctx context.Context, configurations receiver.Configurations) (receiver.Configurations, error) {
+func (s *PagerDutyService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+	receiverConfig := &ReceiverConfig{}
+	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
+	}
+
+	if err := receiverConfig.Validate(); err != nil {
+		return nil, errors.ErrInvalid.WithMsgf(err.Error())
+	}
+
 	return configurations, nil
 }
 
-func (s *PagerDutyService) PostHookTransformConfigs(ctx context.Context, configurations receiver.Configurations) (receiver.Configurations, error) {
+func (s *PagerDutyService) PostHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	return configurations, nil
 }
 
-func (s *PagerDutyService) PopulateDataFromConfigs(ctx context.Context, configurations receiver.Configurations) (map[string]interface{}, error) {
+func (s *PagerDutyService) BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	return map[string]interface{}{}, nil
 }
 
-func (s *PagerDutyService) ValidateConfigurations(configurations receiver.Configurations) error {
-	_, err := configurations.GetString("service_key")
-	if err != nil {
-		return err
+func (s *PagerDutyService) BuildNotificationConfig(subsConfs map[string]interface{}, receiverConfs map[string]interface{}) (map[string]interface{}, error) {
+	receiverConfig := &ReceiverConfig{}
+	if err := mapstructure.Decode(receiverConfig, receiverConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
 	}
 
-	return nil
-}
-
-func (s *PagerDutyService) EnrichSubscriptionConfig(subsConfs map[string]string, receiverConfs receiver.Configurations) (map[string]string, error) {
-	mapConf := make(map[string]string)
-	if val, ok := receiverConfs["service_key"]; ok {
-		if mapConf["service_key"], ok = val.(string); !ok {
-			return nil, errors.New("service_key config from receiver should be in string")
-		}
+	notificationConfig := NotificationConfig{
+		ReceiverConfig: *receiverConfig,
 	}
-	return mapConf, nil
+
+	return notificationConfig.AsMap(), nil
 }

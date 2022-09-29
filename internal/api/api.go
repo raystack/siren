@@ -5,6 +5,7 @@ import (
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
@@ -44,7 +45,6 @@ type ReceiverService interface {
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
 	Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error
-	EnrichSubscriptionConfig(subsConfs map[string]string, rcv *receiver.Receiver) (map[string]string, error)
 }
 
 //go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks
@@ -71,6 +71,11 @@ type TemplateService interface {
 	Render(context.Context, string, map[string]string) (string, error)
 }
 
+//go:generate mockery --name=NotificationService -r --case underscore --with-expecter --structname NotificationService --filename notification_service.go --output=./mocks
+type NotificationService interface {
+	Dispatch(ctx context.Context, n notification.Notification) error
+}
+
 type Deps struct {
 	TemplateService     TemplateService
 	RuleService         RuleService
@@ -79,4 +84,5 @@ type Deps struct {
 	NamespaceService    NamespaceService
 	ReceiverService     ReceiverService
 	SubscriptionService SubscriptionService
+	NotificationService NotificationService
 }

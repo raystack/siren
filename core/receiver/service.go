@@ -8,19 +8,19 @@ import (
 
 // Service handles business logic
 type Service struct {
-	registry   map[string]Resolver
-	repository Repository
+	receiverPlugins map[string]Resolver
+	repository      Repository
 }
 
-func NewService(repository Repository, registry map[string]Resolver) *Service {
+func NewService(repository Repository, receiverPlugins map[string]Resolver) *Service {
 	return &Service{
-		repository: repository,
-		registry:   registry,
+		repository:      repository,
+		receiverPlugins: receiverPlugins,
 	}
 }
 
 func (s *Service) getReceiverPlugin(receiverType string) (Resolver, error) {
-	receiverPlugin, exist := s.registry[receiverType]
+	receiverPlugin, exist := s.receiverPlugins[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
 	}
@@ -58,10 +58,6 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
-	if err := receiverPlugin.ValidateConfigurations(rcv.Configurations); err != nil {
-		return errors.ErrInvalid.WithMsgf(err.Error())
-	}
-
 	rcv.Configurations, err = receiverPlugin.PreHookTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
 		return err
@@ -95,7 +91,7 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 	}
 	rcv.Configurations = transformedConfigs
 
-	populatedData, err := receiverPlugin.PopulateDataFromConfigs(ctx, rcv.Configurations)
+	populatedData, err := receiverPlugin.BuildData(ctx, rcv.Configurations)
 	if err != nil {
 		return nil, err
 	}
@@ -108,10 +104,6 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
-		return err
-	}
-
-	if err := receiverPlugin.ValidateConfigurations(rcv.Configurations); err != nil {
 		return err
 	}
 
@@ -148,7 +140,7 @@ func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage map[stri
 	return receiverPlugin.Notify(ctx, rcv.Configurations, payloadMessage)
 }
 
-func (s *Service) EnrichSubscriptionConfig(subsConfs map[string]string, rcv *Receiver) (map[string]string, error) {
+func (s *Service) BuildNotificationConfig(subsConfs map[string]interface{}, rcv *Receiver) (map[string]interface{}, error) {
 	if rcv == nil {
 		return nil, errors.ErrInvalid.WithCausef("receiver is nil")
 	}
@@ -158,5 +150,5 @@ func (s *Service) EnrichSubscriptionConfig(subsConfs map[string]string, rcv *Rec
 		return nil, err
 	}
 
-	return receiverPlugin.EnrichSubscriptionConfig(subsConfs, rcv.Configurations)
+	return receiverPlugin.BuildNotificationConfig(subsConfs, rcv.Configurations)
 }

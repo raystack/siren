@@ -21,6 +21,7 @@ type GRPCServer struct {
 	namespaceService    api.NamespaceService
 	receiverService     api.ReceiverService
 	subscriptionService api.SubscriptionService
+	notificationService api.NotificationService
 }
 
 func NewGRPCServer(
@@ -37,6 +38,7 @@ func NewGRPCServer(
 		namespaceService:    apiDeps.NamespaceService,
 		receiverService:     apiDeps.ReceiverService,
 		subscriptionService: apiDeps.SubscriptionService,
+		notificationService: apiDeps.NotificationService,
 	}
 }
 

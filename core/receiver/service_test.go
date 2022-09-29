@@ -50,7 +50,7 @@ func TestService_ListReceivers(t *testing.T) {
 							UpdatedAt: timeNow,
 						},
 					}, nil)
-					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), receiver.Configurations{
+					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
 						"token": "key",
 					}).Return(nil, errors.New("decrypt error"))
 				},
@@ -85,9 +85,9 @@ func TestService_ListReceivers(t *testing.T) {
 							UpdatedAt: timeNow,
 						},
 					}, nil)
-					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), receiver.Configurations{
+					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
 						"token": "key",
-					}).Return(receiver.Configurations{
+					}).Return(map[string]interface{}{
 						"token": "decrypted_key",
 					}, nil)
 				},
@@ -154,26 +154,22 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if configuration is not valid",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(errors.New("some error"))
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(nil, errors.ErrInvalid)
+
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
 					Configurations: map[string]interface{}{
-						"token": "key",
+						"token": struct{}{},
 					},
 				},
-				Err: errors.New("some error"),
+				Err: errors.ErrInvalid,
 			},
 			{
 				Description: "should return error if encrypt return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(nil, errors.New("some error"))
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -195,10 +191,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if Create repository return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
@@ -221,10 +214,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if no error returned",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
@@ -326,7 +316,7 @@ func TestService_GetReceiver(t *testing.T) {
 						CreatedAt: timeNow,
 						UpdatedAt: timeNow,
 					}, nil)
-					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), receiver.Configurations{
+					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
 						"token": "key",
 					}).Return(nil, errors.New("decrypt error"))
 				},
@@ -348,12 +338,12 @@ func TestService_GetReceiver(t *testing.T) {
 						CreatedAt: timeNow,
 						UpdatedAt: timeNow,
 					}, nil)
-					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), receiver.Configurations{
+					ss.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
 						"token": "key",
-					}).Return(receiver.Configurations{
+					}).Return(map[string]interface{}{
 						"token": "decrypted_key",
 					}, nil)
-					ss.EXPECT().PopulateDataFromConfigs(mock.AnythingOfType("*context.emptyCtx"), receiver.Configurations{
+					ss.EXPECT().BuildData(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
 						"token": "decrypted_key",
 					}).Return(map[string]interface{}{
 						"newdata": "populated",
@@ -423,9 +413,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if validate configuration return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(errors.New("some error"))
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(nil, errors.ErrInvalid)
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -439,10 +427,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if encrypt return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(nil, errors.New("some error"))
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -464,10 +449,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if Update repository return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
@@ -490,10 +472,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if no error returned",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
@@ -515,10 +494,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			}, {
 				Description: "should return error not found if repository return not found error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
-					ss.EXPECT().ValidateConfigurations(receiver.Configurations{
-						"token": "key",
-					}).Return(nil)
-					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
@@ -632,11 +608,11 @@ func TestService_Notify(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
 						Type: receiver.TypeSlack,
 					}, nil)
-					ts.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ts.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "decrypted_key",
 					}, nil)
-					ts.EXPECT().PopulateDataFromConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(map[string]interface{}{}, nil)
-					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations"), mock.AnythingOfType("map[string]interface {}")).Return(errors.New("some error"))
+					ts.EXPECT().BuildData(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{}, nil)
+					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("map[string]interface {}")).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -646,11 +622,11 @@ func TestService_Notify(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), receiverID).Return(&receiver.Receiver{
 						Type: receiver.TypeSlack,
 					}, nil)
-					ts.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(receiver.Configurations{
+					ts.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{
 						"token": "decrypted_key",
 					}, nil)
-					ts.EXPECT().PopulateDataFromConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations")).Return(map[string]interface{}{}, nil)
-					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("receiver.Configurations"), mock.AnythingOfType("map[string]interface {}")).Return(nil)
+					ts.EXPECT().BuildData(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{}, nil)
+					ts.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("map[string]interface {}")).Return(nil)
 				},
 			},
 		}
@@ -684,7 +660,7 @@ func TestService_Notify(t *testing.T) {
 	}
 }
 
-func TestService_EnrichSubscriptionConfig(t *testing.T) {
+func TestService_BuildNotificationConfig(t *testing.T) {
 	type testCase struct {
 		Description string
 		Setup       func(*mocks.Resolver)
@@ -709,7 +685,7 @@ func TestService_EnrichSubscriptionConfig(t *testing.T) {
 			{
 				Description: "should return error if type receiver enrich subscription config is returning error",
 				Setup: func(ts *mocks.Resolver) {
-					ts.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("receiver.Configurations")).Return(nil, errors.New("some error"))
+					ts.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("map[string]interface{}")).Return(nil, errors.New("some error"))
 				},
 				Receiver: &receiver.Receiver{
 					Type: receiver.TypeSlack,
@@ -719,7 +695,7 @@ func TestService_EnrichSubscriptionConfig(t *testing.T) {
 			{
 				Description: "should return no error if type receiver enrich subscription config is returning no error",
 				Setup: func(ts *mocks.Resolver) {
-					ts.EXPECT().EnrichSubscriptionConfig(mock.AnythingOfType("map[string]string"), mock.AnythingOfType("receiver.Configurations")).Return(map[string]string{}, nil)
+					ts.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("map[string]interface{}")).Return(map[string]interface{}{}, nil)
 				},
 				Receiver: &receiver.Receiver{
 					Type: receiver.TypeSlack,
@@ -742,7 +718,7 @@ func TestService_EnrichSubscriptionConfig(t *testing.T) {
 
 			tc.Setup(ResolverMock)
 
-			_, err := svc.EnrichSubscriptionConfig(map[string]string{}, tc.Receiver)
+			_, err := svc.BuildNotificationConfig(map[string]interface{}{}, tc.Receiver)
 			if tc.ErrString != "" {
 				if tc.ErrString != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

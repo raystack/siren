@@ -2,8 +2,11 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/core/notification"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -42,19 +45,21 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 	alerts := make([]*alert.Alert, 0)
 
 	badAlertCount := 0
+	// Alert model follows alertmanager webhook contract
+	// https://github.com/prometheus/alertmanager/blob/main/notify/webhook/webhook.go#L64
 	for _, item := range req.GetAlerts() {
-		severity := item.Labels.GetSeverity()
+		severity := item.GetLabels()["severity"]
 		if item.GetStatus() == "resolved" {
 			severity = item.GetStatus()
 		}
 
 		alrt := &alert.Alert{
 			ProviderID:   req.GetProviderId(),
-			ResourceName: item.GetAnnotations().GetResource(),
-			MetricName:   item.GetAnnotations().GetMetricName(),
-			MetricValue:  item.GetAnnotations().GetMetricValue(),
+			ResourceName: fmt.Sprintf("%v", item.GetAnnotations()["resource"]),
+			MetricName:   fmt.Sprintf("%v", item.GetAnnotations()["metric_name"]),
+			MetricValue:  fmt.Sprintf("%v", item.GetAnnotations()["metric_value"]),
 			Severity:     severity,
-			Rule:         item.GetAnnotations().GetTemplate(),
+			Rule:         fmt.Sprintf("%v", item.GetAnnotations()["template"]),
 			TriggeredAt:  item.GetStartsAt().AsTime(),
 		}
 		if !isValidCortexAlert(alrt) {
@@ -82,14 +87,30 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 		}
 		items = append(items, alertHistoryItem)
 	}
+
 	result := &sirenv1beta1.CreateCortexAlertsResponse{
 		Alerts: items,
+	}
+
+	// Publish to notification service
+	for _, a := range req.GetAlerts() {
+		n := &notification.Notification{
+			ID:        "cortex-" + a.GetFingerprint(),
+			Variables: a.GetAnnotations(),
+			Labels:    a.GetLabels(),
+			CreatedAt: time.Now(),
+		}
+
+		if err := s.notificationService.Dispatch(ctx, *n); err != nil {
+			s.logger.Warn("failed to send to notification service", "api", "alerts", "notification", n)
+		}
 	}
 
 	if badAlertCount > 0 {
 		s.logger.Error("parameters are missing for alert", "alert count", badAlertCount)
 		return result, nil
 	}
+
 	return result, nil
 }
 

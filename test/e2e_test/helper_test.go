@@ -236,7 +236,7 @@ func StartSiren(cfg config.Config) {
 	logger := log.NewZap()
 	logger.Info("starting up siren...")
 	go func() {
-		if err := cli.StartServer(cfg); err != nil {
+		if err := cli.StartServer(context.Background(), cfg); err != nil {
 			logger.Fatal(err.Error())
 		}
 	}()

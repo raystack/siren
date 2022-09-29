@@ -9,26 +9,26 @@ import (
 func TestMessage_Validate(t *testing.T) {
 	type testCase struct {
 		Description       string
-		Message           slack.Message
+		Message           slack.MessageGoSlack
 		ExpectedErrString string
 	}
 
 	var testCases = []testCase{
 		{
 			Description:       "should return error message or blocks cannot be empty",
-			Message:           slack.Message{},
+			Message:           slack.MessageGoSlack{},
 			ExpectedErrString: "non empty message or non zero length block is required",
 		},
 		{
 			Description: "should return error if required fields are not populated",
-			Message: slack.Message{
+			Message: slack.MessageGoSlack{
 				Message: "a message",
 			},
 			ExpectedErrString: "field \"receiver_name\" is required and field \"receiver_type\" is required",
 		},
 		{
 			Description: "should return error type not supported if slack receiver type not match",
-			Message: slack.Message{
+			Message: slack.MessageGoSlack{
 				Message:      "a message",
 				ReceiverName: "receiver name",
 				ReceiverType: "random",
@@ -37,7 +37,7 @@ func TestMessage_Validate(t *testing.T) {
 		},
 		{
 			Description: "should return multiple validation errors",
-			Message: slack.Message{
+			Message: slack.MessageGoSlack{
 				Message:      "a message",
 				ReceiverType: "random",
 			},
@@ -45,7 +45,7 @@ func TestMessage_Validate(t *testing.T) {
 		},
 		{
 			Description: "should return nil error if slack message is valid",
-			Message: slack.Message{
+			Message: slack.MessageGoSlack{
 				Message:      "a message",
 				ReceiverName: "receiver name",
 				ReceiverType: "channel",

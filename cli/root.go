@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"context"
-
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/cmdx"
 
@@ -11,7 +9,7 @@ import (
 
 const serviceName = "siren"
 
-func New(ctx context.Context) *cobra.Command {
+func New() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "siren <command> <subcommand> [flags]",
 		Short: "siren",

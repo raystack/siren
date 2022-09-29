@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
@@ -51,8 +52,17 @@ func NewSubscriptionRepository(client *Client) *SubscriptionRepository {
 
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
 	var queryBuilder = subscriptionListQueryBuilder
+
 	if flt.NamespaceID != 0 {
 		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
+	}
+
+	if len(flt.Labels) != 0 {
+		labelsJSON, err := json.Marshal(flt.Labels)
+		if err != nil {
+			return nil, errors.ErrInvalid.WithCausef("problem marshalling json to string with err: %s", err.Error())
+		}
+		queryBuilder = queryBuilder.Where(fmt.Sprintf("match <@ '%s'::jsonb", string(json.RawMessage(labelsJSON))))
 	}
 
 	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -160,7 +170,7 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 	return nil
 }
 
-// TODO problem
+// TODO this won't be synced to provider
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
 	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, subscriptionDeleteQuery, id)
 	if err != nil {

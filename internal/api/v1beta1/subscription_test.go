@@ -2,6 +2,7 @@ package v1beta1_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 )
 
 func TestGRPCServer_ListSubscriptions(t *testing.T) {
-	configuration := make(map[string]string)
+	configuration := make(map[string]interface{})
 	configuration["foo"] = "bar"
 	match := make(map[string]string)
 	match["foo"] = "bar"
@@ -59,7 +60,7 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 }
 
 func TestGRPCServer_GetSubscription(t *testing.T) {
-	configuration := make(map[string]string)
+	configuration := make(map[string]interface{})
 	configuration["foo"] = "bar"
 	match := make(map[string]string)
 	match["foo"] = "bar"
@@ -105,10 +106,15 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 }
 
 func TestGRPCServer_CreateSubscription(t *testing.T) {
-	configuration := make(map[string]string)
+	configuration := make(map[string]interface{})
 	configuration["foo"] = "bar"
 	match := make(map[string]string)
 	match["foo"] = "baz"
+
+	configMapString := make(map[string]string)
+	for k, v := range configuration {
+		configMapString[k] = fmt.Sprintf("%v", v)
+	}
 
 	payload := &subscription.Subscription{
 		Namespace: 1,
@@ -134,10 +140,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
 		}).Return(nil).Once()
+
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, err)
@@ -151,10 +158,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
 		}).Return(errors.ErrInvalid).Once()
+
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -168,10 +176,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
 		}).Return(errors.ErrConflict).Once()
+
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -185,10 +194,11 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		mockedSubscriptionService.EXPECT().Create(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = dummyResult.ID
 		}).Return(errors.New("random error")).Once()
+
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -197,7 +207,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 }
 
 func TestGRPCServer_UpdateSubscription(t *testing.T) {
-	configuration := make(map[string]string)
+	configuration := make(map[string]interface{})
 	configuration["foo"] = "bar"
 	match := make(map[string]string)
 	match["foo"] = "baz"
@@ -209,6 +219,11 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		Match:     match,
 	}
 
+	configMapString := make(map[string]string)
+	for k, v := range configuration {
+		configMapString[k] = fmt.Sprintf("%v", v)
+	}
+
 	t.Run("should update a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
@@ -216,11 +231,12 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Run(func(_a0 context.Context, _a1 *subscription.Subscription) {
 			_a1.ID = uint64(1)
 		}).Return(nil).Once()
+
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, err)
@@ -231,11 +247,12 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
+
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -246,11 +263,12 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrConflict).Once()
+
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -261,11 +279,12 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.New("random error")).Once()
+
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -276,11 +295,12 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{SubscriptionService: mockedSubscriptionService})
 		mockedSubscriptionService.EXPECT().Update(context.Background(), payload).Return(errors.ErrInvalid).Once()
+
 		res, err := dummyGRPCServer.UpdateSubscription(context.Background(), &sirenv1beta1.UpdateSubscriptionRequest{
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configuration}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
 			Match:     match,
 		})
 		assert.Nil(t, res)

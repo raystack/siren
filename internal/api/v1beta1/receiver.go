@@ -113,11 +113,3 @@ func (s *GRPCServer) DeleteReceiver(ctx context.Context, req *sirenv1beta1.Delet
 
 	return &sirenv1beta1.DeleteReceiverResponse{}, nil
 }
-
-func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.NotifyReceiverRequest) (*sirenv1beta1.NotifyReceiverResponse, error) {
-	if err := s.receiverService.Notify(ctx, req.GetId(), req.GetPayload().AsMap()); err != nil {
-		return nil, s.generateRPCErr(err)
-	}
-
-	return &sirenv1beta1.NotifyReceiverResponse{}, nil
-}

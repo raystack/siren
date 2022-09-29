@@ -2,7 +2,6 @@ package receiver
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
@@ -32,16 +31,16 @@ type Receiver struct {
 	UpdatedAt      time.Time              `json:"updated_at"`
 }
 
-type Configurations map[string]interface{}
+// type Configurations map[string]interface{}
 
-func (c Configurations) GetString(key string) (string, error) {
-	val, ok := c[key]
-	if !ok {
-		return "", fmt.Errorf("no value supplied for required configurations map key %q", key)
-	}
-	typedVal, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("wrong type for configurations map key %q: expected type string, got value %v of type %T", key, val, val)
-	}
-	return typedVal, nil
-}
+// func (c Configurations) GetString(key string) (string, error) {
+// 	val, ok := c[key]
+// 	if !ok {
+// 		return "", fmt.Errorf("no value supplied for required configurations map key %q", key)
+// 	}
+// 	typedVal, ok := val.(string)
+// 	if !ok {
+// 		return "", fmt.Errorf("wrong type for configurations map key %q: expected type string, got value %v of type %T", key, val, val)
+// 	}
+// 	return typedVal, nil
+// }
