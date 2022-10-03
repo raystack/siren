@@ -8,11 +8,14 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
+// Worker is a notification worker instance that runs one or more than one
+// notification handler
 type Worker struct {
 	logger   log.Logger
 	handlers []*Handler
 }
 
+// NewWorker creates a new worker instance
 func NewWorker(logger log.Logger, handlers ...*Handler) *Worker {
 	return &Worker{
 		logger:   logger,
@@ -20,6 +23,8 @@ func NewWorker(logger log.Logger, handlers ...*Handler) *Worker {
 	}
 }
 
+// Run will execute and run one or multiple notification handlers
+// as goroutines
 func (w *Worker) Run(ctx context.Context) error {
 	cancellableCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -36,7 +41,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}
 	wg.Wait()
 
-	w.logger.Info("all workers exited")
+	w.logger.Info("all handlers exited")
 	err := ctx.Err()
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return nil

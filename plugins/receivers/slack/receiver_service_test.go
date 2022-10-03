@@ -12,7 +12,6 @@ import (
 )
 
 func TestSlackReceiverService_BuildData(t *testing.T) {
-
 	type testCase struct {
 		Description string
 		Setup       func(sc *mocks.SlackClient, e *mocks.Encryptor)

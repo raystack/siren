@@ -26,6 +26,7 @@ type Queuer interface {
 	ErrorHandler(ctx context.Context, ms Message) error
 }
 
+// Notification is a model of notification
 type Notification struct {
 	ID                  string            `json:"id"`
 	Variables           map[string]string `json:"variables"`
@@ -34,6 +35,7 @@ type Notification struct {
 	CreatedAt           time.Time
 }
 
+// ToMessage transforms Notification model to one or several Messages
 func (n Notification) ToMessage(receiverType string, notificationConfigs map[string]interface{}) (*Message, error) {
 	var (
 		expiryDuration time.Duration

@@ -14,6 +14,7 @@ const (
 	defaultBatchSize    = 1
 )
 
+// Handler is a process to handle message publishing
 type Handler struct {
 	id                     string
 	logger                 log.Logger
@@ -25,6 +26,7 @@ type Handler struct {
 	pollDuration time.Duration
 }
 
+// NewHandler creates a new handler with some supported type of Notifiers
 func NewHandler(logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
 		id:           uuid.NewString(),
@@ -57,6 +59,7 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 	return receiverPlugin, nil
 }
 
+// RunHandler executes and run handler until an interrupt or cancel signal
 func (h *Handler) RunHandler(ctx context.Context) {
 	timer := time.NewTimer(h.pollDuration)
 	defer timer.Stop()
@@ -82,6 +85,7 @@ func (h *Handler) RunHandler(ctx context.Context) {
 	}
 }
 
+// MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
 	for _, message := range messages {
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)

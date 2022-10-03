@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// MessageStatus determines the state of the message
 type MessageStatus string
 
 const (
@@ -17,8 +18,10 @@ const (
 	MessageStatusPublished MessageStatus = "published"
 )
 
+// MessageOption provides ability to configure the message initialization
 type MessageOption func(*Message)
 
+// InitWithCreateTime initializes the message with custom create time
 func InitWithCreateTime(timeNow time.Time) MessageOption {
 	return func(m *Message) {
 		m.CreatedAt = timeNow
@@ -26,24 +29,28 @@ func InitWithCreateTime(timeNow time.Time) MessageOption {
 	}
 }
 
+// InitWithID initializes the message with some ID
 func InitWithID(id string) MessageOption {
 	return func(m *Message) {
 		m.ID = id
 	}
 }
 
+// InitWithExpiryDuration initializes the message with the specified expiry duration
 func InitWithExpiryDuration(dur time.Duration) MessageOption {
 	return func(m *Message) {
 		m.expiryDuration = dur
 	}
 }
 
+// InitWithMaxTries initializes the message with custom max tries
 func InitWithMaxTries(mt int) MessageOption {
 	return func(m *Message) {
 		m.MaxTries = mt
 	}
 }
 
+// Message is the model to be sent for a specific subscription's receiver
 type Message struct {
 	ID     string
 	Status MessageStatus
@@ -63,6 +70,8 @@ type Message struct {
 	expiryDuration time.Duration
 }
 
+// Initialize initializes the message with some default value
+// or the customized value
 func (m *Message) Initialize(
 	n Notification,
 	receiverType string,
@@ -99,6 +108,7 @@ func (m *Message) Initialize(
 	}
 }
 
+// MarkFailed update message to the failed state
 func (m *Message) MarkFailed(updatedAt time.Time, err error) {
 	m.TryCount = m.TryCount + 1
 	m.LastError = err.Error()
@@ -106,11 +116,13 @@ func (m *Message) MarkFailed(updatedAt time.Time, err error) {
 	m.UpdatedAt = updatedAt
 }
 
+// MarkPending update message to the pending state
 func (m *Message) MarkPending(updatedAt time.Time) {
 	m.Status = MessageStatusPending
 	m.UpdatedAt = updatedAt
 }
 
+// MarkPublished update message to the published state
 func (m *Message) MarkPublished(updatedAt time.Time) {
 	m.TryCount = m.TryCount + 1
 	m.Status = MessageStatusPublished

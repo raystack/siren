@@ -7,6 +7,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
+// NotificationService is a service for notification domain
 type NotificationService struct {
 	logger              log.Logger
 	q                   Queuer
@@ -14,6 +15,7 @@ type NotificationService struct {
 	receiverPlugins     map[string]Notifier
 }
 
+// NewService creates a new notification service
 func NewService(
 	logger log.Logger,
 	q Queuer,
@@ -36,6 +38,7 @@ func (ns *NotificationService) getReceiverPlugin(receiverType string) (Notifier,
 	return receiverPlugin, nil
 }
 
+// Dispatch sends notification to the specified queue
 func (ns *NotificationService) Dispatch(ctx context.Context, n Notification) error {
 	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, n.Labels)
 	if err != nil {
