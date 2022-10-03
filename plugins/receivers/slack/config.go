@@ -7,15 +7,15 @@ import (
 	"github.com/odpf/siren/core/notification"
 )
 
-// RegisterReceiverConfig is config that needs to be passed when a new slack
+// SlackCredentialConfig is config that needs to be passed when a new slack
 // receiver is being added
-type RegisterReceiverConfig struct {
+type SlackCredentialConfig struct {
 	ClientID     string `mapstructure:"client_id"`
 	ClientSecret string `mapstructure:"client_secret"`
 	AuthCode     string `mapstructure:"auth_code"`
 }
 
-func (c *RegisterReceiverConfig) Validate() error {
+func (c *SlackCredentialConfig) Validate() error {
 	if c.ClientID != "" && c.ClientSecret != "" && c.AuthCode != "" {
 		return nil
 	}

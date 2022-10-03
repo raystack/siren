@@ -186,8 +186,9 @@ func TestService_Create(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface {}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
+
 		testCases = []testCase{
 			{
 				Description: "should return error if namespace service get return error",
@@ -437,7 +438,7 @@ func TestService_Update(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface {}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
 		testCases = []testCase{
 			{
@@ -703,7 +704,7 @@ func TestService_Delete(t *testing.T) {
 					ID: 1,
 				},
 			}, nil)
-			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
+			rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface {}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{}, nil)
 		}
 		testCases = []testCase{
 			{
@@ -1035,7 +1036,7 @@ func TestAssignReceivers(t *testing.T) {
 				4: {ID: 4, Type: receiver.TypeSlack},
 			},
 			Setup: func(rs *mocks.ReceiverService) {
-				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface{}"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
+				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface {}"), mock.AnythingOfType("*receiver.Receiver")).Return(nil, errors.New("some error"))
 			},
 			ErrString: "some error",
 		},
@@ -1091,7 +1092,7 @@ func TestAssignReceivers(t *testing.T) {
 				},
 			},
 			Setup: func(rs *mocks.ReceiverService) {
-				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{
+				rs.EXPECT().BuildNotificationConfig(mock.AnythingOfType("map[string]interface {}"), mock.AnythingOfType("*receiver.Receiver")).Return(map[string]interface{}{
 					"token":  "abcabc",
 					"newkey": "newvalue",
 				}, nil)

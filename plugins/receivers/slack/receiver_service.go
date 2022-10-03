@@ -44,16 +44,16 @@ func (s *SlackReceiverService) Notify(ctx context.Context, configurations map[st
 }
 
 func (s *SlackReceiverService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
-	registerRecevierConfig := &RegisterReceiverConfig{}
-	if err := mapstructure.Decode(configurations, registerRecevierConfig); err != nil {
+	slackCredentialConfig := &SlackCredentialConfig{}
+	if err := mapstructure.Decode(configurations, slackCredentialConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to pre transform config: %w", err)
 	}
 
-	if err := registerRecevierConfig.Validate(); err != nil {
+	if err := slackCredentialConfig.Validate(); err != nil {
 		return nil, errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
-	creds, err := s.slackClient.ExchangeAuth(ctx, registerRecevierConfig.AuthCode, registerRecevierConfig.ClientID, registerRecevierConfig.ClientSecret)
+	creds, err := s.slackClient.ExchangeAuth(ctx, slackCredentialConfig.AuthCode, slackCredentialConfig.ClientID, slackCredentialConfig.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code with slack OAuth server: %w", err)
 	}
@@ -97,6 +97,10 @@ func (s *SlackReceiverService) BuildData(ctx context.Context, configurations map
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
+	}
+
+	if err := receiverConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	channels, err := s.slackClient.GetWorkspaceChannels(

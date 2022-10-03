@@ -44,7 +44,7 @@ func (s *PagerDutyService) BuildData(ctx context.Context, configurations map[str
 
 func (s *PagerDutyService) BuildNotificationConfig(subsConfs map[string]interface{}, receiverConfs map[string]interface{}) (map[string]interface{}, error) {
 	receiverConfig := &ReceiverConfig{}
-	if err := mapstructure.Decode(receiverConfig, receiverConfig); err != nil {
+	if err := mapstructure.Decode(receiverConfs, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
 	}
 

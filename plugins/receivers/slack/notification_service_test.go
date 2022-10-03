@@ -29,7 +29,7 @@ func TestNotification_ToSlackMessage(t *testing.T) {
 			Message: map[string]interface{}{
 				"blocks": "abc",
 			},
-			ExpectedErrString: "unable to unmarshal notification message byte to slack message: json: cannot unmarshal string into Go struct field Message.blocks of type []json.RawMessage",
+			ExpectedErrString: "unable to unmarshal notification message byte to slack message: json: cannot unmarshal string into Go struct field MessageGoSlack.blocks of type []json.RawMessage",
 		},
 		{
 			Description:       "should return error if 'message' are empty and blocks are empty",

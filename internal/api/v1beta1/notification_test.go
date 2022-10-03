@@ -16,7 +16,6 @@ import (
 )
 
 func TestGRPCServer_NotifyReceiver(t *testing.T) {
-
 	var dummyReq = &sirenv1beta1.NotifyReceiverRequest{
 		Id: 1,
 		Payload: &structpb.Struct{
@@ -81,9 +80,11 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 
 	t.Run("should return invalid argument if notify receiver return invalid argument", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
+		mockNotificationService := new(mocks.NotificationService)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService, NotificationService: mockNotificationService})
 
+		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 		mockedReceiverService.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"),
 			uint64(1),
 			map[string]interface{}{
@@ -120,9 +121,11 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 
 	t.Run("should return OK response if notify receiver succeed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
+		mockNotificationService := new(mocks.NotificationService)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService, NotificationService: mockNotificationService})
 
+		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 		mockedReceiverService.EXPECT().Notify(
 			mock.AnythingOfType("*context.emptyCtx"),
 			uint64(1),

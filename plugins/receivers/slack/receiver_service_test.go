@@ -23,10 +23,10 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 		ctx       = context.TODO()
 		testCases = []testCase{
 			{
-				Description: "should return error if no token field in configurations",
+				Description: "should return error if configuration is invalid",
 				Setup:       func(sc *mocks.SlackClient, e *mocks.Encryptor) {},
 				Confs:       make(map[string]interface{}),
-				Err:         errors.New("no token in configurations found"),
+				Err:         errors.New("invalid slack receiver config, workspace: , token: <secret>"),
 			},
 			{
 				Description: "should return error if failed to get workspace channels with slack client",
@@ -34,7 +34,8 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
 				},
 				Confs: map[string]interface{}{
-					"token": "key",
+					"token":     "key",
+					"workspace": "odpf",
 				},
 				Err: errors.New("could not get channels: some error"),
 			},
@@ -49,7 +50,8 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 					}, nil)
 				},
 				Confs: map[string]interface{}{
-					"token": "key",
+					"token":     "key",
+					"workspace": "odpf",
 				},
 			},
 		}
@@ -167,70 +169,7 @@ func TestSlackReceiverService_Notify(t *testing.T) {
 	}
 }
 
-// func TestSlackReceiverService_ValidateConfigurations(t *testing.T) {
-// 	type testCase struct {
-// 		Description string
-// 		Confs       map[string]interface{}
-// 		ErrString   string
-// 	}
-
-// 	var (
-// 		testCases = []testCase{
-// 			{
-// 				Description: "should return error if 'client_id' is empty",
-// 				Confs:       make(map[string]interface{}),
-// 				ErrString:   "no value supplied for required configurations map key \"client_id\"",
-// 			},
-// 			{
-// 				Description: "should return error if 'client_secret' is empty",
-// 				Confs: map[string]interface{}{
-// 					"client_id": "client_id",
-// 				},
-// 				ErrString: "no value supplied for required configurations map key \"client_secret\"",
-// 			},
-// 			{
-// 				Description: "should return error if 'auth_code' is empty",
-// 				Confs: map[string]interface{}{
-// 					"client_id":     "client_id",
-// 					"client_secret": "client_secret",
-// 				},
-// 				ErrString: "no value supplied for required configurations map key \"auth_code\"",
-// 			},
-// 			{
-// 				Description: "should return nil error if all configurations are valid",
-// 				Confs: map[string]interface{}{
-// 					"client_id":     "client_id",
-// 					"client_secret": "client_secret",
-// 					"auth_code":     "auth_code",
-// 				},
-// 			},
-// 			{
-// 				Description: "should return nil error if a configuration is not in string",
-// 				Confs: map[string]interface{}{
-// 					"client_id":     123,
-// 					"client_secret": "client_secret",
-// 					"auth_code":     "auth_code",
-// 				},
-// 				ErrString: "wrong type for configurations map key \"client_id\": expected type string, got value 123 of type int",
-// 			},
-// 		}
-// 	)
-
-// 	for _, tc := range testCases {
-// 		t.Run(tc.Description, func(t *testing.T) {
-// 			svc := slack.NewReceiverService(nil, nil)
-
-// 			err := svc.ValidateConfigurations(tc.Confs)
-// 			if err != nil {
-// 				if tc.ErrString != err.Error() {
-// 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-// 				}
-// 			}
-// 		})
-// 	}
-// }
-
-func TestSlackReceiverService_EnrichSubscriptionConfig(t *testing.T) {
+func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 	type testCase struct {
 		Description         string
 		SubscriptionConfigs map[string]interface{}
@@ -256,7 +195,7 @@ func TestSlackReceiverService_EnrichSubscriptionConfig(t *testing.T) {
 				ErrString: "token config from receiver should be in string",
 			},
 			{
-				Description: "should return configs without token if receiver 'token' does not exist", //TODO might need to check this behaviour, should be returning error
+				Description: "should return configs without token if receiver 'token' does not exist",
 				SubscriptionConfigs: map[string]interface{}{
 					"channel_name": "odpf_warning",
 				},

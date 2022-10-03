@@ -109,6 +109,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should create alerts objects", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
+		mockNotificationService := new(mocks.NotificationService)
+
 		dummyAlerts := []alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
@@ -121,7 +123,9 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
+		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
+
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -137,6 +141,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should create alerts for resolved alerts", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
+		mockNotificationService := new(mocks.NotificationService)
+
 		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
 			ProviderId: 1,
 			Alerts: []*sirenv1beta1.CortexAlert{
@@ -178,7 +184,9 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
+		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
+
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -207,6 +215,8 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should insert valid alerts and should not return error if parameters are missing", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
+		mockNotificationService := new(mocks.NotificationService)
+
 		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
 			ProviderId: 1,
 			Alerts: []*sirenv1beta1.CortexAlert{
@@ -246,10 +256,12 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			Severity:     "CRITICAL",
 			TriggeredAt:  time.Now(),
 		}}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
+
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
+		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
