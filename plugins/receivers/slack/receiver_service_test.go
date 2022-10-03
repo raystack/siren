@@ -108,7 +108,7 @@ func TestSlackReceiverService_Notify(t *testing.T) {
 			{
 				Description: "should return error if slack client return error",
 				Setup: func(sc *mocks.SlackClient) {
-					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.Message"), mock.AnythingOfType("slack.ClientCallOption")).Return(errors.New("some error"))
+					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.MessageGoSlack"), mock.AnythingOfType("slack.ClientCallOption")).Return(errors.New("some error"))
 				},
 				Confs: map[string]interface{}{
 					"token": "123123",
@@ -128,7 +128,7 @@ func TestSlackReceiverService_Notify(t *testing.T) {
 			{
 				Description: "should return nil error if slack client return nil error",
 				Setup: func(sc *mocks.SlackClient) {
-					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.Message"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil)
+					sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*slack.MessageGoSlack"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil)
 				},
 				Confs: map[string]interface{}{
 					"token": "123123",
@@ -175,15 +175,11 @@ func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 		SubscriptionConfigs map[string]interface{}
 		ReceiverConfigs     map[string]interface{}
 		ExpectedConfigMap   map[string]interface{}
-		ErrString           string
+		wantErr             bool
 	}
 
 	var (
 		testCases = []testCase{
-			{
-				Description: "should return error if 'channel_name' does not exist",
-				ErrString:   "subscription receiver config 'channel_name' was missing",
-			},
 			{
 				Description: "should return error if receiver 'token' exist but it is not string",
 				SubscriptionConfigs: map[string]interface{}{
@@ -192,7 +188,7 @@ func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 				ReceiverConfigs: map[string]interface{}{
 					"token": 123,
 				},
-				ErrString: "token config from receiver should be in string",
+				wantErr: true,
 			},
 			{
 				Description: "should return configs without token if receiver 'token' does not exist",
@@ -201,6 +197,8 @@ func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 				},
 				ExpectedConfigMap: map[string]interface{}{
 					"channel_name": "odpf_warning",
+					"token":        "",
+					"workspace":    "",
 				},
 			},
 			{
@@ -214,6 +212,7 @@ func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 				ExpectedConfigMap: map[string]interface{}{
 					"channel_name": "odpf_warning",
 					"token":        "123",
+					"workspace":    "",
 				},
 			},
 		}
@@ -224,13 +223,13 @@ func TestSlackReceiverService_BuildNotificationConfig(t *testing.T) {
 			svc := slack.NewReceiverService(nil, nil)
 
 			got, err := svc.BuildNotificationConfig(tc.SubscriptionConfigs, tc.ReceiverConfigs)
-			if tc.ErrString != "" {
-				if tc.ErrString != err.Error() {
-					t.Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
+			if (err != nil) != tc.wantErr {
+				t.Errorf("got error = %v, wantErr %v", err, tc.wantErr)
 			}
-			if !cmp.Equal(got, tc.ExpectedConfigMap) {
-				t.Fatalf("got result %+v, expected was %+v", got, tc.ExpectedConfigMap)
+			if err == nil {
+				if !cmp.Equal(got, tc.ExpectedConfigMap) {
+					t.Errorf("got result %+v, expected was %+v", got, tc.ExpectedConfigMap)
+				}
 			}
 		})
 	}
