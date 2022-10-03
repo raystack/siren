@@ -2,10 +2,8 @@ package slack
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/notification"
 )
 
 func TestSlackCredentialConfig(t *testing.T) {
@@ -121,46 +119,46 @@ func TestNotificationConfig(t *testing.T) {
 		}
 	})
 
-	t.Run("FromNotificationMessage", func(t *testing.T) {
-		t.Run("return error if decode to NotificationConfig return error", func(t *testing.T) {
-			nm := notification.Message{
-				Configs: map[string]interface{}{
-					"token": time.Now(),
-				},
-			}
+	// t.Run("FromNotificationMessage", func(t *testing.T) {
+	// 	t.Run("return error if decode to NotificationConfig return error", func(t *testing.T) {
+	// 		nm := notification.Message{
+	// 			Configs: map[string]interface{}{
+	// 				"token": time.Now(),
+	// 			},
+	// 		}
 
-			nc := &NotificationConfig{}
-			err := nc.FromNotificationMessage(nm)
-			if err == nil {
-				t.Error("err should not be nil")
-			}
-		})
+	// 		nc := &NotificationConfig{}
+	// 		err := nc.FromNotificationMessage(nm)
+	// 		if err == nil {
+	// 			t.Error("err should not be nil")
+	// 		}
+	// 	})
 
-		t.Run("build NotificationConfig if decode has no problem", func(t *testing.T) {
-			nm := notification.Message{
-				Configs: map[string]interface{}{
-					"channel_name": "channel",
-					"token":        "token",
-					"workspace":    "workspace",
-				},
-			}
+	// 	t.Run("build NotificationConfig if decode has no problem", func(t *testing.T) {
+	// 		nm := notification.Message{
+	// 			Configs: map[string]interface{}{
+	// 				"channel_name": "channel",
+	// 				"token":        "token",
+	// 				"workspace":    "workspace",
+	// 			},
+	// 		}
 
-			nc := &NotificationConfig{}
-			err := nc.FromNotificationMessage(nm)
-			if err != nil {
-				t.Errorf("err should be nil, return err '%s' instead", err.Error())
-			}
+	// 		nc := &NotificationConfig{}
+	// 		err := nc.FromNotificationMessage(nm)
+	// 		if err != nil {
+	// 			t.Errorf("err should be nil, return err '%s' instead", err.Error())
+	// 		}
 
-			if diff := cmp.Diff(&NotificationConfig{
-				SubscriptionConfig: SubscriptionConfig{
-					ChannelName: "channel",
-				},
-				ReceiverConfig: ReceiverConfig{
-					Token:     "token",
-					Workspace: "workspace"},
-			}, nc); diff != "" {
-				t.Errorf("result not match\n%v", diff)
-			}
-		})
-	})
+	// 		if diff := cmp.Diff(&NotificationConfig{
+	// 			SubscriptionConfig: SubscriptionConfig{
+	// 				ChannelName: "channel",
+	// 			},
+	// 			ReceiverConfig: ReceiverConfig{
+	// 				Token:     "token",
+	// 				Workspace: "workspace"},
+	// 		}, nc); diff != "" {
+	// 			t.Errorf("result not match\n%v", diff)
+	// 		}
+	// 	})
+	// })
 }

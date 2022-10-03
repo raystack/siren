@@ -25,7 +25,6 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
-	Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error
 	BuildNotificationConfig(subsConfig map[string]interface{}, rcv *receiver.Receiver) (map[string]interface{}, error)
 }
 

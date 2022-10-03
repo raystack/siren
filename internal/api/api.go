@@ -44,7 +44,6 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
-	Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error
 }
 
 //go:generate mockery --name=RuleService -r --case underscore --with-expecter --structname RuleService --filename rule_service.go --output=./mocks

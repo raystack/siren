@@ -12,8 +12,6 @@ import (
 	goslack "github.com/slack-go/slack"
 )
 
-const defaultChannelType = "channel" // possibly `user`
-
 // MessageGoSlack is the contract of goslack message
 // Deprecated: we are going with doing http call directly
 // for better handling
@@ -76,7 +74,7 @@ func (sm *MessageGoSlack) checkError(err error) error {
 
 func (sm *MessageGoSlack) FromNotificationMessage(nm notification.Message) error {
 	if nm.Configs["channel_type"] == "" {
-		sm.ReceiverType = defaultChannelType
+		sm.ReceiverType = DefaultChannelType
 	}
 	sm.ReceiverName = fmt.Sprintf("%v", nm.Configs["channel_name"])
 

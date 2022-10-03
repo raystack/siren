@@ -94,9 +94,15 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 
 	// Publish to notification service
 	for _, a := range req.GetAlerts() {
+		variables := map[string]interface{}{}
+
+		for k, v := range a.GetAnnotations() {
+			variables[k] = v
+		}
+
 		n := &notification.Notification{
 			ID:        "cortex-" + a.GetFingerprint(),
-			Variables: a.GetAnnotations(),
+			Variables: variables,
 			Labels:    a.GetLabels(),
 			CreatedAt: time.Now(),
 		}

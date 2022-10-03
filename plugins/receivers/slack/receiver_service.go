@@ -23,26 +23,6 @@ func NewReceiverService(slackClient SlackClient, cryptoClient Encryptor) *SlackR
 	}
 }
 
-// TODO to be removed
-// Deprecated: use Publish and SlackNotificationService instead
-func (s *SlackReceiverService) Notify(ctx context.Context, configurations map[string]interface{}, payloadMessage map[string]interface{}) error {
-	token, ok := configurations["token"].(string)
-	if !ok {
-		return errors.ErrInvalid.WithMsgf("no token in configurations found")
-	}
-
-	sm, err := GetSlackMessage(payloadMessage)
-	if err != nil {
-		return err
-	}
-
-	if err := s.slackClient.Notify(ctx, sm, CallWithToken(token)); err != nil {
-		return fmt.Errorf("error calling slack notify: %w", err)
-	}
-
-	return nil
-}
-
 func (s *SlackReceiverService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	slackCredentialConfig := &SlackCredentialConfig{}
 	if err := mapstructure.Decode(configurations, slackCredentialConfig); err != nil {

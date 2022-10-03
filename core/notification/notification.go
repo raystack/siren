@@ -28,15 +28,15 @@ type Queuer interface {
 
 // Notification is a model of notification
 type Notification struct {
-	ID                  string            `json:"id"`
-	Variables           map[string]string `json:"variables"`
-	Labels              map[string]string `json:"labels"`
-	ValidDurationString string            `json:"valid_duration"`
+	ID                  string                 `json:"id"`
+	Variables           map[string]interface{} `json:"variables"`
+	Labels              map[string]string      `json:"labels"`
+	ValidDurationString string                 `json:"valid_duration"`
 	CreatedAt           time.Time
 }
 
 // ToMessage transforms Notification model to one or several Messages
-func (n Notification) ToMessage(receiverType string, notificationConfigs map[string]interface{}) (*Message, error) {
+func (n Notification) ToMessage(receiverType string, notificationConfigMap map[string]interface{}) (*Message, error) {
 	var (
 		expiryDuration time.Duration
 		err            error
@@ -53,7 +53,7 @@ func (n Notification) ToMessage(receiverType string, notificationConfigs map[str
 	nm.Initialize(
 		n,
 		receiverType,
-		notificationConfigs,
+		notificationConfigMap,
 		InitWithExpiryDuration(expiryDuration),
 	)
 

@@ -51,6 +51,7 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 // Enqueue pushes messages to the queue
 func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 	for _, m := range ms {
+		// this will block until message is dequeud
 		q.memoryQ <- m
 		q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "detail", m.Detail)
 	}

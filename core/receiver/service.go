@@ -126,20 +126,6 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
 }
 
-func (s *Service) Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error {
-	rcv, err := s.Get(ctx, id)
-	if err != nil {
-		return errors.ErrInvalid.WithMsgf("error getting receiver with id %d", id).WithCausef(err.Error())
-	}
-
-	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
-	if err != nil {
-		return err
-	}
-
-	return receiverPlugin.Notify(ctx, rcv.Configurations, payloadMessage)
-}
-
 func (s *Service) BuildNotificationConfig(subsConfs map[string]interface{}, rcv *Receiver) (map[string]interface{}, error) {
 	if rcv == nil {
 		return nil, errors.ErrInvalid.WithCausef("receiver is nil")

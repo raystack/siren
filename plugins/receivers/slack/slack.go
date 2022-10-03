@@ -12,5 +12,5 @@ type Encryptor interface {
 type SlackClient interface {
 	ExchangeAuth(ctx context.Context, authCode, clientID, clientSecret string) (Credential, error)
 	GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOption) ([]Channel, error)
-	Notify(ctx context.Context, message *MessageGoSlack, opts ...ClientCallOption) error
+	Notify(ctx context.Context, conf NotificationConfig, message Message, opts ...ClientCallOption) error
 }

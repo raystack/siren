@@ -2,7 +2,6 @@ package slack
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
@@ -35,49 +34,23 @@ func (s *SlackNotificationService) ValidateConfig(notificationConfigMap map[stri
 }
 
 func (s *SlackNotificationService) Publish(ctx context.Context, notificationMessage notification.Message) error {
-	goslackMessage := &MessageGoSlack{}
-	if err := goslackMessage.FromNotificationMessage(notificationMessage); err != nil {
-		return err
-	}
-
 	notificationConfig := &NotificationConfig{}
-	if err := notificationConfig.FromNotificationMessage(notificationMessage); err != nil {
+	if err := mapstructure.Decode(notificationMessage.Configs, notificationConfig); err != nil {
 		return err
 	}
 
-	if err := s.slackClient.Notify(ctx, goslackMessage, CallWithToken(notificationConfig.Token)); err != nil {
+	slackMessage := &Message{}
+	if err := mapstructure.Decode(notificationMessage.Detail, &slackMessage); err != nil {
+		return err
+	}
+
+	if notificationConfig.ChannelType == "" {
+		notificationConfig.ChannelType = DefaultChannelType
+	}
+
+	if err := s.slackClient.Notify(ctx, *notificationConfig, *slackMessage, CallWithToken(notificationConfig.Token)); err != nil {
 		return fmt.Errorf("error calling slack notify: %w", err)
 	}
 
 	return nil
-}
-
-// ToSlackMessage
-//
-//	{
-//		"receiver_name": "",
-//		"receiver_type": "",
-//		"message": "",
-//		"blocks": [
-//				{
-//					"": ""
-//				}
-//			]
-//	}
-func GetSlackMessage(payloadMessage map[string]interface{}) (*MessageGoSlack, error) {
-	jsonByte, err := json.Marshal(payloadMessage)
-	if err != nil {
-		return nil, fmt.Errorf("unable to marshal notification message: %w", err)
-	}
-
-	sm := &MessageGoSlack{}
-	if err := json.Unmarshal(jsonByte, sm); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal notification message byte to slack message: %w", err)
-	}
-
-	if err := sm.Validate(); err != nil {
-		return nil, err
-	}
-
-	return sm, nil
 }

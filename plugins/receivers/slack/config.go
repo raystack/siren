@@ -2,9 +2,6 @@ package slack
 
 import (
 	"fmt"
-
-	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/notification"
 )
 
 // SlackCredentialConfig is config that needs to be passed when a new slack
@@ -56,6 +53,7 @@ func (c *ReceiverData) AsMap() map[string]interface{} {
 // SubscriptionConfig is a stored config for a subscription of a slack receiver
 type SubscriptionConfig struct {
 	ChannelName string `json:"channel_name" mapstructure:"channel_name"`
+	ChannelType string `json:"channel_type" mapstructure:"channel_type"`
 }
 
 func (c *SubscriptionConfig) AsMap() map[string]interface{} {
@@ -89,11 +87,4 @@ func (c *NotificationConfig) AsMap() map[string]interface{} {
 	}
 
 	return notificationMap
-}
-
-func (c *NotificationConfig) FromNotificationMessage(notificationMessage notification.Message) error {
-	if err := mapstructure.Decode(notificationMessage.Configs, c); err != nil {
-		return err
-	}
-	return nil
 }

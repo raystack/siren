@@ -16,8 +16,9 @@ import (
 const (
 	oAuthServerEndpoint = "https://slack.com/api/oauth.v2.access"
 
-	TypeReceiverChannel = "channel"
-	TypeReceiverUser    = "user"
+	TypeChannelChannel = "channel"
+	TypeChannelUser    = "user"
+	DefaultChannelType = TypeChannelChannel
 )
 
 //go:generate mockery --name=GoSlackCaller -r --case underscore --with-expecter --structname GoSlackCaller --filename goslack_caller.go --output=./mocks
@@ -168,38 +169,74 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOpt
 }
 
 // Notify sends message to a specific slack channel
-func (c *Client) Notify(ctx context.Context, message *MessageGoSlack, opts ...ClientCallOption) error {
+func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Message, opts ...ClientCallOption) error {
 	gsc, err := c.createGoSlackClient(ctx, opts...)
 	if err != nil {
 		return fmt.Errorf("goslack client creation failure: %w", err)
 	}
 
 	var channelID string
-	switch message.ReceiverType {
-	case TypeReceiverChannel:
+	switch conf.ChannelType {
+	case TypeChannelChannel:
 		joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 		if err != nil {
 			return fmt.Errorf("failed to fetch joined channel list: %w", err)
 		}
-		channelID = searchChannelId(joinedChannelList, message.ReceiverName)
+		channelID = searchChannelId(joinedChannelList, conf.ChannelName)
 		if channelID == "" {
-			return fmt.Errorf("app is not part of the channel %q", message.ReceiverName)
+			return fmt.Errorf("app is not part of the channel %q", conf.ChannelName)
 		}
-	case TypeReceiverUser:
-		user, err := gsc.GetUserByEmailContext(ctx, message.ReceiverName)
+	case TypeChannelUser:
+		user, err := gsc.GetUserByEmailContext(ctx, conf.ChannelName)
 		if err != nil {
 			if err.Error() == "users_not_found" {
-				return fmt.Errorf("failed to get id for %q", message.ReceiverName)
+				return fmt.Errorf("failed to get id for %q", conf.ChannelName)
 			}
 			return err
 		}
 		channelID = user.ID
 	default:
-		return fmt.Errorf("unknown receiver type %q", message.ReceiverType)
+		return fmt.Errorf("unknown receiver type %q", conf.ChannelType)
 	}
-	_, _, _, err = gsc.SendMessageContext(ctx, channelID, goslack.MsgOptionText(message.Message, false), goslack.MsgOptionBlocks(message.Blocks.BlockSet...))
+
+	goslackAttachments := []goslack.Attachment{}
+	for _, a := range message.Attachments {
+		attachment, err := a.ToGoSlack()
+		if err != nil {
+			return fmt.Errorf("failed to parse slack message: %w", err)
+		}
+		goslackAttachments = append(goslackAttachments, *attachment)
+	}
+
+	msgOptions := []goslack.MsgOption{}
+
+	if message.Text != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionText(message.Text, false))
+	}
+
+	if message.Username != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionUsername(message.Username))
+	}
+
+	if message.IconEmoji != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionIconEmoji(message.IconEmoji))
+	}
+
+	if message.IconURL != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionIconURL(message.IconURL))
+	}
+
+	if len(goslackAttachments) != 0 {
+		msgOptions = append(msgOptions, goslack.MsgOptionAttachments(goslackAttachments...))
+	}
+
+	_, _, _, err = gsc.SendMessageContext(
+		ctx,
+		channelID,
+		msgOptions...,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to send message to %q", message.ReceiverName)
+		return fmt.Errorf("failed to send message to %q", conf.ChannelName)
 	}
 	return nil
 }
