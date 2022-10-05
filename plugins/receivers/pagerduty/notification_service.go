@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/retry"
 )
 
@@ -55,4 +56,13 @@ func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificatio
 	}
 
 	return false, nil
+}
+
+func (pd *PagerDutyNotificationService) DefaultTemplateOfProvider(providerType string) string {
+	switch providerType {
+	case provider.TypeCortex:
+		return DefaultCortexAlertTemplateBodyV1
+	default:
+		return ""
+	}
 }

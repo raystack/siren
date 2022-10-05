@@ -10,6 +10,7 @@ import (
 //go:generate mockery --name=Notifier -r --case underscore --with-expecter --structname Notifier --filename notifier.go --output=./mocks
 type Notifier interface {
 	ValidateConfigMap(notificationConfigMap map[string]interface{}) error
+	DefaultTemplateOfProvider(providerType string) string
 	Publish(ctx context.Context, message Message) (bool, error)
 }
 
@@ -24,11 +25,14 @@ type Queuer interface {
 	Dequeue(ctx context.Context, receiverTypes []string, batchSize int, handlerFn func(context.Context, []Message) error) error
 	SuccessHandler(ctx context.Context, ms Message) error
 	ErrorHandler(ctx context.Context, ms Message) error
+	Stop(ctx context.Context) error
 }
 
 // Notification is a model of notification
 type Notification struct {
-	ID                  string                 `json:"id"`
+	ID string `json:"id"`
+	// To recognize if it is an alert notification, which template for which provider should we use by default
+	ProviderType        string                 `json:"provider_type"`
 	Variables           map[string]interface{} `json:"variables"`
 	Labels              map[string]string      `json:"labels"`
 	ValidDurationString string                 `json:"valid_duration"`

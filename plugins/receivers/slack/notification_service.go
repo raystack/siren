@@ -5,6 +5,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/retry"
 )
@@ -58,4 +59,13 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	}
 
 	return false, nil
+}
+
+func (s *SlackNotificationService) DefaultTemplateOfProvider(providerType string) string {
+	switch providerType {
+	case provider.TypeCortex:
+		return DefaultCortexAlertTemplateBody
+	default:
+		return ""
+	}
 }

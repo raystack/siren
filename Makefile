@@ -17,7 +17,7 @@ test: ## Run the tests
 	go test -race $(shell go list ./... | grep -v /test/) -covermode=atomic -coverprofile=coverage.out
 
 e2e-test: ## Run all e2e tests
-	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out
+	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out --timeout 60s
 
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out

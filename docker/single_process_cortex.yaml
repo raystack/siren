@@ -6,6 +6,14 @@
 # X-Scope-OrgID header. `fake` will be substituted in instead.
 auth_enabled: false
 
+server:
+  http_listen_port: 9009
+
+  # Configure the server to allow messages up to 100MB.
+  grpc_server_max_recv_msg_size: 104857600
+  grpc_server_max_send_msg_size: 104857600
+  grpc_server_max_concurrent_streams: 1000
+
 distributor:
   shard_by_all_labels: true
   pool:
@@ -17,7 +25,8 @@ ingester_client:
     max_recv_msg_size: 104857600
     max_send_msg_size: 104857600
     grpc_compression: gzip
-    ingester:
+
+ingester:
   # We want our ingesters to flush chunks at the same time to optimise
   # deduplication opportunities.
   spread_flushes: true
@@ -45,14 +54,6 @@ ingester_client:
       kvstore:
         store: inmemory
       replication_factor: 1
-
-server:
-  http_listen_port: 9009
-
-  # Configure the server to allow messages up to 100MB.
-  grpc_server_max_recv_msg_size: 104857600
-  grpc_server_max_send_msg_size: 104857600
-  grpc_server_max_concurrent_streams: 1000
 
 # Use local storage - BoltDB for the index, and the filesystem
 # for the chunks.
@@ -114,9 +115,7 @@ alertmanager:
       access_key_id: minio
       s3forcepathstyle: true
 
-memberlist:
-  message_history_buffer_bytes: 1048576
-  join_members:
-    - cortex-am:9009
-    - cortex-all:9009
-  abort_if_cluster_join_fails: false
+alertmanager_storage:
+  backend: local
+  local:
+    path: tmp/cortex/alertmanager

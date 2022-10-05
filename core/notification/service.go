@@ -2,9 +2,12 @@ package notification
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/odpf/salt/log"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
+	"gopkg.in/yaml.v3"
 )
 
 // NotificationService is a service for notification domain
@@ -65,6 +68,26 @@ func (ns *NotificationService) Dispatch(ctx context.Context, n Notification) err
 
 			if err := receiverPlugin.ValidateConfigMap(message.Configs); err != nil {
 				return err
+			}
+
+			//TODO fetch template if any, if not exist, check provider type, if exist use the default template, if not pass as-is
+			// if there is template, render and replace detail with the new one
+			if n.ProviderType != "" {
+				if templateBody := receiverPlugin.DefaultTemplateOfProvider(n.ProviderType); templateBody != "" {
+					renderedDetailString, err := template.RenderBody(templateBody, n)
+					if err != nil {
+						return err // TODO add more error detail
+					}
+
+					// renderedDetailString = strings.TrimSpace(renderedDetailString)
+
+					var messageDetail map[string]interface{}
+					fmt.Println(renderedDetailString)
+					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetail); err != nil {
+						return err // TODO add more error detail
+					}
+					message.Detail = messageDetail
+				}
 			}
 
 			messages = append(messages, *message)

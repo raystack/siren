@@ -22,6 +22,43 @@ func (_m *Notifier) EXPECT() *Notifier_Expecter {
 	return &Notifier_Expecter{mock: &_m.Mock}
 }
 
+// DefaultTemplateOfProvider provides a mock function with given fields: providerType
+func (_m *Notifier) DefaultTemplateOfProvider(providerType string) string {
+	ret := _m.Called(providerType)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(providerType)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// Notifier_DefaultTemplateOfProvider_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DefaultTemplateOfProvider'
+type Notifier_DefaultTemplateOfProvider_Call struct {
+	*mock.Call
+}
+
+// DefaultTemplateOfProvider is a helper method to define mock.On call
+//  - providerType string
+func (_e *Notifier_Expecter) DefaultTemplateOfProvider(providerType interface{}) *Notifier_DefaultTemplateOfProvider_Call {
+	return &Notifier_DefaultTemplateOfProvider_Call{Call: _e.mock.On("DefaultTemplateOfProvider", providerType)}
+}
+
+func (_c *Notifier_DefaultTemplateOfProvider_Call) Run(run func(providerType string)) *Notifier_DefaultTemplateOfProvider_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *Notifier_DefaultTemplateOfProvider_Call) Return(_a0 string) *Notifier_DefaultTemplateOfProvider_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // Publish provides a mock function with given fields: ctx, message
 func (_m *Notifier) Publish(ctx context.Context, message notification.Message) (bool, error) {
 	ret := _m.Called(ctx, message)

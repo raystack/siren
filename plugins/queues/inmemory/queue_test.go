@@ -48,7 +48,7 @@ func TestQueue(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		q.Close()
+		q.Stop(ctx)
 	})
 
 	t.Run("should return no error if all messages are successfully processed with different batch", func(t *testing.T) {
@@ -71,7 +71,7 @@ func TestQueue(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		q.Close()
+		q.Stop(ctx)
 	})
 
 	t.Run("should return an error if a message is failed to process", func(t *testing.T) {
@@ -93,6 +93,6 @@ func TestQueue(t *testing.T) {
 			assert.Error(t, errors.New("error processing dequeued message: some error"), err)
 		}
 
-		q.Close()
+		q.Stop(ctx)
 	})
 }

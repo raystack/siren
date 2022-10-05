@@ -12,29 +12,28 @@ import (
 // Queue simulates queue inmemory, this is for testing only
 // not recommended to use this in production
 type Queue struct {
-	logger  log.Logger
-	once    sync.Once
-	memoryQ chan notification.Message
+	logger     log.Logger
+	once       sync.Once
+	stopSignal chan struct{}
+	memoryQ    chan notification.Message
 }
 
 // New creates a new queue instance
 func New(logger log.Logger) *Queue {
 	return &Queue{
-		logger:  logger,
-		memoryQ: make(chan notification.Message),
+		logger:     logger,
+		stopSignal: make(chan struct{}),
+		memoryQ:    make(chan notification.Message),
 	}
 }
 
 // Dequeue pop the queue based on specific filters (receiver types or batch size)
 // and process the messages with handlerFn
 func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize int, handlerFn func(context.Context, []notification.Message) error) error {
-	cancelableCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	messages := []notification.Message{}
 	for i := 0; i < batchSize; i++ {
 		select {
-		case <-cancelableCtx.Done():
+		case <-ctx.Done():
 			q.logger.Info("inmemory dequeue work is done", "scope", "queues.inmemory.dequeue")
 			return nil
 
@@ -43,7 +42,7 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 		}
 	}
 
-	if err := handlerFn(cancelableCtx, messages); err != nil {
+	if err := handlerFn(ctx, messages); err != nil {
 		return fmt.Errorf("error processing dequeued message: %w", err)
 	}
 
@@ -53,11 +52,16 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 // Enqueue pushes messages to the queue
 func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 	for _, m := range ms {
-		// this will block until message is dequeud
-		q.memoryQ <- m
-		q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "detail", m.Detail)
+		select {
+		case <-q.stopSignal:
+			q.logger.Debug("enqueuer retrieving stop signal")
+			return nil
+		case q.memoryQ <- m:
+			q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "detail", m.Detail)
+		default:
+			return fmt.Errorf("error enqueueing message: %v", m.Detail)
+		}
 	}
-
 	return nil
 }
 
@@ -73,10 +77,12 @@ func (q *Queue) ErrorHandler(ctx context.Context, ms notification.Message) error
 	return nil
 }
 
-// Close is a specific inmemmory queue function
+// Stop is a inmemmory queue function
 // this will close the channel to simulate queue
-func (q *Queue) Close() {
+func (q *Queue) Stop(ctx context.Context) error {
 	q.once.Do(func() {
+		q.logger.Debug("closing inmemory queue channel")
 		close(q.memoryQ)
 	})
+	return nil
 }

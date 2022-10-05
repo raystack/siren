@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/odpf/salt/log"
@@ -25,16 +26,16 @@ func NewWorker(logger log.Logger, h *Handler) *Worker {
 	}
 }
 
-// Run will execute and run one handler as goroutine
-func (w *Worker) Run(ctx context.Context) error {
-	cancellableCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
+// Run will execute and run one handler as goroutines
+func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup) error {
+	defer wg.Done()
 
-	go func(h *Handler) {
-		w.logger.Info("running handler worker", "id", w.id)
-		h.RunHandler(cancellableCtx)
-		w.logger.Info("handler worker exited", "id", w.id)
-	}(w.handler)
+	w.logger.Info("running handler worker", "id", w.id)
+	w.handler.RunHandler(ctx)
+	w.logger.Info("handler worker exited", "id", w.id)
+
+	<-ctx.Done()
+	w.logger.Debug("worker context done", "err", ctx.Err(), "id", w.id)
 
 	err := ctx.Err()
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {

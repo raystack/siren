@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	if err := cli.New().ExecuteContext(ctx); err != nil {
 		fmt.Printf("%+v\n", err)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/retry"
 )
 
@@ -55,4 +56,13 @@ func (h *HTTPNotificationService) Publish(ctx context.Context, notificationMessa
 	}
 
 	return false, nil
+}
+
+func (h *HTTPNotificationService) DefaultTemplateOfProvider(providerType string) string {
+	switch providerType {
+	case provider.TypeCortex:
+		return ""
+	default:
+		return ""
+	}
 }

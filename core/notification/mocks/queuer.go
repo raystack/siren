@@ -152,6 +152,43 @@ func (_c *Queuer_ErrorHandler_Call) Return(_a0 error) *Queuer_ErrorHandler_Call 
 	return _c
 }
 
+// Stop provides a mock function with given fields: ctx
+func (_m *Queuer) Stop(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Queuer_Stop_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Stop'
+type Queuer_Stop_Call struct {
+	*mock.Call
+}
+
+// Stop is a helper method to define mock.On call
+//  - ctx context.Context
+func (_e *Queuer_Expecter) Stop(ctx interface{}) *Queuer_Stop_Call {
+	return &Queuer_Stop_Call{Call: _e.mock.On("Stop", ctx)}
+}
+
+func (_c *Queuer_Stop_Call) Run(run func(ctx context.Context)) *Queuer_Stop_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *Queuer_Stop_Call) Return(_a0 error) *Queuer_Stop_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // SuccessHandler provides a mock function with given fields: ctx, ms
 func (_m *Queuer) SuccessHandler(ctx context.Context, ms notification.Message) error {
 	ret := _m.Called(ctx, ms)

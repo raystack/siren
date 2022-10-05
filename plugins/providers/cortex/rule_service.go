@@ -20,7 +20,7 @@ func (s *CortexService) UpsertRule(ctx context.Context, rl *rule.Rule, templateT
 		inputValues[v.Name] = v.Value
 	}
 
-	renderedRule, err := template.RenderWithTemplate(ctx, templateToUpdate, inputValues)
+	renderedRule, err := template.RenderWithEnrichedDefault(templateToUpdate.Body, templateToUpdate.Variables, inputValues)
 	if err != nil {
 		return err
 	}

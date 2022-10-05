@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/provider"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -45,9 +46,15 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 	alerts := make([]*alert.Alert, 0)
 
 	badAlertCount := 0
+	firingLen := 0
 	// Alert model follows alertmanager webhook contract
 	// https://github.com/prometheus/alertmanager/blob/main/notify/webhook/webhook.go#L64
 	for _, item := range req.GetAlerts() {
+
+		if item.GetStatus() == "firing" {
+			firingLen++
+		}
+
 		severity := item.GetLabels()["severity"]
 		if item.GetStatus() == "resolved" {
 			severity = item.GetStatus()
@@ -100,15 +107,21 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 			variables[k] = v
 		}
 
+		variables["status"] = a.GetStatus()
+		variables["generator_url"] = a.GetGeneratorUrl()
+		variables["num_alerts_firing"] = firingLen
+		// TODO variables["group_key"]
+
 		n := &notification.Notification{
-			ID:        "cortex-" + a.GetFingerprint(),
-			Variables: variables,
-			Labels:    a.GetLabels(),
-			CreatedAt: time.Now(),
+			ProviderType: provider.TypeCortex,
+			ID:           "cortex-" + a.GetFingerprint(),
+			Variables:    variables,
+			Labels:       a.GetLabels(),
+			CreatedAt:    time.Now(),
 		}
 
 		if err := s.notificationService.Dispatch(ctx, *n); err != nil {
-			s.logger.Warn("failed to send to notification service", "api", "alerts", "notification", n)
+			s.logger.Warn("failed to send to notification service", "api", "alerts", "notification", n, "err", err)
 		}
 	}
 

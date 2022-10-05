@@ -61,7 +61,7 @@ func (s *Service) Render(ctx context.Context, name string, requestVariables map[
 		return "", err
 	}
 
-	return RenderWithTemplate(ctx, templateFromDB, requestVariables)
+	return RenderWithEnrichedDefault(templateFromDB.Body, templateFromDB.Variables, requestVariables)
 }
 
 func enrichWithDefaults(variables []Variable, requestVariables map[string]string) map[string]string {
@@ -79,14 +79,18 @@ func enrichWithDefaults(variables []Variable, requestVariables map[string]string
 	return result
 }
 
-func RenderWithTemplate(ctx context.Context, templateToUse *Template, requestVariables map[string]string) (string, error) {
-	enrichedVariables := enrichWithDefaults(templateToUse.Variables, requestVariables)
+func RenderWithEnrichedDefault(templateBody string, templateVars []Variable, requestVariables map[string]string) (string, error) {
+	enrichedVariables := enrichWithDefaults(templateVars, requestVariables)
+	return RenderBody(templateBody, enrichedVariables)
+}
+
+func RenderBody(templateBody string, aStruct interface{}) (string, error) {
 	var tpl bytes.Buffer
-	tmpl, err := texttemplate.New("parser").Delims(leftDelim, rightDelim).Parse(templateToUse.Body)
+	tmpl, err := texttemplate.New("parser").Funcs(defaultFuncMap).Delims(leftDelim, rightDelim).Parse(templateBody)
 	if err != nil {
-		return "", errors.ErrInvalid.WithMsgf("failed to parse template body").WithCausef(err.Error())
+		return "", errors.ErrInvalid.WithMsgf("failed to parse template body").WithMsgf(err.Error())
 	}
-	err = tmpl.Execute(&tpl, enrichedVariables)
+	err = tmpl.Execute(&tpl, &aStruct)
 	if err != nil {
 		return "", err
 	}

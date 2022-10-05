@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/db"
@@ -257,19 +259,40 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	// run worker
 	notificationHandler := notification.NewHandler(logger, queue, notifierRegistry)
 	notificationWorker := notification.NewWorker(logger, notificationHandler)
-	go func(ctx context.Context) {
-		if err := notificationWorker.Run(ctx); err != nil {
+
+	wg := &sync.WaitGroup{}
+	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
+	wg.Add(1)
+	go func() {
+		if err := notificationWorker.Run(workerCtx, wg); err != nil {
 			logger.Error("worker error", "error", err)
 		}
-	}(ctx)
+	}()
 
-	return server.RunServer(
+	err = server.RunServer(
 		ctx,
 		cfg.Service,
 		logger,
 		nr,
 		apiDeps,
 	)
+
+	logger.Info("server stopped", "error", err)
+
+	// stopping server first before cancelling worker
+	cancelWorkerCtx()
+
+	wg.Wait()
+
+	const gracefulStopQueueWaitPeriod = 5 * time.Second
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), gracefulStopQueueWaitPeriod)
+	defer cancel()
+
+	if err := queue.Stop(timeoutCtx); err != nil {
+		logger.Error("error stopping queue", "error", err)
+	}
+
+	return err
 }
 
 func initLogger(cfg config.Log) log.Logger {
