@@ -23,17 +23,24 @@ func (_m *Notifier) EXPECT() *Notifier_Expecter {
 }
 
 // Publish provides a mock function with given fields: ctx, message
-func (_m *Notifier) Publish(ctx context.Context, message notification.Message) error {
+func (_m *Notifier) Publish(ctx context.Context, message notification.Message) (bool, error) {
 	ret := _m.Called(ctx, message)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, notification.Message) error); ok {
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, notification.Message) bool); ok {
 		r0 = rf(ctx, message)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(bool)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, notification.Message) error); ok {
+		r1 = rf(ctx, message)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Notifier_Publish_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Publish'
@@ -55,13 +62,13 @@ func (_c *Notifier_Publish_Call) Run(run func(ctx context.Context, message notif
 	return _c
 }
 
-func (_c *Notifier_Publish_Call) Return(_a0 error) *Notifier_Publish_Call {
-	_c.Call.Return(_a0)
+func (_c *Notifier_Publish_Call) Return(_a0 bool, _a1 error) *Notifier_Publish_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// ValidateConfig provides a mock function with given fields: notificationConfigMap
-func (_m *Notifier) ValidateConfig(notificationConfigMap map[string]interface{}) error {
+// ValidateConfigMap provides a mock function with given fields: notificationConfigMap
+func (_m *Notifier) ValidateConfigMap(notificationConfigMap map[string]interface{}) error {
 	ret := _m.Called(notificationConfigMap)
 
 	var r0 error
@@ -74,25 +81,25 @@ func (_m *Notifier) ValidateConfig(notificationConfigMap map[string]interface{})
 	return r0
 }
 
-// Notifier_ValidateConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateConfig'
-type Notifier_ValidateConfig_Call struct {
+// Notifier_ValidateConfigMap_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateConfigMap'
+type Notifier_ValidateConfigMap_Call struct {
 	*mock.Call
 }
 
-// ValidateConfig is a helper method to define mock.On call
+// ValidateConfigMap is a helper method to define mock.On call
 //  - notificationConfigMap map[string]interface{}
-func (_e *Notifier_Expecter) ValidateConfig(notificationConfigMap interface{}) *Notifier_ValidateConfig_Call {
-	return &Notifier_ValidateConfig_Call{Call: _e.mock.On("ValidateConfig", notificationConfigMap)}
+func (_e *Notifier_Expecter) ValidateConfigMap(notificationConfigMap interface{}) *Notifier_ValidateConfigMap_Call {
+	return &Notifier_ValidateConfigMap_Call{Call: _e.mock.On("ValidateConfigMap", notificationConfigMap)}
 }
 
-func (_c *Notifier_ValidateConfig_Call) Run(run func(notificationConfigMap map[string]interface{})) *Notifier_ValidateConfig_Call {
+func (_c *Notifier_ValidateConfigMap_Call) Run(run func(notificationConfigMap map[string]interface{})) *Notifier_ValidateConfigMap_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Notifier_ValidateConfig_Call) Return(_a0 error) *Notifier_ValidateConfig_Call {
+func (_c *Notifier_ValidateConfigMap_Call) Return(_a0 error) *Notifier_ValidateConfigMap_Call {
 	_c.Call.Return(_a0)
 	return _c
 }

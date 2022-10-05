@@ -63,7 +63,7 @@ func (ns *NotificationService) Dispatch(ctx context.Context, n Notification) err
 				return err
 			}
 
-			if err := receiverPlugin.ValidateConfig(message.Configs); err != nil {
+			if err := receiverPlugin.ValidateConfigMap(message.Configs); err != nil {
 				return err
 			}
 

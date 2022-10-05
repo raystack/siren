@@ -14,7 +14,7 @@ import (
 func TestSlackReceiverService_BuildData(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(sc *mocks.SlackClient, e *mocks.Encryptor)
+		Setup       func(sc *mocks.SlackCaller, e *mocks.Encryptor)
 		Confs       map[string]interface{}
 		Err         error
 	}
@@ -23,14 +23,14 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if configuration is invalid",
-				Setup:       func(sc *mocks.SlackClient, e *mocks.Encryptor) {},
+				Setup:       func(sc *mocks.SlackCaller, e *mocks.Encryptor) {},
 				Confs:       make(map[string]interface{}),
 				Err:         errors.New("invalid slack receiver config, workspace: , token: <secret>"),
 			},
 			{
 				Description: "should return error if failed to get workspace channels with slack client",
-				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return(nil, errors.New("some error"))
+				Setup: func(sc *mocks.SlackCaller, e *mocks.Encryptor) {
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 				},
 				Confs: map[string]interface{}{
 					"token":     "key",
@@ -40,8 +40,8 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 			},
 			{
 				Description: "should return nil error if success populating receiver.Receiver",
-				Setup: func(sc *mocks.SlackClient, e *mocks.Encryptor) {
-					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.ClientCallOption")).Return([]slack.Channel{
+				Setup: func(sc *mocks.SlackCaller, e *mocks.Encryptor) {
+					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return([]slack.Channel{
 						{
 							ID:   "id",
 							Name: "name",
@@ -59,7 +59,7 @@ func TestSlackReceiverService_BuildData(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				slackClientMock = new(mocks.SlackClient)
+				slackClientMock = new(mocks.SlackCaller)
 				encryptorMock   = new(mocks.Encryptor)
 			)
 

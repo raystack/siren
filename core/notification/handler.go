@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
 )
@@ -16,7 +15,6 @@ const (
 
 // Handler is a process to handle message publishing
 type Handler struct {
-	id                     string
 	logger                 log.Logger
 	q                      Queuer
 	notifierRegistry       map[string]Notifier
@@ -29,7 +27,6 @@ type Handler struct {
 // NewHandler creates a new handler with some supported type of Notifiers
 func NewHandler(logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
-		id:           uuid.NewString(),
 		batchSize:    defaultBatchSize,
 		pollDuration: defaultPollDuration,
 
@@ -60,6 +57,7 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 }
 
 // RunHandler executes and run handler until an interrupt or cancel signal
+// TODO check graceful shutdown
 func (h *Handler) RunHandler(ctx context.Context) {
 	timer := time.NewTimer(h.pollDuration)
 	defer timer.Stop()
@@ -95,9 +93,9 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
-		if err := notifier.Publish(ctx, message); err != nil {
+		if retryable, err := notifier.Publish(ctx, message); err != nil {
 
-			message.MarkFailed(time.Now(), err)
+			message.MarkFailed(time.Now(), retryable, err)
 
 			if err := h.q.ErrorHandler(ctx, message); err != nil {
 				return err

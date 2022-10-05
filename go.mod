@@ -12,7 +12,6 @@ require (
 	github.com/go-openapi/loads v0.20.1 // indirect
 	github.com/go-openapi/runtime v0.19.26
 	github.com/go-openapi/spec v0.20.2 // indirect
-	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
@@ -35,6 +34,7 @@ require (
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
 	github.com/prometheus/client_golang v1.13.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20201014093524-73e2ce1bd643
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/schollz/progressbar/v3 v3.9.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/slack-go/slack v0.11.0

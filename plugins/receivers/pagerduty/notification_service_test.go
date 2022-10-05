@@ -1,4 +1,4 @@
-package slack_test
+package pagerduty_test
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/plugins/receivers/slack"
-	"github.com/odpf/siren/plugins/receivers/slack/mocks"
+	"github.com/odpf/siren/plugins/receivers/pagerduty"
+	"github.com/odpf/siren/plugins/receivers/pagerduty/mocks"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestSlackNotificationService_Publish(t *testing.T) {
+func TestPagerDutyNotificationService_Publish_V1(t *testing.T) {
 	tests := []struct {
 		name                string
-		setup               func(*mocks.SlackCaller)
+		setup               func(*mocks.PagerDutyCaller)
 		notificationMessage notification.Message
 		wantRetryable       bool
 		wantErr             bool
@@ -24,7 +24,7 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 			name: "should return error if failed to decode notification config",
 			notificationMessage: notification.Message{
 				Configs: map[string]interface{}{
-					"token": true,
+					"service_key": true,
 				},
 			},
 			wantErr: true,
@@ -33,22 +33,22 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 			name: "should return error if failed to decode notification detail",
 			notificationMessage: notification.Message{
 				Detail: map[string]interface{}{
-					"text": make(chan bool),
+					"description": make(chan bool),
 				},
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error and not retryable if notify return error",
-			setup: func(sc *mocks.SlackCaller) {
-				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(errors.New("some error"))
+			setup: func(pd *mocks.PagerDutyCaller) {
+				pd.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(errors.New("some error"))
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]interface{}{
-					"token": true,
+					"service_key": "123123",
 				},
 				Detail: map[string]interface{}{
-					"message": "hello",
+					"description": "hello",
 				},
 			},
 			wantRetryable: false,
@@ -56,15 +56,15 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 		},
 		{
 			name: "should return error and retryable if notify return retryable error",
-			setup: func(sc *mocks.SlackCaller) {
-				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(retry.RetryableError{Err: errors.New("some error")})
+			setup: func(sc *mocks.PagerDutyCaller) {
+				sc.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(retry.RetryableError{Err: errors.New("some error")})
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]interface{}{
-					"token": "123123",
+					"service_key": "123123",
 				},
 				Detail: map[string]interface{}{
-					"message": "hello",
+					"description": "hello",
 				},
 			},
 			wantRetryable: true,
@@ -73,21 +73,21 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockSlackClient := new(mocks.SlackCaller)
+			mockPDClient := new(mocks.PagerDutyCaller)
 
 			if tt.setup != nil {
-				tt.setup(mockSlackClient)
+				tt.setup(mockPDClient)
 			}
 
-			s := slack.NewNotificationService(mockSlackClient)
+			pd := pagerduty.NewNotificationService(mockPDClient)
 
-			got, err := s.Publish(context.Background(), tt.notificationMessage)
+			got, err := pd.Publish(context.Background(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SlackNotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PagerDutyNotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.wantRetryable {
-				t.Errorf("SlackNotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
+				t.Errorf("PagerDutyNotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
 			}
 		})
 	}

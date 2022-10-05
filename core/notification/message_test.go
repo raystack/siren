@@ -98,7 +98,7 @@ func TestMessage_Mark(t *testing.T) {
 		expectedMessage.Status = notification.MessageStatusFailed
 		expectedMessage.UpdatedAt = testTimeNow
 
-		m.MarkFailed(testTimeNow, err)
+		m.MarkFailed(testTimeNow, true, err)
 
 		if diff := cmp.Diff(m, expectedMessage, cmpopts.IgnoreUnexported(notification.Message{})); diff != "" {
 			t.Errorf("result not match, diff = %v", diff)

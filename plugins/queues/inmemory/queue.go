@@ -3,6 +3,7 @@ package inmemory
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
@@ -12,6 +13,7 @@ import (
 // not recommended to use this in production
 type Queue struct {
 	logger  log.Logger
+	once    sync.Once
 	memoryQ chan notification.Message
 }
 
@@ -74,5 +76,7 @@ func (q *Queue) ErrorHandler(ctx context.Context, ms notification.Message) error
 // Close is a specific inmemmory queue function
 // this will close the channel to simulate queue
 func (q *Queue) Close() {
-	close(q.memoryQ)
+	q.once.Do(func() {
+		close(q.memoryQ)
+	})
 }

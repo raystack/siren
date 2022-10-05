@@ -89,7 +89,7 @@ func TestNotificationService_Dispatch(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfig(mock.AnythingOfType("map[string]interface {}")).Return(errors.New("invalid config"))
+				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(errors.New("invalid config"))
 			},
 			wantErr: true,
 		},
@@ -110,7 +110,7 @@ func TestNotificationService_Dispatch(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfig(mock.AnythingOfType("map[string]interface {}")).Return(nil)
+				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
@@ -132,7 +132,7 @@ func TestNotificationService_Dispatch(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().ValidateConfig(mock.AnythingOfType("map[string]interface {}")).Return(nil)
+				n.EXPECT().ValidateConfigMap(mock.AnythingOfType("map[string]interface {}")).Return(nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,
@@ -158,6 +158,10 @@ func TestNotificationService_Dispatch(t *testing.T) {
 			if err := ns.Dispatch(context.Background(), tc.n); (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
 			}
+
+			mockSubscriptionService.AssertExpectations(t)
+			mockQueuer.AssertExpectations(t)
+			mockNotifier.AssertExpectations(t)
 		})
 	}
 }

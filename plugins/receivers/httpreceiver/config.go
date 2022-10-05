@@ -1,7 +1,17 @@
 package httpreceiver
 
-import "fmt"
+import (
+	"fmt"
 
+	"github.com/odpf/siren/pkg/httpclient"
+	"github.com/odpf/siren/pkg/retry"
+)
+
+// AppConfig is a config loaded when siren is started
+type AppConfig struct {
+	Retry      retry.Config      `mapstructure:"retry" yaml:"retry"`
+	HTTPClient httpclient.Config `mapstructure:"http_client" yaml:"http_client"`
+}
 type ReceiverConfig struct {
 	URL string `mapstructure:"url"`
 }
@@ -20,7 +30,7 @@ func (c *ReceiverConfig) AsMap() map[string]interface{} {
 }
 
 type NotificationConfig struct {
-	ReceiverConfig
+	ReceiverConfig `mapstructure:",squash"`
 }
 
 func (c *NotificationConfig) AsMap() map[string]interface{} {

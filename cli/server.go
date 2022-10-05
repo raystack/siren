@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/db"
@@ -21,6 +20,8 @@ import (
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/httpclient"
+	"github.com/odpf/siren/pkg/retry"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/zaputil"
@@ -149,7 +150,6 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	httpClient := &http.Client{}
 	encryptor, err := secret.New(cfg.EncryptionKey)
 	if err != nil {
 		return fmt.Errorf("cannot initialize encryptor: %w", err)
@@ -184,7 +184,29 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	)
 
 	// plugin receiver services
-	slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
+	slackHTTPClient := httpclient.New(cfg.Receivers.Slack.HTTPClient)
+	slackRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	slackClient := slack.NewClient(
+		cfg.Receivers.Slack,
+		slack.ClientWithHTTPClient(slackHTTPClient),
+		slack.ClientWithRetrier(slackRetrier),
+	)
+	pagerdutyHTTPClient := httpclient.New(cfg.Receivers.Pagerduty.HTTPClient)
+	pagerdutyRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	pagerdutyClient := pagerduty.NewClient(
+		cfg.Receivers.Pagerduty,
+		pagerduty.ClientWithHTTPClient(pagerdutyHTTPClient),
+		pagerduty.ClientWithRetrier(pagerdutyRetrier),
+	)
+	httpreceiverHTTPClient := httpclient.New(cfg.Receivers.HTTPReceiver.HTTPClient)
+	httpreceiverRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	httpreceiverClient := httpreceiver.NewClient(
+		logger,
+		cfg.Receivers.HTTPReceiver,
+		httpreceiver.ClientWithHTTPClient(httpreceiverHTTPClient),
+		httpreceiver.ClientWithRetrier(httpreceiverRetrier),
+	)
+
 	slackReceiverService := slack.NewReceiverService(slackClient, encryptor)
 	httpReceiverService := httpreceiver.NewReceiverService()
 	pagerDutyReceiverService := pagerduty.NewReceiverService()
@@ -207,11 +229,19 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		subscription.RegisterProviderPlugin(provider.TypeCortex, cortexProviderService),
 	)
 
+	// notification
 	slackNotificationService := slack.NewNotificationService(slackClient)
+	pagerdutyNotificationService := pagerduty.NewNotificationService(pagerdutyClient)
+	httpreceiverNotificationService := httpreceiver.NewNotificationService(httpreceiverClient)
+
+	notifierRegistry := map[string]notification.Notifier{
+		receiver.TypeSlack:     slackNotificationService,
+		receiver.TypePagerDuty: pagerdutyNotificationService,
+		receiver.TypeHTTP:      httpreceiverNotificationService,
+	}
+
 	queue := inmemory.New(logger)
-	notificationService := notification.NewService(logger, queue, subscriptionService, map[string]notification.Notifier{
-		receiver.TypeSlack: slackNotificationService,
-	})
+	notificationService := notification.NewService(logger, queue, subscriptionService, notifierRegistry)
 
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,
@@ -225,11 +255,8 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 
 	// run worker
-	notificationHandler := notification.NewHandler(logger, queue,
-		map[string]notification.Notifier{
-			receiver.TypeSlack: slackNotificationService,
-		})
-	notificationWorker := notification.NewWorker(logger, []*notification.Handler{notificationHandler}...)
+	notificationHandler := notification.NewHandler(logger, queue, notifierRegistry)
+	notificationWorker := notification.NewWorker(logger, notificationHandler)
 	go func(ctx context.Context) {
 		if err := notificationWorker.Run(ctx); err != nil {
 			logger.Error("worker error", "error", err)

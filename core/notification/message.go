@@ -60,8 +60,9 @@ type Message struct {
 	Detail       map[string]interface{} // the datasource to build vendor-specific message
 	LastError    string
 
-	MaxTries int
-	TryCount int
+	MaxTries  int
+	TryCount  int
+	Retryable bool
 
 	ExpiredAt time.Time
 	CreatedAt time.Time
@@ -109,9 +110,10 @@ func (m *Message) Initialize(
 }
 
 // MarkFailed update message to the failed state
-func (m *Message) MarkFailed(updatedAt time.Time, err error) {
+func (m *Message) MarkFailed(updatedAt time.Time, retryable bool, err error) {
 	m.TryCount = m.TryCount + 1
 	m.LastError = err.Error()
+	m.Retryable = retryable
 	m.Status = MessageStatusFailed
 	m.UpdatedAt = updatedAt
 }

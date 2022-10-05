@@ -8,9 +8,9 @@ type Encryptor interface {
 	Decrypt(str string) (string, error)
 }
 
-//go:generate mockery --name=SlackClient -r --case underscore --with-expecter --structname SlackClient --filename slack_client.go --output=./mocks
-type SlackClient interface {
+//go:generate mockery --name=SlackCaller -r --case underscore --with-expecter --structname SlackCaller --filename slack_caller.go --output=./mocks
+type SlackCaller interface {
 	ExchangeAuth(ctx context.Context, authCode, clientID, clientSecret string) (Credential, error)
-	GetWorkspaceChannels(ctx context.Context, opts ...ClientCallOption) ([]Channel, error)
-	Notify(ctx context.Context, conf NotificationConfig, message Message, opts ...ClientCallOption) error
+	GetWorkspaceChannels(ctx context.Context, token string) ([]Channel, error)
+	Notify(ctx context.Context, conf NotificationConfig, message Message) error
 }

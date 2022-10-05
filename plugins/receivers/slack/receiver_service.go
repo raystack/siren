@@ -11,14 +11,14 @@ import (
 
 // SlackReceiverService is a receiver plugin service layer for slack
 type SlackReceiverService struct {
-	slackClient  SlackClient
+	client       SlackCaller
 	cryptoClient Encryptor
 }
 
 // NewReceiverService returns slack service struct. This service implement [receiver.Resolver] interface.
-func NewReceiverService(slackClient SlackClient, cryptoClient Encryptor) *SlackReceiverService {
+func NewReceiverService(client SlackCaller, cryptoClient Encryptor) *SlackReceiverService {
 	return &SlackReceiverService{
-		slackClient:  slackClient,
+		client:       client,
 		cryptoClient: cryptoClient,
 	}
 }
@@ -33,7 +33,7 @@ func (s *SlackReceiverService) PreHookTransformConfigs(ctx context.Context, conf
 		return nil, errors.ErrInvalid.WithMsgf(err.Error())
 	}
 
-	creds, err := s.slackClient.ExchangeAuth(ctx, slackCredentialConfig.AuthCode, slackCredentialConfig.ClientID, slackCredentialConfig.ClientSecret)
+	creds, err := s.client.ExchangeAuth(ctx, slackCredentialConfig.AuthCode, slackCredentialConfig.ClientID, slackCredentialConfig.ClientSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code with slack OAuth server: %w", err)
 	}
@@ -83,9 +83,9 @@ func (s *SlackReceiverService) BuildData(ctx context.Context, configurations map
 		return nil, err
 	}
 
-	channels, err := s.slackClient.GetWorkspaceChannels(
+	channels, err := s.client.GetWorkspaceChannels(
 		ctx,
-		CallWithToken(receiverConfig.Token),
+		receiverConfig.Token,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not get channels: %w", err)

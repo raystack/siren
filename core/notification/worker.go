@@ -2,8 +2,8 @@ package notification
 
 import (
 	"context"
-	"sync"
 
+	"github.com/google/uuid"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
 )
@@ -11,37 +11,31 @@ import (
 // Worker is a notification worker instance that runs one or more than one
 // notification handler
 type Worker struct {
-	logger   log.Logger
-	handlers []*Handler
+	id      string
+	logger  log.Logger
+	handler *Handler
 }
 
 // NewWorker creates a new worker instance
-func NewWorker(logger log.Logger, handlers ...*Handler) *Worker {
+func NewWorker(logger log.Logger, h *Handler) *Worker {
 	return &Worker{
-		logger:   logger,
-		handlers: handlers,
+		id:      uuid.NewString(),
+		logger:  logger,
+		handler: h,
 	}
 }
 
-// Run will execute and run one or multiple notification handlers
-// as goroutines
+// Run will execute and run one handler as goroutine
 func (w *Worker) Run(ctx context.Context) error {
 	cancellableCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	wg := &sync.WaitGroup{}
-	for _, handler := range w.handlers {
-		wg.Add(1)
-		go func(h *Handler) {
-			defer wg.Done()
-			w.logger.Info("running handler worker", "id", h.id)
-			h.RunHandler(cancellableCtx)
-			w.logger.Info("handler worker exited", "id", h.id)
-		}(handler)
-	}
-	wg.Wait()
+	go func(h *Handler) {
+		w.logger.Info("running handler worker", "id", w.id)
+		h.RunHandler(cancellableCtx)
+		w.logger.Info("handler worker exited", "id", w.id)
+	}(w.handler)
 
-	w.logger.Info("all handlers exited")
 	err := ctx.Err()
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return nil

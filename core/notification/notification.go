@@ -9,8 +9,8 @@ import (
 
 //go:generate mockery --name=Notifier -r --case underscore --with-expecter --structname Notifier --filename notifier.go --output=./mocks
 type Notifier interface {
-	ValidateConfig(notificationConfigMap map[string]interface{}) error
-	Publish(ctx context.Context, message Message) error
+	ValidateConfigMap(notificationConfigMap map[string]interface{}) error
+	Publish(ctx context.Context, message Message) (bool, error)
 }
 
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks

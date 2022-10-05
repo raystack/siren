@@ -2,6 +2,7 @@ package slack
 
 import (
 	"encoding/json"
+	"fmt"
 
 	goslack "github.com/slack-go/slack"
 )
@@ -15,6 +16,41 @@ type Message struct {
 	IconURL     string              `yaml:"icon_url,omitempty" json:"icon_url,omitempty"  mapstructure:"icon_url"`
 	LinkNames   bool                `yaml:"link_names,omitempty" json:"link_names,omitempty"  mapstructure:"link_names"`
 	Attachments []MessageAttachment `yaml:"attachments,omitempty" json:"attachments,omitempty" mapstructure:"attachments"`
+}
+
+func (m Message) BuildGoSlackMessageOptions() ([]goslack.MsgOption, error) {
+	goslackAttachments := []goslack.Attachment{}
+	for _, a := range m.Attachments {
+		attachment, err := a.ToGoSlack()
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse slack attachment: %w", err)
+		}
+		goslackAttachments = append(goslackAttachments, *attachment)
+	}
+
+	msgOptions := []goslack.MsgOption{}
+
+	if m.Text != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionText(m.Text, false))
+	}
+
+	if m.Username != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionUsername(m.Username))
+	}
+
+	if m.IconEmoji != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionIconEmoji(m.IconEmoji))
+	}
+
+	if m.IconURL != "" {
+		msgOptions = append(msgOptions, goslack.MsgOptionIconURL(m.IconURL))
+	}
+
+	if len(goslackAttachments) != 0 {
+		msgOptions = append(msgOptions, goslack.MsgOptionAttachments(goslackAttachments...))
+	}
+
+	return msgOptions, nil
 }
 
 type MessageAttachment map[string]interface{}

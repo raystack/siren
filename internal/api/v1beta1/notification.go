@@ -20,7 +20,7 @@ func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.Notif
 
 	if err == nil {
 		if err := s.notificationService.Dispatch(ctx, *n); err != nil {
-			s.logger.Warn("failed to send to notification service", "api", "notification", "notification", n)
+			s.logger.Warn("failed to send to notification service", "api", "notification", "notification", n, "error", err)
 		}
 	}
 
