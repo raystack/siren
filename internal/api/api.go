@@ -72,7 +72,8 @@ type TemplateService interface {
 
 //go:generate mockery --name=NotificationService -r --case underscore --with-expecter --structname NotificationService --filename notification_service.go --output=./mocks
 type NotificationService interface {
-	Dispatch(ctx context.Context, n notification.Notification) error
+	DispatchDirect(ctx context.Context, n notification.Notification, receiverID uint64) error
+	DispatchBySubscription(ctx context.Context, n notification.Notification) error
 }
 
 type Deps struct {

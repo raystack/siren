@@ -8,13 +8,93 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/notification/mocks"
+	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/stretchr/testify/mock"
 )
 
 const testPluginType = "test"
 
-func TestNotificationService_Dispatch(t *testing.T) {
+func TestNotificationService_DispatchDirect(t *testing.T) {
+	testCases := []struct {
+		name    string
+		setup   func(*mocks.ReceiverService, *mocks.Queuer, *mocks.Notifier)
+		n       notification.Notification
+		wantErr bool
+	}{
+		{
+			name: "should return error if there is an error when fetching receiver",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error if failed to transform notification to messages",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{}, nil)
+			},
+			n: notification.Notification{
+				ValidDurationString: "xxx",
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return error if enqueue error",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					Type: testPluginType,
+					Configurations: map[string]interface{}{
+						"key": "value",
+					},
+				}, nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return no error if enqueue success",
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					Type: testPluginType,
+					Configurations: map[string]interface{}{
+						"key": "value",
+					},
+				}, nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+			},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				mockReceiverService = new(mocks.ReceiverService)
+				mockQueuer          = new(mocks.Queuer)
+				mockNotifier        = new(mocks.Notifier)
+			)
+
+			if tc.setup != nil {
+				tc.setup(mockReceiverService, mockQueuer, mockNotifier)
+			}
+
+			ns := notification.NewService(
+				log.NewNoop(), mockQueuer, mockReceiverService, nil, map[string]notification.Notifier{
+					testPluginType: mockNotifier,
+				})
+
+			if err := ns.DispatchDirect(context.Background(), tc.n, 1); (err != nil) != tc.wantErr {
+				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
+			}
+
+			mockReceiverService.AssertExpectations(t)
+			mockQueuer.AssertExpectations(t)
+			mockNotifier.AssertExpectations(t)
+		})
+	}
+}
+
+func TestNotificationService_DispatchBySubscription(t *testing.T) {
 	testCases := []struct {
 		name    string
 		setup   func(*mocks.SubscriptionService, *mocks.Queuer, *mocks.Notifier)
@@ -151,11 +231,11 @@ func TestNotificationService_Dispatch(t *testing.T) {
 			}
 
 			ns := notification.NewService(
-				log.NewNoop(), mockQueuer, mockSubscriptionService, map[string]notification.Notifier{
+				log.NewNoop(), mockQueuer, nil, mockSubscriptionService, map[string]notification.Notifier{
 					testPluginType: mockNotifier,
 				})
 
-			if err := ns.Dispatch(context.Background(), tc.n); (err != nil) != tc.wantErr {
+			if err := ns.DispatchBySubscription(context.Background(), tc.n); (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
 			}
 

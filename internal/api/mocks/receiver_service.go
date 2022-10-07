@@ -192,45 +192,6 @@ func (_c *ReceiverService_List_Call) Return(_a0 []receiver.Receiver, _a1 error) 
 	return _c
 }
 
-// Notify provides a mock function with given fields: ctx, id, payloadMessage
-func (_m *ReceiverService) Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error {
-	ret := _m.Called(ctx, id, payloadMessage)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, map[string]interface{}) error); ok {
-		r0 = rf(ctx, id, payloadMessage)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ReceiverService_Notify_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Notify'
-type ReceiverService_Notify_Call struct {
-	*mock.Call
-}
-
-// Notify is a helper method to define mock.On call
-//  - ctx context.Context
-//  - id uint64
-//  - payloadMessage map[string]interface{}
-func (_e *ReceiverService_Expecter) Notify(ctx interface{}, id interface{}, payloadMessage interface{}) *ReceiverService_Notify_Call {
-	return &ReceiverService_Notify_Call{Call: _e.mock.On("Notify", ctx, id, payloadMessage)}
-}
-
-func (_c *ReceiverService_Notify_Call) Run(run func(ctx context.Context, id uint64, payloadMessage map[string]interface{})) *ReceiverService_Notify_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(map[string]interface{}))
-	})
-	return _c
-}
-
-func (_c *ReceiverService_Notify_Call) Return(_a0 error) *ReceiverService_Notify_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Update provides a mock function with given fields: ctx, rcv
 func (_m *ReceiverService) Update(ctx context.Context, rcv *receiver.Receiver) error {
 	ret := _m.Called(ctx, rcv)

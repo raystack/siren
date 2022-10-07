@@ -5,9 +5,16 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/retry"
+)
+
+const (
+	TypeChannelChannel = "channel"
+	TypeChannelUser    = "user"
+
+	defaultChannelType = TypeChannelChannel
 )
 
 // SlackNotificationService is a notification plugin service layer for slack
@@ -47,7 +54,10 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	}
 
 	if notificationConfig.ChannelType == "" {
-		notificationConfig.ChannelType = DefaultChannelType
+		notificationConfig.ChannelType = defaultChannelType
+	}
+	if notificationConfig.ChannelName != "" {
+		slackMessage.Channel = notificationConfig.ChannelName
 	}
 
 	if err := s.client.Notify(ctx, *notificationConfig, *slackMessage); err != nil {
@@ -61,10 +71,10 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	return false, nil
 }
 
-func (s *SlackNotificationService) DefaultTemplateOfProvider(providerType string) string {
-	switch providerType {
-	case provider.TypeCortex:
-		return DefaultCortexAlertTemplateBody
+func (s *SlackNotificationService) DefaultTemplateOfProvider(templateName string) string {
+	switch templateName {
+	case template.ReservedName_DefaultCortex:
+		return defaultCortexAlertTemplateBody
 	default:
 		return ""
 	}

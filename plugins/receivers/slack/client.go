@@ -18,10 +18,6 @@ import (
 const (
 	defaultSlackAPIHost = "https://slack.com/api"
 	oAuthSlackPath      = "/oauth.v2.access"
-
-	TypeChannelChannel = "channel"
-	TypeChannelUser    = "user"
-	DefaultChannelType = TypeChannelChannel
 )
 
 //go:generate mockery --name=GoSlackCaller -r --case underscore --with-expecter --structname GoSlackCaller --filename goslack_caller.go --output=./mocks
@@ -56,16 +52,6 @@ type Client struct {
 	retrier retry.Runner
 }
 
-// type clientData struct {
-// 	// customPath   string
-// 	// authCode     string
-// 	// clientID     string
-// 	// clientSecret string
-// 	// token        string
-// 	// creds         Credential
-// 	goslackClient GoSlackCaller
-// }
-
 // NewClient is a constructor to create slack client.
 // this version uses go-slack client and this construction wraps the client.
 func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
@@ -89,46 +75,6 @@ func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
 
 	return c
 }
-
-// // createClient create slack client with 3 options
-// // - goslack Client
-// // - token
-// // - client secret
-// // the order that took precedence
-// // goslackClient - token - client secret
-// // e.g. if user passes goslackClient, it will ignore the others
-// func (c *Client) createGoSlackClient(ctx context.Context, opts ...ClientCallOption) (GoSlackCaller, error) {
-// 	c.data = &clientData{}
-// 	for _, opt := range opts {
-// 		opt(c.data)
-// 	}
-
-// 	if c.data.goslackClient != nil {
-// 		return c.data.goslackClient, nil
-// 	}
-
-// 	if c.data.token != "" {
-// 		goslackOpts := []goslack.Option{}
-// 		if c.data.customPath != "" {
-// 			goslackOpts = append(goslackOpts, goslack.OptionAPIURL(c.cfg.APIHost+c.data.customPath))
-// 		}
-
-// 		c.data.goslackClient = goslack.New(c.data.token, goslackOpts...)
-// 		return c.data.goslackClient, nil
-// 	}
-
-// 	// if c.data.authCode == "" || c.data.clientID == "" || c.data.clientSecret == "" {
-// 	// 	return nil, errors.New("no client id/secret credential provided")
-// 	// }
-
-// 	// creds, err := c.ExchangeAuth(ctx, c.data.authCode, c.data.clientID, c.data.clientSecret)
-// 	// if err != nil {
-// 	// 	return nil, err
-// 	// }
-// 	// c.data.creds = creds
-
-// 	return c.data.goslackClient, nil
-// }
 
 // ExchangeAuth submits client ID, client secret, and auth code and retrieve acces token and team name
 func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSecret string) (Credential, error) {
@@ -202,16 +148,16 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 		if err != nil {
 			return fmt.Errorf("failed to fetch joined channel list: %w", err)
 		}
-		channelID = searchChannelId(joinedChannelList, conf.ChannelName)
+		channelID = searchChannelId(joinedChannelList, message.Channel)
 		if channelID == "" {
-			return fmt.Errorf("app is not part of the channel %q", conf.ChannelName)
+			return fmt.Errorf("app is not part of the channel %q", message.Channel)
 		}
 	case TypeChannelUser:
 		// https://api.slack.com/methods/users.lookupByEmail
-		user, err := gsc.GetUserByEmailContext(ctx, conf.ChannelName)
+		user, err := gsc.GetUserByEmailContext(ctx, message.Channel)
 		if err != nil {
 			if err.Error() == "users_not_found" {
-				return fmt.Errorf("failed to get id for %q", conf.ChannelName)
+				return fmt.Errorf("failed to get id for %q", message.Channel)
 			}
 			return err
 		}
@@ -227,13 +173,13 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 
 	if c.retrier != nil {
 		if err := c.retrier.Run(ctx, func(ctx context.Context) error {
-			return c.sendMessageContext(ctx, gsc, channelID, conf.ChannelName, msgOptions...)
+			return c.sendMessageContext(ctx, gsc, channelID, message.Channel, msgOptions...)
 		}); err != nil {
 			return err
 		}
 		return nil
 	} else {
-		return c.sendMessageContext(ctx, gsc, channelID, conf.ChannelName, msgOptions...)
+		return c.sendMessageContext(ctx, gsc, channelID, message.Channel, msgOptions...)
 	}
 }
 

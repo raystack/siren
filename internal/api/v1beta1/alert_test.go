@@ -123,7 +123,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
+		mockNotificationService.EXPECT().DispatchBySubscription(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
@@ -184,7 +184,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
+		mockNotificationService.EXPECT().DispatchBySubscription(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
@@ -261,7 +261,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
 			Return(dummyAlerts, nil).Once()
-		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
+		mockNotificationService.EXPECT().DispatchBySubscription(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))

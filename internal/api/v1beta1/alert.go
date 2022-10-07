@@ -7,7 +7,7 @@ import (
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -105,7 +105,7 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 	for _, a := range req.GetAlerts() {
 		n := CortexAlertPBToNotification(a, firingLen, req.GetGroupKey(), notificationCreationTime)
 
-		if err := s.notificationService.Dispatch(ctx, n); err != nil {
+		if err := s.notificationService.DispatchBySubscription(ctx, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}
@@ -143,10 +143,10 @@ func CortexAlertPBToNotification(
 	data["group_key"] = groupKey
 
 	return notification.Notification{
-		ProviderType: provider.TypeCortex,
-		ID:           "cortex-" + a.GetFingerprint(),
-		Data:         data,
-		Labels:       a.GetLabels(),
-		CreatedAt:    createdTime,
+		ID:        "cortex-" + a.GetFingerprint(),
+		Data:      data,
+		Labels:    a.GetLabels(),
+		Template:  template.ReservedName_DefaultCortex,
+		CreatedAt: createdTime,
 	}
 }

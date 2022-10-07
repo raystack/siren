@@ -33,4 +33,3 @@ receivers:
       wait_duration: 20ms
     http_client:
       timeout_ms: 500
-

@@ -4,19 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/odpf/siren/core/subscription"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 //go:generate mockery --name=Notifier -r --case underscore --with-expecter --structname Notifier --filename notifier.go --output=./mocks
 type Notifier interface {
 	ValidateConfigMap(notificationConfigMap map[string]interface{}) error
-	DefaultTemplateOfProvider(providerType string) string
+	DefaultTemplateOfProvider(templateName string) string
 	Publish(ctx context.Context, message Message) (bool, error)
-}
-
-//go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
-type SubscriptionService interface {
-	MatchByLabels(ctx context.Context, labels map[string]string) ([]subscription.Subscription, error)
 }
 
 //go:generate mockery --name=Queuer -r --case underscore --with-expecter --structname Queuer --filename queuer.go --output=./mocks
@@ -30,12 +25,11 @@ type Queuer interface {
 
 // Notification is a model of notification
 type Notification struct {
-	ID string `json:"id"`
-	// To recognize if it is an alert notification, which template for which provider should we use by default
-	ProviderType        string                 `json:"provider_type"`
+	ID                  string
 	Data                map[string]interface{} `json:"data"`
 	Labels              map[string]string      `json:"labels"`
 	ValidDurationString string                 `json:"valid_duration"`
+	Template            string                 `json:"template"`
 	CreatedAt           time.Time
 }
 
@@ -49,7 +43,7 @@ func (n Notification) ToMessage(receiverType string, notificationConfigMap map[s
 	if n.ValidDurationString != "" {
 		expiryDuration, err = time.ParseDuration(n.ValidDurationString)
 		if err != nil {
-			return nil, err
+			return nil, errors.ErrInvalid.WithMsgf(err.Error())
 		}
 	}
 

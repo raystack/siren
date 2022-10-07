@@ -4,5 +4,5 @@ import _ "embed"
 
 var (
 	//go:embed config/default_cortex_alert_template_body.goyaml
-	DefaultCortexAlertTemplateBody string
+	defaultCortexAlertTemplateBody string
 )

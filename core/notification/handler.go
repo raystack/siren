@@ -56,8 +56,6 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 	return receiverPlugin, nil
 }
 
-// RunHandler executes and run handler until an interrupt or cancel signal
-// TODO check graceful shutdown
 func (h *Handler) RunHandler(ctx context.Context) {
 	timer := time.NewTimer(h.pollDuration)
 	defer timer.Stop()

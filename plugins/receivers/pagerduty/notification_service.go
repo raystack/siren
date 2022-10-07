@@ -61,7 +61,7 @@ func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificatio
 func (pd *PagerDutyNotificationService) DefaultTemplateOfProvider(providerType string) string {
 	switch providerType {
 	case provider.TypeCortex:
-		return DefaultCortexAlertTemplateBodyV1
+		return defaultCortexAlertTemplateBodyV1
 	default:
 		return ""
 	}

@@ -243,7 +243,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 
 	queue := inmemory.New(logger)
-	notificationService := notification.NewService(logger, queue, subscriptionService, notifierRegistry)
+	notificationService := notification.NewService(logger, queue, receiverService, subscriptionService, notifierRegistry)
 
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,
