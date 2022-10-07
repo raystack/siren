@@ -2,7 +2,6 @@ package inmemory
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -39,8 +38,10 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 			q.logger.Info("inmemory dequeue work is done", "scope", "queues.inmemory.dequeue")
 			return nil
 		case message = <-q.memoryQ:
+			q.logger.Debug("dequeued a message")
 		default:
-			return errors.New("queue empty")
+			q.logger.Debug("queue empty")
+			return notification.ErrNoMessage
 		}
 
 		messages = append(messages, message)

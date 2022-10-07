@@ -259,16 +259,11 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 
 	// run worker
 	notificationHandler := notification.NewHandler(logger, queue, notifierRegistry)
-	notificationWorker := notification.NewWorker(logger, notificationHandler)
 
+	cancelWorkerChan := make(chan struct{})
 	wg := &sync.WaitGroup{}
-	workerCtx, cancelWorkerCtx := context.WithCancel(context.Background())
 	wg.Add(1)
-	go func() {
-		if err := notificationWorker.Run(workerCtx, wg); err != nil {
-			logger.Error("worker error", "error", err)
-		}
-	}()
+	go notificationHandler.RunHandler(ctx, wg, cancelWorkerChan)
 
 	err = server.RunServer(
 		ctx,
@@ -281,8 +276,8 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	logger.Info("server stopped", "error", err)
 
 	// stopping server first before cancelling worker
-	cancelWorkerCtx()
-
+	close(cancelWorkerChan)
+	// wait for all workers to stop before stopping the queue
 	wg.Wait()
 
 	const gracefulStopQueueWaitPeriod = 5 * time.Second

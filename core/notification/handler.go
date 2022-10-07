@@ -2,8 +2,10 @@ package notification
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
 )
@@ -15,6 +17,7 @@ const (
 
 // Handler is a process to handle message publishing
 type Handler struct {
+	id                     string
 	logger                 log.Logger
 	q                      Queuer
 	notifierRegistry       map[string]Notifier
@@ -27,6 +30,7 @@ type Handler struct {
 // NewHandler creates a new handler with some supported type of Notifiers
 func NewHandler(logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
+		id:           uuid.NewString(),
 		batchSize:    defaultBatchSize,
 		pollDuration: defaultPollDuration,
 
@@ -56,24 +60,27 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 	return receiverPlugin, nil
 }
 
-func (h *Handler) RunHandler(ctx context.Context) {
-	timer := time.NewTimer(h.pollDuration)
-	defer timer.Stop()
+func (h *Handler) RunHandler(ctx context.Context, wg *sync.WaitGroup, cancelChan chan struct{}) {
+	defer wg.Done()
+
+	ticker := time.NewTicker(h.pollDuration)
+	defer ticker.Stop()
+
+	h.logger.Info("running handler", "id", h.id)
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-cancelChan:
+			h.logger.Info("stopping handler", "id", h.id)
 			return
 
-		case <-timer.C:
-			timer.Reset(h.pollDuration)
-
+		case t := <-ticker.C:
 			receiverTypes := h.supportedReceiverTypes
 			if len(receiverTypes) == 0 {
 				h.logger.Warn("no receiver type plugin registered, skipping dequeue", "scope", "notification.handler")
 			} else {
-				h.logger.Debug("ready to dequeue and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize)
-				if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
+				h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", t)
+				if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil && err != ErrNoMessage {
 					h.logger.Error("dequeue failed", "scope", "notification.handler", "error", err)
 				}
 			}
