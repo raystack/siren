@@ -229,10 +229,11 @@ func TestClient_NotifyChannel(t *testing.T) {
 				},
 				SubscriptionConfig: slack.SubscriptionConfig{
 					ChannelType: slack.TypeChannelChannel,
-					ChannelName: "test",
 				},
 			},
-			slack.Message{})
+			slack.Message{
+				Channel: "test",
+			})
 
 		assert.NoError(t, err)
 
