@@ -6752,6 +6752,12 @@ func (m *CreateCortexAlertsRequest) validate(all bool) error {
 
 	}
 
+	// no validation rules for GroupKey
+
+	// no validation rules for ExternalUrl
+
+	// no validation rules for Version
+
 	if len(errors) > 0 {
 		return CreateCortexAlertsRequestMultiError(errors)
 	}

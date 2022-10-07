@@ -31,7 +31,7 @@ func TestMessage_Initialize(t *testing.T) {
 					"labelkey1": "value1",
 					"samekey":   "label_value",
 				},
-				Variables: map[string]interface{}{
+				Data: map[string]interface{}{
 					"varkey1": "value1",
 					"samekey": "var_value",
 				},

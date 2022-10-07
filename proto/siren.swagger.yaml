@@ -82,6 +82,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/definitions/CortexAlert'
+              external_url:
+                type: string
+              group_key:
+                type: string
+              version:
+                type: string
       tags:
         - Alert
   /v1beta1/namespaces:

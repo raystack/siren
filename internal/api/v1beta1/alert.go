@@ -99,29 +99,14 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 		Alerts: items,
 	}
 
+	notificationCreationTime := time.Now()
+
 	// Publish to notification service
 	for _, a := range req.GetAlerts() {
-		variables := map[string]interface{}{}
+		n := CortexAlertPBToNotification(a, firingLen, req.GetGroupKey(), notificationCreationTime)
 
-		for k, v := range a.GetAnnotations() {
-			variables[k] = v
-		}
-
-		variables["status"] = a.GetStatus()
-		variables["generator_url"] = a.GetGeneratorUrl()
-		variables["num_alerts_firing"] = firingLen
-		// TODO variables["group_key"]
-
-		n := &notification.Notification{
-			ProviderType: provider.TypeCortex,
-			ID:           "cortex-" + a.GetFingerprint(),
-			Variables:    variables,
-			Labels:       a.GetLabels(),
-			CreatedAt:    time.Now(),
-		}
-
-		if err := s.notificationService.Dispatch(ctx, *n); err != nil {
-			s.logger.Warn("failed to send to notification service", "api", "alerts", "notification", n, "err", err)
+		if err := s.notificationService.Dispatch(ctx, n); err != nil {
+			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}
 
@@ -137,4 +122,31 @@ func isValidCortexAlert(alrt *alert.Alert) bool {
 	return alrt != nil && !(alrt.ResourceName == "" || alrt.Rule == "" ||
 		alrt.MetricValue == "" || alrt.MetricName == "" ||
 		alrt.Severity == "")
+}
+
+// TODO test
+func CortexAlertPBToNotification(
+	a *sirenv1beta1.CortexAlert,
+	firingLen int,
+	groupKey string,
+	createdTime time.Time,
+) notification.Notification {
+	data := map[string]interface{}{}
+
+	for k, v := range a.GetAnnotations() {
+		data[k] = v
+	}
+
+	data["status"] = a.GetStatus()
+	data["generator_url"] = a.GetGeneratorUrl()
+	data["num_alerts_firing"] = firingLen
+	data["group_key"] = groupKey
+
+	return notification.Notification{
+		ProviderType: provider.TypeCortex,
+		ID:           "cortex-" + a.GetFingerprint(),
+		Data:         data,
+		Labels:       a.GetLabels(),
+		CreatedAt:    createdTime,
+	}
 }

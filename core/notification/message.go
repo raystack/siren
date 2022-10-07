@@ -90,7 +90,7 @@ func (m *Message) Initialize(
 	for k, v := range n.Labels {
 		detail[k] = v
 	}
-	for k, v := range n.Variables {
+	for k, v := range n.Data {
 		detail[k] = v
 	}
 	m.Detail = detail

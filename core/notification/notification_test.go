@@ -30,7 +30,7 @@ func TestNotification_ToMessage(t *testing.T) {
 				Labels: map[string]string{
 					"labelkey1": "value1",
 				},
-				Variables: map[string]interface{}{
+				Data: map[string]interface{}{
 					"varkey1": "value1",
 				},
 			},
@@ -48,7 +48,7 @@ func TestNotification_ToMessage(t *testing.T) {
 				Labels: map[string]string{
 					"labelkey1": "value1",
 				},
-				Variables: map[string]interface{}{
+				Data: map[string]interface{}{
 					"varkey1": "value1",
 				},
 				ValidDurationString: "10m",

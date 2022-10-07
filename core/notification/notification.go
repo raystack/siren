@@ -33,7 +33,7 @@ type Notification struct {
 	ID string `json:"id"`
 	// To recognize if it is an alert notification, which template for which provider should we use by default
 	ProviderType        string                 `json:"provider_type"`
-	Variables           map[string]interface{} `json:"variables"`
+	Data                map[string]interface{} `json:"data"`
 	Labels              map[string]string      `json:"labels"`
 	ValidDurationString string                 `json:"valid_duration"`
 	CreatedAt           time.Time
