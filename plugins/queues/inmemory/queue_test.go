@@ -3,6 +3,7 @@ package inmemory_test
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/odpf/salt/log"
@@ -31,22 +32,26 @@ func TestQueue(t *testing.T) {
 	t.Run("should return no error if all messages are successfully processed", func(t *testing.T) {
 		ctx := context.Background()
 		logger := log.NewZap()
-		q := inmemory.New(logger)
+		q := inmemory.New(logger, 10)
 
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			assert.Len(t, messages, 1)
 			return nil
 		}
 
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			err := q.Enqueue(ctx, messages...)
 			require.NoError(t, err)
 		}()
 
 		for i := 0; i < len(messages); i++ {
-			err := q.Dequeue(ctx, nil, 1, handlerFn)
-			require.NoError(t, err)
+			_ = q.Dequeue(ctx, nil, 1, handlerFn)
 		}
+
+		wg.Wait()
 
 		q.Stop(ctx)
 	})
@@ -54,22 +59,26 @@ func TestQueue(t *testing.T) {
 	t.Run("should return no error if all messages are successfully processed with different batch", func(t *testing.T) {
 		ctx := context.Background()
 		logger := log.NewZap()
-		q := inmemory.New(logger)
+		q := inmemory.New(logger, 10)
 
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			assert.Len(t, messages, 2)
 			return nil
 		}
 
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			err := q.Enqueue(ctx, messages...)
 			require.NoError(t, err)
 		}()
 
 		for i := 0; i < 2; i++ {
-			err := q.Dequeue(ctx, nil, 2, handlerFn)
-			require.NoError(t, err)
+			_ = q.Dequeue(ctx, nil, 2, handlerFn)
 		}
+
+		wg.Wait()
 
 		q.Stop(ctx)
 	})
@@ -77,13 +86,16 @@ func TestQueue(t *testing.T) {
 	t.Run("should return an error if a message is failed to process", func(t *testing.T) {
 		ctx := context.Background()
 		logger := log.NewZap()
-		q := inmemory.New(logger)
+		q := inmemory.New(logger, 10)
 
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			return errors.New("some error")
 		}
 
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			err := q.Enqueue(ctx, messages...)
 			require.NoError(t, err)
 		}()
@@ -92,6 +104,8 @@ func TestQueue(t *testing.T) {
 			err := q.Dequeue(ctx, nil, 1, handlerFn)
 			assert.Error(t, errors.New("error processing dequeued message: some error"), err)
 		}
+
+		wg.Wait()
 
 		q.Stop(ctx)
 	})

@@ -242,7 +242,8 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		receiver.TypeHTTP:      httpreceiverNotificationService,
 	}
 
-	queue := inmemory.New(logger)
+	// for dev purpose only, should not be used in production
+	queue := inmemory.New(logger, 50)
 	notificationService := notification.NewService(logger, queue, receiverService, subscriptionService, notifierRegistry)
 
 	apiDeps := &api.Deps{

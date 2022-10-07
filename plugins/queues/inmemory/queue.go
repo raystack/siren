@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -19,11 +20,11 @@ type Queue struct {
 }
 
 // New creates a new queue instance
-func New(logger log.Logger) *Queue {
+func New(logger log.Logger, capacity uint) *Queue {
 	return &Queue{
 		logger:     logger,
 		stopSignal: make(chan struct{}),
-		memoryQ:    make(chan notification.Message),
+		memoryQ:    make(chan notification.Message, capacity),
 	}
 }
 
@@ -32,14 +33,17 @@ func New(logger log.Logger) *Queue {
 func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize int, handlerFn func(context.Context, []notification.Message) error) error {
 	messages := []notification.Message{}
 	for i := 0; i < batchSize; i++ {
+		var message notification.Message
 		select {
 		case <-ctx.Done():
 			q.logger.Info("inmemory dequeue work is done", "scope", "queues.inmemory.dequeue")
 			return nil
-
-		case message := <-q.memoryQ:
-			messages = append(messages, message)
+		case message = <-q.memoryQ:
+		default:
+			return errors.New("queue empty")
 		}
+
+		messages = append(messages, message)
 	}
 
 	if err := handlerFn(ctx, messages); err != nil {
@@ -58,6 +62,7 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 			return nil
 		case q.memoryQ <- m:
 			q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "detail", m.Detail)
+			continue
 		default:
 			return fmt.Errorf("error enqueueing message: %v", m.Detail)
 		}
