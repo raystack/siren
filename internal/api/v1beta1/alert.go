@@ -105,7 +105,7 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 	for _, a := range req.GetAlerts() {
 		n := CortexAlertPBToNotification(a, firingLen, req.GetGroupKey(), notificationCreationTime)
 
-		if err := s.notificationService.DispatchBySubscription(ctx, n); err != nil {
+		if err := s.notificationService.DispatchToSubscribers(ctx, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}

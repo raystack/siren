@@ -15,7 +15,7 @@ import (
 
 const testPluginType = "test"
 
-func TestNotificationService_DispatchDirect(t *testing.T) {
+func TestNotificationService_DispatchToReceiver(t *testing.T) {
 	testCases := []struct {
 		name    string
 		setup   func(*mocks.ReceiverService, *mocks.Queuer, *mocks.Notifier)
@@ -83,7 +83,7 @@ func TestNotificationService_DispatchDirect(t *testing.T) {
 					testPluginType: mockNotifier,
 				})
 
-			if err := ns.DispatchDirect(context.Background(), tc.n, 1); (err != nil) != tc.wantErr {
+			if err := ns.DispatchToReceiver(context.Background(), tc.n, 1); (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
 			}
 
@@ -94,7 +94,7 @@ func TestNotificationService_DispatchDirect(t *testing.T) {
 	}
 }
 
-func TestNotificationService_DispatchBySubscription(t *testing.T) {
+func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 	testCases := []struct {
 		name    string
 		setup   func(*mocks.SubscriptionService, *mocks.Queuer, *mocks.Notifier)
@@ -235,7 +235,7 @@ func TestNotificationService_DispatchBySubscription(t *testing.T) {
 					testPluginType: mockNotifier,
 				})
 
-			if err := ns.DispatchBySubscription(context.Background(), tc.n); (err != nil) != tc.wantErr {
+			if err := ns.DispatchToSubscribers(context.Background(), tc.n); (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
 			}
 

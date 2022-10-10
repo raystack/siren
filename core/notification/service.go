@@ -55,7 +55,7 @@ func (ns *NotificationService) getReceiverPlugin(receiverType string) (Notifier,
 	return receiverPlugin, nil
 }
 
-func (ns *NotificationService) DispatchDirect(ctx context.Context, n Notification, receiverID uint64) error {
+func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
 	rcv, err := ns.receiverService.Get(ctx, receiverID)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (ns *NotificationService) DispatchDirect(ctx context.Context, n Notificatio
 	return nil
 }
 
-func (ns *NotificationService) DispatchBySubscription(ctx context.Context, n Notification) error {
+func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Notification) error {
 	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, n.Labels)
 	if err != nil {
 		return err

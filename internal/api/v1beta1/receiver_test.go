@@ -334,7 +334,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
 
-		mockNotificationService.EXPECT().DispatchDirect(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.ErrInvalid)
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.ErrInvalid)
 
 		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
@@ -345,7 +345,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 		mockNotificationService := &mocks.NotificationService{}
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
-		mockNotificationService.EXPECT().DispatchDirect(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 
 		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
@@ -357,7 +357,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
 
-		mockNotificationService.EXPECT().DispatchDirect(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(nil)
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(nil)
 
 		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.Nil(t, err)

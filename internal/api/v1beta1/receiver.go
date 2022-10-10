@@ -126,7 +126,7 @@ func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.Notif
 		return nil, s.generateRPCErr(err)
 	}
 
-	if err := s.notificationService.DispatchDirect(ctx, n, req.GetId()); err != nil {
+	if err := s.notificationService.DispatchToReceiver(ctx, n, req.GetId()); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
