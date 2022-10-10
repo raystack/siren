@@ -32,7 +32,7 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification detail",
 			notificationMessage: notification.Message{
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"text": make(chan bool),
 				},
 			},
@@ -47,7 +47,7 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 				Configs: map[string]interface{}{
 					"token": true,
 				},
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"message": "hello",
 				},
 			},
@@ -63,7 +63,7 @@ func TestSlackNotificationService_Publish(t *testing.T) {
 				Configs: map[string]interface{}{
 					"token": "123123",
 				},
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"message": "hello",
 				},
 			},

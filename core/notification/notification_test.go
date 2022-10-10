@@ -36,7 +36,7 @@ func TestNotification_ToMessage(t *testing.T) {
 			},
 			want: &notification.Message{
 				Status: notification.MessageStatusEnqueued,
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"labelkey1": "value1",
 					"varkey1":   "value1",
 				},
@@ -55,7 +55,7 @@ func TestNotification_ToMessage(t *testing.T) {
 			},
 			want: &notification.Message{
 				Status: notification.MessageStatusEnqueued,
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"labelkey1": "value1",
 					"varkey1":   "value1",
 				},

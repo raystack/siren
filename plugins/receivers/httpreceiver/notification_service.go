@@ -42,7 +42,7 @@ func (h *HTTPNotificationService) Publish(ctx context.Context, notificationMessa
 		return false, err
 	}
 
-	bodyBytes, err := json.Marshal(notificationMessage.Detail)
+	bodyBytes, err := json.Marshal(notificationMessage.Details)
 	if err != nil {
 		return false, err
 	}

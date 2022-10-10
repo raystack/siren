@@ -216,7 +216,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
 		receiverRepository,
-		map[string]receiver.Resolver{
+		map[string]receiver.ConfigResolver{
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
 			receiver.TypePagerDuty: pagerDutyReceiverService,

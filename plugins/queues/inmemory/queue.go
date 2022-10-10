@@ -62,10 +62,10 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 			q.logger.Debug("enqueuer retrieving stop signal")
 			return nil
 		case q.memoryQ <- m:
-			q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "detail", m.Detail)
+			q.logger.Debug("enqueued message", "scope", "queues.inmemory.enqueue", "type", m.ReceiverType, "configs", m.Configs, "details", m.Details)
 			continue
 		default:
-			return fmt.Errorf("error enqueueing message: %v", m.Detail)
+			return fmt.Errorf("error enqueueing message: %v", m.Details)
 		}
 	}
 	return nil
@@ -73,13 +73,13 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 
 // SuccessHandler is a callback that will be called once the message is succesfully handled by handlerFn
 func (q *Queue) SuccessHandler(ctx context.Context, ms notification.Message) error {
-	q.logger.Debug("successfully sending message", "scope", "queues.inmemory.success_handler", "type", ms.ReceiverType, "configs", ms.Configs, "detail", ms.Detail)
+	q.logger.Debug("successfully sending message", "scope", "queues.inmemory.success_handler", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details)
 	return nil
 }
 
 // ErrorHandler is a callback that will be called once the message is failed to be handled by handlerFn
 func (q *Queue) ErrorHandler(ctx context.Context, ms notification.Message) error {
-	q.logger.Error("failed sending message", "scope", "queues.inmemory.error_handler", "type", ms.ReceiverType, "configs", ms.Configs, "detail", ms.Detail, "last_error", ms.LastError)
+	q.logger.Error("failed sending message", "scope", "queues.inmemory.error_handler", "type", ms.ReceiverType, "configs", ms.Configs, "details", ms.Details, "last_error", ms.LastError)
 	return nil
 }
 

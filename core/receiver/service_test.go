@@ -17,7 +17,7 @@ func TestService_ListReceivers(t *testing.T) {
 	type testCase struct {
 		Description string
 		Receivers   []receiver.Receiver
-		Setup       func(*mocks.ReceiverRepository, *mocks.Resolver)
+		Setup       func(*mocks.ReceiverRepository, *mocks.ConfigResolver)
 		Err         error
 	}
 
@@ -27,14 +27,14 @@ func TestService_ListReceivers(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if List repository error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return(nil, errors.New("some error"))
 				},
 				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if List repository success and decrypt error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
 						{
 							ID:   10,
@@ -58,7 +58,7 @@ func TestService_ListReceivers(t *testing.T) {
 			},
 			{
 				Description: "should return error if type unknown",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
 						{
 							Type: "random",
@@ -69,7 +69,7 @@ func TestService_ListReceivers(t *testing.T) {
 			},
 			{
 				Description: "should success if list repository and decrypt success",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
 						{
 							ID:   10,
@@ -115,10 +115,10 @@ func TestService_ListReceivers(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.ReceiverRepository)
-				resolverMock   = new(mocks.Resolver)
+				resolverMock   = new(mocks.ConfigResolver)
 			)
 
-			registry := map[string]receiver.Resolver{
+			registry := map[string]receiver.ConfigResolver{
 				receiver.TypeSlack: resolverMock,
 			}
 
@@ -144,7 +144,7 @@ func TestService_ListReceivers(t *testing.T) {
 func TestService_CreateReceiver(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.ReceiverRepository, *mocks.Resolver)
+		Setup       func(*mocks.ReceiverRepository, *mocks.ConfigResolver)
 		Rcv         *receiver.Receiver
 		Err         error
 	}
@@ -153,7 +153,7 @@ func TestService_CreateReceiver(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if type unknown",
-				Setup:       func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {},
+				Setup:       func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {},
 				Rcv: &receiver.Receiver{
 					Type: "random",
 				},
@@ -161,7 +161,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return error if PreHookTransformConfigs return error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(nil, errors.New("some error"))
 
 				},
@@ -176,7 +176,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return error if Create repository return error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -199,7 +199,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return nil error if no error returned",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -227,10 +227,10 @@ func TestService_CreateReceiver(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.ReceiverRepository)
-				resolverMock   = new(mocks.Resolver)
+				resolverMock   = new(mocks.ConfigResolver)
 			)
 
-			registry := map[string]receiver.Resolver{
+			registry := map[string]receiver.ConfigResolver{
 				receiver.TypeSlack: resolverMock,
 			}
 
@@ -254,7 +254,7 @@ func TestService_GetReceiver(t *testing.T) {
 	type testCase struct {
 		Description      string
 		ExpectedReceiver *receiver.Receiver
-		Setup            func(*mocks.ReceiverRepository, *mocks.Resolver)
+		Setup            func(*mocks.ReceiverRepository, *mocks.ConfigResolver)
 		Err              error
 	}
 
@@ -265,14 +265,14 @@ func TestService_GetReceiver(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if Get repository error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(nil, errors.New("some error"))
 				},
 				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if type unknown",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(&receiver.Receiver{
 						Type: "random",
 					}, nil)
@@ -281,14 +281,14 @@ func TestService_GetReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if Get repository return not found error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(nil, receiver.NotFoundError{})
 				},
 				Err: errors.New("receiver not found"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypt error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
@@ -310,7 +310,7 @@ func TestService_GetReceiver(t *testing.T) {
 			},
 			{
 				Description: "should success if Get repository and decrypt success",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), testID).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
@@ -360,10 +360,10 @@ func TestService_GetReceiver(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.ReceiverRepository)
-				resolverMock   = new(mocks.Resolver)
+				resolverMock   = new(mocks.ConfigResolver)
 			)
 
-			registry := map[string]receiver.Resolver{
+			registry := map[string]receiver.ConfigResolver{
 				receiver.TypeSlack: resolverMock,
 			}
 
@@ -389,7 +389,7 @@ func TestService_GetReceiver(t *testing.T) {
 func TestService_UpdateReceiver(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.ReceiverRepository, *mocks.Resolver)
+		Setup       func(*mocks.ReceiverRepository, *mocks.ConfigResolver)
 		Rcv         *receiver.Receiver
 		Err         error
 	}
@@ -398,7 +398,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if type unknown",
-				Setup:       func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {},
+				Setup:       func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {},
 				Rcv: &receiver.Receiver{
 					Type: "random",
 				},
@@ -406,7 +406,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return error if PreHookTransformConfigs return error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
@@ -420,7 +420,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return error if Update repository return error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -443,7 +443,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			},
 			{
 				Description: "should return nil error if no error returned",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -465,7 +465,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Err: nil,
 			}, {
 				Description: "should return error not found if repository return not found error",
-				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.Resolver) {
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -493,10 +493,10 @@ func TestService_UpdateReceiver(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.ReceiverRepository)
-				resolverMock   = new(mocks.Resolver)
+				resolverMock   = new(mocks.ConfigResolver)
 			)
 
-			registry := map[string]receiver.Resolver{
+			registry := map[string]receiver.ConfigResolver{
 				receiver.TypeSlack: resolverMock,
 			}
 

@@ -118,11 +118,11 @@ func (ns *NotificationService) DispatchBySubscription(ctx context.Context, n Not
 						return errors.ErrInvalid.WithMsgf(err.Error())
 					}
 
-					var messageDetail map[string]interface{}
-					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetail); err != nil {
+					var messageDetails map[string]interface{}
+					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
 						return err
 					}
-					message.Detail = messageDetail
+					message.Details = messageDetails
 				}
 			}
 

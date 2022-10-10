@@ -49,7 +49,7 @@ func (s *SlackNotificationService) Publish(ctx context.Context, notificationMess
 	}
 
 	slackMessage := &Message{}
-	if err := mapstructure.Decode(notificationMessage.Detail, &slackMessage); err != nil {
+	if err := mapstructure.Decode(notificationMessage.Details, &slackMessage); err != nil {
 		return false, err
 	}
 

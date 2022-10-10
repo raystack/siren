@@ -8,18 +8,18 @@ import (
 
 // Service handles business logic
 type Service struct {
-	receiverPlugins map[string]Resolver
+	receiverPlugins map[string]ConfigResolver
 	repository      Repository
 }
 
-func NewService(repository Repository, receiverPlugins map[string]Resolver) *Service {
+func NewService(repository Repository, receiverPlugins map[string]ConfigResolver) *Service {
 	return &Service{
 		repository:      repository,
 		receiverPlugins: receiverPlugins,
 	}
 }
 
-func (s *Service) getReceiverPlugin(receiverType string) (Resolver, error) {
+func (s *Service) getReceiverPlugin(receiverType string) (ConfigResolver, error) {
 	receiverPlugin, exist := s.receiverPlugins[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)

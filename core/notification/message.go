@@ -57,7 +57,7 @@ type Message struct {
 
 	ReceiverType string
 	Configs      map[string]interface{} // the datasource to build vendor-specific configs
-	Detail       map[string]interface{} // the datasource to build vendor-specific message
+	Details      map[string]interface{} // the datasource to build vendor-specific message
 	LastError    string
 
 	MaxTries  int
@@ -86,14 +86,14 @@ func (m *Message) Initialize(
 
 	m.ReceiverType = receiverType
 	m.Configs = notificationConfigs
-	detail := make(map[string]interface{})
+	details := make(map[string]interface{})
 	for k, v := range n.Labels {
-		detail[k] = v
+		details[k] = v
 	}
 	for k, v := range n.Data {
-		detail[k] = v
+		details[k] = v
 	}
-	m.Detail = detail
+	m.Details = details
 
 	m.MaxTries = DefaultMaxTries
 

@@ -39,7 +39,7 @@ func TestMessage_Initialize(t *testing.T) {
 			want: &notification.Message{
 				ID:     testID,
 				Status: notification.MessageStatusEnqueued,
-				Detail: map[string]interface{}{
+				Details: map[string]interface{}{
 					"labelkey1": "value1",
 					"varkey1":   "value1",
 					"samekey":   "var_value",
@@ -76,7 +76,7 @@ func TestMessage_Mark(t *testing.T) {
 	m := &notification.Message{
 		ID:     "some-id",
 		Status: notification.MessageStatusEnqueued,
-		Detail: map[string]interface{}{
+		Details: map[string]interface{}{
 			"labelkey1": "value1",
 			"varkey1":   "value1",
 		},

@@ -42,7 +42,7 @@ func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificatio
 	}
 
 	pgMessageV1 := &MessageV1{}
-	if err := mapstructure.Decode(notificationMessage.Detail, &pgMessageV1); err != nil {
+	if err := mapstructure.Decode(notificationMessage.Details, &pgMessageV1); err != nil {
 		return false, err
 	}
 	pgMessageV1.ServiceKey = notificationConfig.ServiceKey
