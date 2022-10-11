@@ -24,7 +24,12 @@ newrelic:
 service:
   host: localhost
   port: 8080
-slack_app:
-  client_id: 123.456
-  client_secret: xyz
 encryption_key:  ____STRING_OF_32_CHARACTERS_____
+receivers:
+  slack:
+    api_host:
+    retry:
+      max_retry: 4
+      wait_duration: 20ms
+    http_client:
+      timeout_ms: 500

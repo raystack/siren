@@ -190,6 +190,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	ct.CortexAllHost = dockerCortexAll.GetExternalHost()
 	ct.resources = append(ct.resources, dockerCortexAll.GetResource())
 	logger.Info("cortex-all is up")

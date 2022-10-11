@@ -2,7 +2,7 @@ NAME="github.com/odpf/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "675f38f48c3cf83918fd71ab85ad49ac568bd945"
+PROTON_COMMIT := "9ece66237001172a087325bd536ad6d944c801d9"
 
 .PHONY: all build test clean dist vet proto install
 
@@ -17,7 +17,7 @@ test: ## Run the tests
 	go test -race $(shell go list ./... | grep -v /test/) -covermode=atomic -coverprofile=coverage.out
 
 e2e-test: ## Run all e2e tests
-	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out
+	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out --timeout 60s
 
 coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out

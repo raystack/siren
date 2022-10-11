@@ -27,14 +27,14 @@ func TestGetAlertManagerReceiverConfig(t *testing.T) {
 					{
 						ID:   5,
 						Type: receiver.TypeHTTP,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"url": "http://webhook",
 						},
 					},
 					{
 						ID:   7,
 						Type: receiver.TypeSlack,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"channel_name": "odpf-channel",
 							"token":        "123123123",
 						},
@@ -42,7 +42,7 @@ func TestGetAlertManagerReceiverConfig(t *testing.T) {
 					{
 						ID:   9,
 						Type: receiver.TypeSlack,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"channel_name": "odpf-channel",
 							"token":        "123123123",
 						},
@@ -50,7 +50,7 @@ func TestGetAlertManagerReceiverConfig(t *testing.T) {
 					{
 						ID:   10,
 						Type: receiver.TypePagerDuty,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"service_key": "a-service-key",
 						},
 					},

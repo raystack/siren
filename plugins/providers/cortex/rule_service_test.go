@@ -123,7 +123,7 @@ func TestCortexService_UpsertRule(t *testing.T) {
 				}(),
 				namespaceURN: "odpf",
 			},
-			err: errors.New("failed to parse template body"),
+			err: errors.New("template: parser:1: function \"x\" not defined"),
 		},
 		{
 			name:  "should return error if cannot cannot parse rendered rule to RuleNode",

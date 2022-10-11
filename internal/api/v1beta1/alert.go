@@ -2,8 +2,12 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -42,19 +46,27 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 	alerts := make([]*alert.Alert, 0)
 
 	badAlertCount := 0
+	firingLen := 0
+	// Alert model follows alertmanager webhook contract
+	// https://github.com/prometheus/alertmanager/blob/main/notify/webhook/webhook.go#L64
 	for _, item := range req.GetAlerts() {
-		severity := item.Labels.GetSeverity()
+
+		if item.GetStatus() == "firing" {
+			firingLen++
+		}
+
+		severity := item.GetLabels()["severity"]
 		if item.GetStatus() == "resolved" {
 			severity = item.GetStatus()
 		}
 
 		alrt := &alert.Alert{
 			ProviderID:   req.GetProviderId(),
-			ResourceName: item.GetAnnotations().GetResource(),
-			MetricName:   item.GetAnnotations().GetMetricName(),
-			MetricValue:  item.GetAnnotations().GetMetricValue(),
+			ResourceName: fmt.Sprintf("%v", item.GetAnnotations()["resource"]),
+			MetricName:   fmt.Sprintf("%v", item.GetAnnotations()["metric_name"]),
+			MetricValue:  fmt.Sprintf("%v", item.GetAnnotations()["metric_value"]),
 			Severity:     severity,
-			Rule:         item.GetAnnotations().GetTemplate(),
+			Rule:         fmt.Sprintf("%v", item.GetAnnotations()["template"]),
 			TriggeredAt:  item.GetStartsAt().AsTime(),
 		}
 		if !isValidCortexAlert(alrt) {
@@ -82,14 +94,27 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 		}
 		items = append(items, alertHistoryItem)
 	}
+
 	result := &sirenv1beta1.CreateCortexAlertsResponse{
 		Alerts: items,
+	}
+
+	notificationCreationTime := time.Now()
+
+	// Publish to notification service
+	for _, a := range req.GetAlerts() {
+		n := CortexAlertPBToNotification(a, firingLen, req.GetGroupKey(), notificationCreationTime)
+
+		if err := s.notificationService.DispatchToSubscribers(ctx, n); err != nil {
+			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
+		}
 	}
 
 	if badAlertCount > 0 {
 		s.logger.Error("parameters are missing for alert", "alert count", badAlertCount)
 		return result, nil
 	}
+
 	return result, nil
 }
 
@@ -97,4 +122,31 @@ func isValidCortexAlert(alrt *alert.Alert) bool {
 	return alrt != nil && !(alrt.ResourceName == "" || alrt.Rule == "" ||
 		alrt.MetricValue == "" || alrt.MetricName == "" ||
 		alrt.Severity == "")
+}
+
+// TODO test
+func CortexAlertPBToNotification(
+	a *sirenv1beta1.CortexAlert,
+	firingLen int,
+	groupKey string,
+	createdTime time.Time,
+) notification.Notification {
+	data := map[string]interface{}{}
+
+	for k, v := range a.GetAnnotations() {
+		data[k] = v
+	}
+
+	data["status"] = a.GetStatus()
+	data["generator_url"] = a.GetGeneratorUrl()
+	data["num_alerts_firing"] = firingLen
+	data["group_key"] = groupKey
+
+	return notification.Notification{
+		ID:        "cortex-" + a.GetFingerprint(),
+		Data:      data,
+		Labels:    a.GetLabels(),
+		Template:  template.ReservedName_DefaultCortex,
+		CreatedAt: createdTime,
+	}
 }

@@ -9,8 +9,8 @@ import (
 )
 
 type SubscriptionReceiver struct {
-	ID            uint64            `json:"id"`
-	Configuration map[string]string `json:"configuration"`
+	ID            uint64                 `json:"id"`
+	Configuration map[string]interface{} `json:"configuration"`
 }
 
 type SubscriptionReceivers []SubscriptionReceiver

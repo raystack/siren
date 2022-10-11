@@ -29,7 +29,10 @@
         "namespace": 2,
         "receivers": [
             {
-                "id": 31
+                "id": 1,
+                "configuration": {
+                    "channel_name": "odpf-data"
+                }
             }
         ],
         "match": {

@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/odpf/siren/core/subscription"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
@@ -104,16 +105,26 @@ func (s *GRPCServer) DeleteSubscription(ctx context.Context, req *sirenv1beta1.D
 }
 
 func getReceiverMetadataFromDomainObject(item *subscription.Receiver) sirenv1beta1.ReceiverMetadata {
+	configMap := make(map[string]string)
+	for k, v := range item.Configuration {
+		configMap[k] = fmt.Sprintf("%v", v)
+	}
+
 	return sirenv1beta1.ReceiverMetadata{
 		Id:            item.ID,
-		Configuration: item.Configuration,
+		Configuration: configMap,
 	}
 }
 
 func getReceiverMetadataInDomainObject(item *sirenv1beta1.ReceiverMetadata) subscription.Receiver {
+	configMapInterface := make(map[string]interface{})
+	for k, v := range item.Configuration {
+		configMapInterface[k] = v
+	}
+
 	return subscription.Receiver{
 		ID:            item.Id,
-		Configuration: item.Configuration,
+		Configuration: configMapInterface,
 	}
 }
 

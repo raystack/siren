@@ -82,6 +82,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/definitions/CortexAlert'
+              external_url:
+                type: string
+              group_key:
+                type: string
+              version:
+                type: string
       tags:
         - Alert
   /v1beta1/namespaces:
@@ -765,17 +771,6 @@ definitions:
       triggered_at:
         type: string
         format: date-time
-  Annotations:
-    type: object
-    properties:
-      metric_name:
-        type: string
-      metric_value:
-        type: string
-      resource:
-        type: string
-      template:
-        type: string
   Any:
     type: object
     properties:
@@ -786,9 +781,20 @@ definitions:
     type: object
     properties:
       annotations:
-        $ref: '#/definitions/Annotations'
+        type: object
+        additionalProperties:
+          type: string
+      ends_at:
+        type: string
+        format: date-time
+      fingerprint:
+        type: string
+      generator_url:
+        type: string
       labels:
-        $ref: '#/definitions/Labels'
+        type: object
+        additionalProperties:
+          type: string
       starts_at:
         type: string
         format: date-time
@@ -928,11 +934,6 @@ definitions:
     properties:
       template:
         $ref: '#/definitions/Template'
-  Labels:
-    type: object
-    properties:
-      severity:
-        type: string
   ListAlertsResponse:
     type: object
     properties:

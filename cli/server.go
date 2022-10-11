@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+	"sync"
+	"time"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/db"
@@ -11,6 +13,7 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
@@ -19,10 +22,13 @@ import (
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/httpclient"
+	"github.com/odpf/siren/pkg/retry"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/zaputil"
 	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/queues/inmemory"
 	"github.com/odpf/siren/plugins/receivers/httpreceiver"
 	"github.com/odpf/siren/plugins/receivers/pagerduty"
 	"github.com/odpf/siren/plugins/receivers/slack"
@@ -57,8 +63,6 @@ func serverCmd() *cobra.Command {
 
 func serverInitCommand() *cobra.Command {
 	var configFile string
-	// var resourcesURL string
-	// var rulesURL string
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -98,7 +102,7 @@ func serverStartCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return StartServer(cfg)
+			return StartServer(cmd.Context(), cfg)
 		},
 	}
 
@@ -130,7 +134,7 @@ func serverMigrateCommand() *cobra.Command {
 	return c
 }
 
-func StartServer(cfg config.Config) error {
+func StartServer(ctx context.Context, cfg config.Config) error {
 	nr, err := telemetry.New(cfg.NewRelic)
 	if err != nil {
 		return err
@@ -148,7 +152,6 @@ func StartServer(cfg config.Config) error {
 		return err
 	}
 
-	httpClient := &http.Client{}
 	encryptor, err := secret.New(cfg.EncryptionKey)
 	if err != nil {
 		return fmt.Errorf("cannot initialize encryptor: %w", err)
@@ -183,7 +186,29 @@ func StartServer(cfg config.Config) error {
 	)
 
 	// plugin receiver services
-	slackClient := slack.NewClient(slack.ClientWithHTTPClient(httpClient))
+	slackHTTPClient := httpclient.New(cfg.Receivers.Slack.HTTPClient)
+	slackRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	slackClient := slack.NewClient(
+		cfg.Receivers.Slack,
+		slack.ClientWithHTTPClient(slackHTTPClient),
+		slack.ClientWithRetrier(slackRetrier),
+	)
+	pagerdutyHTTPClient := httpclient.New(cfg.Receivers.Pagerduty.HTTPClient)
+	pagerdutyRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	pagerdutyClient := pagerduty.NewClient(
+		cfg.Receivers.Pagerduty,
+		pagerduty.ClientWithHTTPClient(pagerdutyHTTPClient),
+		pagerduty.ClientWithRetrier(pagerdutyRetrier),
+	)
+	httpreceiverHTTPClient := httpclient.New(cfg.Receivers.HTTPReceiver.HTTPClient)
+	httpreceiverRetrier := retry.New(cfg.Receivers.Slack.Retry)
+	httpreceiverClient := httpreceiver.NewClient(
+		logger,
+		cfg.Receivers.HTTPReceiver,
+		httpreceiver.ClientWithHTTPClient(httpreceiverHTTPClient),
+		httpreceiver.ClientWithRetrier(httpreceiverRetrier),
+	)
+
 	slackReceiverService := slack.NewReceiverService(slackClient, encryptor)
 	httpReceiverService := httpreceiver.NewReceiverService()
 	pagerDutyReceiverService := pagerduty.NewReceiverService()
@@ -191,7 +216,7 @@ func StartServer(cfg config.Config) error {
 	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
 		receiverRepository,
-		map[string]receiver.Resolver{
+		map[string]receiver.ConfigResolver{
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
 			receiver.TypePagerDuty: pagerDutyReceiverService,
@@ -206,6 +231,21 @@ func StartServer(cfg config.Config) error {
 		subscription.RegisterProviderPlugin(provider.TypeCortex, cortexProviderService),
 	)
 
+	// notification
+	slackNotificationService := slack.NewNotificationService(slackClient)
+	pagerdutyNotificationService := pagerduty.NewNotificationService(pagerdutyClient)
+	httpreceiverNotificationService := httpreceiver.NewNotificationService(httpreceiverClient)
+
+	notifierRegistry := map[string]notification.Notifier{
+		receiver.TypeSlack:     slackNotificationService,
+		receiver.TypePagerDuty: pagerdutyNotificationService,
+		receiver.TypeHTTP:      httpreceiverNotificationService,
+	}
+
+	// for dev purpose only, should not be used in production
+	queue := inmemory.New(logger, 50)
+	notificationService := notification.NewService(logger, queue, receiverService, subscriptionService, notifierRegistry)
+
 	apiDeps := &api.Deps{
 		TemplateService:     templateService,
 		RuleService:         ruleService,
@@ -214,13 +254,41 @@ func StartServer(cfg config.Config) error {
 		NamespaceService:    namespaceService,
 		ReceiverService:     receiverService,
 		SubscriptionService: subscriptionService,
+		NotificationService: notificationService,
 	}
-	return server.RunServer(
+
+	// run worker
+	notificationHandler := notification.NewHandler(logger, queue, notifierRegistry)
+
+	cancelWorkerChan := make(chan struct{})
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go notificationHandler.RunHandler(ctx, wg, cancelWorkerChan)
+
+	err = server.RunServer(
+		ctx,
 		cfg.Service,
 		logger,
 		nr,
 		apiDeps,
 	)
+
+	logger.Info("server stopped", "error", err)
+
+	// stopping server first before cancelling worker
+	close(cancelWorkerChan)
+	// wait for all workers to stop before stopping the queue
+	wg.Wait()
+
+	const gracefulStopQueueWaitPeriod = 5 * time.Second
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), gracefulStopQueueWaitPeriod)
+	defer cancel()
+
+	if err := queue.Stop(timeoutCtx); err != nil {
+		logger.Error("error stopping queue", "error", err)
+	}
+
+	return err
 }
 
 func initLogger(cfg config.Log) log.Logger {

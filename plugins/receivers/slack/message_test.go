@@ -1,65 +1,57 @@
-package slack_test
+package slack
 
 import (
 	"testing"
-
-	"github.com/odpf/siren/plugins/receivers/slack"
 )
 
-func TestMessage_Validate(t *testing.T) {
-	type testCase struct {
-		Description       string
-		Message           slack.Message
-		ExpectedErrString string
-	}
-
-	var testCases = []testCase{
+func TestMessage_BuildGoSlackMessageOptions(t *testing.T) {
+	tests := []struct {
+		name    string
+		message Message
+		wantErr bool
+	}{
 		{
-			Description:       "should return error message or blocks cannot be empty",
-			Message:           slack.Message{},
-			ExpectedErrString: "non empty message or non zero length block is required",
+			name: "should return error if failed to parse message attachment",
+			message: Message{
+				Attachments: []MessageAttachment{
+					{"blocks": "test"},
+				},
+			},
+			wantErr: true,
 		},
 		{
-			Description: "should return error if required fields are not populated",
-			Message: slack.Message{
-				Message: "a message",
+			name: "should build all message options if all fields in message present",
+			message: Message{
+				Channel:   "channel", // won't be included
+				Text:      "text",
+				Username:  "username",
+				IconEmoji: ":emoji:",
+				IconURL:   "icon_url",
+				LinkNames: true, // won't be included
+				Attachments: []MessageAttachment{
+					{
+						"color": "#f2c744",
+						"blocks": []map[string]interface{}{
+							{
+								"type": "section",
+								"text": map[string]interface{}{
+									"type": "mrkdwn",
+									"text": "this is markdown task",
+								},
+							},
+						},
+					},
+				},
 			},
-			ExpectedErrString: "field \"receiver_name\" is required and field \"receiver_type\" is required",
-		},
-		{
-			Description: "should return error type not supported if slack receiver type not match",
-			Message: slack.Message{
-				Message:      "a message",
-				ReceiverName: "receiver name",
-				ReceiverType: "random",
-			},
-			ExpectedErrString: "error value \"random\" for key \"receiver_type\" not recognized, only support \"user channel\"",
-		},
-		{
-			Description: "should return multiple validation errors",
-			Message: slack.Message{
-				Message:      "a message",
-				ReceiverType: "random",
-			},
-			ExpectedErrString: "field \"receiver_name\" is required and error value \"random\" for key \"receiver_type\" not recognized, only support \"user channel\"",
-		},
-		{
-			Description: "should return nil error if slack message is valid",
-			Message: slack.Message{
-				Message:      "a message",
-				ReceiverName: "receiver name",
-				ReceiverType: "channel",
-			},
+			wantErr: false,
 		},
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.Description, func(t *testing.T) {
-			err := tc.Message.Validate()
-			if err != nil {
-				if err.Error() != tc.ExpectedErrString {
-					t.Fatalf("got error %q, expected was %q", err.Error(), tc.ExpectedErrString)
-				}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := tt.message.BuildGoSlackMessageOptions()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Message.BuildGoSlackMessageOptions() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

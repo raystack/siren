@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const ReservedName_DefaultCortex = "system-default-cortex"
+
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname TemplateRepository --filename template_repository.go --output=./mocks
 type Repository interface {
 	Upsert(context.Context, *Template) error
@@ -28,4 +30,8 @@ type Template struct {
 	Variables []Variable `json:"variables" validate:"required,dive,required"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
+}
+
+func IsReservedName(templateName string) bool {
+	return (templateName == ReservedName_DefaultCortex)
 }

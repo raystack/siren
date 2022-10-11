@@ -3,7 +3,10 @@ package v1beta1
 import (
 	"context"
 
+	"github.com/mitchellh/mapstructure"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -115,7 +118,15 @@ func (s *GRPCServer) DeleteReceiver(ctx context.Context, req *sirenv1beta1.Delet
 }
 
 func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.NotifyReceiverRequest) (*sirenv1beta1.NotifyReceiverResponse, error) {
-	if err := s.receiverService.Notify(ctx, req.GetId(), req.GetPayload().AsMap()); err != nil {
+	payloadMap := req.GetPayload().AsMap()
+
+	n := notification.Notification{}
+	if err := mapstructure.Decode(payloadMap, &n); err != nil {
+		err = errors.ErrInvalid.WithMsgf("failed to parse payload to notification: %s", err.Error())
+		return nil, s.generateRPCErr(err)
+	}
+
+	if err := s.notificationService.DispatchToReceiver(ctx, n, req.GetId()); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 

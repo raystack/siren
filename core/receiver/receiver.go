@@ -2,7 +2,6 @@ package receiver
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
@@ -24,24 +23,10 @@ type Repository interface {
 type Receiver struct {
 	ID             uint64                 `json:"id"`
 	Name           string                 `json:"name"`
-	Type           string                 `json:"type"`
+	Type           string                 `json:"type"` // TODO receiver type should be immutable
 	Labels         map[string]string      `json:"labels"`
 	Configurations map[string]interface{} `json:"configurations"`
 	Data           map[string]interface{} `json:"data"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
-}
-
-type Configurations map[string]interface{}
-
-func (c Configurations) GetString(key string) (string, error) {
-	val, ok := c[key]
-	if !ok {
-		return "", fmt.Errorf("no value supplied for required configurations map key %q", key)
-	}
-	typedVal, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("wrong type for configurations map key %q: expected type string, got value %v of type %T", key, val, val)
-	}
-	return typedVal, nil
 }

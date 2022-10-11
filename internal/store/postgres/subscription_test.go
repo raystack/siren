@@ -128,7 +128,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -144,7 +144,10 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Namespace: 2,
 					Receivers: []subscription.Receiver{
 						{
-							ID: 31,
+							ID: 1,
+							Configuration: map[string]interface{}{
+								"channel_name": "odpf-data",
+							},
 						},
 					},
 					Match: map[string]string{
@@ -156,7 +159,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 			},
 		},
 		{
-			Description: "should get filtered subscriptions",
+			Description: "should get filtered subscriptions by namespace id",
 			Filter: subscription.Filter{
 				NamespaceID: 1,
 			},
@@ -168,7 +171,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]string{
+							Configuration: map[string]interface{}{
 								"channel_name": "odpf-data",
 							},
 						},
@@ -180,15 +183,43 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 				},
 			},
 		},
+		{
+			Description: "should get filtered subscriptions by match labels",
+			Filter: subscription.Filter{
+				Labels: map[string]string{
+					"environment": "production",
+					"severity":    "CRITICAL",
+					"team":        "odpf-app",
+				},
+			},
+			ExpectedSubscriptions: []subscription.Subscription{
+				{
+					ID:        3,
+					URN:       "odpf-pd",
+					Namespace: 2,
+					Receivers: []subscription.Receiver{
+						{
+							ID: 1,
+							Configuration: map[string]interface{}{
+								"channel_name": "odpf-data",
+							},
+						},
+					},
+					Match: map[string]string{
+						"environment": "production",
+						"severity":    "CRITICAL",
+						"team":        "odpf-app",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
 			got, err := s.repository.List(s.ctx, tc.Filter)
-			if tc.ErrString != "" {
-				if err.Error() != tc.ErrString {
-					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
+			if err != nil && err.Error() != tc.ErrString {
+				s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 			}
 			if !cmp.Equal(got, tc.ExpectedSubscriptions, cmpopts.IgnoreFields(subscription.Subscription{}, "CreatedAt", "UpdatedAt")) {
 				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedSubscriptions)
@@ -217,11 +248,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]string{},
+						Configuration: map[string]interface{}{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"channel_name": "test",
 						},
 					},
@@ -240,11 +271,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]string{},
+						Configuration: map[string]interface{}{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"channel_name": "test",
 						},
 					},
@@ -262,11 +293,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]string{},
+						Configuration: map[string]interface{}{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]string{
+						Configuration: map[string]interface{}{
 							"channel_name": "test",
 						},
 					},
@@ -310,7 +341,10 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 				Namespace: 2,
 				Receivers: []subscription.Receiver{
 					{
-						ID: 31,
+						ID: 1,
+						Configuration: map[string]interface{}{
+							"channel_name": "odpf-data",
+						},
 					},
 				},
 				Match: map[string]string{
@@ -471,11 +505,11 @@ func (s *SubscriptionRepositoryTestSuite) TestTransaction() {
 			Receivers: []subscription.Receiver{
 				{
 					ID:            2,
-					Configuration: map[string]string{},
+					Configuration: map[string]interface{}{},
 				},
 				{
 					ID: 1,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"channel_name": "test",
 					},
 				},
@@ -504,11 +538,11 @@ func (s *SubscriptionRepositoryTestSuite) TestTransaction() {
 			Receivers: []subscription.Receiver{
 				{
 					ID:            2,
-					Configuration: map[string]string{},
+					Configuration: map[string]interface{}{},
 				},
 				{
 					ID: 1,
-					Configuration: map[string]string{
+					Configuration: map[string]interface{}{
 						"channel_name": "test",
 					},
 				},

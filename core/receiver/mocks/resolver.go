@@ -5,7 +5,6 @@ package mocks
 import (
 	context "context"
 
-	receiver "github.com/odpf/siren/core/receiver"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -22,22 +21,22 @@ func (_m *Resolver) EXPECT() *Resolver_Expecter {
 	return &Resolver_Expecter{mock: &_m.Mock}
 }
 
-// EnrichSubscriptionConfig provides a mock function with given fields: subsConfs, configs
-func (_m *Resolver) EnrichSubscriptionConfig(subsConfs map[string]string, configs receiver.Configurations) (map[string]string, error) {
-	ret := _m.Called(subsConfs, configs)
+// BuildData provides a mock function with given fields: ctx, configs
+func (_m *Resolver) BuildData(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
+	ret := _m.Called(ctx, configs)
 
-	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(map[string]string, receiver.Configurations) map[string]string); ok {
-		r0 = rf(subsConfs, configs)
+	var r0 map[string]interface{}
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}) map[string]interface{}); ok {
+		r0 = rf(ctx, configs)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]string)
+			r0 = ret.Get(0).(map[string]interface{})
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]string, receiver.Configurations) error); ok {
-		r1 = rf(subsConfs, configs)
+	if rf, ok := ret.Get(1).(func(context.Context, map[string]interface{}) error); ok {
+		r1 = rf(ctx, configs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -45,36 +44,83 @@ func (_m *Resolver) EnrichSubscriptionConfig(subsConfs map[string]string, config
 	return r0, r1
 }
 
-// Resolver_EnrichSubscriptionConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrichSubscriptionConfig'
-type Resolver_EnrichSubscriptionConfig_Call struct {
+// Resolver_BuildData_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildData'
+type Resolver_BuildData_Call struct {
 	*mock.Call
 }
 
-// EnrichSubscriptionConfig is a helper method to define mock.On call
-//  - subsConfs map[string]string
-//  - configs receiver.Configurations
-func (_e *Resolver_Expecter) EnrichSubscriptionConfig(subsConfs interface{}, configs interface{}) *Resolver_EnrichSubscriptionConfig_Call {
-	return &Resolver_EnrichSubscriptionConfig_Call{Call: _e.mock.On("EnrichSubscriptionConfig", subsConfs, configs)}
+// BuildData is a helper method to define mock.On call
+//  - ctx context.Context
+//  - configs map[string]interface{}
+func (_e *Resolver_Expecter) BuildData(ctx interface{}, configs interface{}) *Resolver_BuildData_Call {
+	return &Resolver_BuildData_Call{Call: _e.mock.On("BuildData", ctx, configs)}
 }
 
-func (_c *Resolver_EnrichSubscriptionConfig_Call) Run(run func(subsConfs map[string]string, configs receiver.Configurations)) *Resolver_EnrichSubscriptionConfig_Call {
+func (_c *Resolver_BuildData_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *Resolver_BuildData_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]string), args[1].(receiver.Configurations))
+		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Resolver_EnrichSubscriptionConfig_Call) Return(_a0 map[string]string, _a1 error) *Resolver_EnrichSubscriptionConfig_Call {
+func (_c *Resolver_BuildData_Call) Return(_a0 map[string]interface{}, _a1 error) *Resolver_BuildData_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+// BuildNotificationConfig provides a mock function with given fields: subscriptionConfigMap, receiverConfigMap
+func (_m *Resolver) BuildNotificationConfig(subscriptionConfigMap map[string]interface{}, receiverConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	ret := _m.Called(subscriptionConfigMap, receiverConfigMap)
+
+	var r0 map[string]interface{}
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, map[string]interface{}) map[string]interface{}); ok {
+		r0 = rf(subscriptionConfigMap, receiverConfigMap)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, map[string]interface{}) error); ok {
+		r1 = rf(subscriptionConfigMap, receiverConfigMap)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Resolver_BuildNotificationConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildNotificationConfig'
+type Resolver_BuildNotificationConfig_Call struct {
+	*mock.Call
+}
+
+// BuildNotificationConfig is a helper method to define mock.On call
+//  - subscriptionConfigMap map[string]interface{}
+//  - receiverConfigMap map[string]interface{}
+func (_e *Resolver_Expecter) BuildNotificationConfig(subscriptionConfigMap interface{}, receiverConfigMap interface{}) *Resolver_BuildNotificationConfig_Call {
+	return &Resolver_BuildNotificationConfig_Call{Call: _e.mock.On("BuildNotificationConfig", subscriptionConfigMap, receiverConfigMap)}
+}
+
+func (_c *Resolver_BuildNotificationConfig_Call) Run(run func(subscriptionConfigMap map[string]interface{}, receiverConfigMap map[string]interface{})) *Resolver_BuildNotificationConfig_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(map[string]interface{}), args[1].(map[string]interface{}))
+	})
+	return _c
+}
+
+func (_c *Resolver_BuildNotificationConfig_Call) Return(_a0 map[string]interface{}, _a1 error) *Resolver_BuildNotificationConfig_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // Notify provides a mock function with given fields: ctx, configs, payloadMessage
-func (_m *Resolver) Notify(ctx context.Context, configs receiver.Configurations, payloadMessage map[string]interface{}) error {
+func (_m *Resolver) Notify(ctx context.Context, configs map[string]interface{}, payloadMessage map[string]interface{}) error {
 	ret := _m.Called(ctx, configs, payloadMessage)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, receiver.Configurations, map[string]interface{}) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}, map[string]interface{}) error); ok {
 		r0 = rf(ctx, configs, payloadMessage)
 	} else {
 		r0 = ret.Error(0)
@@ -90,15 +136,15 @@ type Resolver_Notify_Call struct {
 
 // Notify is a helper method to define mock.On call
 //  - ctx context.Context
-//  - configs receiver.Configurations
+//  - configs map[string]interface{}
 //  - payloadMessage map[string]interface{}
 func (_e *Resolver_Expecter) Notify(ctx interface{}, configs interface{}, payloadMessage interface{}) *Resolver_Notify_Call {
 	return &Resolver_Notify_Call{Call: _e.mock.On("Notify", ctx, configs, payloadMessage)}
 }
 
-func (_c *Resolver_Notify_Call) Run(run func(ctx context.Context, configs receiver.Configurations, payloadMessage map[string]interface{})) *Resolver_Notify_Call {
+func (_c *Resolver_Notify_Call) Run(run func(ctx context.Context, configs map[string]interface{}, payloadMessage map[string]interface{})) *Resolver_Notify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(receiver.Configurations), args[2].(map[string]interface{}))
+		run(args[0].(context.Context), args[1].(map[string]interface{}), args[2].(map[string]interface{}))
 	})
 	return _c
 }
@@ -108,12 +154,12 @@ func (_c *Resolver_Notify_Call) Return(_a0 error) *Resolver_Notify_Call {
 	return _c
 }
 
-// PopulateDataFromConfigs provides a mock function with given fields: ctx, configs
-func (_m *Resolver) PopulateDataFromConfigs(ctx context.Context, configs receiver.Configurations) (map[string]interface{}, error) {
+// PostHookTransformConfigs provides a mock function with given fields: ctx, configs
+func (_m *Resolver) PostHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, configs)
 
 	var r0 map[string]interface{}
-	if rf, ok := ret.Get(0).(func(context.Context, receiver.Configurations) map[string]interface{}); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}) map[string]interface{}); ok {
 		r0 = rf(ctx, configs)
 	} else {
 		if ret.Get(0) != nil {
@@ -122,54 +168,7 @@ func (_m *Resolver) PopulateDataFromConfigs(ctx context.Context, configs receive
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, receiver.Configurations) error); ok {
-		r1 = rf(ctx, configs)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Resolver_PopulateDataFromConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PopulateDataFromConfigs'
-type Resolver_PopulateDataFromConfigs_Call struct {
-	*mock.Call
-}
-
-// PopulateDataFromConfigs is a helper method to define mock.On call
-//  - ctx context.Context
-//  - configs receiver.Configurations
-func (_e *Resolver_Expecter) PopulateDataFromConfigs(ctx interface{}, configs interface{}) *Resolver_PopulateDataFromConfigs_Call {
-	return &Resolver_PopulateDataFromConfigs_Call{Call: _e.mock.On("PopulateDataFromConfigs", ctx, configs)}
-}
-
-func (_c *Resolver_PopulateDataFromConfigs_Call) Run(run func(ctx context.Context, configs receiver.Configurations)) *Resolver_PopulateDataFromConfigs_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(receiver.Configurations))
-	})
-	return _c
-}
-
-func (_c *Resolver_PopulateDataFromConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Resolver_PopulateDataFromConfigs_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// PostHookTransformConfigs provides a mock function with given fields: ctx, configs
-func (_m *Resolver) PostHookTransformConfigs(ctx context.Context, configs receiver.Configurations) (receiver.Configurations, error) {
-	ret := _m.Called(ctx, configs)
-
-	var r0 receiver.Configurations
-	if rf, ok := ret.Get(0).(func(context.Context, receiver.Configurations) receiver.Configurations); ok {
-		r0 = rf(ctx, configs)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(receiver.Configurations)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, receiver.Configurations) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, map[string]interface{}) error); ok {
 		r1 = rf(ctx, configs)
 	} else {
 		r1 = ret.Error(1)
@@ -185,38 +184,38 @@ type Resolver_PostHookTransformConfigs_Call struct {
 
 // PostHookTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
-//  - configs receiver.Configurations
+//  - configs map[string]interface{}
 func (_e *Resolver_Expecter) PostHookTransformConfigs(ctx interface{}, configs interface{}) *Resolver_PostHookTransformConfigs_Call {
 	return &Resolver_PostHookTransformConfigs_Call{Call: _e.mock.On("PostHookTransformConfigs", ctx, configs)}
 }
 
-func (_c *Resolver_PostHookTransformConfigs_Call) Run(run func(ctx context.Context, configs receiver.Configurations)) *Resolver_PostHookTransformConfigs_Call {
+func (_c *Resolver_PostHookTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *Resolver_PostHookTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(receiver.Configurations))
+		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Resolver_PostHookTransformConfigs_Call) Return(_a0 receiver.Configurations, _a1 error) *Resolver_PostHookTransformConfigs_Call {
+func (_c *Resolver_PostHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Resolver_PostHookTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // PreHookTransformConfigs provides a mock function with given fields: ctx, configs
-func (_m *Resolver) PreHookTransformConfigs(ctx context.Context, configs receiver.Configurations) (receiver.Configurations, error) {
+func (_m *Resolver) PreHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, configs)
 
-	var r0 receiver.Configurations
-	if rf, ok := ret.Get(0).(func(context.Context, receiver.Configurations) receiver.Configurations); ok {
+	var r0 map[string]interface{}
+	if rf, ok := ret.Get(0).(func(context.Context, map[string]interface{}) map[string]interface{}); ok {
 		r0 = rf(ctx, configs)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(receiver.Configurations)
+			r0 = ret.Get(0).(map[string]interface{})
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, receiver.Configurations) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, map[string]interface{}) error); ok {
 		r1 = rf(ctx, configs)
 	} else {
 		r1 = ret.Error(1)
@@ -232,57 +231,20 @@ type Resolver_PreHookTransformConfigs_Call struct {
 
 // PreHookTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
-//  - configs receiver.Configurations
+//  - configs map[string]interface{}
 func (_e *Resolver_Expecter) PreHookTransformConfigs(ctx interface{}, configs interface{}) *Resolver_PreHookTransformConfigs_Call {
 	return &Resolver_PreHookTransformConfigs_Call{Call: _e.mock.On("PreHookTransformConfigs", ctx, configs)}
 }
 
-func (_c *Resolver_PreHookTransformConfigs_Call) Run(run func(ctx context.Context, configs receiver.Configurations)) *Resolver_PreHookTransformConfigs_Call {
+func (_c *Resolver_PreHookTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *Resolver_PreHookTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(receiver.Configurations))
+		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Resolver_PreHookTransformConfigs_Call) Return(_a0 receiver.Configurations, _a1 error) *Resolver_PreHookTransformConfigs_Call {
+func (_c *Resolver_PreHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Resolver_PreHookTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// ValidateConfigurations provides a mock function with given fields: configs
-func (_m *Resolver) ValidateConfigurations(configs receiver.Configurations) error {
-	ret := _m.Called(configs)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(receiver.Configurations) error); ok {
-		r0 = rf(configs)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Resolver_ValidateConfigurations_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateConfigurations'
-type Resolver_ValidateConfigurations_Call struct {
-	*mock.Call
-}
-
-// ValidateConfigurations is a helper method to define mock.On call
-//  - configs receiver.Configurations
-func (_e *Resolver_Expecter) ValidateConfigurations(configs interface{}) *Resolver_ValidateConfigurations_Call {
-	return &Resolver_ValidateConfigurations_Call{Call: _e.mock.On("ValidateConfigurations", configs)}
-}
-
-func (_c *Resolver_ValidateConfigurations_Call) Run(run func(configs receiver.Configurations)) *Resolver_ValidateConfigurations_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(receiver.Configurations))
-	})
-	return _c
-}
-
-func (_c *Resolver_ValidateConfigurations_Call) Return(_a0 error) *Resolver_ValidateConfigurations_Call {
-	_c.Call.Return(_a0)
 	return _c
 }
 

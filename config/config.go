@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/receivers"
 )
 
 // Load returns application configuration
@@ -33,11 +34,6 @@ type Log struct {
 	GCPCompatible bool   `yaml:"gcp_compatible" mapstructure:"gcp_compatible" default:"true"`
 }
 
-type SlackApp struct {
-	ClientID     string `yaml:"client_id" mapstructure:"client_id"`
-	ClientSecret string `yaml:"client_secret" mapstructure:"client_secret"`
-}
-
 // Config contains the application configuration
 type Config struct {
 	DB            db.Config                `mapstructure:"db"`
@@ -45,6 +41,6 @@ type Config struct {
 	NewRelic      telemetry.NewRelicConfig `mapstructure:"newrelic"`
 	Service       server.Config            `mapstructure:"service"`
 	Log           Log                      `mapstructure:"log"`
-	SlackApp      SlackApp                 `mapstructure:"slack_app"`
 	EncryptionKey string                   `mapstructure:"encryption_key"`
+	Receivers     receivers.Config         `mapstructure:"receivers"`
 }

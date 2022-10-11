@@ -25,8 +25,7 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
-	Notify(ctx context.Context, id uint64, payloadMessage map[string]interface{}) error
-	EnrichSubscriptionConfig(subsConfig map[string]string, rcv *receiver.Receiver) (map[string]string, error)
+	BuildNotificationConfig(subsConfig map[string]interface{}, rcv *receiver.Receiver) (map[string]interface{}, error)
 }
 
 // Service handles business logic
@@ -222,6 +221,32 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
+func (s *Service) MatchByLabels(ctx context.Context, labels map[string]string) ([]Subscription, error) {
+	// fetch all subscriptions by matching labels.
+	subscriptionsByLabels, err := s.repository.List(ctx, Filter{
+		Labels: labels,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(subscriptionsByLabels) == 0 {
+		return nil, nil
+	}
+
+	receiversMap, err := CreateReceiversMap(ctx, s.receiverService, subscriptionsByLabels)
+	if err != nil {
+		return nil, err
+	}
+
+	subscriptionsByLabels, err = AssignReceivers(s.receiverService, receiversMap, subscriptionsByLabels)
+	if err != nil {
+		return nil, err
+	}
+
+	return subscriptionsByLabels, nil
+}
+
 func (s *Service) getProviderPluginService(providerType string) (SubscriptionSyncer, error) {
 	pluginService, exist := s.subscriptionProviderRegistry[providerType]
 	if !exist {
@@ -311,7 +336,7 @@ func AssignReceivers(receiverService ReceiverService, receiversMap map[uint64]*r
 			if mappedRcv := receiversMap[subsRcv.ID]; mappedRcv == nil {
 				return nil, errors.ErrInvalid.WithMsgf("receiver id %d not found", subsRcv.ID)
 			}
-			subsConfig, err := receiverService.EnrichSubscriptionConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
+			subsConfig, err := receiverService.BuildNotificationConfig(subsRcv.Configuration, receiversMap[subsRcv.ID])
 			if err != nil {
 				return nil, errors.ErrInvalid.WithMsgf(err.Error())
 			}

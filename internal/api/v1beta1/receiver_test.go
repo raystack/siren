@@ -329,126 +329,38 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 }
 
 func TestGRPCServer_NotifyReceiver(t *testing.T) {
-
-	var dummyReq = &sirenv1beta1.NotifyReceiverRequest{
-		Id: 1,
-		Payload: &structpb.Struct{
-			Fields: map[string]*structpb.Value{
-				"receiver_name": {
-					Kind: &structpb.Value_StringValue{
-						StringValue: "foo",
-					},
-				},
-				"receiver_type": {
-					Kind: &structpb.Value_StringValue{
-						StringValue: "channel",
-					},
-				},
-				"message": {
-					Kind: &structpb.Value_StringValue{
-						StringValue: "bar",
-					},
-				},
-				"blocks": {
-					Kind: &structpb.Value_ListValue{
-						ListValue: &structpb.ListValue{
-							Values: []*structpb.Value{
-								{
-									Kind: &structpb.Value_StructValue{
-										StructValue: &structpb.Struct{
-											Fields: map[string]*structpb.Value{
-												"type": {
-													Kind: &structpb.Value_StringValue{
-														StringValue: "section",
-													},
-												},
-												"text": {
-													Kind: &structpb.Value_StructValue{
-														StructValue: &structpb.Struct{
-															Fields: map[string]*structpb.Value{
-																"type": {
-																	Kind: &structpb.Value_StringValue{
-																		StringValue: "mrkdwn",
-																	},
-																},
-																"text": {
-																	Kind: &structpb.Value_StringValue{
-																		StringValue: "Hello",
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
 	t.Run("should return invalid argument if notify receiver return invalid argument", func(t *testing.T) {
-		mockedReceiverService := &mocks.ReceiverService{}
+		mockNotificationService := new(mocks.NotificationService)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
 
-		mockedReceiverService.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"),
-			uint64(1),
-			map[string]interface{}{
-				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
-				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
-				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
-				"blocks":        dummyReq.GetPayload().Fields["blocks"].GetListValue().AsSlice(),
-			},
-		).Return(errors.ErrInvalid)
-		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), dummyReq)
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.ErrInvalid)
+
+		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
-		mockedReceiverService.AssertExpectations(t)
+		mockNotificationService.AssertExpectations(t)
 	})
 
 	t.Run("should return internal error if notify receiver return some error", func(t *testing.T) {
-		mockedReceiverService := &mocks.ReceiverService{}
+		mockNotificationService := &mocks.NotificationService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 
-		mockedReceiverService.EXPECT().Notify(
-			mock.AnythingOfType("*context.emptyCtx"),
-			uint64(1),
-			map[string]interface{}{
-				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
-				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
-				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
-				"blocks":        dummyReq.GetPayload().Fields["blocks"].GetListValue().AsSlice(),
-			},
-		).Return(errors.New("some error"))
-		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), dummyReq)
+		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
-		mockedReceiverService.AssertExpectations(t)
+		mockNotificationService.AssertExpectations(t)
 	})
 
 	t.Run("should return OK response if notify receiver succeed", func(t *testing.T) {
-		mockedReceiverService := &mocks.ReceiverService{}
+		mockNotificationService := new(mocks.NotificationService)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{NotificationService: mockNotificationService})
 
-		mockedReceiverService.EXPECT().Notify(
-			mock.AnythingOfType("*context.emptyCtx"),
-			uint64(1),
-			map[string]interface{}{
-				"receiver_name": dummyReq.GetPayload().Fields["receiver_name"].GetStringValue(),
-				"receiver_type": dummyReq.GetPayload().Fields["receiver_type"].GetStringValue(),
-				"message":       dummyReq.GetPayload().Fields["message"].GetStringValue(),
-				"blocks":        dummyReq.GetPayload().Fields["blocks"].GetListValue().AsSlice(),
-			},
-		).Return(nil)
-		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), dummyReq)
+		mockNotificationService.EXPECT().DispatchToReceiver(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification"), mock.AnythingOfType("uint64")).Return(nil)
+
+		_, err := dummyGRPCServer.NotifyReceiver(context.Background(), &sirenv1beta1.NotifyReceiverRequest{})
 		assert.Nil(t, err)
-		mockedReceiverService.AssertExpectations(t)
+		mockNotificationService.AssertExpectations(t)
 	})
-
 }

@@ -6550,63 +6550,9 @@ func (m *CortexAlert) validate(all bool) error {
 
 	var errors []error
 
-	if all {
-		switch v := interface{}(m.GetAnnotations()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "Annotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "Annotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetAnnotations()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CortexAlertValidationError{
-				field:  "Annotations",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Annotations
 
-	if all {
-		switch v := interface{}(m.GetLabels()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "Labels",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "Labels",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetLabels()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CortexAlertValidationError{
-				field:  "Labels",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for Labels
 
 	// no validation rules for Status
 
@@ -6638,6 +6584,39 @@ func (m *CortexAlert) validate(all bool) error {
 			}
 		}
 	}
+
+	if all {
+		switch v := interface{}(m.GetEndsAt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CortexAlertValidationError{
+					field:  "EndsAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CortexAlertValidationError{
+					field:  "EndsAt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetEndsAt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CortexAlertValidationError{
+				field:  "EndsAt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for GeneratorUrl
+
+	// no validation rules for Fingerprint
 
 	if len(errors) > 0 {
 		return CortexAlertMultiError(errors)
@@ -6772,6 +6751,12 @@ func (m *CreateCortexAlertsRequest) validate(all bool) error {
 		}
 
 	}
+
+	// no validation rules for GroupKey
+
+	// no validation rules for ExternalUrl
+
+	// no validation rules for Version
 
 	if len(errors) > 0 {
 		return CreateCortexAlertsRequestMultiError(errors)
