@@ -9,7 +9,7 @@ export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
 Siren lets you subscribe to a notification when they are triggered. You can define custom matching conditions and use
-[receivers](./receivers.md) to describe which medium you want to use for getting the notifications when a notification is triggered. A notification could be triggered on-demand via API or by the incoming alerts via webhook.
+[receivers](./receiver.md) to describe which medium you want to use for getting the notifications when a notification is triggered. A notification could be triggered on-demand via API or by the incoming alerts via webhook.
 
 **Example Subscription:**
 
@@ -90,7 +90,6 @@ $ siren subscription create --file subscription.yaml
 $ siren subscription edit --id 10 --file subscription.yaml
 ```
 
-
   </TabItem>
   <TabItem value="http" label="HTTP">
     <CodeBlock className="language-bash">
@@ -122,14 +121,13 @@ $ siren subscription edit --id 10 --file subscription.yaml
 </Tabs>
 
 ### Get all subscriptions
+
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
-
 
 ```bash
 $ siren subscription list
 ```
-
 
   </TabItem>
   <TabItem value="http" label="HTTP">
@@ -148,7 +146,6 @@ $ siren subscription list
 ```bash
 $ siren subscription view 10
 ```
-
 
   </TabItem>
   <TabItem value="http" label="HTTP">

@@ -39,7 +39,6 @@ Configuration of each receiver depends on the type itself. This page describes a
 }
 ```
 
-
 Creating a slack receiver involves exchanging the auth code for a token with slack oAuth server. Siren will need the auth code, client id, client secret and optional label metadata.
 
 **Example**
@@ -107,7 +106,6 @@ Here is the list of actions one need to take to attach a Slack app to Siren.
    verifying the dropdown in the top-right corner. Click Allow.
 7. Copy the `code` that you received from Slack redirection URL query params and use this inside create receiver payload.
 
-
 ### Message Payload Format
 
 ```yaml
@@ -129,7 +127,6 @@ attachments:
 Payload format above follow [slack chat.postMessage API](https://api.slack.com/methods/chat.postMessage) contract.
 
 Using a slack receiver you will be able to send out Slack notification using its send API. You can also use it to route alerts using Subscriptions whenever an alert matches the conditions of your choice. Check the required permissions of the Slack App [here](./receiver.md#permissions-and-auth-settings-for-slack-receivers).
-
 
 ### Message Payload Templating
 
@@ -202,7 +199,8 @@ Siren has a PagerDuty default [template](../../../plugins/receivers/pagerduty/co
 ```
 
 ### Message Payload Format
-Payload will be sent as-is. If defined by [templates](./templates.md), payload will be the same with the generated payload by template.
+
+Payload will be sent as-is. If defined by [templates](../guides/template.md), payload will be the same with the generated payload by template.
 
 ## File
 
@@ -221,4 +219,5 @@ The `url` below should be file path url e.g. `./folder_a/folder_b/file.json`.
 ```
 
 ### Message Payload Format
+
 Payload will be written to file as-is in `ndjson` format.
