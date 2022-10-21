@@ -5,7 +5,9 @@ import (
 	"time"
 )
 
-const ReservedName_DefaultCortex = "system-default-cortex"
+const (
+	ReservedName_DefaultCortex = "system-default-cortex"
+)
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname TemplateRepository --filename template_repository.go --output=./mocks
 type Repository interface {

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestPagerDutyNotificationService_Publish_V1(t *testing.T) {
+func TestNotificationService_Publish_V1(t *testing.T) {
 	tests := []struct {
 		name                string
 		setup               func(*mocks.PagerDutyCaller)
@@ -83,11 +83,11 @@ func TestPagerDutyNotificationService_Publish_V1(t *testing.T) {
 
 			got, err := pd.Publish(context.Background(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("PagerDutyNotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NotificationService.Publish() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.wantRetryable {
-				t.Errorf("PagerDutyNotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
+				t.Errorf("NotificationService.Publish() = %v, want %v", got, tt.wantRetryable)
 			}
 		})
 	}

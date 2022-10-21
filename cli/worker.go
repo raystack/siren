@@ -21,8 +21,12 @@ func workerCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "worker <command> <worker_command>",
 		Aliases: []string{"w"},
-		Short:   "Siren's worker command",
-		Long:    "Worker management commands.",
+		Short:   "Start or manage Siren's workers",
+		Long: heredoc.Doc(`
+			A command to start or manage Siren's workers.
+
+			A worker is an instance in Siren that run detached from the server.
+		`),
 		Example: heredoc.Doc(`
 			$ siren worker start notification_handler
 			$ siren worker start notification_handler -c ./config.yaml

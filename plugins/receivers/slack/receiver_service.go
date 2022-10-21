@@ -7,23 +7,25 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/plugins/receivers/base"
 )
 
-// SlackReceiverService is a receiver plugin service layer for slack
-type SlackReceiverService struct {
+// ReceiverService is a receiver plugin service layer for slack
+type ReceiverService struct {
+	base.UnimplementedReceiverService
 	client       SlackCaller
 	cryptoClient Encryptor
 }
 
 // NewReceiverService returns slack service struct. This service implement [receiver.Resolver] interface.
-func NewReceiverService(client SlackCaller, cryptoClient Encryptor) *SlackReceiverService {
-	return &SlackReceiverService{
+func NewReceiverService(client SlackCaller, cryptoClient Encryptor) *ReceiverService {
+	return &ReceiverService{
 		client:       client,
 		cryptoClient: cryptoClient,
 	}
 }
 
-func (s *SlackReceiverService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *ReceiverService) PreHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	slackCredentialConfig := &SlackCredentialConfig{}
 	if err := mapstructure.Decode(configurations, slackCredentialConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to pre transform config: %w", err)
@@ -52,7 +54,7 @@ func (s *SlackReceiverService) PreHookTransformConfigs(ctx context.Context, conf
 }
 
 // PostHookTransformConfigs do transformation in post-hook service lifecycle
-func (s *SlackReceiverService) PostHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *ReceiverService) PostHookTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -73,7 +75,7 @@ func (s *SlackReceiverService) PostHookTransformConfigs(ctx context.Context, con
 }
 
 // BuildData populates receiver data field based on config
-func (s *SlackReceiverService) BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *ReceiverService) BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -104,7 +106,7 @@ func (s *SlackReceiverService) BuildData(ctx context.Context, configurations map
 	return receiverData.AsMap(), nil
 }
 
-func (s *SlackReceiverService) BuildNotificationConfig(subsConfs map[string]interface{}, receiverConfs map[string]interface{}) (map[string]interface{}, error) {
+func (s *ReceiverService) BuildNotificationConfig(subsConfs map[string]interface{}, receiverConfs map[string]interface{}) (map[string]interface{}, error) {
 	subscriptionConfig := &SubscriptionConfig{}
 	if err := mapstructure.Decode(subsConfs, subscriptionConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to subscription config: %w", err)

@@ -4,39 +4,28 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/plugins/receivers/base"
 )
 
-// HTTPNotificationService is a notification plugin service layer for http webhook
-type HTTPNotificationService struct {
+// NotificationService is a notification plugin service layer for http webhook
+type NotificationService struct {
+	base.UnimplementedNotificationService
 	client HTTPCaller
 }
 
 // NewNotificationService returns httpreceiver service struct. This service implement [receiver.Notifier] interface.
-func NewNotificationService(client HTTPCaller) *HTTPNotificationService {
-	return &HTTPNotificationService{
+func NewNotificationService(client HTTPCaller) *NotificationService {
+	return &NotificationService{
 		client: client,
 	}
 }
 
-func (h *HTTPNotificationService) ValidateConfigMap(notificationConfigMap map[string]interface{}) error {
-	notificationConfig := &NotificationConfig{}
-	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
-		return err
-	}
-
-	if err := notificationConfig.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (h *HTTPNotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
+func (h *NotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationMessage.Configs, notificationConfig); err != nil {
 		return false, err
@@ -58,19 +47,15 @@ func (h *HTTPNotificationService) Publish(ctx context.Context, notificationMessa
 	return false, nil
 }
 
-func (h *HTTPNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
-	return notificationConfigMap, nil
-}
-
-func (h *HTTPNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
-	return notificationConfigMap, nil
-}
-
-func (h *HTTPNotificationService) DefaultTemplateOfProvider(providerType string) string {
-	switch providerType {
-	case provider.TypeCortex:
-		return ""
-	default:
-		return ""
+func (h *NotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	notificationConfig := &NotificationConfig{}
+	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
 	}
+
+	if err := notificationConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	return notificationConfig.AsMap(), nil
 }

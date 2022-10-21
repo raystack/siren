@@ -29,7 +29,7 @@
   [[- end]]
 [[- end]]
 [[define "slack.body"]]
-[[- .Labels.summary -]]
+[[- if .Data.summary]][[.Data.summary]][[else]][[.Labels.summary]][[end]]
 [[ end]]
 [[define "slack.dashboard"]]
 [[- if .Data.dashboard]][[.Data.dashboard]][[else]][[.Data.defaultDashboard]][[end]]

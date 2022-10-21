@@ -3,39 +3,29 @@ package pagerduty
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/provider"
+	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/plugins/receivers/base"
 )
 
-// PagerDutyNotificationService is a notification plugin service layer for pagerduty
-type PagerDutyNotificationService struct {
+// NotificationService is a notification plugin service layer for pagerduty
+type NotificationService struct {
+	base.UnimplementedNotificationService
 	client PagerDutyCaller
 }
 
 // NewNotificationService returns pagerduty service struct. This service implement [receiver.Notifier] interface.
-func NewNotificationService(client PagerDutyCaller) *PagerDutyNotificationService {
-	return &PagerDutyNotificationService{
+func NewNotificationService(client PagerDutyCaller) *NotificationService {
+	return &NotificationService{
 		client: client,
 	}
 }
 
-func (pd *PagerDutyNotificationService) ValidateConfigMap(notificationConfigMap map[string]interface{}) error {
-	notificationConfig := &NotificationConfig{}
-	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
-		return err
-	}
-
-	if err := notificationConfig.Validate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
+func (pd *NotificationService) Publish(ctx context.Context, notificationMessage notification.Message) (bool, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationMessage.Configs, notificationConfig); err != nil {
 		return false, err
@@ -58,17 +48,22 @@ func (pd *PagerDutyNotificationService) Publish(ctx context.Context, notificatio
 	return false, nil
 }
 
-func (pd *PagerDutyNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
-	return notificationConfigMap, nil
+func (pd *NotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	notificationConfig := &NotificationConfig{}
+	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
+		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
+	}
+
+	if err := notificationConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	return notificationConfig.AsMap(), nil
 }
 
-func (pd *PagerDutyNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
-	return notificationConfigMap, nil
-}
-
-func (pd *PagerDutyNotificationService) DefaultTemplateOfProvider(providerType string) string {
-	switch providerType {
-	case provider.TypeCortex:
+func (pd *NotificationService) DefaultTemplateOfProvider(templateName string) string {
+	switch templateName {
+	case template.ReservedName_DefaultCortex:
 		return defaultCortexAlertTemplateBodyV1
 	default:
 		return ""

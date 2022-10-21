@@ -19,6 +19,7 @@ import (
 	"github.com/odpf/siren/pkg/retry"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/receivers/file"
 	"github.com/odpf/siren/plugins/receivers/httpreceiver"
 	"github.com/odpf/siren/plugins/receivers/pagerduty"
 	"github.com/odpf/siren/plugins/receivers/slack"
@@ -96,6 +97,7 @@ func InitAPIDeps(
 	slackReceiverService := slack.NewReceiverService(slackClient, encryptor)
 	httpReceiverService := httpreceiver.NewReceiverService()
 	pagerDutyReceiverService := pagerduty.NewReceiverService()
+	fileReceiverService := file.NewReceiverService()
 
 	receiverRepository := postgres.NewReceiverRepository(pgClient)
 	receiverService := receiver.NewService(
@@ -104,6 +106,7 @@ func InitAPIDeps(
 			receiver.TypeSlack:     slackReceiverService,
 			receiver.TypeHTTP:      httpReceiverService,
 			receiver.TypePagerDuty: pagerDutyReceiverService,
+			receiver.TypeFile:      fileReceiverService,
 		},
 	)
 
@@ -119,11 +122,13 @@ func InitAPIDeps(
 	slackNotificationService := slack.NewNotificationService(slackClient, encryptor)
 	pagerdutyNotificationService := pagerduty.NewNotificationService(pagerdutyClient)
 	httpreceiverNotificationService := httpreceiver.NewNotificationService(httpreceiverClient)
+	fileNotificationService := file.NewNotificationService()
 
 	notifierRegistry := map[string]notification.Notifier{
 		receiver.TypeSlack:     slackNotificationService,
 		receiver.TypePagerDuty: pagerdutyNotificationService,
 		receiver.TypeHTTP:      httpreceiverNotificationService,
+		receiver.TypeFile:      fileNotificationService,
 	}
 
 	notificationService := notification.NewService(logger, queue, receiverService, subscriptionService, notifierRegistry)

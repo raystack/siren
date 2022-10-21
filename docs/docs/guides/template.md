@@ -1,9 +1,14 @@
-# Templates
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from '@theme/CodeBlock';
+import siteConfig from '/docusaurus.config.js';
 
-Siren templates are an abstraction
-over [Prometheus rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). It
-utilises [go-templates](https://golang.org/pkg/text/template/) to provide implements data-driven templates for
-generating textual output. The template delimiter used is `[[` and `]]`.
+# Template
+
+export const apiVersion = siteConfig.customFields.apiVersion
+export const defaultHost = siteConfig.customFields.defaultHost
+
+Templates concept in Siren is used for abstraction. The usage is versatile enough to be used to abstract out rules and notification format. It utilises [go-templates](https://golang.org/pkg/text/template/) to provide data-driven templates for generating textual output. The template delimiter used is `[[` and `]]`.
 
 One can create templates using either HTTP APIs or CLI.
 
@@ -13,13 +18,20 @@ One can create templates using either HTTP APIs or CLI.
 
 Templates can be created using Siren APIs. The below snippet describes an example.
 
-```text
-PUT /v1beta1/templates HTTP/1.1
-Host: localhost:3000
-Content-Type: application/json
-Content-Length: 1383
+<Tabs groupId="api">
+  <TabItem value="cli" label="CLI" default>
 
-{
+```bash
+$ siren template upsert --file template.yaml
+```
+
+  </TabItem>
+  <TabItem value="http" label="HTTP">
+    <CodeBlock className="language-bash">
+    {`$ curl --request PUT
+  --url `}{defaultHost}{`/`}{apiVersion}{`/templates
+  --header 'content-type: application/json'
+  --data-raw '{
     "name": "CPU",
     "body": "- alert: CPUHighWarning\n  expr: avg by (host) (cpu_usage_user{cpu=\"cpu-total\"}) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    severity: WARNING\n    team: '[[ .team ]]'\n  annotations:\n    dashboard: https://example.com\n    description: CPU has been above [[.warning]] for last [[.for]] {{ $labels.host }}\n- alert: CPUHighCritical\n  expr: avg by (host) (cpu_usage_user{cpu=\"cpu-total\"}) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    severity: CRITICAL\n    team: '[[ .team ]]'\n  annotations:\n    dashboard: example.com\n    description: CPU has been above [[.critical]] for last [[.for]] {{ $labels.host }}\n",
     "tags": [
@@ -52,18 +64,19 @@ Content-Length: 1383
             "description": ""
         }
     ]
-}
-
-```
+}'`}
+    </CodeBlock>
+  </TabItem>
+</Tabs>
 
 ### Terminology of the request body
 
-| Term        | Description                                                                                                | Example/Default  |
-|-------------|------------------------------------------------------------------------------------------------------------|------------------|
-| Name        | Name of the template                                                                                       | CPUHigh          |
-| Body        | Array of rule body. The body can be templatized in go template format.                                     | See example above |
-| Variables   | Array of variables that were templatized in the body with their data type, default value and description.  | See example above |
-| Tags        | Array of resources/applications that can utilize this template                                             | VM               |
+| Term      | Description                                                                                               | Example/Default   |
+| --------- | --------------------------------------------------------------------------------------------------------- | ----------------- |
+| Name      | Name of the template                                                                                      | CPUHigh           |
+| Body      | Array of rule body. The body can be templatized in go template format.                                    | See example above |
+| Variables | Array of variables that were templatized in the body with their data type, default value and description. | See example above |
+| Tags      | Array of resources/applications that can utilize this template                                            | VM                |
 
 The response body will look like this:
 
@@ -74,10 +87,7 @@ The response body will look like this:
   "UpdatedAt": "2021-04-29T16:22:19.978837+05:30",
   "name": "CPU",
   "body": "- alert: CPUHighWarning\n  expr: avg by (host) (cpu_usage_user{cpu=\"cpu-total\"}) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    severity: WARNING\n    team: '[[ .team ]]'\n  annotations:\n    dashboard: https://example.com\n    description: CPU has been above [[.warning]] for last [[.for]] {{ $labels.host }}\n- alert: CPUHighCritical\n  expr: avg by (host) (cpu_usage_user{cpu=\"cpu-total\"}) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    severity: CRITICAL\n    team: '[[ .team ]]'\n  annotations:\n    dashboard: example.com\n    description: CPU has been above [[.critical]] for last [[.for]] {{ $labels.host }}\n",
-  "tags": [
-    "firehose",
-    "dagger"
-  ],
+  "tags": ["firehose", "dagger"],
   "variables": [
     {
       "name": "team",
@@ -113,19 +123,41 @@ The response body will look like this:
 
 Here is an example to fetch a template using name.
 
-```text
-GET /v1beta1/templates/cpu HTTP/1.1
-Host: localhost:3000
+<Tabs groupId="api">
+  <TabItem value="cli" label="CLI" default>
+
+```bash
+$ siren template view cpu
 ```
+
+  </TabItem>
+  <TabItem value="http" label="HTTP">
+    <CodeBlock className="language-bash">
+    {`$ curl --request GET
+  --url `}{defaultHost}{`/`}{apiVersion}{`/templates/cpu`}
+    </CodeBlock>
+  </TabItem>
+</Tabs>
 
 **Fetching by Tags**
 
 Here is an example to fetch a templates matching the tag.
 
-```text
-GET /v1beta1/templates?tag=firehose HTTP/1.1
-Host: localhost:3000
+<Tabs groupId="api">
+  <TabItem value="cli" label="CLI" default>
+
+```bash
+$ siren template list --tag firehose
 ```
+
+  </TabItem>
+  <TabItem value="http" label="HTTP">
+    <CodeBlock className="language-bash">
+    {`$ curl --request GET
+  --url `}{defaultHost}{`/`}{apiVersion}{`/templates?tag=firehose`}
+    </CodeBlock>
+  </TabItem>
+</Tabs>
 
 ### Deleting a template
 
@@ -133,6 +165,23 @@ Host: localhost:3000
 DELETE /v1beta1/templates/cpu HTTP/1.1
 Host: localhost:3000
 ```
+
+<Tabs groupId="api">
+  <TabItem value="cli" label="CLI" default>
+
+```bash
+$ siren template delete cpu
+```
+
+  </TabItem>
+  <TabItem value="http" label="HTTP">
+    <CodeBlock className="language-bash">
+    {`$ curl --request DELETE
+  --url `}{defaultHost}{`/`}{apiVersion}{`/templates/cpu`}
+    </CodeBlock>
+  </TabItem>
+</Tabs>
+
 
 **Note:**
 
@@ -183,22 +232,22 @@ In the above example, we are using one template to define rules of two severity 
 have made 3 templates variables `for`, `warning` and `critical` which denote the appropriate alerting thresholds. They
 will be given a value while actual rule(alert) creating.
 
-```shell
-go run main.go upload cpu_template.yaml
+```bash
+siren template upload cpu_template.yaml
 ```
 
 ### Terminology
 
-| Term        | Description                                                                                                | Example/Default  |
-|-------------|------------------------------------------------------------------------------------------------------------|------------------|
-| API Version | Which API to use to parse the YAML file                                                                    | v2               |
-| Type        | Describes the type of object represented by YAML file                                                      | template         |
-| Name        | Name of the template                                                                                       | CPUHigh          |
-| Body        | Array of rule body. The body can be templatized in go template format.                                     | See example file |
-| Variables   | Array of variables that were templatized in the body with their data type, default value and description.  | See example file |
-| Tags        | Array of resources/applications that can utilize this template                                             | VM               |
+| Term        | Description                                                                                               | Example/Default  |
+| ----------- | --------------------------------------------------------------------------------------------------------- | ---------------- |
+| API Version | Which API to use to parse the YAML file                                                                   | v2               |
+| Type        | Describes the type of object represented by YAML file                                                     | template         |
+| Name        | Name of the template                                                                                      | CPUHigh          |
+| Body        | Array of rule body. The body can be templatized in go template format.                                    | See example file |
+| Variables   | Array of variables that were templatized in the body with their data type, default value and description. | See example file |
+| Tags        | Array of resources/applications that can utilize this template                                            | VM               |
 
 **Note:**
 
 1. It's suggested to always provide default value for the templated variables.
-2. Updating a template via CLI will update all associated rules.
+2. Updating a template used by rules via CLI will update all associated rules.

@@ -114,7 +114,7 @@ func TestClient_Notify_WithRetrier(t *testing.T) {
 		}))
 
 		c := httpreceiver.NewClient(log.NewNoop(), httpreceiver.AppConfig{},
-			httpreceiver.ClientWithRetrier(retry.New(retry.Config{})))
+			httpreceiver.ClientWithRetrier(retry.New(retry.Config{Enable: true})))
 		_ = c.Notify(context.Background(), testServer.URL, nil)
 
 		assert.Equal(t, expectedCounter, counter)
@@ -131,7 +131,7 @@ func TestClient_Notify_WithRetrier(t *testing.T) {
 		}))
 
 		c := httpreceiver.NewClient(log.NewNoop(), httpreceiver.AppConfig{},
-			httpreceiver.ClientWithRetrier(retry.New(retry.Config{})))
+			httpreceiver.ClientWithRetrier(retry.New(retry.Config{Enable: true})))
 		_ = c.Notify(context.Background(), testServer.URL, nil)
 
 		assert.Equal(t, expectedCounter, counter)

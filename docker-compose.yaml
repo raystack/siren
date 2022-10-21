@@ -8,14 +8,12 @@ services:
     volumes:
       - siren_dbdata:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: "siren_dev"
+      POSTGRES_DB: "siren_development"
       POSTGRES_HOST_AUTH_METHOD: "trust"
   cortex-am:
     image: quay.io/cortexproject/cortex:master-63703f5
     container_name: "siren_cortex_am"
-    command: -target=alertmanager -config.file=/etc/single-process-config.yaml
-    ports:
-      - "9008:9009"
+    command: -target=alertmanager -config.file=/etc/single-process-config.yaml --log.level=debug
     environment:
       minio_host: siren_nginx_1
     volumes:
@@ -30,9 +28,7 @@ services:
   cortex-all:
     image: quay.io/cortexproject/cortex:master-63703f5
     container_name: "siren_cortex_all"
-    command: -target=all -config.file=/etc/single-process-config.yaml
-    ports:
-      - "9009:9009"
+    command: -target=all -config.file=/etc/single-process-config.yaml --log.level=debug
     environment:
       minio_host: siren_nginx_1
     volumes:
@@ -78,6 +74,19 @@ services:
       - minio1
     entrypoint: >
       /bin/sh -c " /usr/bin/mc alias set myminio http://minio1:9000 minio minio123; /usr/bin/mc rm -r --force cortex; /usr/bin/mc mb myminio/cortex; /usr/bin/mc ls myminio/cortex; /usr/bin/mc policy get myminio/cortex; "
+  nginx:
+    image: nginx:1.23
+    container_name: siren_nginx
+    restart: unless-stopped
+    ports:
+      - 9009:9009
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - siren
+    depends_on:
+      - cortex-am
+      - cortex-all
 volumes:
   siren_dbdata:
   data1-1:

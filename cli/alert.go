@@ -39,7 +39,7 @@ func alertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 }
 
 func listAlertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
-	var providerName string
+	var providerType string
 	var providerId uint64
 	var resouceName string
 	var startTime uint64
@@ -71,7 +71,7 @@ func listAlertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			defer cancel()
 
 			res, err := client.ListAlerts(ctx, &sirenv1beta1.ListAlertsRequest{
-				ProviderName: providerName,
+				ProviderType: providerType,
 				ProviderId:   providerId,
 				ResourceName: resouceName,
 				StartTime:    startTime,
@@ -110,8 +110,8 @@ func listAlertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&providerName, "provider-name", "", "provider name")
-	cmd.MarkFlagRequired("provider-name")
+	cmd.Flags().StringVar(&providerType, "provider-type", "", "provider type")
+	cmd.MarkFlagRequired("provider-type")
 	cmd.Flags().Uint64Var(&providerId, "provider-id", 0, "provider id")
 	cmd.MarkFlagRequired("provider-id")
 	cmd.Flags().StringVar(&resouceName, "resource-name", "", "resource name")

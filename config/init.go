@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/mcuadros/go-defaults"
+	"github.com/odpf/siren/core/receiver"
 	"gopkg.in/yaml.v2"
 )
 
@@ -12,12 +13,23 @@ func Init(configFile string) error {
 
 	defaults.SetDefaults(cfg)
 
+	cfg.DB.Driver = "postgres"
+	cfg.DB.URL = "postgres://postgres:@localhost:5432/siren_development?sslmode=disable"
+
+	if len(cfg.Notification.MessageHandler.ReceiverTypes) == 0 {
+		cfg.Notification.MessageHandler.ReceiverTypes = receiver.SupportedTypes
+	}
+
+	if len(cfg.Notification.DLQHandler.ReceiverTypes) == 0 {
+		cfg.Notification.DLQHandler.ReceiverTypes = receiver.SupportedTypes
+	}
+
 	data, err := yaml.Marshal(cfg)
 	if err != nil {
 		return err
 	}
 
-	if err := os.WriteFile(configFile, data, 0655); err != nil {
+	if err := os.WriteFile(configFile, data, os.ModePerm); err != nil {
 		return err
 	}
 

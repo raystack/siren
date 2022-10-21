@@ -42,6 +42,10 @@ func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListRece
 }
 
 func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.CreateReceiverRequest) (*sirenv1beta1.CreateReceiverResponse, error) {
+	if !receiver.IsTypeSupported(req.GetType()) {
+		return nil, s.generateRPCErr(errors.ErrInvalid.WithMsgf("unsupported type %s", req.GetType()))
+	}
+
 	rcv := &receiver.Receiver{
 		Name:           req.GetName(),
 		Type:           req.GetType(),
@@ -90,6 +94,10 @@ func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetRecei
 }
 
 func (s *GRPCServer) UpdateReceiver(ctx context.Context, req *sirenv1beta1.UpdateReceiverRequest) (*sirenv1beta1.UpdateReceiverResponse, error) {
+	if !receiver.IsTypeSupported(req.GetType()) {
+		return nil, s.generateRPCErr(errors.ErrInvalid.WithMsgf("unsupported type %s", req.GetType()))
+	}
+
 	rcv := &receiver.Receiver{
 		ID:             req.GetId(),
 		Name:           req.GetName(),

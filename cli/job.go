@@ -19,7 +19,12 @@ func jobCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		Use:     "job <command>",
 		Aliases: []string{"jobs"},
 		Short:   "Manage siren jobs",
-		Long:    "Jobs management commands.",
+		Long: heredoc.Doc(`
+			Execute a siren's job.
+			
+			A job is a task in Siren that could be executed and stopped once the task is done. 
+			The Job is usually run as a CronJob to be executed on a specified time.
+		`),
 		Example: heredoc.Doc(`
 			$ siren job run cleanup_queue
 		`),

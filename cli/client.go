@@ -14,7 +14,7 @@ import (
 )
 
 type ClientConfig struct {
-	Host string `yaml:"host" cmdx:"host"`
+	Host string `yaml:"host" cmdx:"host" default:"localhost:8080"`
 }
 
 func loadClientConfig(cmd *cobra.Command, cmdxConfig *cmdx.Config) (*ClientConfig, error) {
@@ -24,12 +24,23 @@ func loadClientConfig(cmd *cobra.Command, cmdxConfig *cmdx.Config) (*ClientConfi
 		&clientConfig,
 		cmdx.WithFlags(cmd.Flags()),
 	); err != nil {
-		if !errors.Is(err, new(config.ConfigFileNotFoundError)) {
+		if !errors.As(err, new(config.ConfigFileNotFoundError)) {
 			return nil, err
 		}
 	}
 
+	if err := validateClientConfig(&clientConfig); err != nil {
+		return nil, err
+	}
+
 	return &clientConfig, nil
+}
+
+func validateClientConfig(cfg *ClientConfig) error {
+	if cfg.Host == "" {
+		return errors.New("`host` is missing")
+	}
+	return nil
 }
 
 func createConnection(ctx context.Context, host string) (*grpc.ClientConn, error) {

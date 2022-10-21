@@ -65,16 +65,7 @@ func (m *Provider) validate(all bool) error {
 
 	// no validation rules for Name
 
-	if _, ok := _Provider_Type_InLookup[m.GetType()]; !ok {
-		err := ProviderValidationError{
-			field:  "Type",
-			reason: "value must be in list [cortex]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	if all {
 		switch v := interface{}(m.GetCredentials()).(type) {
@@ -240,10 +231,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProviderValidationError{}
-
-var _Provider_Type_InLookup = map[string]struct{}{
-	"cortex": {},
-}
 
 // Validate checks the field values on ListProvidersRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -550,16 +537,7 @@ func (m *CreateProviderRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := _CreateProviderRequest_Type_InLookup[m.GetType()]; !ok {
-		err := CreateProviderRequestValidationError{
-			field:  "Type",
-			reason: "value must be in list [cortex]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	if all {
 		switch v := interface{}(m.GetCredentials()).(type) {
@@ -674,10 +652,6 @@ var _ interface {
 var _CreateProviderRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _CreateProviderRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _CreateProviderRequest_Type_InLookup = map[string]struct{}{
-	"cortex": {},
-}
 
 // Validate checks the field values on CreateProviderResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1071,16 +1045,7 @@ func (m *UpdateProviderRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := _UpdateProviderRequest_Type_InLookup[m.GetType()]; !ok {
-		err := UpdateProviderRequestValidationError{
-			field:  "Type",
-			reason: "value must be in list [cortex]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	if all {
 		switch v := interface{}(m.GetCredentials()).(type) {
@@ -1193,10 +1158,6 @@ var _ interface {
 } = UpdateProviderRequestValidationError{}
 
 var _UpdateProviderRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _UpdateProviderRequest_Type_InLookup = map[string]struct{}{
-	"cortex": {},
-}
 
 // Validate checks the field values on UpdateProviderResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4469,16 +4430,7 @@ func (m *Receiver) validate(all bool) error {
 
 	// no validation rules for Name
 
-	if _, ok := _Receiver_Type_InLookup[m.GetType()]; !ok {
-		err := ReceiverValidationError{
-			field:  "Type",
-			reason: "value must be in list [slack pagerduty http]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	// no validation rules for Labels
 
@@ -4673,12 +4625,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ReceiverValidationError{}
-
-var _Receiver_Type_InLookup = map[string]struct{}{
-	"slack":     {},
-	"pagerduty": {},
-	"http":      {},
-}
 
 // Validate checks the field values on ListReceiversRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -4949,16 +4895,7 @@ func (m *CreateReceiverRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := _CreateReceiverRequest_Type_InLookup[m.GetType()]; !ok {
-		err := CreateReceiverRequestValidationError{
-			field:  "Type",
-			reason: "value must be in list [slack pagerduty http]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	// no validation rules for Labels
 
@@ -5071,12 +5008,6 @@ var _ interface {
 } = CreateReceiverRequestValidationError{}
 
 var _CreateReceiverRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
-
-var _CreateReceiverRequest_Type_InLookup = map[string]struct{}{
-	"slack":     {},
-	"pagerduty": {},
-	"http":      {},
-}
 
 // Validate checks the field values on CreateReceiverResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -5449,16 +5380,7 @@ func (m *UpdateReceiverRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := _UpdateReceiverRequest_Type_InLookup[m.GetType()]; !ok {
-		err := UpdateReceiverRequestValidationError{
-			field:  "Type",
-			reason: "value must be in list [slack pagerduty http]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Type
 
 	// no validation rules for Labels
 
@@ -5571,12 +5493,6 @@ var _ interface {
 } = UpdateReceiverRequestValidationError{}
 
 var _UpdateReceiverRequest_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_.-]+$")
-
-var _UpdateReceiverRequest_Type_InLookup = map[string]struct{}{
-	"slack":     {},
-	"pagerduty": {},
-	"http":      {},
-}
 
 // Validate checks the field values on UpdateReceiverResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -6280,16 +6196,7 @@ func (m *ListAlertsRequest) validate(all bool) error {
 
 	var errors []error
 
-	if _, ok := _ListAlertsRequest_ProviderName_InLookup[m.GetProviderName()]; !ok {
-		err := ListAlertsRequestValidationError{
-			field:  "ProviderName",
-			reason: "value must be in list [cortex]",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ProviderType
 
 	// no validation rules for ProviderId
 
@@ -6386,10 +6293,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAlertsRequestValidationError{}
-
-var _ListAlertsRequest_ProviderName_InLookup = map[string]struct{}{
-	"cortex": {},
-}
 
 var _ListAlertsRequest_ResourceName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 

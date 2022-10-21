@@ -59,6 +59,8 @@ func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
+	ns.ID = encryptedNamespace.ID
+
 	return nil
 }
 
@@ -74,8 +76,8 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Namespace, error) {
 	return s.decrypt(encryptedNamespace)
 }
 
-func (s *Service) Update(ctx context.Context, namespace *Namespace) error {
-	encryptedNamespace, err := s.encrypt(namespace)
+func (s *Service) Update(ctx context.Context, ns *Namespace) error {
+	encryptedNamespace, err := s.encrypt(ns)
 	if err != nil {
 		return err
 	}
@@ -93,6 +95,8 @@ func (s *Service) Update(ctx context.Context, namespace *Namespace) error {
 		}
 		return err
 	}
+
+	ns.ID = encryptedNamespace.ID
 
 	return nil
 }

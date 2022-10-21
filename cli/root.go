@@ -54,7 +54,6 @@ func New() *cobra.Command {
 	cmdx.SetClientHook(rootCmd, func(cmd *cobra.Command) {
 		// client config
 		cmd.PersistentFlags().StringP("host", "h", "", "Siren API service to connect to")
-		cmd.MarkPersistentFlagRequired("host")
 	})
 
 	return rootCmd

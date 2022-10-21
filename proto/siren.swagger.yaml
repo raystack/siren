@@ -14,7 +14,7 @@ consumes:
 produces:
   - application/json
 paths:
-  /v1beta1/alerts/{provider_name}/{provider_id}:
+  /v1beta1/alerts/{provider_type}/{provider_id}:
     get:
       summary: list alerts
       operationId: SirenService_ListAlerts
@@ -28,7 +28,7 @@ paths:
           schema:
             $ref: '#/definitions/Status'
       parameters:
-        - name: provider_name
+        - name: provider_type
           in: path
           required: true
           type: string

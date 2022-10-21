@@ -340,7 +340,7 @@ func TestClient_NotifyWithRetrier(t *testing.T) {
 			}
 		}))
 
-		c := slack.NewClient(slack.AppConfig{APIHost: testServer.URL}, slack.ClientWithRetrier(retry.New(retry.Config{})))
+		c := slack.NewClient(slack.AppConfig{APIHost: testServer.URL}, slack.ClientWithRetrier(retry.New(retry.Config{Enable: true})))
 		_ = c.Notify(
 			context.Background(),
 			slack.NotificationConfig{
@@ -371,7 +371,7 @@ func TestClient_NotifyWithRetrier(t *testing.T) {
 			}
 		}))
 
-		c := slack.NewClient(slack.AppConfig{APIHost: testServer.URL}, slack.ClientWithRetrier(retry.New(retry.Config{})))
+		c := slack.NewClient(slack.AppConfig{APIHost: testServer.URL}, slack.ClientWithRetrier(retry.New(retry.Config{Enable: true})))
 		_ = c.Notify(
 			context.Background(),
 			slack.NotificationConfig{

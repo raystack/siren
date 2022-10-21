@@ -1,59 +1,45 @@
-# Alert History Subscription
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from '@theme/CodeBlock';
+import siteConfig from '/docusaurus.config.js';
 
-Siren can store the alerts triggered via Cortex Alertmanager. Cortex alertmanager is configured to call Siren API, using
-a webhook receiver. This is done by adding a subscription using an HTTP Receiver on empty match condition, which will
-result in calling thus HTTP Receiver on all alerts
+# Alert History
 
-Example Receiver
+export const apiVersion = siteConfig.customFields.apiVersion
+export const defaultHost = siteConfig.customFields.defaultHost
 
-```json
-{
-  "id": "1",
-  "name": "alert-history-receiver",
-  "type": "http",
-  "labels": {
-    "team": "siren-devs-alert-history"
-  },
-  "configurations": {
-    "url": "http://localhost:3000/v1beta1/alerts/cortex/3"
-  }
-}
+Siren can store the alerts triggered by provider e.g. Cortex Alertmanager. Provider needs to be configured to call Siren API using a webhook.
+
+## Cortex Alertmanager
+
+For Cortex Alertmanager, everytime a provider is added, a default [webhook_config](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config) receiver with empty route condition is set, which will result in calling the defined Siren API's on all alerts. This sync also happens everytime the server started.
+
+Example Cortex Alertmanager config
+
+```yaml
+receivers:
+  - name: default
+    webhook_configs:
+      - send_resolved: true
+        http_config:
+          follow_redirects: true
+        url: http://localhost:8080/v1beta1/alerts/cortex/3 # siren API
+        max_alerts: 0
 ```
 
-Note that the url has `cortex/3` at the end, which means this will be able to parse alert history payloads from cortex
-type and store in DB by making it belong to provider id `3`.
+Note that the url has `cortex/3` at the end, which means this will be able to parse alert history payloads from cortex type and store in DB by making it belong to provider id `3`. After this, as soon as any alert is triggered, it will be sent to Siren for history and a notification will also be published.
 
-We will need the subscription as well, example:
-
-```json
-{
-  "id": "384",
-  "urn": "alert-history-subscription",
-  "namespace": "10",
-  "receivers": [
-    {
-      "id": "1"
-    }
-  ],
-  "match": {}
-}
-```
-
-After this, as soon as any alert is sent by Alertmanager to slack or pagerduty, it will be sent to Siren for storage
-purpose.
-
-![Siren Alert History](/img/alerthistory.jpg)
-
-The parsing of payload from alert manager depends on a particular syntax. you can configure your templates to follow
-this syntax, with proper annotations to identify:
+All information on triggered alerts depend on the alerting rule configured in Siren (synced to Cortex Ruler). Main information that should exist in the rule are:
 
 - Which alert was triggered
 - Which resource this alert refers to
-- On Which metric, this alert was triggered
+- On which metric, this alert was triggered
 - What was the metric value for alert trigger
-- What was the severity of alert(CRITICAL, WARNING or RESOLVED)
+- What was the severity of alert (CRITICAL, WARNING or RESOLVED)
 
-An Example template:
+For reusability, rule in siren need to be defined based on a [template](./template.md). Template's body describes what data that is rendered once the variable is applied.
+
+An Example of rule's template:
 
 ```yaml
 apiVersion: v2
@@ -97,7 +83,7 @@ tags:
   - systems
 ```
 
-Please note that, the mandatory keys, in order to successfully store Alert History is,
+Please note that, the mandatory keys, in order to successfully store Alert History of Cortex Alertmanager provider is,
 
 ```yaml
 labels:
@@ -109,21 +95,17 @@ annotations:
   metricValue: { { $labels.cpu_usage_user } }
 ```
 
-The keys are pretty obvious to match with what was described in bullets points in the introduction above.
+The keys are pretty obvious to match with what was described in bullets points in the introduction above. The above annotations and labels will be parsed by Siren APIs to be stored in the database and would affect the content of notification message.
 
-In the above example we can see, the alert annotation has sufficient values for alert history storage. We can set up
-cortex alertmanager, to call Siren AlertHistory APIs as a webhook receiver. The above annotations and labels will be
-parsed by Siren APIs, to be stored in the database.
+### Alert History Creation via API
 
-**Alert History Creation via API**
-
-```text
-POST /v1beta1/alerts/cortex/1 HTTP/1.1
-Host: localhost:3000
-Content-Type: application/json
-Content-Length: 357
-
-{
+<Tabs groupId="api">
+  <TabItem value="http" label="HTTP">
+    <CodeBlock className="language-bash">
+    {`$ curl --request POST
+  --url `}{defaultHost}{`/`}{apiVersion}{`/alerts/cortex/1
+  --header 'content-type: application/json'
+  --data-raw '{
     "alerts": [
         {
             "status": "firing",
@@ -138,11 +120,14 @@ Content-Length: 357
             }
         }
     ]
-}
-```
+}'`}
+    </CodeBlock>
+  </TabItem>
+</Tabs>
 
-The request body of Alertmanager POST call to configured webhook looks something like (after you have followed the
-labels and annotations c in the templates) above snippet.
+The request body of Alertmanager POST call to configured webhook looks something like (after you have followed the labels and annotations in the templates) the above snippet. The contract complies with Cortex Alertmanager [webhook_config](https://prometheus.io/docs/alerting/latest/configuration/#webhook_config) body. Siren's alerts API will parse the above payload and also store in the database, which you can fetch via the GET APIs with proper filters of startTime, endTime. See the swagger file for more details.
 
-The alerts API will parse the above payload and store in the database, which you can fetch via the GET APIs with proper
-filters of startTime, endTime. See the swagger file for more details.
+
+**Alert Notification Payload Template**
+
+For each receiver, Siren has a default notification payload template to render Cortex alert notification. See [notification](./notification.md#message-payload-format).

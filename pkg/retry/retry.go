@@ -36,7 +36,7 @@ func New(cfg Config) Runner {
 // Run wraps function call with retry logic
 // exponential backoff option is configurable
 func (w *wrapper) Run(ctx context.Context, f func(ctx context.Context) error) error {
-	if w.c.Disable {
+	if !w.c.Enable {
 		return f(ctx)
 	}
 

@@ -151,7 +151,7 @@ func TestClient_NotifyV1_WithRetrier(t *testing.T) {
 		}))
 
 		c := pagerduty.NewClient(pagerduty.AppConfig{APIHost: testServer.URL},
-			pagerduty.ClientWithRetrier(retry.New(retry.Config{})),
+			pagerduty.ClientWithRetrier(retry.New(retry.Config{Enable: true})),
 		)
 		_ = c.NotifyV1(context.Background(), pagerduty.MessageV1{})
 
@@ -169,7 +169,7 @@ func TestClient_NotifyV1_WithRetrier(t *testing.T) {
 		}))
 
 		c := pagerduty.NewClient(pagerduty.AppConfig{APIHost: testServer.URL},
-			pagerduty.ClientWithRetrier(retry.New(retry.Config{})),
+			pagerduty.ClientWithRetrier(retry.New(retry.Config{Enable: true})),
 		)
 		_ = c.NotifyV1(context.Background(), pagerduty.MessageV1{})
 

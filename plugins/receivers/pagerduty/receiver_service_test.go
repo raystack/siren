@@ -9,18 +9,7 @@ import (
 	"github.com/odpf/siren/plugins/receivers/pagerduty"
 )
 
-func TestPagerDutyService_Functions(t *testing.T) {
-	t.Run("should return error not implemented if notify is called", func(t *testing.T) {
-		svc := pagerduty.NewReceiverService()
-
-		expectedErrorString := "operation not supported"
-		err := svc.Notify(context.TODO(), map[string]interface{}{}, map[string]interface{}{})
-
-		if err.Error() != expectedErrorString {
-			t.Fatalf("got error %s, expected was %s", err.Error(), expectedErrorString)
-		}
-	})
-
+func TestReceiverService_Functions(t *testing.T) {
 	t.Run("should return empty if get populated data is called", func(t *testing.T) {
 		svc := pagerduty.NewReceiverService()
 
@@ -35,7 +24,7 @@ func TestPagerDutyService_Functions(t *testing.T) {
 	})
 }
 
-func TestPagerDutyService_BuildNotificationConfig(t *testing.T) {
+func TestReceiverService_BuildNotificationConfig(t *testing.T) {
 	type testCase struct {
 		Description         string
 		SubscriptionConfigs map[string]interface{}
