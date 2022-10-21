@@ -8,7 +8,7 @@ import siteConfig from '/docusaurus.config.js';
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-Siren rules are generated from predefined [templates](templates.md) by providing values of the variables of the template.
+Siren rules are generated from predefined [templates](template.md) by providing values of the variables of the template.
 
 One can create templates using either HTTP APIs or CLI.
 
@@ -58,7 +58,6 @@ $ siren rule create --file rule.yaml
     </CodeBlock>
   </TabItem>
 </Tabs>
-
 
 Here we are using CPU template and providing value for few variables("for", "team"). In case some variables value is not
 provided default will be picked from the template's definition.
@@ -174,21 +173,21 @@ The yaml file can be edited and re-uploaded to edit the rule thresholds.
 
 Siren gives flexibility to templatize rules for re-usability purpose. Template can be managed via APIs (REST
 and GRPC). Apart from that, there is a command line interface as well which parses a YAML file in a specified format (as
-described below) and upload to Siren using an HTTP Client of Siren Service. Refer [here](../guides/templates.md) for
+described below) and upload to Siren using an HTTP Client of Siren Service. Refer [here](../guides/template.md) for
 more details around usage and terminology.
 
 ## Managing Rules via YAML File
 
 To manage rules in bulk, Siren gives a way to manage rules using YAML files, which you can manage in a version
 controlled repository. Using the `upload` command one can upload a rule YAML file in a specified format (as described
-below) and upload to Siren using the GRPC Client(comes inbuilt) of Siren Service. Refer [here](../guides/rules.md) for
+below) and upload to Siren using the GRPC Client(comes inbuilt) of Siren Service. Refer [here](../guides/rule.md) for
 more details around usage and terminology.
 
 **Note:** Updating a template also updates the associated rules.
 
 # Bulk Rule management
 
-For org wide use cases, teams end up managing a lot of rules, often manually. Siren CLI can be used to automate the rule creation, rule update, and [template](./templates.md) update.
+For org wide use cases, teams end up managing a lot of rules, often manually. Siren CLI can be used to automate the rule creation, rule update, and [template](./template.md) update.
 
 ## Use Case: CI
 
