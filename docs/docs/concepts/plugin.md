@@ -4,7 +4,7 @@ Siren decouples various `provider`, `receiver`, and `queue` as a plugin. The pur
 
 ## Provider
 
-Provider responsibility is to accept incoming rules configuration from Siren and send alerts to the designated Siren Hook API. Provider plugin needs to fulfill some interfaces. More detail about interfaces can be found in [contribution](../contribute/provider_and_namespace.md) page. Supported providers are:
+Provider responsibility is to accept incoming rules configuration from Siren and send alerts to the designated Siren Hook API. Provider plugin needs to fulfill some interfaces. More detail about interfaces can be found in [contribution](../contribute/provider.md) page. Supported providers are:
 - [Cortexmetrics](https://cortexmetrics.io/)
 
 ## Receiver

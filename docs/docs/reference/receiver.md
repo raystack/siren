@@ -202,7 +202,7 @@ Siren has a PagerDuty default [template](../../../plugins/receivers/pagerduty/co
 ```
 
 ### Message Payload Format
-Payload will be sent as-is. If defined by [templates](./templates.md), payload will be the same with the generated payload by template.
+Payload will be sent as-is. If defined by [templates](../guides/template.md), payload will be the same with the generated payload by template.
 
 ## File
 

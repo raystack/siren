@@ -9,7 +9,7 @@ export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
 Siren lets you subscribe to a notification when they are triggered. You can define custom matching conditions and use
-[receivers](./receivers.md) to describe which medium you want to use for getting the notifications when a notification is triggered. A notification could be triggered on-demand via API or by the incoming alerts via webhook.
+[receivers](./receiver.md) to describe which medium you want to use for getting the notifications when a notification is triggered. A notification could be triggered on-demand via API or by the incoming alerts via webhook.
 
 **Example Subscription:**
 
