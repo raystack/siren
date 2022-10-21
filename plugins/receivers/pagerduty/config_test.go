@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/odpf/siren/pkg/secret"
 )
 
 func TestReceiverConfig(t *testing.T) {
@@ -68,12 +69,12 @@ func TestNotificationConfig(t *testing.T) {
 	t.Run("AsMap", func(t *testing.T) {
 		nc := NotificationConfig{
 			ReceiverConfig: ReceiverConfig{
-				ServiceKey: "service_key",
+				ServiceKey: secret.MaskableString("service_key"),
 			},
 		}
 
 		if diff := cmp.Diff(map[string]interface{}{
-			"service_key": "service_key",
+			"service_key": secret.MaskableString("service_key"),
 		}, nc.AsMap()); diff != "" {
 			t.Errorf("result not match\n%v", diff)
 		}

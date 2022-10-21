@@ -30,6 +30,32 @@ func TestHandler_MessageHandler(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "return error if post hook transform config is failing and error callback success",
+			messages: []notification.Message{
+				{
+					ReceiverType: testPluginType,
+				},
+			},
+			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "return error if post hook transform config is failing and error callback is failing",
+			messages: []notification.Message{
+				{
+					ReceiverType: testPluginType,
+				},
+			},
+			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+			},
+			wantErr: true,
+		},
+		{
 			name: "return error if publish message return error and error handler queue return error",
 			messages: []notification.Message{
 				{
@@ -37,8 +63,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
 				n.EXPECT().Publish(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
-				q.EXPECT().ErrorHandler(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -50,8 +77,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
 				n.EXPECT().Publish(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
-				q.EXPECT().ErrorHandler(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: true,
 		},
@@ -63,8 +91,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
 				n.EXPECT().Publish(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
-				q.EXPECT().SuccessHandler(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -76,8 +105,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+				n.EXPECT().PostHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
 				n.EXPECT().Publish(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
-				q.EXPECT().SuccessHandler(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -93,7 +123,7 @@ func TestHandler_MessageHandler(t *testing.T) {
 				tc.setup(mockQueue, mockNotifier)
 			}
 
-			h := notification.NewHandler(log.NewNoop(), mockQueue, map[string]notification.Notifier{
+			h := notification.NewHandler(notification.HandlerConfig{}, log.NewNoop(), mockQueue, map[string]notification.Notifier{
 				testReceiverType: mockNotifier,
 			})
 			if err := h.MessageHandler(context.TODO(), tc.messages); (err != nil) != tc.wantErr {

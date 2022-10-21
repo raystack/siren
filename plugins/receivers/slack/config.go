@@ -5,6 +5,7 @@ import (
 
 	"github.com/odpf/siren/pkg/httpclient"
 	"github.com/odpf/siren/pkg/retry"
+	"github.com/odpf/siren/pkg/secret"
 )
 
 // AppConfig is a config loaded when siren is started
@@ -31,15 +32,15 @@ func (c *SlackCredentialConfig) Validate() error {
 
 // ReceiverConfig is a stored config for a slack receiver
 type ReceiverConfig struct {
-	Token     string `json:"token" mapstructure:"token"`
-	Workspace string `json:"workspace" mapstructure:"workspace"`
+	Token     secret.MaskableString `json:"token" mapstructure:"token"`
+	Workspace string                `json:"workspace" mapstructure:"workspace"`
 }
 
 func (c *ReceiverConfig) Validate() error {
 	if c.Token != "" && c.Workspace != "" {
 		return nil
 	}
-	return fmt.Errorf("invalid slack receiver config, workspace: %s, token: <secret>", c.Workspace)
+	return fmt.Errorf("invalid slack receiver config, workspace: %s, token: %s", c.Workspace, c.Token)
 }
 
 func (c *ReceiverConfig) AsMap() map[string]interface{} {
@@ -78,11 +79,14 @@ type NotificationConfig struct {
 	SubscriptionConfig `mapstructure:",squash"`
 }
 
+// Validate validates whether notification config contains required fields or not
+// channel_name is not mandatory because in NotifyToReceiver flow, channel_name
+// is being passed from the request (not from the config)
 func (c *NotificationConfig) Validate() error {
-	if c.Token != "" && c.Workspace != "" && c.ChannelName != "" {
+	if c.Token != "" && c.Workspace != "" {
 		return nil
 	}
-	return fmt.Errorf("invalid slack notification config, workspace: %s, token: <secret>, channel_name: %s", c.Workspace, c.ChannelName)
+	return fmt.Errorf("invalid slack notification config, workspace: %s, token: %s, channel_name: %s", c.Workspace, c.Token, c.ChannelName)
 }
 
 func (c *NotificationConfig) AsMap() map[string]interface{} {

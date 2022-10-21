@@ -93,7 +93,7 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 		nsModel.ProviderID,
 		nsModel.URN,
 		nsModel.Name,
-		nsModel.Credentials,
+		nsModel.CredentialString,
 		nsModel.Labels,
 	).StructScan(&createdNamespace); err != nil {
 		err = checkPostgresError(err)
@@ -142,7 +142,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 		namespaceModel.ProviderID,
 		namespaceModel.URN,
 		namespaceModel.Name,
-		namespaceModel.Credentials,
+		namespaceModel.CredentialString,
 		namespaceModel.Labels,
 	).StructScan(&updatedNamespace); err != nil {
 		err := checkPostgresError(err)

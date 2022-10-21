@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/secret"
 )
 
 // Service handles business logic
@@ -106,19 +107,19 @@ func (s *Service) encrypt(ns *Namespace) (*EncryptedNamespace, error) {
 		return nil, err
 	}
 
-	encryptedCredentials, err := s.cryptoClient.Encrypt(string(plainTextCredentials))
+	encryptedCredentials, err := s.cryptoClient.Encrypt(secret.MaskableString(plainTextCredentials))
 	if err != nil {
 		return nil, err
 	}
 
 	return &EncryptedNamespace{
-		Namespace:   ns,
-		Credentials: encryptedCredentials,
+		Namespace:        ns,
+		CredentialString: encryptedCredentials.UnmaskedString(),
 	}, nil
 }
 
 func (s *Service) decrypt(ens *EncryptedNamespace) (*Namespace, error) {
-	decryptedCredentialsStr, err := s.cryptoClient.Decrypt(ens.Credentials)
+	decryptedCredentialsStr, err := s.cryptoClient.Decrypt(secret.MaskableString(ens.CredentialString))
 	if err != nil {
 		return nil, err
 	}

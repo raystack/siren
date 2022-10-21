@@ -27,7 +27,7 @@ type NotificationService struct {
 	q                   Queuer
 	receiverService     ReceiverService
 	subscriptionService SubscriptionService
-	receiverPlugins     map[string]Notifier
+	notifierPlugins     map[string]Notifier
 }
 
 // NewService creates a new notification service
@@ -36,23 +36,23 @@ func NewService(
 	q Queuer,
 	receiverService ReceiverService,
 	subscriptionService SubscriptionService,
-	receiverPlugins map[string]Notifier,
+	notifierPlugins map[string]Notifier,
 ) *NotificationService {
 	return &NotificationService{
 		logger:              logger,
 		q:                   q,
 		receiverService:     receiverService,
 		subscriptionService: subscriptionService,
-		receiverPlugins:     receiverPlugins,
+		notifierPlugins:     notifierPlugins,
 	}
 }
 
-func (ns *NotificationService) getReceiverPlugin(receiverType string) (Notifier, error) {
-	receiverPlugin, exist := ns.receiverPlugins[receiverType]
+func (ns *NotificationService) getNotifierPlugin(receiverType string) (Notifier, error) {
+	notifierPlugin, exist := ns.notifierPlugins[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
 	}
-	return receiverPlugin, nil
+	return notifierPlugin, nil
 }
 
 func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
@@ -66,7 +66,20 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 		return err
 	}
 
-	// supported no template
+	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
+	if err != nil {
+		return err
+	}
+
+	newConfigs, err := notifierPlugin.PreHookTransformConfigs(ctx, message.Configs)
+	if err != nil {
+		return err
+	}
+	message.Configs = newConfigs
+
+	message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodReceiver.String())
+
+	// supported no templating for now
 
 	if err := ns.q.Enqueue(ctx, *message); err != nil {
 		return err
@@ -94,14 +107,18 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 				return err
 			}
 
-			receiverPlugin, err := ns.getReceiverPlugin(rcv.Type)
+			notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 			if err != nil {
 				return err
 			}
 
-			if err := receiverPlugin.ValidateConfigMap(message.Configs); err != nil {
+			newConfigs, err := notifierPlugin.PreHookTransformConfigs(ctx, message.Configs)
+			if err != nil {
 				return err
 			}
+			message.Configs = newConfigs
+
+			message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodSubscribers.String())
 
 			//TODO fetch template if any, if not exist, check provider type, if exist use the default template, if not pass as-is
 			// if there is template, render and replace detail with the new one
@@ -109,7 +126,7 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 				var templateBody string
 
 				if template.IsReservedName(n.Template) {
-					templateBody = receiverPlugin.DefaultTemplateOfProvider(n.Template)
+					templateBody = notifierPlugin.DefaultTemplateOfProvider(n.Template)
 				}
 
 				if templateBody != "" {

@@ -42,6 +42,8 @@ func New() *cobra.Command {
 	rootCmd.AddCommand(templatesCmd(cmdxConfig))
 	rootCmd.AddCommand(rulesCmd(cmdxConfig))
 	rootCmd.AddCommand(alertsCmd(cmdxConfig))
+	rootCmd.AddCommand(jobCmd(cmdxConfig))
+	rootCmd.AddCommand(workerCmd())
 
 	// Help topics
 	cmdx.SetHelp(rootCmd)

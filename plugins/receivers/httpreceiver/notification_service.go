@@ -58,6 +58,14 @@ func (h *HTTPNotificationService) Publish(ctx context.Context, notificationMessa
 	return false, nil
 }
 
+func (h *HTTPNotificationService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	return notificationConfigMap, nil
+}
+
+func (h *HTTPNotificationService) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+	return notificationConfigMap, nil
+}
+
 func (h *HTTPNotificationService) DefaultTemplateOfProvider(providerType string) string {
 	switch providerType {
 	case provider.TypeCortex:

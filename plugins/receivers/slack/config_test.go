@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/odpf/siren/pkg/secret"
 )
 
 func TestSlackCredentialConfig(t *testing.T) {
@@ -106,13 +107,13 @@ func TestNotificationConfig(t *testing.T) {
 				ChannelName: "channel",
 			},
 			ReceiverConfig: ReceiverConfig{
-				Token:     "token",
+				Token:     secret.MaskableString("token"),
 				Workspace: "workspace"},
 		}
 
 		if diff := cmp.Diff(map[string]interface{}{
 			"channel_name": "channel",
-			"token":        "token",
+			"token":        secret.MaskableString("token"),
 			"workspace":    "workspace",
 		}, nc.AsMap()); diff != "" {
 			t.Errorf("result not match\n%v", diff)

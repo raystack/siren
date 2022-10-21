@@ -53,16 +53,18 @@ func NewSubscriptionRepository(client *Client) *SubscriptionRepository {
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
 	var queryBuilder = subscriptionListQueryBuilder
 
-	if flt.NamespaceID != 0 {
-		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
-	}
-
+	// If filter by Labels and namespace ID exist, filter by namespace should be done in app
+	// to make use of search by labels with GIN index
 	if len(flt.Labels) != 0 {
 		labelsJSON, err := json.Marshal(flt.Labels)
 		if err != nil {
 			return nil, errors.ErrInvalid.WithCausef("problem marshalling json to string with err: %s", err.Error())
 		}
 		queryBuilder = queryBuilder.Where(fmt.Sprintf("match <@ '%s'::jsonb", string(json.RawMessage(labelsJSON))))
+	} else {
+		if flt.NamespaceID != 0 {
+			queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
+		}
 	}
 
 	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -81,6 +83,14 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		var subscriptionModel model.Subscription
 		if err := rows.StructScan(&subscriptionModel); err != nil {
 			return nil, err
+		}
+
+		// If filter by Labels and namespace ID exist, filter by namespace should be done in app
+		// to make use of search by labels with GIN index
+		if len(flt.Labels) != 0 && flt.NamespaceID != 0 {
+			if subscriptionModel.NamespaceID != flt.NamespaceID {
+				continue
+			}
 		}
 
 		subscriptionsDomain = append(subscriptionsDomain, *subscriptionModel.ToDomain())

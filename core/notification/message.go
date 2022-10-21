@@ -12,6 +12,9 @@ type MessageStatus string
 const (
 	DefaultMaxTries = 3
 
+	// additional details
+	DetailsKeyRoutingMethod = "routing_method"
+
 	MessageStatusEnqueued  MessageStatus = "enqueued"
 	MessageStatusFailed    MessageStatus = "failed"
 	MessageStatusPending   MessageStatus = "pending"
@@ -129,4 +132,9 @@ func (m *Message) MarkPublished(updatedAt time.Time) {
 	m.TryCount = m.TryCount + 1
 	m.Status = MessageStatusPublished
 	m.UpdatedAt = updatedAt
+}
+
+// AddDetail adds a custom kv string detail
+func (m *Message) AddStringDetail(key, value string) {
+	m.Details[key] = value
 }

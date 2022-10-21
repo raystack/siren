@@ -28,16 +28,16 @@ func New(encryptionKey string) (*Crypto, error) {
 	}, nil
 }
 
-func (sec *Crypto) Encrypt(str string) (string, error) {
+func (sec *Crypto) Encrypt(str MaskableString) (MaskableString, error) {
 	cipher, err := cryptopasta.Encrypt([]byte(str), sec.encryptionKey)
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(cipher), nil
+	return MaskableString(base64.StdEncoding.EncodeToString(cipher)), nil
 }
 
-func (sec *Crypto) Decrypt(str string) (string, error) {
-	encrypted, err := base64.StdEncoding.DecodeString(str)
+func (sec *Crypto) Decrypt(str MaskableString) (MaskableString, error) {
+	encrypted, err := base64.StdEncoding.DecodeString(str.UnmaskedString())
 	if err != nil {
 		return "", err
 	}
@@ -45,5 +45,5 @@ func (sec *Crypto) Decrypt(str string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(decryptedToken), nil
+	return MaskableString(decryptedToken), nil
 }

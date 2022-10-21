@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Slack        slack.AppConfig        `mapstructure:"slack" yaml:"slack"`
-	Pagerduty    pagerduty.AppConfig    `mapstructure:"pagerduty" yaml:"pagerduty"`
-	HTTPReceiver httpreceiver.AppConfig `mapstructure:"http" yaml:"http"`
+	Slack        slack.AppConfig        `mapstructure:"slack"`
+	Pagerduty    pagerduty.AppConfig    `mapstructure:"pagerduty"`
+	HTTPReceiver httpreceiver.AppConfig `mapstructure:"http"`
 }
