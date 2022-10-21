@@ -1,0 +1,54 @@
+[[define "__alert_severity_prefix_emoji" -]]
+  [[if ne .Data.status "firing" -]]
+  :white_check_mark:
+  [[- else if eq .Labels.severity "CRITICAL" -]]
+  :fire:
+  [[- else if eq .Labels.severity "WARNING" -]]
+  :warning:
+  [[- else -]]
+  :question:
+  [[- end]]
+[[- end]]
+[[ define "slack.pretext" -]]
+  [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.numAlertsFiring ]][[ end ]])
+  [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
+  [[- else ]] *([[ .Labels.severity | toUpper ]])*
+  [[- end]] [[ .Labels.alertname ]]
+[[- end ]]
+[[define "slack.color" -]]
+[[if eq .Data.status "firing" -]]
+  [[if eq .Labels.severity "WARNING" -]]
+  warning
+  [[- else if eq .Labels.severity "CRITICAL" -]]
+  danger
+  [[- else -]]
+  #439FE0
+  [[- end -]]
+  [[else -]]
+  good
+  [[- end]]
+[[- end]]
+[[define "slack.body"]]
+[[- if .Data.summary]][[.Data.summary]][[else]][[.Labels.summary]][[end]]
+[[ end]]
+[[define "slack.dashboard"]]
+[[- if .Data.dashboard]][[.Data.dashboard]][[else]][[.Data.defaultDashboard]][[end]]
+[[- end -]]
+[[define "slack.runbook"]]
+[[- if .Data.playbook]][[.Data.playbook]][[end]]
+[[- end -]]
+username: "Siren"
+icon_emoji: ":eagle:"
+link_names: false
+attachments:
+  - title: ""
+    pretext: "[[template "slack.pretext" . ]]"
+    text: "[[template "slack.body" . ]]"
+    color: "[[template "slack.color" . ]]"
+    actions:
+    - type: button
+      text: "Runbook :books:"
+      url: "[[template "slack.runbook" . ]]"
+    - type: button
+      text: 'Dashboard :bar_chart:'
+      url: "[[template "slack.dashboard" . ]]"
