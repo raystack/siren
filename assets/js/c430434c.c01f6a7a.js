@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunksiren=self.webpackChunksiren||[]).push([[9777],{485:function(s){s.exports=JSON.parse('{"allTagsPath":"/siren/blog/tags","slug":"/siren/blog/tags/odpf","name":"odpf","count":1,"permalink":"/siren/blog/tags/odpf"}')}}]);
