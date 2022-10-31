@@ -20,10 +20,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var (
-	SERVER_HOST = "http://localhost:8080"
-)
-
 func uploadTemplate(ctx context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {
 	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {

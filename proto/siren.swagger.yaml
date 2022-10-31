@@ -53,20 +53,23 @@ paths:
           format: uint64
       tags:
         - Alert
-  /v1beta1/alerts/cortex/{provider_id}:
     post:
-      summary: create cortex alerts
-      operationId: SirenService_CreateCortexAlerts
+      summary: create alerts
+      operationId: SirenService_CreateAlerts
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/CreateCortexAlertsResponse'
+            $ref: '#/definitions/CreateAlertsResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Status'
       parameters:
+        - name: provider_type
+          in: path
+          required: true
+          type: string
         - name: provider_id
           in: path
           required: true
@@ -77,17 +80,6 @@ paths:
           required: true
           schema:
             type: object
-            properties:
-              alerts:
-                type: array
-                items:
-                  $ref: '#/definitions/CortexAlert'
-              external_url:
-                type: string
-              group_key:
-                type: string
-              version:
-                type: string
       tags:
         - Alert
   /v1beta1/namespaces:
@@ -777,30 +769,7 @@ definitions:
       '@type':
         type: string
     additionalProperties: {}
-  CortexAlert:
-    type: object
-    properties:
-      annotations:
-        type: object
-        additionalProperties:
-          type: string
-      ends_at:
-        type: string
-        format: date-time
-      fingerprint:
-        type: string
-      generator_url:
-        type: string
-      labels:
-        type: object
-        additionalProperties:
-          type: string
-      starts_at:
-        type: string
-        format: date-time
-      status:
-        type: string
-  CreateCortexAlertsResponse:
+  CreateAlertsResponse:
     type: object
     properties:
       alerts:
@@ -1077,8 +1046,6 @@ definitions:
     properties:
       configuration:
         type: object
-        additionalProperties:
-          type: string
       id:
         type: string
         format: uint64

@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/odpf/siren/test/e2e_test/dockertestx"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -22,9 +24,8 @@ import (
 
 type CortexTest struct {
 	PGConfig          db.Config
-	CortexConfig      cortex.Config
-	CortexAMHost      string
-	CortexAllHost     string
+	CortexConfig      cortex.AppConfig
+	NginxHost         string
 	bridgeNetworkName string
 	pool              *dockertest.Pool
 	network           *docker.Network
@@ -79,8 +80,14 @@ func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1
 	s.Require().Equal(1, len(rRes.GetReceivers()))
 }
 
-func fetchCortexRules(cortexHost string) ([]byte, error) {
-	resp, err := http.Get(fmt.Sprintf("http://%s/api/v1/rules", cortexHost))
+func fetchCortexRules(cortexHost, tenant string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/api/v1/rules", cortexHost), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Scope-OrgID", tenant)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +100,34 @@ func fetchCortexRules(cortexHost string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func fetchCortexAlertmanagerConfig(cortexAMHost string) ([]byte, error) {
-	resp, err := http.Get(fmt.Sprintf("http://%s/api/v1/alerts", cortexAMHost))
+func fetchCortexAlertmanagerConfig(cortexAMHost, tenant string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/api/v1/alerts", cortexAMHost), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Scope-OrgID", tenant)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return bodyBytes, nil
+}
+
+func triggerCortexAlert(cortexAMHost, tenant, bodyJson string) ([]byte, error) {
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/api/prom/alertmanager/api/v1/alerts", cortexAMHost), bytes.NewBufferString(bodyJson))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Scope-OrgID", tenant)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +208,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	if err != nil {
 		return nil, err
 	}
-	ct.CortexAMHost = dockerCortexAM.GetExternalHost()
+
 	ct.resources = append(ct.resources, dockerCortexAM.GetResource())
 	logger.Info("cortex-am is up")
 
@@ -191,9 +224,26 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 		return nil, err
 	}
 
-	ct.CortexAllHost = dockerCortexAll.GetExternalHost()
 	ct.resources = append(ct.resources, dockerCortexAll.GetResource())
 	logger.Info("cortex-all is up")
+
+	dockerNginx, err := dockertestx.CreateNginx(
+		dockertestx.NginxWithDockerNetwork(ct.network),
+		dockertestx.NginxWithDockerPool(ct.pool),
+		dockertestx.NginxWithPresetConfig("cortex"),
+		dockertestx.NginxWithExposedPort("9009"),
+		dockertestx.NginxWithConfigVariables(map[string]string{
+			"ExposedPort":      "9009",
+			"RulerHost":        dockerCortexAll.GetInternalHost(),
+			"AlertManagerHost": dockerCortexAM.GetInternalHost(),
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	ct.NginxHost = dockerNginx.GetExternalHost()
+	ct.resources = append(ct.resources, dockerNginx.GetResource())
 
 	ct.PGConfig = db.Config{
 		Driver:          "postgres",

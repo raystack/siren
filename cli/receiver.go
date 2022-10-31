@@ -249,6 +249,8 @@ func updateReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		Short: "Edit a receiver",
 		Long: heredoc.Doc(`
 			Edit an existing receiver.
+
+			Note: receiver type is immutable.
 		`),
 		Annotations: map[string]string{
 			"group:core": "true",
@@ -283,7 +285,6 @@ func updateReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			_, err = client.UpdateReceiver(ctx, &sirenv1beta1.UpdateReceiverRequest{
 				Id:             id,
 				Name:           receiverConfig.Name,
-				Type:           receiverConfig.Type,
 				Configurations: grpcConfigurations,
 				Labels:         receiverConfig.Labels,
 			})

@@ -46,11 +46,27 @@ type Credential struct {
 	TeamName    string
 }
 
+type ClientOption func(*Client)
+
+// ClientWithHTTPClient assigns custom http client when creating a slack client
+func ClientWithHTTPClient(httpClient *httpclient.Client) ClientOption {
+	return func(c *Client) {
+		c.httpClient = httpClient
+	}
+}
+
+// ClientWithRetrier wraps client call with retrier
+func ClientWithRetrier(runner retry.Runner) ClientOption {
+	return func(c *Client) {
+		// note: for now retry only happen in send message context method
+		c.retrier = runner
+	}
+}
+
 type Client struct {
 	cfg        AppConfig
 	httpClient *httpclient.Client
-	// data       *clientData
-	retrier retry.Runner
+	retrier    retry.Runner
 }
 
 // NewClient is a constructor to create slack client.

@@ -15,9 +15,12 @@ type Repository interface {
 }
 
 type Receiver struct {
-	ID             uint64                 `json:"id"`
-	Name           string                 `json:"name"`
-	Type           string                 `json:"type"` // TODO receiver type should be immutable
+	ID   uint64 `json:"id"`
+	Name string `json:"name"`
+
+	// Type should be immutable
+	Type string `json:"type"`
+
 	Labels         map[string]string      `json:"labels"`
 	Configurations map[string]interface{} `json:"configurations"`
 	Data           map[string]interface{} `json:"data"`

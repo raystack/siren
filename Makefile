@@ -2,7 +2,7 @@ NAME="github.com/odpf/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "d6ec8837cf20f75fbaa1e834789caa650ee4378d"
+PROTON_COMMIT := "3e995d8f0898b07bd35576b00012718cd7682b2f"
 
 .PHONY: all build test clean dist vet proto install
 
@@ -23,6 +23,7 @@ coverage: ## Print code coverage
 	go test -race -coverprofile coverage.out -covermode=atomic ./... && go tool cover -html=coverage.out
 
 generate: ## run all go generate in the code base (including generating mock files)
+	find . -type d -name "mocks" | xargs rm -r
 	go generate ./...
 
 lint: ## lint checker

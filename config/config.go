@@ -10,7 +10,7 @@ import (
 	"github.com/odpf/siren/internal/server"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/odpf/siren/plugins/providers"
 	"github.com/odpf/siren/plugins/receivers"
 )
 
@@ -38,10 +38,10 @@ type Log struct {
 // Config contains the application configuration
 type Config struct {
 	DB           db.Config                `mapstructure:"db"`
-	Cortex       cortex.Config            `mapstructure:"cortex"`
 	NewRelic     telemetry.NewRelicConfig `mapstructure:"newrelic" yaml:"newrelic"`
 	Service      server.Config            `mapstructure:"service" yaml:"service"`
 	Log          Log                      `mapstructure:"log" yaml:"log"`
+	Providers    providers.Config         `mapstructure:"providers" yaml:"providers"`
 	Receivers    receivers.Config         `mapstructure:"receivers" yaml:"receivers"`
 	Notification notification.Config      `mapstructure:"notification" yaml:"notification"`
 }

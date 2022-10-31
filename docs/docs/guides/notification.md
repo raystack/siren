@@ -10,6 +10,15 @@ export const defaultHost = siteConfig.customFields.defaultHost
 
 Notification is one of main features in Siren. Siren capables to send notification to various receivers (e.g. Slack, PagerDuty). Notification in Siren could be sent directly to a receiver or user could subscribe notifications by providing key-value label matchers. For the latter, Siren routes notification to specific receivers by matching notification key-value labels with the provided label matchers.
 
+
+## Queue
+
+Queue is used as a buffer for the outbound notifications. Siren has a pluggable queue where user could choose which Queue to use in the [config](../reference/server_configuration.md). Supported Queues are:
+
+- In-Memory
+- PostgreSQl
+
+
 ## Sending a message/notification
 
 We could send a notification to a specific receiver by passing a `receiver_id` in the path params and correct payload format in the body. The payload format needs to follow receiver type contract. 

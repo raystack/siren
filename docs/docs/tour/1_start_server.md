@@ -26,6 +26,16 @@ $ ./siren server init
 
 You will have a new config file `./config.yaml` with the default values. The default values would be the minimum config to get Siren up and running.
 
+### Update Config of Cortex Webhook URL
+
+When we register a cortex provider, we need to set the alertmanager config `webhook_config` and set Siren API to send alerts to Siren from Cortex. You need to update `webhook_url` of `cortex` in Siren to be like this.
+
+```yaml
+providers:
+    cortex:
+        webhook_url: http://host.docker.internal:8080
+```
+
 ## 3. Start-up Siren dependencies
 
 We are using `docker-compose` to start-up all dependencies of Siren. See [introduction](./introduction.md) to see what components are defined in `docker-compose`.
@@ -39,16 +49,15 @@ docker-compose up -d
 If you haven't got dependencies (postgresql, cortex, etc) images in your local, this might take a while to fetch all images. If all dependencies are successfully started, you will get this message in the terminal.
 
 ```shell
-[+] Running 9/9
+[+] Running 8/8
  ⠿ Network siren_siren              Created 0.0s
  ⠿ Network siren_default            Created 0.0s
- ⠿ Volume "siren_data1-1"           Created 0.0s
- ⠿ Volume "siren_siren_dbdata"      Created 0.0s
- ⠿ Container siren_postgres         Started 0.7s
- ⠿ Container siren-minio1-1         Started 0.7s
- ⠿ Container siren_cortex_am        Started 1.3s
- ⠿ Container siren-createbuckets-1  Started 1.1s
- ⠿ Container siren_cortex_all       Started 1.6s
+ ⠿ Container siren-minio1-1         Started 0.6s
+ ⠿ Container siren_postgres         Started 0.6s
+ ⠿ Container siren-createbuckets-1  Started 0.8s
+ ⠿ Container siren_cortex_am        Started 0.9s
+ ⠿ Container siren_cortex_all       Started 1.1s
+ ⠿ Container siren_nginx            Started 1.3s
 ```
 
 ## 4. Run Siren server

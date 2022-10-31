@@ -22,43 +22,6 @@ func (_m *SubscriptionRepository) EXPECT() *SubscriptionRepository_Expecter {
 	return &SubscriptionRepository_Expecter{mock: &_m.Mock}
 }
 
-// Commit provides a mock function with given fields: ctx
-func (_m *SubscriptionRepository) Commit(ctx context.Context) error {
-	ret := _m.Called(ctx)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SubscriptionRepository_Commit_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Commit'
-type SubscriptionRepository_Commit_Call struct {
-	*mock.Call
-}
-
-// Commit is a helper method to define mock.On call
-//  - ctx context.Context
-func (_e *SubscriptionRepository_Expecter) Commit(ctx interface{}) *SubscriptionRepository_Commit_Call {
-	return &SubscriptionRepository_Commit_Call{Call: _e.mock.On("Commit", ctx)}
-}
-
-func (_c *SubscriptionRepository_Commit_Call) Run(run func(ctx context.Context)) *SubscriptionRepository_Commit_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *SubscriptionRepository_Commit_Call) Return(_a0 error) *SubscriptionRepository_Commit_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Create provides a mock function with given fields: _a0, _a1
 func (_m *SubscriptionRepository) Create(_a0 context.Context, _a1 *subscription.Subscription) error {
 	ret := _m.Called(_a0, _a1)
@@ -229,44 +192,6 @@ func (_c *SubscriptionRepository_List_Call) Return(_a0 []subscription.Subscripti
 	return _c
 }
 
-// Rollback provides a mock function with given fields: ctx, err
-func (_m *SubscriptionRepository) Rollback(ctx context.Context, err error) error {
-	ret := _m.Called(ctx, err)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, error) error); ok {
-		r0 = rf(ctx, err)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SubscriptionRepository_Rollback_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Rollback'
-type SubscriptionRepository_Rollback_Call struct {
-	*mock.Call
-}
-
-// Rollback is a helper method to define mock.On call
-//  - ctx context.Context
-//  - err error
-func (_e *SubscriptionRepository_Expecter) Rollback(ctx interface{}, err interface{}) *SubscriptionRepository_Rollback_Call {
-	return &SubscriptionRepository_Rollback_Call{Call: _e.mock.On("Rollback", ctx, err)}
-}
-
-func (_c *SubscriptionRepository_Rollback_Call) Run(run func(ctx context.Context, err error)) *SubscriptionRepository_Rollback_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(error))
-	})
-	return _c
-}
-
-func (_c *SubscriptionRepository_Rollback_Call) Return(_a0 error) *SubscriptionRepository_Rollback_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Update provides a mock function with given fields: _a0, _a1
 func (_m *SubscriptionRepository) Update(_a0 context.Context, _a1 *subscription.Subscription) error {
 	ret := _m.Called(_a0, _a1)
@@ -301,45 +226,6 @@ func (_c *SubscriptionRepository_Update_Call) Run(run func(_a0 context.Context, 
 }
 
 func (_c *SubscriptionRepository_Update_Call) Return(_a0 error) *SubscriptionRepository_Update_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-// WithTransaction provides a mock function with given fields: ctx
-func (_m *SubscriptionRepository) WithTransaction(ctx context.Context) context.Context {
-	ret := _m.Called(ctx)
-
-	var r0 context.Context
-	if rf, ok := ret.Get(0).(func(context.Context) context.Context); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(context.Context)
-		}
-	}
-
-	return r0
-}
-
-// SubscriptionRepository_WithTransaction_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTransaction'
-type SubscriptionRepository_WithTransaction_Call struct {
-	*mock.Call
-}
-
-// WithTransaction is a helper method to define mock.On call
-//  - ctx context.Context
-func (_e *SubscriptionRepository_Expecter) WithTransaction(ctx interface{}) *SubscriptionRepository_WithTransaction_Call {
-	return &SubscriptionRepository_WithTransaction_Call{Call: _e.mock.On("WithTransaction", ctx)}
-}
-
-func (_c *SubscriptionRepository_WithTransaction_Call) Run(run func(ctx context.Context)) *SubscriptionRepository_WithTransaction_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
-	})
-	return _c
-}
-
-func (_c *SubscriptionRepository_WithTransaction_Call) Return(_a0 context.Context) *SubscriptionRepository_WithTransaction_Call {
 	_c.Call.Return(_a0)
 	return _c
 }

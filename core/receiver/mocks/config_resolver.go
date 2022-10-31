@@ -68,55 +68,8 @@ func (_c *ConfigResolver_BuildData_Call) Return(_a0 map[string]interface{}, _a1 
 	return _c
 }
 
-// BuildNotificationConfig provides a mock function with given fields: subscriptionConfigMap, receiverConfigMap
-func (_m *ConfigResolver) BuildNotificationConfig(subscriptionConfigMap map[string]interface{}, receiverConfigMap map[string]interface{}) (map[string]interface{}, error) {
-	ret := _m.Called(subscriptionConfigMap, receiverConfigMap)
-
-	var r0 map[string]interface{}
-	if rf, ok := ret.Get(0).(func(map[string]interface{}, map[string]interface{}) map[string]interface{}); ok {
-		r0 = rf(subscriptionConfigMap, receiverConfigMap)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]interface{})
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]interface{}, map[string]interface{}) error); ok {
-		r1 = rf(subscriptionConfigMap, receiverConfigMap)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ConfigResolver_BuildNotificationConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BuildNotificationConfig'
-type ConfigResolver_BuildNotificationConfig_Call struct {
-	*mock.Call
-}
-
-// BuildNotificationConfig is a helper method to define mock.On call
-//  - subscriptionConfigMap map[string]interface{}
-//  - receiverConfigMap map[string]interface{}
-func (_e *ConfigResolver_Expecter) BuildNotificationConfig(subscriptionConfigMap interface{}, receiverConfigMap interface{}) *ConfigResolver_BuildNotificationConfig_Call {
-	return &ConfigResolver_BuildNotificationConfig_Call{Call: _e.mock.On("BuildNotificationConfig", subscriptionConfigMap, receiverConfigMap)}
-}
-
-func (_c *ConfigResolver_BuildNotificationConfig_Call) Run(run func(subscriptionConfigMap map[string]interface{}, receiverConfigMap map[string]interface{})) *ConfigResolver_BuildNotificationConfig_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(map[string]interface{}), args[1].(map[string]interface{}))
-	})
-	return _c
-}
-
-func (_c *ConfigResolver_BuildNotificationConfig_Call) Return(_a0 map[string]interface{}, _a1 error) *ConfigResolver_BuildNotificationConfig_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-// PostHookTransformConfigs provides a mock function with given fields: ctx, configs
-func (_m *ConfigResolver) PostHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
+// PostHookDBTransformConfigs provides a mock function with given fields: ctx, configs
+func (_m *ConfigResolver) PostHookDBTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, configs)
 
 	var r0 map[string]interface{}
@@ -138,32 +91,32 @@ func (_m *ConfigResolver) PostHookTransformConfigs(ctx context.Context, configs 
 	return r0, r1
 }
 
-// ConfigResolver_PostHookTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PostHookTransformConfigs'
-type ConfigResolver_PostHookTransformConfigs_Call struct {
+// ConfigResolver_PostHookDBTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PostHookDBTransformConfigs'
+type ConfigResolver_PostHookDBTransformConfigs_Call struct {
 	*mock.Call
 }
 
-// PostHookTransformConfigs is a helper method to define mock.On call
+// PostHookDBTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
 //  - configs map[string]interface{}
-func (_e *ConfigResolver_Expecter) PostHookTransformConfigs(ctx interface{}, configs interface{}) *ConfigResolver_PostHookTransformConfigs_Call {
-	return &ConfigResolver_PostHookTransformConfigs_Call{Call: _e.mock.On("PostHookTransformConfigs", ctx, configs)}
+func (_e *ConfigResolver_Expecter) PostHookDBTransformConfigs(ctx interface{}, configs interface{}) *ConfigResolver_PostHookDBTransformConfigs_Call {
+	return &ConfigResolver_PostHookDBTransformConfigs_Call{Call: _e.mock.On("PostHookDBTransformConfigs", ctx, configs)}
 }
 
-func (_c *ConfigResolver_PostHookTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *ConfigResolver_PostHookTransformConfigs_Call {
+func (_c *ConfigResolver_PostHookDBTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *ConfigResolver_PostHookDBTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *ConfigResolver_PostHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *ConfigResolver_PostHookTransformConfigs_Call {
+func (_c *ConfigResolver_PostHookDBTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *ConfigResolver_PostHookDBTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// PreHookTransformConfigs provides a mock function with given fields: ctx, configs
-func (_m *ConfigResolver) PreHookTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
+// PreHookDBTransformConfigs provides a mock function with given fields: ctx, configs
+func (_m *ConfigResolver) PreHookDBTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, configs)
 
 	var r0 map[string]interface{}
@@ -185,26 +138,26 @@ func (_m *ConfigResolver) PreHookTransformConfigs(ctx context.Context, configs m
 	return r0, r1
 }
 
-// ConfigResolver_PreHookTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PreHookTransformConfigs'
-type ConfigResolver_PreHookTransformConfigs_Call struct {
+// ConfigResolver_PreHookDBTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PreHookDBTransformConfigs'
+type ConfigResolver_PreHookDBTransformConfigs_Call struct {
 	*mock.Call
 }
 
-// PreHookTransformConfigs is a helper method to define mock.On call
+// PreHookDBTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
 //  - configs map[string]interface{}
-func (_e *ConfigResolver_Expecter) PreHookTransformConfigs(ctx interface{}, configs interface{}) *ConfigResolver_PreHookTransformConfigs_Call {
-	return &ConfigResolver_PreHookTransformConfigs_Call{Call: _e.mock.On("PreHookTransformConfigs", ctx, configs)}
+func (_e *ConfigResolver_Expecter) PreHookDBTransformConfigs(ctx interface{}, configs interface{}) *ConfigResolver_PreHookDBTransformConfigs_Call {
+	return &ConfigResolver_PreHookDBTransformConfigs_Call{Call: _e.mock.On("PreHookDBTransformConfigs", ctx, configs)}
 }
 
-func (_c *ConfigResolver_PreHookTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *ConfigResolver_PreHookTransformConfigs_Call {
+func (_c *ConfigResolver_PreHookDBTransformConfigs_Call) Run(run func(ctx context.Context, configs map[string]interface{})) *ConfigResolver_PreHookDBTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *ConfigResolver_PreHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *ConfigResolver_PreHookTransformConfigs_Call {
+func (_c *ConfigResolver_PreHookDBTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *ConfigResolver_PreHookDBTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

@@ -10,27 +10,34 @@ import (
 // Service handles business logic
 type Service struct {
 	repository Repository
+	registry   map[string]AlertTransformer
 }
 
 // NewService returns repository struct
-func NewService(repository Repository) *Service {
-	return &Service{repository}
+func NewService(repository Repository, registry map[string]AlertTransformer) *Service {
+	return &Service{repository, registry}
 }
 
-func (s *Service) Create(ctx context.Context, alerts []*Alert) ([]Alert, error) {
-	result := make([]Alert, 0, len(alerts))
+func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, body map[string]interface{}) ([]*Alert, int, error) {
+	pluginService, err := s.getProviderPluginService(providerType)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	alerts, firingLen, err := pluginService.TransformToAlerts(ctx, providerID, body)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	for _, alrt := range alerts {
-		newAlert, err := s.repository.Create(ctx, alrt)
-		if err != nil {
+		if err := s.repository.Create(ctx, alrt); err != nil {
 			if errors.Is(err, ErrRelation) {
-				return nil, errors.ErrNotFound.WithMsgf(err.Error())
+				return nil, 0, errors.ErrNotFound.WithMsgf(err.Error())
 			}
-			return nil, err
+			return nil, 0, err
 		}
-		result = append(result, *newAlert)
 	}
-	return result, nil
+	return alerts, firingLen, nil
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Alert, error) {
@@ -39,4 +46,12 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Alert, error) {
 	}
 
 	return s.repository.List(ctx, flt)
+}
+
+func (s *Service) getProviderPluginService(providerType string) (AlertTransformer, error) {
+	pluginService, exist := s.registry[providerType]
+	if !exist {
+		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)
+	}
+	return pluginService, nil
 }

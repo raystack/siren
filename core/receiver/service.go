@@ -41,7 +41,7 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 		if err != nil {
 			return nil, err
 		}
-		transformedConfigs, err := receiverPlugin.PostHookTransformConfigs(ctx, rcv.Configurations)
+		transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
-	rcv.Configurations, err = receiverPlugin.PreHookTransformConfigs(ctx, rcv.Configurations)
+	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 		return nil, err
 	}
 
-	transformedConfigs, err := receiverPlugin.PostHookTransformConfigs(ctx, rcv.Configurations)
+	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
-	rcv.Configurations, err = receiverPlugin.PreHookTransformConfigs(ctx, rcv.Configurations)
+	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
 		return err
 	}
@@ -119,22 +119,10 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 		}
 		return err
 	}
+
 	return nil
 }
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
-}
-
-func (s *Service) BuildNotificationConfig(subsConfs map[string]interface{}, rcv *Receiver) (map[string]interface{}, error) {
-	if rcv == nil {
-		return nil, errors.ErrInvalid.WithCausef("receiver is nil")
-	}
-
-	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	return receiverPlugin.BuildNotificationConfig(subsConfs, rcv.Configurations)
 }

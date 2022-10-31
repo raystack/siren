@@ -14,6 +14,8 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestGRPCServer_ListSubscriptions(t *testing.T) {
@@ -111,10 +113,13 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 	match := make(map[string]string)
 	match["foo"] = "baz"
 
-	configMapString := make(map[string]string)
+	configMapString := make(map[string]interface{})
 	for k, v := range configuration {
 		configMapString[k] = fmt.Sprintf("%v", v)
 	}
+
+	configMapPB, err := structpb.NewStruct(configMapString)
+	require.NoError(t, err)
 
 	payload := &subscription.Subscription{
 		Namespace: 1,
@@ -144,7 +149,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, err)
@@ -162,7 +167,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -180,7 +185,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -198,7 +203,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		res, err := dummyGRPCServer.CreateSubscription(context.Background(), &sirenv1beta1.CreateSubscriptionRequest{
 			Namespace: 1,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -219,10 +224,13 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 		Match:     match,
 	}
 
-	configMapString := make(map[string]string)
+	configMapString := make(map[string]interface{})
 	for k, v := range configuration {
 		configMapString[k] = fmt.Sprintf("%v", v)
 	}
+
+	configMapPB, err := structpb.NewStruct(configMapString)
+	require.NoError(t, err)
 
 	t.Run("should update a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
@@ -236,7 +244,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, err)
@@ -252,7 +260,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -268,7 +276,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -284,7 +292,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)
@@ -300,7 +308,7 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Id:        1,
 			Namespace: 10,
 			Urn:       "foo",
-			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapString}},
+			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
 		})
 		assert.Nil(t, res)

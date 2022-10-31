@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/api/mocks"
 	"github.com/odpf/siren/internal/api/v1beta1"
@@ -14,7 +15,7 @@ import (
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestGRPCServer_ListAlerts(t *testing.T) {
@@ -76,33 +77,80 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 }
 
 func TestGRPCServer_CreateAlertHistory(t *testing.T) {
-	timenow := timestamppb.New(time.Now())
-	payload := []*alert.Alert{
-		{
-			ProviderID:   1,
-			ResourceName: "foo",
-			MetricName:   "bar",
-			MetricValue:  "30",
-			Severity:     "CRITICAL",
-			Rule:         "random",
-			TriggeredAt:  timenow.AsTime(),
-		},
-	}
-	dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
-		ProviderId: 1,
-		Alerts: []*sirenv1beta1.CortexAlert{
-			{
-				Status: "foo",
-				Labels: map[string]string{
-					"severity": "CRITICAL",
-				},
-				Annotations: map[string]string{
-					"resource":    "foo",
-					"template":    "random",
+	timenow := time.Now()
+
+	payload := map[string]interface{}{
+		"alerts": []interface{}{
+			map[string]interface{}{
+				"annotations": map[string]interface{}{
 					"metricName":  "bar",
 					"metricValue": "30",
+					"resource":    "foo",
+					"template":    "random",
 				},
-				StartsAt: timenow,
+				"labels": map[string]interface{}{
+					"severity": "foo",
+				},
+				"startsAt": timenow.String(),
+				"status":   "foo",
+			},
+		},
+	}
+
+	alertPB := &structpb.Struct{
+		Fields: map[string]*structpb.Value{
+			"status": {
+				Kind: &structpb.Value_StringValue{StringValue: "foo"},
+			},
+			"labels": {
+				Kind: &structpb.Value_StructValue{
+					StructValue: &structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"severity": {
+								Kind: &structpb.Value_StringValue{StringValue: "foo"},
+							},
+						},
+					},
+				},
+			},
+			"annotations": {
+				Kind: &structpb.Value_StructValue{
+					StructValue: &structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"resource": {
+								Kind: &structpb.Value_StringValue{StringValue: "foo"},
+							},
+							"template": {
+								Kind: &structpb.Value_StringValue{StringValue: "random"},
+							},
+							"metricName": {
+								Kind: &structpb.Value_StringValue{StringValue: "bar"},
+							},
+							"metricValue": {
+								Kind: &structpb.Value_StringValue{StringValue: "30"},
+							},
+						},
+					},
+				},
+			},
+			"startsAt": {
+				Kind: &structpb.Value_StringValue{StringValue: timenow.String()},
+			},
+		},
+	}
+
+	dummyReq := &sirenv1beta1.CreateAlertsRequest{
+		ProviderId:   1,
+		ProviderType: provider.TypeCortex,
+		Body: &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"alerts": {
+					Kind: &structpb.Value_ListValue{
+						ListValue: &structpb.ListValue{
+							Values: []*structpb.Value{structpb.NewStructValue(alertPB)},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -111,7 +159,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		mockNotificationService := new(mocks.NotificationService)
 
-		dummyAlerts := []alert.Alert{{
+		dummyAlerts := []*alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -119,15 +167,15 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			MetricValue:  "30",
 			Severity:     "CRITICAL",
 			Rule:         "random",
-			TriggeredAt:  timenow.AsTime(),
+			TriggeredAt:  timenow,
 		}}
-		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(dummyAlerts, nil).Once()
+		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), payload).
+			Return(dummyAlerts, 1, nil).Once()
 		mockNotificationService.EXPECT().DispatchToSubscribers(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
-		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.CreateAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
 		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
 		assert.Equal(t, "foo", res.GetAlerts()[0].GetResourceName())
@@ -143,36 +191,82 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		mockNotificationService := new(mocks.NotificationService)
 
-		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
-			ProviderId: 1,
-			Alerts: []*sirenv1beta1.CortexAlert{
-				{
-					Status: "resolved",
-					Labels: map[string]string{
-						"severity": "CRITICAL",
+		alertPB := &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"status": {
+					Kind: &structpb.Value_StringValue{StringValue: "resolved"},
+				},
+				"labels": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"severity": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+							},
+						},
 					},
-					Annotations: map[string]string{
-						"resource":    "foo",
-						"template":    "random",
-						"metricName":  "bar",
-						"metricValue": "30",
+				},
+				"annotations": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"resource": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+								"template": {
+									Kind: &structpb.Value_StringValue{StringValue: "random"},
+								},
+								"metricName": {
+									Kind: &structpb.Value_StringValue{StringValue: "bar"},
+								},
+								"metricValue": {
+									Kind: &structpb.Value_StringValue{StringValue: "30"},
+								},
+							},
+						},
 					},
-					StartsAt: timenow,
+				},
+				"startsAt": {
+					Kind: &structpb.Value_StringValue{StringValue: timenow.String()},
 				},
 			},
 		}
-		payload := []*alert.Alert{
-			{
-				ProviderID:   1,
-				ResourceName: "foo",
-				MetricName:   "bar",
-				MetricValue:  "30",
-				Severity:     "resolved",
-				Rule:         "random",
-				TriggeredAt:  timenow.AsTime(),
+
+		dummyReq := &sirenv1beta1.CreateAlertsRequest{
+			ProviderId:   1,
+			ProviderType: provider.TypeCortex,
+			Body: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"alerts": {
+						Kind: &structpb.Value_ListValue{
+							ListValue: &structpb.ListValue{
+								Values: []*structpb.Value{structpb.NewStructValue(alertPB)},
+							},
+						},
+					},
+				},
 			},
 		}
-		dummyAlerts := []alert.Alert{{
+
+		payload := map[string]interface{}{
+			"alerts": []interface{}{
+				map[string]interface{}{
+					"annotations": map[string]interface{}{
+						"metricName":  "bar",
+						"metricValue": "30",
+						"resource":    "foo",
+						"template":    "random",
+					},
+					"labels": map[string]interface{}{
+						"severity": "foo",
+					},
+					"startsAt": timenow.String(),
+					"status":   "resolved",
+				},
+			},
+		}
+		dummyAlerts := []*alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -180,15 +274,15 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			MetricValue:  "30",
 			Severity:     "resolved",
 			Rule:         "random",
-			TriggeredAt:  timenow.AsTime(),
+			TriggeredAt:  timenow,
 		}}
-		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(dummyAlerts, nil).Once()
+		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), payload).
+			Return(dummyAlerts, 1, nil).Once()
 		mockNotificationService.EXPECT().DispatchToSubscribers(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
-		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.CreateAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
 		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetId())
 		assert.Equal(t, "foo", res.GetAlerts()[0].GetResourceName())
@@ -204,10 +298,10 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService})
 
-		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(nil, errors.New("random error")).Once()
+		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), payload).
+			Return(nil, 0, errors.New("random error")).Once()
 
-		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.CreateAlerts(context.Background(), dummyReq)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
 		assert.Nil(t, res)
 		mockedAlertService.AssertExpectations(t)
@@ -217,37 +311,140 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		mockNotificationService := new(mocks.NotificationService)
 
-		dummyReq := &sirenv1beta1.CreateCortexAlertsRequest{
-			ProviderId: 1,
-			Alerts: []*sirenv1beta1.CortexAlert{
-				{
-					Status: "foo",
-					Labels: map[string]string{
-						"severity": "CRITICAL",
-					},
-					Annotations: map[string]string{
-						"resource":    "foo",
+		payload := map[string]interface{}{
+			"alerts": []interface{}{
+				map[string]interface{}{
+					"annotations": map[string]interface{}{
 						"metricName":  "bar",
 						"metricValue": "30",
-					},
-					StartsAt: timenow,
-				},
-				{
-					Status: "foo",
-					Labels: map[string]string{
-						"severity": "CRITICAL",
-					},
-					Annotations: map[string]string{
 						"resource":    "foo",
 						"template":    "random",
+					},
+					"labels": map[string]interface{}{
+						"severity": "foo",
+					},
+					"startsAt": timenow.String(),
+					"status":   "foo",
+				}, map[string]interface{}{
+					"annotations": map[string]interface{}{
 						"metricName":  "bar",
 						"metricValue": "30",
+						"resource":    "foo",
+						"template":    "random",
 					},
-					StartsAt: timenow,
+					"labels": map[string]interface{}{
+						"severity": "foo",
+					},
+					"startsAt": timenow.String(),
+					"status":   "resolved",
 				},
 			},
 		}
-		dummyAlerts := []alert.Alert{{
+
+		alert1PB := &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"status": {
+					Kind: &structpb.Value_StringValue{StringValue: "foo"},
+				},
+				"labels": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"severity": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+							},
+						},
+					},
+				},
+				"annotations": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"resource": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+								"template": {
+									Kind: &structpb.Value_StringValue{StringValue: "random"},
+								},
+								"metricName": {
+									Kind: &structpb.Value_StringValue{StringValue: "bar"},
+								},
+								"metricValue": {
+									Kind: &structpb.Value_StringValue{StringValue: "30"},
+								},
+							},
+						},
+					},
+				},
+				"startsAt": {
+					Kind: &structpb.Value_StringValue{StringValue: timenow.String()},
+				},
+			},
+		}
+
+		alert2PB := &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"status": {
+					Kind: &structpb.Value_StringValue{StringValue: "resolved"},
+				},
+				"labels": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"severity": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+							},
+						},
+					},
+				},
+				"annotations": {
+					Kind: &structpb.Value_StructValue{
+						StructValue: &structpb.Struct{
+							Fields: map[string]*structpb.Value{
+								"resource": {
+									Kind: &structpb.Value_StringValue{StringValue: "foo"},
+								},
+								"template": {
+									Kind: &structpb.Value_StringValue{StringValue: "random"},
+								},
+								"metricName": {
+									Kind: &structpb.Value_StringValue{StringValue: "bar"},
+								},
+								"metricValue": {
+									Kind: &structpb.Value_StringValue{StringValue: "30"},
+								},
+							},
+						},
+					},
+				},
+				"startsAt": {
+					Kind: &structpb.Value_StringValue{StringValue: timenow.String()},
+				},
+			},
+		}
+
+		dummyReq := &sirenv1beta1.CreateAlertsRequest{
+			ProviderId:   1,
+			ProviderType: provider.TypeCortex,
+			Body: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"alerts": {
+						Kind: &structpb.Value_ListValue{
+							ListValue: &structpb.ListValue{
+								Values: []*structpb.Value{
+									structpb.NewStructValue(alert1PB),
+									structpb.NewStructValue(alert2PB),
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		dummyAlerts := []*alert.Alert{{
 			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",
@@ -259,11 +456,11 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
-		mockedAlertService.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), payload).
-			Return(dummyAlerts, nil).Once()
+		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), payload).
+			Return(dummyAlerts, 2, nil).Once()
 		mockNotificationService.EXPECT().DispatchToSubscribers(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
-		res, err := dummyGRPCServer.CreateCortexAlerts(context.Background(), dummyReq)
+		res, err := dummyGRPCServer.CreateAlerts(context.Background(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
 		assert.Equal(t, uint64(1), res.GetAlerts()[0].GetProviderId())
 		assert.Equal(t, "foo", res.GetAlerts()[0].GetResourceName())

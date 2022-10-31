@@ -138,7 +138,7 @@ func TestService_Upsert(t *testing.T) {
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
 					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
-					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template"), mock.AnythingOfType("string")).Return(nil)
+					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(nil)
 					rr.EXPECT().Commit(ctx).Return(nil)
 				},
 			},
@@ -175,7 +175,7 @@ func TestService_Upsert(t *testing.T) {
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
 					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
-					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template"), mock.AnythingOfType("string")).Return(errors.New("some error"))
+					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
 				},
 				ErrString: "some error",
@@ -213,7 +213,7 @@ func TestService_Upsert(t *testing.T) {
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
 					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
-					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template"), mock.AnythingOfType("string")).Return(errors.New("some error"))
+					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("rollback error"))
 				},
 				ErrString: "rollback error",
@@ -251,7 +251,7 @@ func TestService_Upsert(t *testing.T) {
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
 					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
-					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template"), mock.AnythingOfType("string")).Return(nil)
+					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(nil)
 					rr.EXPECT().Commit(ctx).Return(errors.New("some commit error"))
 				},
 				ErrString: "some commit error",

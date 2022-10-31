@@ -108,7 +108,7 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, subscriptionInsertQuery,
+	if err := r.client.db.QueryRowxContext(ctx, subscriptionInsertQuery,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
@@ -136,7 +136,7 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 	}
 
 	var subscriptionModel model.Subscription
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(&subscriptionModel); err != nil {
+	if err := r.client.db.QueryRowxContext(ctx, query, args...).StructScan(&subscriptionModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, subscription.NotFoundError{ID: id}
 		}
@@ -155,7 +155,7 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, subscriptionUpdateQuery,
+	if err := r.client.db.QueryRowxContext(ctx, subscriptionUpdateQuery,
 		subscriptionModel.ID,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
@@ -182,25 +182,10 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 
 // TODO this won't be synced to provider
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, subscriptionDeleteQuery, id)
+	rows, err := r.client.db.QueryxContext(ctx, subscriptionDeleteQuery, id)
 	if err != nil {
 		return err
 	}
 	rows.Close()
 	return nil
-}
-
-func (r *SubscriptionRepository) WithTransaction(ctx context.Context) context.Context {
-	return r.client.WithTransaction(ctx, nil)
-}
-
-func (r *SubscriptionRepository) Rollback(ctx context.Context, err error) error {
-	if txErr := r.client.Rollback(ctx); txErr != nil {
-		return fmt.Errorf("rollback error %s with error: %w", txErr.Error(), err)
-	}
-	return nil
-}
-
-func (r *SubscriptionRepository) Commit(ctx context.Context) error {
-	return r.client.Commit(ctx)
 }

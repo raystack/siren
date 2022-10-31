@@ -49,7 +49,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 						"key": "value",
 					},
 				}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
 			},
 			wantErr: true,
 		},
@@ -62,7 +62,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 						"key": "value",
 					},
 				}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
@@ -78,7 +78,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 						"key": "value",
 					},
 				}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
@@ -129,6 +129,23 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "should return error if receiver type of a receiver is unknown",
+			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				ss.EXPECT().
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					Return([]subscription.Subscription{
+						{
+							Receivers: []subscription.Receiver{
+								{
+									Type: "random",
+								},
+							},
+						},
+					}, nil)
+			},
+			wantErr: true,
+		},
+		{
 			name: "should return error if there is no matching subscription",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
@@ -156,23 +173,6 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return error if receiver type of a receiver is unknown",
-			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
-				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
-					Return([]subscription.Subscription{
-						{
-							Receivers: []subscription.Receiver{
-								{
-									Type: "random",
-								},
-							},
-						},
-					}, nil)
-			},
-			wantErr: true,
-		},
-		{
 			name: "should return error if receiver config is invalid",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				ss.EXPECT().
@@ -189,7 +189,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
 			},
 			wantErr: true,
 		},
@@ -210,7 +210,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
@@ -234,7 +234,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
 				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)

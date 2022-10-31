@@ -102,7 +102,7 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
-		newConfig, err := notifier.PostHookTransformConfigs(ctx, message.Configs)
+		newConfig, err := notifier.PostHookQueueTransformConfigs(ctx, message.Configs)
 		if err != nil {
 			message.MarkFailed(time.Now(), false, err)
 
@@ -113,7 +113,7 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		}
 		message.Configs = newConfig
 
-		if retryable, err := notifier.Publish(ctx, message); err != nil {
+		if retryable, err := notifier.Send(ctx, message); err != nil {
 
 			message.MarkFailed(time.Now(), retryable, err)
 

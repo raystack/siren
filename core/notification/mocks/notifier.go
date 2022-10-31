@@ -22,13 +22,13 @@ func (_m *Notifier) EXPECT() *Notifier_Expecter {
 	return &Notifier_Expecter{mock: &_m.Mock}
 }
 
-// DefaultTemplateOfProvider provides a mock function with given fields: templateName
-func (_m *Notifier) DefaultTemplateOfProvider(templateName string) string {
-	ret := _m.Called(templateName)
+// GetSystemDefaultTemplate provides a mock function with given fields:
+func (_m *Notifier) GetSystemDefaultTemplate() string {
+	ret := _m.Called()
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(string) string); ok {
-		r0 = rf(templateName)
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(string)
 	}
@@ -36,31 +36,30 @@ func (_m *Notifier) DefaultTemplateOfProvider(templateName string) string {
 	return r0
 }
 
-// Notifier_DefaultTemplateOfProvider_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DefaultTemplateOfProvider'
-type Notifier_DefaultTemplateOfProvider_Call struct {
+// Notifier_GetSystemDefaultTemplate_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSystemDefaultTemplate'
+type Notifier_GetSystemDefaultTemplate_Call struct {
 	*mock.Call
 }
 
-// DefaultTemplateOfProvider is a helper method to define mock.On call
-//  - templateName string
-func (_e *Notifier_Expecter) DefaultTemplateOfProvider(templateName interface{}) *Notifier_DefaultTemplateOfProvider_Call {
-	return &Notifier_DefaultTemplateOfProvider_Call{Call: _e.mock.On("DefaultTemplateOfProvider", templateName)}
+// GetSystemDefaultTemplate is a helper method to define mock.On call
+func (_e *Notifier_Expecter) GetSystemDefaultTemplate() *Notifier_GetSystemDefaultTemplate_Call {
+	return &Notifier_GetSystemDefaultTemplate_Call{Call: _e.mock.On("GetSystemDefaultTemplate")}
 }
 
-func (_c *Notifier_DefaultTemplateOfProvider_Call) Run(run func(templateName string)) *Notifier_DefaultTemplateOfProvider_Call {
+func (_c *Notifier_GetSystemDefaultTemplate_Call) Run(run func()) *Notifier_GetSystemDefaultTemplate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		run()
 	})
 	return _c
 }
 
-func (_c *Notifier_DefaultTemplateOfProvider_Call) Return(_a0 string) *Notifier_DefaultTemplateOfProvider_Call {
+func (_c *Notifier_GetSystemDefaultTemplate_Call) Return(_a0 string) *Notifier_GetSystemDefaultTemplate_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-// PostHookTransformConfigs provides a mock function with given fields: ctx, notificationConfigMap
-func (_m *Notifier) PostHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+// PostHookQueueTransformConfigs provides a mock function with given fields: ctx, notificationConfigMap
+func (_m *Notifier) PostHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, notificationConfigMap)
 
 	var r0 map[string]interface{}
@@ -82,32 +81,32 @@ func (_m *Notifier) PostHookTransformConfigs(ctx context.Context, notificationCo
 	return r0, r1
 }
 
-// Notifier_PostHookTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PostHookTransformConfigs'
-type Notifier_PostHookTransformConfigs_Call struct {
+// Notifier_PostHookQueueTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PostHookQueueTransformConfigs'
+type Notifier_PostHookQueueTransformConfigs_Call struct {
 	*mock.Call
 }
 
-// PostHookTransformConfigs is a helper method to define mock.On call
+// PostHookQueueTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
 //  - notificationConfigMap map[string]interface{}
-func (_e *Notifier_Expecter) PostHookTransformConfigs(ctx interface{}, notificationConfigMap interface{}) *Notifier_PostHookTransformConfigs_Call {
-	return &Notifier_PostHookTransformConfigs_Call{Call: _e.mock.On("PostHookTransformConfigs", ctx, notificationConfigMap)}
+func (_e *Notifier_Expecter) PostHookQueueTransformConfigs(ctx interface{}, notificationConfigMap interface{}) *Notifier_PostHookQueueTransformConfigs_Call {
+	return &Notifier_PostHookQueueTransformConfigs_Call{Call: _e.mock.On("PostHookQueueTransformConfigs", ctx, notificationConfigMap)}
 }
 
-func (_c *Notifier_PostHookTransformConfigs_Call) Run(run func(ctx context.Context, notificationConfigMap map[string]interface{})) *Notifier_PostHookTransformConfigs_Call {
+func (_c *Notifier_PostHookQueueTransformConfigs_Call) Run(run func(ctx context.Context, notificationConfigMap map[string]interface{})) *Notifier_PostHookQueueTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Notifier_PostHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Notifier_PostHookTransformConfigs_Call {
+func (_c *Notifier_PostHookQueueTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Notifier_PostHookQueueTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// PreHookTransformConfigs provides a mock function with given fields: ctx, notificationConfigMap
-func (_m *Notifier) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+// PreHookQueueTransformConfigs provides a mock function with given fields: ctx, notificationConfigMap
+func (_m *Notifier) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
 	ret := _m.Called(ctx, notificationConfigMap)
 
 	var r0 map[string]interface{}
@@ -129,32 +128,32 @@ func (_m *Notifier) PreHookTransformConfigs(ctx context.Context, notificationCon
 	return r0, r1
 }
 
-// Notifier_PreHookTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PreHookTransformConfigs'
-type Notifier_PreHookTransformConfigs_Call struct {
+// Notifier_PreHookQueueTransformConfigs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PreHookQueueTransformConfigs'
+type Notifier_PreHookQueueTransformConfigs_Call struct {
 	*mock.Call
 }
 
-// PreHookTransformConfigs is a helper method to define mock.On call
+// PreHookQueueTransformConfigs is a helper method to define mock.On call
 //  - ctx context.Context
 //  - notificationConfigMap map[string]interface{}
-func (_e *Notifier_Expecter) PreHookTransformConfigs(ctx interface{}, notificationConfigMap interface{}) *Notifier_PreHookTransformConfigs_Call {
-	return &Notifier_PreHookTransformConfigs_Call{Call: _e.mock.On("PreHookTransformConfigs", ctx, notificationConfigMap)}
+func (_e *Notifier_Expecter) PreHookQueueTransformConfigs(ctx interface{}, notificationConfigMap interface{}) *Notifier_PreHookQueueTransformConfigs_Call {
+	return &Notifier_PreHookQueueTransformConfigs_Call{Call: _e.mock.On("PreHookQueueTransformConfigs", ctx, notificationConfigMap)}
 }
 
-func (_c *Notifier_PreHookTransformConfigs_Call) Run(run func(ctx context.Context, notificationConfigMap map[string]interface{})) *Notifier_PreHookTransformConfigs_Call {
+func (_c *Notifier_PreHookQueueTransformConfigs_Call) Run(run func(ctx context.Context, notificationConfigMap map[string]interface{})) *Notifier_PreHookQueueTransformConfigs_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *Notifier_PreHookTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Notifier_PreHookTransformConfigs_Call {
+func (_c *Notifier_PreHookQueueTransformConfigs_Call) Return(_a0 map[string]interface{}, _a1 error) *Notifier_PreHookQueueTransformConfigs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// Publish provides a mock function with given fields: ctx, message
-func (_m *Notifier) Publish(ctx context.Context, message notification.Message) (bool, error) {
+// Send provides a mock function with given fields: ctx, message
+func (_m *Notifier) Send(ctx context.Context, message notification.Message) (bool, error) {
 	ret := _m.Called(ctx, message)
 
 	var r0 bool
@@ -174,26 +173,26 @@ func (_m *Notifier) Publish(ctx context.Context, message notification.Message) (
 	return r0, r1
 }
 
-// Notifier_Publish_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Publish'
-type Notifier_Publish_Call struct {
+// Notifier_Send_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Send'
+type Notifier_Send_Call struct {
 	*mock.Call
 }
 
-// Publish is a helper method to define mock.On call
+// Send is a helper method to define mock.On call
 //  - ctx context.Context
 //  - message notification.Message
-func (_e *Notifier_Expecter) Publish(ctx interface{}, message interface{}) *Notifier_Publish_Call {
-	return &Notifier_Publish_Call{Call: _e.mock.On("Publish", ctx, message)}
+func (_e *Notifier_Expecter) Send(ctx interface{}, message interface{}) *Notifier_Send_Call {
+	return &Notifier_Send_Call{Call: _e.mock.On("Send", ctx, message)}
 }
 
-func (_c *Notifier_Publish_Call) Run(run func(ctx context.Context, message notification.Message)) *Notifier_Publish_Call {
+func (_c *Notifier_Send_Call) Run(run func(ctx context.Context, message notification.Message)) *Notifier_Send_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(notification.Message))
 	})
 	return _c
 }
 
-func (_c *Notifier_Publish_Call) Return(_a0 bool, _a1 error) *Notifier_Publish_Call {
+func (_c *Notifier_Send_Call) Return(_a0 bool, _a1 error) *Notifier_Send_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }

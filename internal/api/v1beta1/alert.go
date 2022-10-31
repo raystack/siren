@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/odpf/siren/core/alert"
@@ -42,40 +41,8 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 	}, nil
 }
 
-func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.CreateCortexAlertsRequest) (*sirenv1beta1.CreateCortexAlertsResponse, error) {
-	alerts := make([]*alert.Alert, 0)
-
-	badAlertCount := 0
-	firingLen := 0
-	// Alert model follows alertmanager webhook contract
-	// https://github.com/prometheus/alertmanager/blob/main/notify/webhook/webhook.go#L64
-	for _, item := range req.GetAlerts() {
-
-		if item.GetStatus() == "firing" {
-			firingLen++
-		}
-
-		severity := item.GetLabels()["severity"]
-		if item.GetStatus() == "resolved" {
-			severity = item.GetStatus()
-		}
-
-		alrt := &alert.Alert{
-			ProviderID:   req.GetProviderId(),
-			ResourceName: fmt.Sprintf("%v", item.GetAnnotations()["resource"]),
-			MetricName:   fmt.Sprintf("%v", item.GetAnnotations()["metricName"]),
-			MetricValue:  fmt.Sprintf("%v", item.GetAnnotations()["metricValue"]),
-			Severity:     severity,
-			Rule:         fmt.Sprintf("%v", item.GetAnnotations()["template"]),
-			TriggeredAt:  item.GetStartsAt().AsTime(),
-		}
-		if !isValidCortexAlert(alrt) {
-			badAlertCount++
-			continue
-		}
-		alerts = append(alerts, alrt)
-	}
-	createdAlerts, err := s.alertService.Create(ctx, alerts)
+func (s *GRPCServer) CreateAlerts(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
+	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetBody().AsMap())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -95,58 +62,64 @@ func (s *GRPCServer) CreateCortexAlerts(ctx context.Context, req *sirenv1beta1.C
 		items = append(items, alertHistoryItem)
 	}
 
-	result := &sirenv1beta1.CreateCortexAlertsResponse{
+	result := &sirenv1beta1.CreateAlertsResponse{
 		Alerts: items,
 	}
 
-	notificationCreationTime := time.Now()
-
 	// Publish to notification service
-	for _, a := range req.GetAlerts() {
-		n := CortexAlertPBToNotification(a, firingLen, req.GetGroupKey(), notificationCreationTime)
+	for _, a := range createdAlerts {
+		n := AlertPBToNotification(a, firingLen, a.GroupKey, time.Now())
 
 		if err := s.notificationService.DispatchToSubscribers(ctx, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}
 
-	if badAlertCount > 0 {
-		s.logger.Error("parameters are missing for alert", "alert count", badAlertCount)
-		return result, nil
-	}
-
 	return result, nil
 }
 
-func isValidCortexAlert(alrt *alert.Alert) bool {
-	return alrt != nil && !(alrt.ResourceName == "" || alrt.Rule == "" ||
-		alrt.MetricValue == "" || alrt.MetricName == "" ||
-		alrt.Severity == "")
-}
-
-// TODO test
-func CortexAlertPBToNotification(
-	a *sirenv1beta1.CortexAlert,
+// Transform alerts and populate Data and Labels to be interpolated to the system-default template
+// .Data
+// - id
+// - status "FIRING"/"RESOLVED"
+// - resource
+// - template
+// - metricValue
+// - metricName
+// - generatorUrl
+// - numAlertsFiring
+// - dashboard
+// - playbook
+// - summary
+// .Labels
+// - severity "WARNING"/"CRITICAL"
+// - alertname
+// - (others labels defined in rules)
+func AlertPBToNotification(
+	a *alert.Alert,
 	firingLen int,
 	groupKey string,
 	createdTime time.Time,
 ) notification.Notification {
+	id := "cortex-" + a.Fingerprint
+
 	data := map[string]interface{}{}
 
-	for k, v := range a.GetAnnotations() {
+	for k, v := range a.Annotations {
 		data[k] = v
 	}
 
-	data["status"] = a.GetStatus()
-	data["generatorUrl"] = a.GetGeneratorUrl()
+	data["status"] = a.Status
+	data["generatorUrl"] = a.GeneratorURL
 	data["numAlertsFiring"] = firingLen
 	data["groupKey"] = groupKey
+	data["id"] = id
 
 	return notification.Notification{
-		ID:        "cortex-" + a.GetFingerprint(),
+		ID:        id,
 		Data:      data,
-		Labels:    a.GetLabels(),
-		Template:  template.ReservedName_DefaultCortex,
+		Labels:    a.Labels,
+		Template:  template.ReservedName_SystemDefault,
 		CreatedAt: createdTime,
 	}
 }

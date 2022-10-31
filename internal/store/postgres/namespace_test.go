@@ -424,6 +424,60 @@ func (s *NamespaceRepositoryTestSuite) TestDelete() {
 	}
 }
 
+func (s *NamespaceRepositoryTestSuite) TestTransaction() {
+	s.Run("successfully commit transaction", func() {
+		fetchedNamespaces, err := s.repository.List(s.ctx)
+		s.NoError(err)
+		s.Len(fetchedNamespaces, 3)
+
+		ctx := s.repository.WithTransaction(context.Background())
+		err = s.repository.Create(ctx, &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
+				Name: "instance-2-tx",
+				URN:  "instance-2-tx",
+				Provider: provider.Provider{
+					ID: 2,
+				},
+			},
+			CredentialString: "xxx",
+		})
+		s.NoError(err)
+
+		err = s.repository.Commit(ctx)
+		s.NoError(err)
+
+		fetchedNamespaces, err = s.repository.List(s.ctx)
+		s.NoError(err)
+		s.Len(fetchedNamespaces, 4)
+	})
+
+	s.Run("successfully rollback transaction", func() {
+		fetchedNamespaces, err := s.repository.List(s.ctx)
+		s.NoError(err)
+		s.Len(fetchedNamespaces, 4)
+
+		ctx := s.repository.WithTransaction(context.Background())
+		err = s.repository.Create(ctx, &namespace.EncryptedNamespace{
+			Namespace: &namespace.Namespace{
+				Name: "instance-2-tx-rb",
+				URN:  "instance-2-tx-rb",
+				Provider: provider.Provider{
+					ID: 2,
+				},
+			},
+			CredentialString: "xxx",
+		})
+		s.NoError(err)
+
+		err = s.repository.Rollback(ctx, nil)
+		s.NoError(err)
+
+		fetchedNamespaces, err = s.repository.List(s.ctx)
+		s.NoError(err)
+		s.Len(fetchedNamespaces, 4)
+	})
+}
+
 func TestNamespaceRepository(t *testing.T) {
 	suite.Run(t, new(NamespaceRepositoryTestSuite))
 }

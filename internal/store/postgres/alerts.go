@@ -39,9 +39,9 @@ func NewAlertRepository(client *Client) *AlertRepository {
 	return &AlertRepository{client}
 }
 
-func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) (*alert.Alert, error) {
+func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 	if alrt == nil {
-		return nil, errors.New("alert domain is nil")
+		return errors.New("alert domain is nil")
 	}
 
 	var alertModel model.Alert
@@ -61,12 +61,12 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) (*alert.
 	).StructScan(&newAlertModel); err != nil {
 		err := checkPostgresError(err)
 		if errors.Is(err, errForeignKeyViolation) {
-			return nil, alert.ErrRelation
+			return alert.ErrRelation
 		}
-		return nil, err
+		return err
 	}
 
-	return newAlertModel.ToDomain(), nil
+	return nil
 }
 
 func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {

@@ -98,7 +98,7 @@ func (s *Service) Upsert(ctx context.Context, rl *Rule) error {
 		return err
 	}
 
-	if err := pluginService.UpsertRule(ctx, rl, templateToUpdate, ns.URN); err != nil {
+	if err := pluginService.UpsertRule(ctx, ns.URN, ns.Provider, rl, templateToUpdate); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}

@@ -13,7 +13,9 @@ type Service struct {
 
 // NewService returns repository struct
 func NewService(repository Repository) *Service {
-	return &Service{repository}
+	return &Service{
+		repository: repository,
+	}
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
@@ -21,7 +23,10 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
 }
 
 func (s *Service) Create(ctx context.Context, prov *Provider) error {
-	//TODO check provider is nil
+	if prov == nil {
+		return errors.ErrInvalid.WithMsgf("provider is nil")
+	}
+
 	err := s.repository.Create(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
@@ -29,6 +34,7 @@ func (s *Service) Create(ctx context.Context, prov *Provider) error {
 		}
 		return err
 	}
+
 	return nil
 }
 
@@ -44,6 +50,10 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Provider, error) {
 }
 
 func (s *Service) Update(ctx context.Context, prov *Provider) error {
+	if prov == nil {
+		return errors.ErrInvalid.WithMsgf("provider is nil")
+	}
+
 	err := s.repository.Update(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
@@ -54,6 +64,7 @@ func (s *Service) Update(ctx context.Context, prov *Provider) error {
 		}
 		return err
 	}
+
 	return nil
 }
 

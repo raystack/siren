@@ -2,10 +2,10 @@ package v1beta1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/odpf/siren/core/subscription"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -18,12 +18,26 @@ func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *sirenv1beta1.List
 	items := []*sirenv1beta1.Subscription{}
 
 	for _, sub := range subscriptions {
+
+		receiverMetadatasPB := make([]*sirenv1beta1.ReceiverMetadata, 0)
+		for _, item := range sub.Receivers {
+			configMapPB, err := structpb.NewStruct(item.Configuration)
+			if err != nil {
+				return nil, err
+			}
+
+			receiverMetadatasPB = append(receiverMetadatasPB, &sirenv1beta1.ReceiverMetadata{
+				Id:            item.ID,
+				Configuration: configMapPB,
+			})
+		}
+
 		item := &sirenv1beta1.Subscription{
 			Id:        sub.ID,
 			Urn:       sub.URN,
 			Namespace: sub.Namespace,
 			Match:     sub.Match,
-			Receivers: getReceiverMetadataListFromDomainObject(sub.Receivers),
+			Receivers: receiverMetadatasPB,
 			CreatedAt: timestamppb.New(sub.CreatedAt),
 			UpdatedAt: timestamppb.New(sub.UpdatedAt),
 		}
@@ -60,8 +74,15 @@ func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetS
 
 	receivers := make([]*sirenv1beta1.ReceiverMetadata, 0)
 	for _, receiverMetadataItem := range sub.Receivers {
-		item := getReceiverMetadataFromDomainObject(&receiverMetadataItem)
-		receivers = append(receivers, &item)
+		configMapPB, err := structpb.NewStruct(receiverMetadataItem.Configuration)
+		if err != nil {
+			return nil, err
+		}
+
+		receivers = append(receivers, &sirenv1beta1.ReceiverMetadata{
+			Id:            receiverMetadataItem.ID,
+			Configuration: configMapPB,
+		})
 	}
 
 	return &sirenv1beta1.GetSubscriptionResponse{
@@ -104,43 +125,13 @@ func (s *GRPCServer) DeleteSubscription(ctx context.Context, req *sirenv1beta1.D
 	return &sirenv1beta1.DeleteSubscriptionResponse{}, nil
 }
 
-func getReceiverMetadataFromDomainObject(item *subscription.Receiver) sirenv1beta1.ReceiverMetadata {
-	configMap := make(map[string]string)
-	for k, v := range item.Configuration {
-		configMap[k] = fmt.Sprintf("%v", v)
-	}
-
-	return sirenv1beta1.ReceiverMetadata{
-		Id:            item.ID,
-		Configuration: configMap,
-	}
-}
-
-func getReceiverMetadataInDomainObject(item *sirenv1beta1.ReceiverMetadata) subscription.Receiver {
-	configMapInterface := make(map[string]interface{})
-	for k, v := range item.Configuration {
-		configMapInterface[k] = v
-	}
-
-	return subscription.Receiver{
-		ID:            item.Id,
-		Configuration: configMapInterface,
-	}
-}
-
 func getReceiverMetadataListInDomainObject(domainReceivers []*sirenv1beta1.ReceiverMetadata) []subscription.Receiver {
 	receivers := make([]subscription.Receiver, 0)
-	for _, receiverMetadataItem := range domainReceivers {
-		receivers = append(receivers, getReceiverMetadataInDomainObject(receiverMetadataItem))
-	}
-	return receivers
-}
-
-func getReceiverMetadataListFromDomainObject(domainReceivers []subscription.Receiver) []*sirenv1beta1.ReceiverMetadata {
-	receivers := make([]*sirenv1beta1.ReceiverMetadata, 0)
-	for _, receiverMetadataItem := range domainReceivers {
-		item := getReceiverMetadataFromDomainObject(&receiverMetadataItem)
-		receivers = append(receivers, &item)
+	for _, item := range domainReceivers {
+		receivers = append(receivers, subscription.Receiver{
+			ID:            item.Id,
+			Configuration: item.Configuration.AsMap(),
+		})
 	}
 	return receivers
 }

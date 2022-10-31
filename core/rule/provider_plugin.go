@@ -3,6 +3,7 @@ package rule
 import (
 	"context"
 
+	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/template"
 )
 
@@ -12,5 +13,5 @@ import (
 //
 //go:generate mockery --name=RuleUploader -r --case underscore --with-expecter --structname RuleUploader --filename rule_uploader.go --output=./mocks
 type RuleUploader interface {
-	UpsertRule(ctx context.Context, rl *Rule, templateToUpdate *template.Template, namespaceURN string) error
+	UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *Rule, templateToUpdate *template.Template) error
 }
