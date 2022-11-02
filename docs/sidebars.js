@@ -15,12 +15,13 @@ module.exports = {
 
   docsSidebar: [
     'introduction',
+    'installation',
     {
       type: "category",
       label: "Tour",
       items: [
-        "tour/introduction",
-        "tour/startup_siren_server",
+        "tour/overview",
+        "tour/start_server",
         "tour/registering_provider",
         "tour/registering_receivers",
         "tour/sending_notifications_to_receiver",

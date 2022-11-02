@@ -3,17 +3,17 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from '@theme/CodeBlock';
 import siteConfig from '/docusaurus.config.js';
 
-# 3 - Registering Receivers
+# Register receivers
 
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
-
 
 ## 1. Register a receiver
 
 Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. With `file` receiver, all published notifications will be written to a file. Let's create two receivers `file` with different filename using Siren CLI.
 
 Prepare receivers detail:
+
 ```bash
 cat <<EOT >> receiver_1.yaml
 name: file-sink-1
@@ -25,9 +25,11 @@ configurations:
     url: ./out-file-sink1.json
 EOT
 ```
+
 Register the receiver with this command
 
 Prepare a receiver detail:
+
 ```bash
 cat <<EOT >> receiver_2.yaml
 name: file-sink-2
@@ -46,7 +48,9 @@ EOT
 ```shell
 ./siren receiver create -f receiver_1.yaml
 ```
+
 Once done, you will get messages
+
 ```bash
 Receiver created with id: 1 ✓
 ```
@@ -78,7 +82,9 @@ Receiver created with id: 1 ✓
 ```shell
 ./siren receiver create -f receiver_2.yaml
 ```
+
 Once done, you will get messages
+
 ```bash
 Receiver created with id: 2 ✓
 ```

@@ -2,7 +2,7 @@
 
 Siren orchestrates alerting rules of your applications using a monitoring and alerting provider e.g. [Cortex metrics](https://cortexmetrics.io/) and sending notifications in a simple DIY configuration. With Siren, you can define templates (using go templates standard), create/edit/enable/disable alerting rules on demand, and sending out notifications. It also gives flexibility to manage bulk of rules via YAML files. Siren can be integrated with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
-![Siren Overview](/img/overview.svg)
+![Siren Overview](/img/siren_arch.svg)
 
 ## Key Features
 
