@@ -3,8 +3,7 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from '@theme/CodeBlock';
 import siteConfig from '/docusaurus.config.js';
 
-# 2 - Registering Provider and Namespaces
-
+# Register provider
 
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
@@ -16,6 +15,7 @@ The first things we need to set up before we add receivers and testing alerts an
 Siren provides HTTP API where we need to send a request to `POST /v1beta1/providers` with a json body to create a provider. Beside that, Siren also has a CLI that interacts to Siren server and we could use it.
 
 To create a new provider with CLI, we need to create a `yaml` file.
+
 ```yaml
 # input.yaml
 host: http://localhost:9009
@@ -23,7 +23,9 @@ urn: localhost-dev-cortex
 name: dev-cortex
 type: cortex
 ```
+
 If you are in unix system, you could do this
+
 ```bash
 cat <<EOT >> input.yaml
 host: http://localhost:9009
@@ -41,7 +43,9 @@ Once the file is ready, we can start creating the provider.
 ```bash
 siren provider create --file input.yaml
 ```
+
 If succeed, you will got this message.
+
 ```shell
 Provider created with id: 1 ✓
 ```
@@ -62,13 +66,12 @@ Provider created with id: 1 ✓
   </TabItem>
 </Tabs>
 
-
-
 The `id` we got from the provider creation is important to create a namespace later.
 
 ## 2. Register namespaces
 
 For multi-tenancy scenario, which Cortex supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done similar with how we created provider.
+
 ```bash
 cat <<EOT >> ns1.yaml
 urn: odpf-ns
@@ -135,7 +138,6 @@ EOT
   </TabItem>
 </Tabs>
 
-
 ## 3. Verify Created Providers and Namespaces
 
 To make sure all providers and namespaces are properly created, we could try query Siren with Siren CLI.
@@ -148,10 +150,11 @@ See what providers exist in Siren.
 ```shell
 ./siren provider list
 ```
+
 ```shell
 Showing 2 of 2 providers
- 
-ID      TYPE    URN                     NAME       
+
+ID      TYPE    URN                     NAME
 1       cortex  localhost-dev-cortex    dev-cortex
 
 For details on a provider, try: siren provider view <id>
@@ -166,7 +169,6 @@ For details on a provider, try: siren provider view <id>
   </TabItem>
 </Tabs>
 
-
 See what namespaces exist in Siren.
 
 <Tabs groupId="api">
@@ -175,11 +177,12 @@ See what namespaces exist in Siren.
 ```shell
 ./siren namespace list
 ```
+
 ```shell
 Showing 2 of 2 namespaces
- 
-ID      URN             NAME       
-1       odpf-ns         odpf-ns    
+
+ID      URN             NAME
+1       odpf-ns         odpf-ns
 2       non-odpf-ns     non-odpf-ns
 
 For details on a namespace, try: siren namespace view <id>
