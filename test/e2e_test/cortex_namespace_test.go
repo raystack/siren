@@ -40,6 +40,7 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
 
+	// TODO host.docker.internal only works for docker-desktop to call a service in host (siren)
 	s.appConfig.Providers.Cortex.WebhookBaseAPI = "http://host.docker.internal:8080/v1beta1/alerts/cortex"
 	StartSiren(*s.appConfig)
 

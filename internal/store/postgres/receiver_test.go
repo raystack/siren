@@ -11,6 +11,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -18,8 +19,8 @@ type ReceiverRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
 	client     *postgres.Client
-	pool       *dockertestx.Pool
-	resource   *dockertestx.Resource
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.ReceiverRepository
 }
 

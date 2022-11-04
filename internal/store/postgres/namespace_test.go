@@ -12,6 +12,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -19,8 +20,8 @@ type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
 	client     *postgres.Client
-	pool       *dockertestx.Pool
-	resource   *dockertestx.Resource
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	repository *postgres.NamespaceRepository
 }
 

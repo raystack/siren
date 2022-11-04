@@ -12,14 +12,15 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
 type AlertsRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
-	pool       *dockertestx.Pool
-	resource   *dockertestx.Resource
+	pool       *dockertest.Pool
+	resource   *dockertest.Resource
 	client     *postgres.Client
 	repository *postgres.AlertRepository
 }

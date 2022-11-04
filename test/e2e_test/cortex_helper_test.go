@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	"github.com/ory/dockertest/v3/docker"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -26,9 +27,10 @@ type CortexTest struct {
 	CortexConfig      cortex.AppConfig
 	NginxHost         string
 	bridgeNetworkName string
-	pool              *dockertestx.Pool
-	network           *docker.Network
-	resources         []*dockertestx.Resource
+	pool              *dockertest.Pool
+	network           *dockertest.Network
+	resources         []*dockertest.Resource
+	hostIP            string
 }
 
 func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1beta1.SirenServiceClient, cortexProviderHost string) {
@@ -147,27 +149,44 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	ct := &CortexTest{
 		bridgeNetworkName: fmt.Sprintf("bridge-%s", uuid.New().String()),
-		resources:         []*dockertestx.Resource{},
+		resources:         []*dockertest.Resource{},
 	}
 
-	ct.pool, err = dockertestx.NewPool("")
+	ct.pool, err = dockertest.NewPool("")
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a bridge network for testing.
-	ct.network, err = ct.pool.Client.CreateNetwork(docker.CreateNetworkOptions{
-		Name: ct.bridgeNetworkName,
-	})
+	ct.network, err = ct.pool.CreateNetwork(ct.bridgeNetworkName)
 	if err != nil {
 		return nil, err
+	}
+
+	dockerNetworks, err := ct.pool.Client.ListNetworks()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(dockerNetworks) == 0 {
+		return nil, errors.New("no docker network found")
+	}
+
+	for _, ntwrk := range dockerNetworks {
+		if ntwrk.Name == "bridge" {
+			if len(ntwrk.IPAM.Config) == 0 {
+				return nil, errors.New("no docker network gateway config found")
+			}
+			ct.hostIP = ntwrk.IPAM.Config[0].Gateway
+			break
+		}
 	}
 
 	// pg 1
 	logger.Info("creating main postgres...")
 	dockerPG, err := dockertestx.CreatePostgres(
 		dockertestx.PostgresWithLogger(logger),
-		dockertestx.PostgresWithDockerNetwork(ct.network),
+		dockertestx.PostgresWithDockertestNetwork(ct.network),
 		dockertestx.PostgresWithDockerPool(ct.pool),
 	)
 	if err != nil {
@@ -178,7 +197,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	logger.Info("creating minio...")
 	dockerMinio, err := dockertestx.CreateMinio(
-		dockertestx.MinioWithDockerNetwork(ct.network),
+		dockertestx.MinioWithDockertestNetwork(ct.network),
 		dockertestx.MinioWithDockerPool(ct.pool),
 	)
 	if err != nil {
@@ -189,7 +208,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	logger.Info("migrating minio...")
 	if err := dockertestx.MigrateMinio(dockerMinio.GetInternalHost(), "cortex",
-		dockertestx.MigrateMinioWithDockerNetwork(ct.network),
+		dockertestx.MigrateMinioWithDockertestNetwork(ct.network),
 		dockertestx.MigrateMinioWithDockerPool(ct.pool),
 	); err != nil {
 		return nil, err
@@ -201,7 +220,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	dockerCortexAM, err := dockertestx.CreateCortex(
 		dockertestx.CortexWithModule("alertmanager"),
 		dockertestx.CortexWithS3Endpoint(minioURL),
-		dockertestx.CortexWithDockerNetwork(ct.network),
+		dockertestx.CortexWithDockertestNetwork(ct.network),
 		dockertestx.CortexWithDockerPool(ct.pool),
 	)
 	if err != nil {
@@ -216,7 +235,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	dockerCortexAll, err := dockertestx.CreateCortex(
 		dockertestx.CortexWithAlertmanagerURL(alertManagerURL),
 		dockertestx.CortexWithS3Endpoint(minioURL),
-		dockertestx.CortexWithDockerNetwork(ct.network),
+		dockertestx.CortexWithDockertestNetwork(ct.network),
 		dockertestx.CortexWithDockerPool(ct.pool),
 	)
 	if err != nil {
@@ -227,7 +246,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	logger.Info("cortex-all is up")
 
 	dockerNginx, err := dockertestx.CreateNginx(
-		dockertestx.NginxWithDockerNetwork(ct.network),
+		dockertestx.NginxWithDockertestNetwork(ct.network),
 		dockertestx.NginxWithDockerPool(ct.pool),
 		dockertestx.NginxWithPresetConfig("cortex"),
 		dockertestx.NginxWithExposedPort("9009"),
@@ -262,7 +281,7 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	}, migrations.FS, migrations.ResourcePath); err != nil {
 		return nil, err
 	}
-	logger.Info("siren is migrated")
+	logger.Info("siren db is migrated")
 
 	return ct, nil
 }
@@ -273,8 +292,40 @@ func (ct *CortexTest) CleanUp() error {
 			return fmt.Errorf("could not purge resource: %w", err)
 		}
 	}
-	if err := ct.pool.Client.RemoveNetwork(ct.network.ID); err != nil {
+	if err := ct.network.Close(); err != nil {
 		return err
 	}
 	return nil
 }
+
+// func RunDockerizedSiren(apiPort int, pool *dockertest.Pool, netwrk *dockertest.Network) (*dockertest.Resource, error) {
+// 	// Build and run the given Dockerfile
+// 	resource, err := pool.BuildAndRunWithOptions("../../Dockerfile.dev", &dockertest.RunOptions{
+// 		Name:         "siren-e2e",
+// 		Networks:     []*dockertest.Network{netwrk},
+// 		ExposedPorts: []string{"8080"},
+// 		PortBindings: map[docker.Port][]docker.PortBinding{
+// 			"8080": []docker.PortBinding{{HostPort: fmt.Sprintf("%d", apiPort)}},
+// 		},
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if err = pool.Retry(func() error {
+// 		var err error
+// 		resp, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%d", apiPort))
+// 		if err != nil {
+// 			return err
+// 		}
+// 		_, err = io.ReadAll(resp.Body)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return nil
+// 	}); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return resource, nil
+// }

@@ -15,6 +15,7 @@ import (
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/plugins/queues/postgresq"
 	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -23,8 +24,8 @@ type QueueTestSuite struct {
 	logger   log.Logger
 	ctx      context.Context
 	dbc      *db.Client
-	pool     *dockertestx.Pool
-	resource *dockertestx.Resource
+	pool     *dockertest.Pool
+	resource *dockertest.Resource
 	q        *postgresq.Queue
 	dlq      *postgresq.Queue
 }
