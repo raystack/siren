@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -35,7 +35,7 @@ var (
 	}
 )
 
-func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
+func purgeDocker(pool *dockertestx.Pool, resource *dockertestx.Resource) error {
 	if err := pool.Purge(resource); err != nil {
 		return fmt.Errorf("could not purge resource: %w", err)
 	}

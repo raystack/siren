@@ -1560,6 +1560,8 @@ github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
 github.com/odpf/salt v0.2.5-0.20221019092709-83b91cba3daf h1:Ehn6ltBEIowDKtfnkptzZ+Y+32PSMalx2N3Td1jnbD4=
 github.com/odpf/salt v0.2.5-0.20221019092709-83b91cba3daf/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
+github.com/odpf/salt v0.2.5-0.20221104075046-434fc1e9375a h1:U+Wm5SN9BM/+xvyHq2zhdWAeUlDwdi8aARURw+z24gk=
+github.com/odpf/salt v0.2.5-0.20221104075046-434fc1e9375a/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/run v1.1.0/go.mod h1:sVPdnTZT1zYwAJeCMu2Th4T21pA3FPOQRfWjQlk7DVU=

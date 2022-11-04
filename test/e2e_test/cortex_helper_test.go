@@ -10,13 +10,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	"github.com/odpf/siren/test/e2e_test/dockertestx"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -27,9 +26,9 @@ type CortexTest struct {
 	CortexConfig      cortex.AppConfig
 	NginxHost         string
 	bridgeNetworkName string
-	pool              *dockertest.Pool
+	pool              *dockertestx.Pool
 	network           *docker.Network
-	resources         []*dockertest.Resource
+	resources         []*dockertestx.Resource
 }
 
 func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1beta1.SirenServiceClient, cortexProviderHost string) {
@@ -148,10 +147,10 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	ct := &CortexTest{
 		bridgeNetworkName: fmt.Sprintf("bridge-%s", uuid.New().String()),
-		resources:         []*dockertest.Resource{},
+		resources:         []*dockertestx.Resource{},
 	}
 
-	ct.pool, err = dockertest.NewPool("")
+	ct.pool, err = dockertestx.NewPool("")
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +165,10 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	// pg 1
 	logger.Info("creating main postgres...")
-	dockerPG, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithLogger(logger),
-		dockertest.PostgresWithDockerNetwork(ct.network),
-		dockertest.PostgresWithDockerPool(ct.pool),
+	dockerPG, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithLogger(logger),
+		dockertestx.PostgresWithDockerNetwork(ct.network),
+		dockertestx.PostgresWithDockerPool(ct.pool),
 	)
 	if err != nil {
 		return nil, err
@@ -178,9 +177,9 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	logger.Info("main postgres is created")
 
 	logger.Info("creating minio...")
-	dockerMinio, err := dockertest.CreateMinio(
-		dockertest.MinioWithDockerNetwork(ct.network),
-		dockertest.MinioWithDockerPool(ct.pool),
+	dockerMinio, err := dockertestx.CreateMinio(
+		dockertestx.MinioWithDockerNetwork(ct.network),
+		dockertestx.MinioWithDockerPool(ct.pool),
 	)
 	if err != nil {
 		return nil, err
@@ -189,9 +188,9 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	logger.Info("minio is created")
 
 	logger.Info("migrating minio...")
-	if err := dockertest.MigrateMinio(dockerMinio.GetInternalHost(), "cortex",
-		dockertest.MigrateMinioWithDockerNetwork(ct.network),
-		dockertest.MigrateMinioWithDockerPool(ct.pool),
+	if err := dockertestx.MigrateMinio(dockerMinio.GetInternalHost(), "cortex",
+		dockertestx.MigrateMinioWithDockerNetwork(ct.network),
+		dockertestx.MigrateMinioWithDockerPool(ct.pool),
 	); err != nil {
 		return nil, err
 	}
@@ -199,11 +198,11 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 	minioURL := fmt.Sprintf("http://%s", dockerMinio.GetInternalHost())
 
 	logger.Info("starting up cortex-am...")
-	dockerCortexAM, err := dockertest.CreateCortex(
-		dockertest.CortexWithModule("alertmanager"),
-		dockertest.CortexWithS3Endpoint(minioURL),
-		dockertest.CortexWithDockerNetwork(ct.network),
-		dockertest.CortexWithDockerPool(ct.pool),
+	dockerCortexAM, err := dockertestx.CreateCortex(
+		dockertestx.CortexWithModule("alertmanager"),
+		dockertestx.CortexWithS3Endpoint(minioURL),
+		dockertestx.CortexWithDockerNetwork(ct.network),
+		dockertestx.CortexWithDockerPool(ct.pool),
 	)
 	if err != nil {
 		return nil, err
@@ -214,11 +213,11 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 
 	logger.Info("starting up cortex-all...")
 	alertManagerURL := fmt.Sprintf("http://%s/api/prom/alertmanager/", dockerCortexAM.GetInternalHost())
-	dockerCortexAll, err := dockertest.CreateCortex(
-		dockertest.CortexWithAlertmanagerURL(alertManagerURL),
-		dockertest.CortexWithS3Endpoint(minioURL),
-		dockertest.CortexWithDockerNetwork(ct.network),
-		dockertest.CortexWithDockerPool(ct.pool),
+	dockerCortexAll, err := dockertestx.CreateCortex(
+		dockertestx.CortexWithAlertmanagerURL(alertManagerURL),
+		dockertestx.CortexWithS3Endpoint(minioURL),
+		dockertestx.CortexWithDockerNetwork(ct.network),
+		dockertestx.CortexWithDockerPool(ct.pool),
 	)
 	if err != nil {
 		return nil, err

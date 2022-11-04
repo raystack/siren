@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/postgres"
@@ -18,8 +18,8 @@ type ProviderRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
 	client     *postgres.Client
-	pool       *dockertest.Pool
-	resource   *dockertest.Resource
+	pool       *dockertestx.Pool
+	resource   *dockertestx.Resource
 	repository *postgres.ProviderRepository
 }
 
@@ -27,8 +27,8 @@ func (s *ProviderRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	dpg, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithDetail(
+	dpg, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
 	)
