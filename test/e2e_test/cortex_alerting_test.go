@@ -181,7 +181,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			defer r.Body.Close()
 			s.Assert().NoError(err)
 
-			expectedBody := `"alertname":"some alert name","environment":"integration","generatorUrl":"","groupKey":"{}/{environment=\"integration\",team=\"odpf\"}:{}","id":"cortex-684c979dcb5ffb96","key1":"value1","key2":"value2","metricName":"test_alert","metricValue":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
+			expectedBody := `{"alertname":"some alert name","environment":"integration","generatorUrl":"","groupKey":"{}/{environment=\"integration\",team=\"odpf\"}:{}","id":"cortex-684c979dcb5ffb96","key1":"value1","key2":"value2","metricName":"test_alert","metricValue":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
 			s.Assert().Equal(expectedBody, string(body))
 			close(waitChan)
 		}))
