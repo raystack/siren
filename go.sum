@@ -1557,12 +1557,6 @@ github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLA
 github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229/go.mod h1:0aYXnNPJ8l7uZxf45rWW1a/uME32OF0rhiYGNQ2oF2E=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
-github.com/odpf/salt v0.2.5-0.20221104082327-331b4095e025 h1:2NjPtpdzRSFBb2Nsw8kLjBqvCGUXrRaVgRHQHPI0qLc=
-github.com/odpf/salt v0.2.5-0.20221104082327-331b4095e025/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
-github.com/odpf/salt v0.2.5-0.20221104085240-fa2885f66cce h1:eTLlA1AUA6MTeNh3FSG3syy3RjzKhxyPLvl7OqiXOcg=
-github.com/odpf/salt v0.2.5-0.20221104085240-fa2885f66cce/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
-github.com/odpf/salt v0.2.5-0.20221104090941-0fcfbd98eed1 h1:bMVMatG8HnRs+ZOz+Qns/a27u+94auPyn5ieOaUe624=
-github.com/odpf/salt v0.2.5-0.20221104090941-0fcfbd98eed1/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
 github.com/odpf/salt v0.2.5-0.20221104100256-dc17b102381a h1:8VANBL7/1RjMZxbL+ExlRP4nyStqn393pw4t17kaL5g=
 github.com/odpf/salt v0.2.5-0.20221104100256-dc17b102381a/go.mod h1:SVfb9FtFA22A5AUvXF9QfwkT3KSCkkKw53P0DmtrSXw=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=

@@ -9,7 +9,7 @@ import (
 	"github.com/odpf/siren/plugins"
 )
 
-// UnimplementedService is a base receiver plugin service layer
+// UnimplementedService is a base receiver provider service layer
 type UnimplementedService struct{}
 
 func (s *UnimplementedService) SyncRuntimeConfig(ctx context.Context, namespaceURN string, prov provider.Provider) error {
