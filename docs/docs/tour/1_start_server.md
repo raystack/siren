@@ -38,7 +38,7 @@ providers:
 
 ## 3. Start-up Siren dependencies
 
-We are using `docker-compose` to start-up all dependencies of Siren. See [introduction](./introduction.md) to see what components are defined in `docker-compose`.
+We are using `docker-compose` to start-up all dependencies of Siren. See [introduction](../introduction.md) to see what components are defined in `docker-compose`.
 
 To start all dependencies of Siren, run.
 
