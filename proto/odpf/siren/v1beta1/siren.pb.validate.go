@@ -2931,7 +2931,34 @@ func (m *ReceiverMetadata) validate(all bool) error {
 
 	// no validation rules for Id
 
-	// no validation rules for Configuration
+	if all {
+		switch v := interface{}(m.GetConfiguration()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ReceiverMetadataValidationError{
+					field:  "Configuration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ReceiverMetadataValidationError{
+					field:  "Configuration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetConfiguration()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ReceiverMetadataValidationError{
+				field:  "Configuration",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return ReceiverMetadataMultiError(errors)
@@ -6431,249 +6458,74 @@ var _ interface {
 	ErrorName() string
 } = ListAlertsResponseValidationError{}
 
-// Validate checks the field values on CortexAlert with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *CortexAlert) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on CortexAlert with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in CortexAlertMultiError, or
-// nil if none found.
-func (m *CortexAlert) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *CortexAlert) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Annotations
-
-	// no validation rules for Labels
-
-	// no validation rules for Status
-
-	if all {
-		switch v := interface{}(m.GetStartsAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "StartsAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "StartsAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetStartsAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CortexAlertValidationError{
-				field:  "StartsAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetEndsAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "EndsAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CortexAlertValidationError{
-					field:  "EndsAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetEndsAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CortexAlertValidationError{
-				field:  "EndsAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for GeneratorUrl
-
-	// no validation rules for Fingerprint
-
-	if len(errors) > 0 {
-		return CortexAlertMultiError(errors)
-	}
-	return nil
-}
-
-// CortexAlertMultiError is an error wrapping multiple validation errors
-// returned by CortexAlert.ValidateAll() if the designated constraints aren't met.
-type CortexAlertMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m CortexAlertMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m CortexAlertMultiError) AllErrors() []error { return m }
-
-// CortexAlertValidationError is the validation error returned by
-// CortexAlert.Validate if the designated constraints aren't met.
-type CortexAlertValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CortexAlertValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CortexAlertValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CortexAlertValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CortexAlertValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CortexAlertValidationError) ErrorName() string { return "CortexAlertValidationError" }
-
-// Error satisfies the builtin error interface
-func (e CortexAlertValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCortexAlert.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CortexAlertValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CortexAlertValidationError{}
-
-// Validate checks the field values on CreateCortexAlertsRequest with the rules
+// Validate checks the field values on CreateAlertsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *CreateCortexAlertsRequest) Validate() error {
+func (m *CreateAlertsRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreateCortexAlertsRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on CreateAlertsRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// CreateCortexAlertsRequestMultiError, or nil if none found.
-func (m *CreateCortexAlertsRequest) ValidateAll() error {
+// CreateAlertsRequestMultiError, or nil if none found.
+func (m *CreateAlertsRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreateCortexAlertsRequest) validate(all bool) error {
+func (m *CreateAlertsRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
+
+	// no validation rules for ProviderType
 
 	// no validation rules for ProviderId
 
-	for idx, item := range m.GetAlerts() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateCortexAlertsRequestValidationError{
-						field:  fmt.Sprintf("Alerts[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateCortexAlertsRequestValidationError{
-						field:  fmt.Sprintf("Alerts[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return CreateCortexAlertsRequestValidationError{
-					field:  fmt.Sprintf("Alerts[%v]", idx),
+	if all {
+		switch v := interface{}(m.GetBody()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateAlertsRequestValidationError{
+					field:  "Body",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateAlertsRequestValidationError{
+					field:  "Body",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
 		}
-
+	} else if v, ok := interface{}(m.GetBody()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateAlertsRequestValidationError{
+				field:  "Body",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
-	// no validation rules for GroupKey
-
-	// no validation rules for ExternalUrl
-
-	// no validation rules for Version
-
 	if len(errors) > 0 {
-		return CreateCortexAlertsRequestMultiError(errors)
+		return CreateAlertsRequestMultiError(errors)
 	}
 	return nil
 }
 
-// CreateCortexAlertsRequestMultiError is an error wrapping multiple validation
-// errors returned by CreateCortexAlertsRequest.ValidateAll() if the
-// designated constraints aren't met.
-type CreateCortexAlertsRequestMultiError []error
+// CreateAlertsRequestMultiError is an error wrapping multiple validation
+// errors returned by CreateAlertsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAlertsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreateCortexAlertsRequestMultiError) Error() string {
+func (m CreateAlertsRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -6682,11 +6534,11 @@ func (m CreateCortexAlertsRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreateCortexAlertsRequestMultiError) AllErrors() []error { return m }
+func (m CreateAlertsRequestMultiError) AllErrors() []error { return m }
 
-// CreateCortexAlertsRequestValidationError is the validation error returned by
-// CreateCortexAlertsRequest.Validate if the designated constraints aren't met.
-type CreateCortexAlertsRequestValidationError struct {
+// CreateAlertsRequestValidationError is the validation error returned by
+// CreateAlertsRequest.Validate if the designated constraints aren't met.
+type CreateAlertsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -6694,24 +6546,24 @@ type CreateCortexAlertsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreateCortexAlertsRequestValidationError) Field() string { return e.field }
+func (e CreateAlertsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreateCortexAlertsRequestValidationError) Reason() string { return e.reason }
+func (e CreateAlertsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreateCortexAlertsRequestValidationError) Cause() error { return e.cause }
+func (e CreateAlertsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreateCortexAlertsRequestValidationError) Key() bool { return e.key }
+func (e CreateAlertsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreateCortexAlertsRequestValidationError) ErrorName() string {
-	return "CreateCortexAlertsRequestValidationError"
+func (e CreateAlertsRequestValidationError) ErrorName() string {
+	return "CreateAlertsRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreateCortexAlertsRequestValidationError) Error() string {
+func (e CreateAlertsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -6723,14 +6575,14 @@ func (e CreateCortexAlertsRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreateCortexAlertsRequest.%s: %s%s",
+		"invalid %sCreateAlertsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreateCortexAlertsRequestValidationError{}
+var _ error = CreateAlertsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -6738,24 +6590,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreateCortexAlertsRequestValidationError{}
+} = CreateAlertsRequestValidationError{}
 
-// Validate checks the field values on CreateCortexAlertsResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// Validate checks the field values on CreateAlertsResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *CreateCortexAlertsResponse) Validate() error {
+func (m *CreateAlertsResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CreateCortexAlertsResponse with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on CreateAlertsResponse with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// CreateCortexAlertsResponseMultiError, or nil if none found.
-func (m *CreateCortexAlertsResponse) ValidateAll() error {
+// CreateAlertsResponseMultiError, or nil if none found.
+func (m *CreateAlertsResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CreateCortexAlertsResponse) validate(all bool) error {
+func (m *CreateAlertsResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -6769,7 +6621,7 @@ func (m *CreateCortexAlertsResponse) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, CreateCortexAlertsResponseValidationError{
+					errors = append(errors, CreateAlertsResponseValidationError{
 						field:  fmt.Sprintf("Alerts[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -6777,7 +6629,7 @@ func (m *CreateCortexAlertsResponse) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, CreateCortexAlertsResponseValidationError{
+					errors = append(errors, CreateAlertsResponseValidationError{
 						field:  fmt.Sprintf("Alerts[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -6786,7 +6638,7 @@ func (m *CreateCortexAlertsResponse) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return CreateCortexAlertsResponseValidationError{
+				return CreateAlertsResponseValidationError{
 					field:  fmt.Sprintf("Alerts[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -6797,18 +6649,18 @@ func (m *CreateCortexAlertsResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CreateCortexAlertsResponseMultiError(errors)
+		return CreateAlertsResponseMultiError(errors)
 	}
 	return nil
 }
 
-// CreateCortexAlertsResponseMultiError is an error wrapping multiple
-// validation errors returned by CreateCortexAlertsResponse.ValidateAll() if
-// the designated constraints aren't met.
-type CreateCortexAlertsResponseMultiError []error
+// CreateAlertsResponseMultiError is an error wrapping multiple validation
+// errors returned by CreateAlertsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAlertsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CreateCortexAlertsResponseMultiError) Error() string {
+func (m CreateAlertsResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -6817,11 +6669,11 @@ func (m CreateCortexAlertsResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CreateCortexAlertsResponseMultiError) AllErrors() []error { return m }
+func (m CreateAlertsResponseMultiError) AllErrors() []error { return m }
 
-// CreateCortexAlertsResponseValidationError is the validation error returned
-// by CreateCortexAlertsResponse.Validate if the designated constraints aren't met.
-type CreateCortexAlertsResponseValidationError struct {
+// CreateAlertsResponseValidationError is the validation error returned by
+// CreateAlertsResponse.Validate if the designated constraints aren't met.
+type CreateAlertsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -6829,24 +6681,24 @@ type CreateCortexAlertsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e CreateCortexAlertsResponseValidationError) Field() string { return e.field }
+func (e CreateAlertsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CreateCortexAlertsResponseValidationError) Reason() string { return e.reason }
+func (e CreateAlertsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CreateCortexAlertsResponseValidationError) Cause() error { return e.cause }
+func (e CreateAlertsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CreateCortexAlertsResponseValidationError) Key() bool { return e.key }
+func (e CreateAlertsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CreateCortexAlertsResponseValidationError) ErrorName() string {
-	return "CreateCortexAlertsResponseValidationError"
+func (e CreateAlertsResponseValidationError) ErrorName() string {
+	return "CreateAlertsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e CreateCortexAlertsResponseValidationError) Error() string {
+func (e CreateAlertsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -6858,14 +6710,14 @@ func (e CreateCortexAlertsResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCreateCortexAlertsResponse.%s: %s%s",
+		"invalid %sCreateAlertsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CreateCortexAlertsResponseValidationError{}
+var _ error = CreateAlertsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -6873,7 +6725,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CreateCortexAlertsResponseValidationError{}
+} = CreateAlertsResponseValidationError{}
 
 // Validate checks the field values on Annotations with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

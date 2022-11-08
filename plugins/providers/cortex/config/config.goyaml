@@ -6,40 +6,10 @@ global:
   slack_api_url: https://slack.com/api/chat.postMessage
 receivers:
   - name: default
-[[- range $key, $receiver := .Receivers -]]
-[[if eq $receiver.Type "slack"]]
-  - name: [[$receiver.Type]]_[[$receiver.Name]]
-    slack_configs:
-      - channel: '[[index $receiver.Configurations "channel_name"]]'
-        http_config:
-          bearer_token: '[[index $receiver.Configurations "token"]]'
-        icon_emoji: ':eagle:'
-        link_names: false
-        send_resolved: true
-        color: '{{ template "slack.color" . }}'
-        title: ''
-        pretext: '{{template "slack.pretext" . }}'
-        text: '{{ template "slack.body" . }}'
-        actions:
-          - type: button
-            text: 'Runbook :books:'
-            url: '{{template "slack.runbook" . }}'
-          - type: button
-            text: 'Dashboard :bar_chart:'
-            url: '{{template "slack.dashboard" . }}'
-[[- end -]]
-[[- if eq $receiver.Type "pagerduty"]]
-  - name: [[$receiver.Type]]_[[$receiver.Name]]
-    pagerduty_configs:
-      - service_key: '[[index $receiver.Configurations "service_key"]]'
-[[- end -]]
-[[- if eq $receiver.Type "http"]]
-  - name: [[$receiver.Type]]_[[$receiver.Name]]
     webhook_configs:
-      - url: '[[index $receiver.Configurations "url"]]'
-[[- end -]]
-[[- end]]
+      - url: '[[.WebhookURL]]'
 route:
+  receiver: default
   group_by:
     - alertname
     - severity
@@ -47,18 +17,6 @@ route:
     - service_name
     - time_stamp
     - identifier
-  group_wait: 30s
+  group_wait: [[.GroupWaitDuration]]
   group_interval: 30m
   repeat_interval: 4h
-  receiver: default
-  routes:
-  [[- range $key, $receiver := .Receivers]]
-    - receiver: [[$receiver.Type]]_[[$receiver.Name]]
-    [[- if gt (len $receiver.Match) 0 ]]
-      match:
-      [[- range $key, $value := $receiver.Match ]]
-        [[ $key ]]: [[ $value ]]
-      [[- end]]
-    [[- end ]]
-      continue: true
-  [[- end -]]

@@ -7,7 +7,7 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname AlertRepository --filename alert_repository.go --output=./mocks
 type Repository interface {
-	Create(context.Context, *Alert) (*Alert, error)
+	Create(context.Context, *Alert) error
 	List(context.Context, Filter) ([]Alert, error)
 }
 
@@ -22,4 +22,13 @@ type Alert struct {
 	TriggeredAt  time.Time `json:"triggered_at"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
+
+	// These fields won't be stored in the DB
+	// these are additional information for notification purposes
+	GroupKey     string
+	Status       string
+	Annotations  map[string]string
+	Labels       map[string]string
+	GeneratorURL string
+	Fingerprint  string
 }

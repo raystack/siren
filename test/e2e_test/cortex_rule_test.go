@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/internal/server"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
@@ -37,18 +38,21 @@ func (s *CortexRuleTestSuite) SetupTest() {
 		},
 	}
 
+	defaults.SetDefaults(s.appConfig)
+
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
 
-	// override address to use ruler (all)
-	s.appConfig.Cortex.Address = fmt.Sprintf("http://%s", s.testBench.CortexAllHost)
+	// TODO host.docker.internal only works for docker-desktop to call a service in host (siren)
+	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://host.docker.internal:%d/v1beta1/alerts/cortex", apiPort)
+	s.appConfig.Providers.Cortex.GroupWaitDuration = "1s"
 	StartSiren(*s.appConfig)
 
 	ctx := context.Background()
 	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
 	s.Require().NoError(err)
 
-	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.appConfig.Cortex.Address)
+	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.testBench.NginxHost)
 }
 
 func (s *CortexRuleTestSuite) TearDownTest() {
@@ -70,7 +74,7 @@ func (s *CortexRuleTestSuite) TestRules() {
 		err = uploadRule(ctx, s.client, "testdata/cortex/rule-sample-scenario-1.yaml")
 		s.Require().NoError(err)
 
-		bodyBytes, err := fetchCortexRules(s.testBench.CortexAllHost)
+		bodyBytes, err := fetchCortexRules(s.testBench.NginxHost, "fake")
 		s.Require().NoError(err)
 		expectedScenarioCortexRule, err := os.ReadFile("testdata/cortex/expected-cortexrule-scenario-1.yaml")
 		s.Require().NoError(err)
@@ -82,7 +86,7 @@ func (s *CortexRuleTestSuite) TestRules() {
 		err := uploadRule(ctx, s.client, "testdata/cortex/rule-sample-scenario-2.yaml")
 		s.Require().NoError(err)
 
-		bodyBytes, err := fetchCortexRules(s.testBench.CortexAllHost)
+		bodyBytes, err := fetchCortexRules(s.testBench.NginxHost, "fake")
 		s.Require().NoError(err)
 		expectedScenarioCortexRule, err := os.ReadFile("testdata/cortex/expected-cortexrule-scenario-2.yaml")
 		s.Require().NoError(err)

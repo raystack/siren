@@ -24,26 +24,17 @@ func (_m *AlertRepository) EXPECT() *AlertRepository_Expecter {
 }
 
 // Create provides a mock function with given fields: _a0, _a1
-func (_m *AlertRepository) Create(_a0 context.Context, _a1 *alert.Alert) (*alert.Alert, error) {
+func (_m *AlertRepository) Create(_a0 context.Context, _a1 *alert.Alert) error {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *alert.Alert
-	if rf, ok := ret.Get(0).(func(context.Context, *alert.Alert) *alert.Alert); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *alert.Alert) error); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*alert.Alert)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *alert.Alert) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // AlertRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
@@ -65,8 +56,8 @@ func (_c *AlertRepository_Create_Call) Run(run func(_a0 context.Context, _a1 *al
 	return _c
 }
 
-func (_c *AlertRepository_Create_Call) Return(_a0 *alert.Alert, _a1 error) *AlertRepository_Create_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *AlertRepository_Create_Call) Return(_a0 error) *AlertRepository_Create_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 

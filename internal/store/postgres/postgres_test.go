@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -18,6 +16,7 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 )
 
 const (
@@ -28,7 +27,7 @@ const (
 
 var (
 	dbConfig = db.Config{
-		Driver:          "pgx",
+		Driver:          "postgres",
 		MaxIdleConns:    10,
 		MaxOpenConns:    10,
 		ConnMaxLifeTime: 1000,
@@ -158,31 +157,28 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 	return insertedData, nil
 }
 
-func bootstrapAlert(client *postgres.Client) ([]alert.Alert, error) {
+func bootstrapAlert(client *postgres.Client) error {
 	filePath := "./testdata/mock-alert.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var data []alert.Alert
 	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
-		return nil, err
+		return err
 	}
 
 	repo := postgres.NewAlertRepository(client)
 
-	var insertedData []alert.Alert
 	for _, d := range data {
-		alrt, err := repo.Create(context.Background(), &d)
+		err := repo.Create(context.Background(), &d)
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		insertedData = append(insertedData, *alrt)
 	}
 
-	return insertedData, nil
+	return nil
 }
 
 func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {

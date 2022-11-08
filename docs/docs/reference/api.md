@@ -28,17 +28,16 @@ list alerts
 | 200 | A successful response. | [ListAlertsResponse](#listalertsresponse) |
 | default | An unexpected error response. | [Status](#status) |
 
-### /v1beta1/alerts/cortex/{provider_id}
-
 #### POST
 ##### Summary
 
-create cortex alerts
+create alerts
 
 ##### Parameters
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
+| provider_type | path |  | Yes | string |
 | provider_id | path |  | Yes | string (uint64) |
 | body | body |  | Yes | object |
 
@@ -46,7 +45,7 @@ create cortex alerts
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
-| 200 | A successful response. | [CreateCortexAlertsResponse](#createcortexalertsresponse) |
+| 200 | A successful response. | [CreateAlertsResponse](#createalertsresponse) |
 | default | An unexpected error response. | [Status](#status) |
 
 ### /v1beta1/namespaces
@@ -593,19 +592,7 @@ render a template
 | ---- | ---- | ----------- | -------- |
 | @type | string |  | No |
 
-#### CortexAlert
-
-| Name | Type | Description | Required |
-| ---- | ---- | ----------- | -------- |
-| annotations | object |  | No |
-| ends_at | dateTime |  | No |
-| fingerprint | string |  | No |
-| generator_url | string |  | No |
-| labels | object |  | No |
-| starts_at | dateTime |  | No |
-| status | string |  | No |
-
-#### CreateCortexAlertsResponse
+#### CreateAlertsResponse
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |

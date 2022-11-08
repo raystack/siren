@@ -41,6 +41,7 @@ func New() *cobra.Command {
 	rootCmd.AddCommand(receiversCmd(cmdxConfig))
 	rootCmd.AddCommand(templatesCmd(cmdxConfig))
 	rootCmd.AddCommand(rulesCmd(cmdxConfig))
+	rootCmd.AddCommand(subscriptionsCmd(cmdxConfig))
 	rootCmd.AddCommand(alertsCmd(cmdxConfig))
 	rootCmd.AddCommand(jobCmd(cmdxConfig))
 	rootCmd.AddCommand(workerCmd())

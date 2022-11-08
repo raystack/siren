@@ -40,7 +40,7 @@ type SirenServiceClient interface {
 	UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*UpdateReceiverResponse, error)
 	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error)
 	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*ListAlertsResponse, error)
-	CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*CreateCortexAlertsResponse, error)
+	CreateAlerts(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error)
 	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*UpdateRuleResponse, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error)
@@ -256,9 +256,9 @@ func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsReque
 	return out, nil
 }
 
-func (c *sirenServiceClient) CreateCortexAlerts(ctx context.Context, in *CreateCortexAlertsRequest, opts ...grpc.CallOption) (*CreateCortexAlertsResponse, error) {
-	out := new(CreateCortexAlertsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateCortexAlerts", in, out, opts...)
+func (c *sirenServiceClient) CreateAlerts(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error) {
+	out := new(CreateAlertsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ type SirenServiceServer interface {
 	UpdateReceiver(context.Context, *UpdateReceiverRequest) (*UpdateReceiverResponse, error)
 	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error)
 	ListAlerts(context.Context, *ListAlertsRequest) (*ListAlertsResponse, error)
-	CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*CreateCortexAlertsResponse, error)
+	CreateAlerts(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error)
 	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*UpdateRuleResponse, error)
 	ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error)
@@ -435,8 +435,8 @@ func (UnimplementedSirenServiceServer) DeleteReceiver(context.Context, *DeleteRe
 func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRequest) (*ListAlertsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAlerts not implemented")
 }
-func (UnimplementedSirenServiceServer) CreateCortexAlerts(context.Context, *CreateCortexAlertsRequest) (*CreateCortexAlertsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCortexAlerts not implemented")
+func (UnimplementedSirenServiceServer) CreateAlerts(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAlerts not implemented")
 }
 func (UnimplementedSirenServiceServer) ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRules not implemented")
@@ -868,20 +868,20 @@ func _SirenService_ListAlerts_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SirenService_CreateCortexAlerts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCortexAlertsRequest)
+func _SirenService_CreateAlerts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAlertsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SirenServiceServer).CreateCortexAlerts(ctx, in)
+		return srv.(SirenServiceServer).CreateAlerts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateCortexAlerts",
+		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateAlerts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SirenServiceServer).CreateCortexAlerts(ctx, req.(*CreateCortexAlertsRequest))
+		return srv.(SirenServiceServer).CreateAlerts(ctx, req.(*CreateAlertsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1108,8 +1108,8 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SirenService_ListAlerts_Handler,
 		},
 		{
-			MethodName: "CreateCortexAlerts",
-			Handler:    _SirenService_CreateCortexAlerts_Handler,
+			MethodName: "CreateAlerts",
+			Handler:    _SirenService_CreateAlerts_Handler,
 		},
 		{
 			MethodName: "ListRules",

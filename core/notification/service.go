@@ -61,17 +61,17 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 		return err
 	}
 
-	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
-	if err != nil {
-		return err
-	}
-
 	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	newConfigs, err := notifierPlugin.PreHookTransformConfigs(ctx, message.Configs)
+	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
+	if err != nil {
+		return err
+	}
+
+	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 	if err != nil {
 		return err
 	}
@@ -102,17 +102,17 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 
 	for _, s := range subscriptions {
 		for _, rcv := range s.Receivers {
-			message, err := n.ToMessage(rcv.Type, rcv.Configuration)
-			if err != nil {
-				return err
-			}
-
 			notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 			if err != nil {
 				return err
 			}
 
-			newConfigs, err := notifierPlugin.PreHookTransformConfigs(ctx, message.Configs)
+			message, err := n.ToMessage(rcv.Type, rcv.Configuration)
+			if err != nil {
+				return err
+			}
+
+			newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 			if err != nil {
 				return err
 			}
@@ -126,7 +126,7 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 				var templateBody string
 
 				if template.IsReservedName(n.Template) {
-					templateBody = notifierPlugin.DefaultTemplateOfProvider(n.Template)
+					templateBody = notifierPlugin.GetSystemDefaultTemplate()
 				}
 
 				if templateBody != "" {

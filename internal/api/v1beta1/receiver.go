@@ -2,11 +2,14 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/secret"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,7 +23,7 @@ func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListRece
 
 	items := []*sirenv1beta1.Receiver{}
 	for _, rcv := range receivers {
-		configurations, err := structpb.NewStruct(rcv.Configurations)
+		configurations, err := structpb.NewStruct(sanitizeConfigMap(rcv.Configurations))
 		if err != nil {
 			return nil, s.generateRPCErr(err)
 		}
@@ -74,7 +77,7 @@ func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetRecei
 		return nil, s.generateRPCErr(err)
 	}
 
-	configuration, err := structpb.NewStruct(rcv.Configurations)
+	configuration, err := structpb.NewStruct(sanitizeConfigMap(rcv.Configurations))
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -139,4 +142,18 @@ func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.Notif
 	}
 
 	return &sirenv1beta1.NotifyReceiverResponse{}, nil
+}
+
+// sanitizeConfigMap does all sanitization to present receiver configurations to the user
+func sanitizeConfigMap(receiverConfigMap map[string]interface{}) map[string]interface{} {
+	var newConfigMap = make(map[string]interface{})
+	for k, v := range receiverConfigMap {
+		// sanitize maskable string. convert `secret.MaskableString` to string to be compatible with structpb
+		if reflect.TypeOf(v) == reflect.TypeOf(secret.MaskableString("")) {
+			newConfigMap[k] = fmt.Sprintf("%v", v)
+		} else {
+			newConfigMap[k] = v
+		}
+	}
+	return newConfigMap
 }

@@ -251,3 +251,4 @@ siren template upload cpu_template.yaml
 
 1. It's suggested to always provide default value for the templated variables.
 2. Updating a template used by rules via CLI will update all associated rules.
+

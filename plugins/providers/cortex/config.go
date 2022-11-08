@@ -9,7 +9,12 @@ var (
 	ConfigYamlString string
 )
 
-// Config is a cortex provider config
-type Config struct {
-	Address string `mapstructure:"address" default:"http://localhost:9009"`
+type AppConfig struct {
+	GroupWaitDuration string `mapstructure:"group_wait" yaml:"group_wait" default:"30s"`
+	WebhookBaseAPI    string `mapstructure:"webhook_base_api" yaml:"webhook_base_api" default:"http://localhost:8080/v1beta1/alerts/cortex"`
+}
+
+type TemplateConfig struct {
+	GroupWaitDuration string
+	WebhookURL        string
 }

@@ -165,7 +165,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		dlq = inmemory.New(logger, 10)
 	}
 
-	apiDeps, _, _, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, queue)
+	apiDeps, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, queue)
 	if err != nil {
 		return err
 	}

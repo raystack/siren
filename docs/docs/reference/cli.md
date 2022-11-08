@@ -229,6 +229,43 @@ Start server on default port 8080
 -c, --config string   Config file path (default "config.yaml")
 ````
 
+## `siren subscription`
+
+Manage subscriptions
+
+### `siren subscription create [flags]`
+
+Create a new subscription
+
+```
+-f, --file string   path to the subscription config
+````
+
+### `siren subscription delete`
+
+Delete a subscription details
+
+### `siren subscription edit [flags]`
+
+Edit a subscription
+
+```
+-f, --file string   Path to the subscription config
+    --id uint       subscription id
+````
+
+### `siren subscription list`
+
+List subscriptions
+
+### `siren subscription view [flags]`
+
+View a subscription details
+
+```
+--format string   Print output with the selected format (default "yaml")
+````
+
 ## `siren template`
 
 Manage templates

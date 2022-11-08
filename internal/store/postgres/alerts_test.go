@@ -8,10 +8,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -28,8 +29,8 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	dpg, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithDetail(
+	dpg, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
 	)
@@ -63,8 +64,7 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 
 func (s *AlertsRepositoryTestSuite) SetupTest() {
 	var err error
-	_, err = bootstrapAlert(s.client)
-	if err != nil {
+	if err = bootstrapAlert(s.client); err != nil {
 		s.T().Fatal(err)
 	}
 }
@@ -195,14 +195,11 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Create(s.ctx, tc.AlertToCreate)
+			err := s.repository.Create(s.ctx, tc.AlertToCreate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
-			}
-			if tc.ExpectedID != 0 && (got.ID != tc.ExpectedID) {
-				s.T().Fatalf("got result %+v, expected was %+v", got.ID, tc.ExpectedID)
 			}
 		})
 	}

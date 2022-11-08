@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/odpf/siren/core/namespace"
@@ -89,7 +90,7 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 	nsModel.FromDomain(*ns)
 
 	var createdNamespace model.Namespace
-	if err := r.client.db.QueryRowxContext(ctx, namespaceInsertQuery,
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, namespaceInsertQuery,
 		nsModel.ProviderID,
 		nsModel.URN,
 		nsModel.Name,
@@ -118,7 +119,7 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 	}
 
 	var nsDetailModel model.NamespaceDetail
-	if err := r.client.db.GetContext(ctx, &nsDetailModel, query, args...); err != nil {
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(&nsDetailModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, namespace.NotFoundError{ID: id}
 		}
@@ -137,7 +138,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 	namespaceModel.FromDomain(*ns)
 
 	var updatedNamespace model.Namespace
-	if err := r.client.db.QueryRowxContext(ctx, namespaceUpdateQuery,
+	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, namespaceUpdateQuery,
 		namespaceModel.ID,
 		namespaceModel.ProviderID,
 		namespaceModel.URN,
@@ -164,8 +165,25 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 }
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.db.ExecContext(ctx, namespaceDeleteQuery, id); err != nil {
+	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, namespaceDeleteQuery, id)
+	if err != nil {
 		return err
 	}
+	rows.Close()
 	return nil
+}
+
+func (r *NamespaceRepository) WithTransaction(ctx context.Context) context.Context {
+	return r.client.WithTransaction(ctx, nil)
+}
+
+func (r *NamespaceRepository) Rollback(ctx context.Context, err error) error {
+	if txErr := r.client.Rollback(ctx); txErr != nil {
+		return fmt.Errorf("rollback error %s with error: %w", txErr.Error(), err)
+	}
+	return nil
+}
+
+func (r *NamespaceRepository) Commit(ctx context.Context) error {
+	return r.client.Commit(ctx)
 }

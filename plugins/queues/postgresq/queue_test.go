@@ -9,12 +9,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/plugins/queues/postgresq"
 	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -38,8 +39,8 @@ func (s *QueueTestSuite) SetupSuite() {
 	)
 
 	s.logger = log.NewZap()
-	dpg, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithDetail(
+	dpg, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
 	)

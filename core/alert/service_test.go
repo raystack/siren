@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/alert/mocks"
 	"github.com/odpf/siren/pkg/errors"
@@ -17,7 +18,7 @@ func TestService_Get(t *testing.T) {
 
 	t.Run("should call repository List method with proper arguments and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
+		dummyService := alert.NewService(repositoryMock, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
@@ -44,7 +45,7 @@ func TestService_Get(t *testing.T) {
 
 	t.Run("should call repository List method with proper arguments if endtime is zero", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
+		dummyService := alert.NewService(repositoryMock, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
@@ -66,7 +67,7 @@ func TestService_Get(t *testing.T) {
 
 	t.Run("should call repository List method and handle errors", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
+		dummyService := alert.NewService(repositoryMock, nil)
 		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).
 			Return(nil, errors.New("random error"))
 		actualAlerts, err := dummyService.List(ctx, alert.Filter{
@@ -81,47 +82,112 @@ func TestService_Get(t *testing.T) {
 }
 
 func TestService_Create(t *testing.T) {
-	ctx := context.TODO()
-	timenow := time.Now()
-
-	t.Run("should call repository Create method with proper arguments ", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
-		alertsToBeCreated := []*alert.Alert{
-			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
-				Rule: "lagHigh", TriggeredAt: timenow},
+	var (
+		ctx               = context.TODO()
+		timenow           = time.Now()
+		testType          = "test"
+		alertsToBeCreated = map[string]interface{}{
+			"alerts": []map[string]interface{}{
+				{
+					"annotations": map[string]interface{}{
+						"metricName":  "bar",
+						"metricValue": "30",
+						"resource":    "foo",
+						"template":    "random",
+					},
+					"labels": map[string]interface{}{
+						"severity": "foo",
+					},
+					"startsAt": timenow.String(),
+					"status":   "foo",
+				},
+			},
 		}
+	)
 
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(alertsToBeCreated[0], nil)
-		actualAlerts, err := dummyService.Create(ctx, alertsToBeCreated)
-		assert.Nil(t, err)
-		assert.NotEmpty(t, actualAlerts)
-		repositoryMock.AssertNumberOfCalls(t, "Create", 1)
-	})
+	var testCases = []struct {
+		name              string
+		setup             func(*mocks.AlertRepository, *mocks.AlertTransformer)
+		alertsToBeCreated map[string]interface{}
+		expectedAlerts    []*alert.Alert
+		expectedFiringLen int
+		wantErr           bool
+	}{
+		{
+			name: "should return error if TransformToAlerts return error",
+			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return(nil, 0, errors.New("some error"))
+			},
+			alertsToBeCreated: alertsToBeCreated,
+			wantErr:           true,
+		},
+		{
+			name: "should call repository Create method with proper arguments",
+			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+						Rule: "lagHigh", TriggeredAt: timenow},
+				}, 1, nil)
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*alert.Alert")).Return(nil)
+			},
+			alertsToBeCreated: alertsToBeCreated,
+			expectedFiringLen: 1,
+			expectedAlerts: []*alert.Alert{
+				{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+					Rule: "lagHigh", TriggeredAt: timenow},
+			},
+		},
+		{
+			name: "should return error not found if repository return err relation",
+			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+						Rule: "lagHigh", TriggeredAt: timenow},
+				}, 1, nil)
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(alert.ErrRelation)
+			},
+			alertsToBeCreated: alertsToBeCreated,
+			wantErr:           true,
+		},
+		{
+			name: "should handle errors from repository",
+			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+						Rule: "lagHigh", TriggeredAt: timenow},
+				}, 1, nil)
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(errors.New("random error"))
+			},
+			alertsToBeCreated: alertsToBeCreated,
+			wantErr:           true,
+		},
+	}
 
-	t.Run("should return error not found if repository return err relation", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
-		alertsToBeCreated := []*alert.Alert{
-			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
-				Rule: "lagHigh", TriggeredAt: timenow},
-		}
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, alert.ErrRelation)
-		actualAlerts, err := dummyService.Create(ctx, alertsToBeCreated)
-		assert.EqualError(t, err, "provider id does not exist")
-		assert.Nil(t, actualAlerts)
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				repositoryMock       = &mocks.AlertRepository{}
+				alertTransformerMock = &mocks.AlertTransformer{}
+			)
 
-	t.Run("should handle errors from repository", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock)
-		alertsToBeCreated := []*alert.Alert{
-			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
-				Rule: "lagHigh", TriggeredAt: timenow},
-		}
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(nil, errors.New("random error"))
-		actualAlerts, err := dummyService.Create(ctx, alertsToBeCreated)
-		assert.EqualError(t, err, "random error")
-		assert.Nil(t, actualAlerts)
-	})
+			if tc.setup != nil {
+				tc.setup(repositoryMock, alertTransformerMock)
+			}
+
+			svc := alert.NewService(repositoryMock, map[string]alert.AlertTransformer{
+				testType: alertTransformerMock,
+			})
+			actualAlerts, firingLen, err := svc.CreateAlerts(ctx, testType, 1, tc.alertsToBeCreated)
+			if tc.wantErr {
+				if err == nil {
+					t.Error("error should not be nil")
+				}
+			} else {
+				if diff := cmp.Diff(actualAlerts, tc.expectedAlerts); diff != "" {
+					t.Errorf("result not equal, diff are %+v", diff)
+				}
+				assert.Equal(t, tc.expectedFiringLen, firingLen)
+			}
+		})
+	}
 }

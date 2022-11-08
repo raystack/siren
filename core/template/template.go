@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ReservedName_DefaultCortex = "system-default-cortex"
+	ReservedName_SystemDefault = "system-default"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname TemplateRepository --filename template_repository.go --output=./mocks
@@ -35,5 +35,5 @@ type Template struct {
 }
 
 func IsReservedName(templateName string) bool {
-	return (templateName == ReservedName_DefaultCortex)
+	return (templateName == ReservedName_SystemDefault)
 }

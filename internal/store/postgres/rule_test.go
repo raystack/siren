@@ -7,10 +7,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -27,8 +28,8 @@ func (s *RuleRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	dpg, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithDetail(
+	dpg, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
 	)

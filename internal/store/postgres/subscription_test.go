@@ -7,10 +7,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertest"
+	"github.com/odpf/salt/dockertestx"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -27,8 +28,8 @@ func (s *SubscriptionRepositoryTestSuite) SetupSuite() {
 	var err error
 
 	logger := log.NewZap()
-	dpg, err := dockertest.CreatePostgres(
-		dockertest.PostgresWithDetail(
+	dpg, err := dockertestx.CreatePostgres(
+		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
 	)
@@ -491,74 +492,6 @@ func (s *SubscriptionRepositoryTestSuite) TestDelete() {
 			}
 		})
 	}
-}
-
-func (s *SubscriptionRepositoryTestSuite) TestTransaction() {
-	s.Run("successfully commit transaction", func() {
-		ctx := s.repository.WithTransaction(context.Background())
-		err := s.repository.Create(ctx, &subscription.Subscription{
-			Namespace: 2,
-			URN:       "foo-commit",
-			Match: map[string]string{
-				"foo": "bar",
-			},
-			Receivers: []subscription.Receiver{
-				{
-					ID:            2,
-					Configuration: map[string]interface{}{},
-				},
-				{
-					ID: 1,
-					Configuration: map[string]interface{}{
-						"channel_name": "test",
-					},
-				},
-			},
-		})
-		s.NoError(err)
-
-		err = s.repository.Commit(ctx)
-		s.NoError(err)
-
-		fetchedRules, err := s.repository.List(s.ctx, subscription.Filter{
-			NamespaceID: 2,
-		})
-		s.NoError(err)
-		s.Len(fetchedRules, 3)
-	})
-
-	s.Run("successfully rollback transaction", func() {
-		ctx := s.repository.WithTransaction(context.Background())
-		err := s.repository.Create(ctx, &subscription.Subscription{
-			Namespace: 2,
-			URN:       "foo-rollback",
-			Match: map[string]string{
-				"foo": "bar",
-			},
-			Receivers: []subscription.Receiver{
-				{
-					ID:            2,
-					Configuration: map[string]interface{}{},
-				},
-				{
-					ID: 1,
-					Configuration: map[string]interface{}{
-						"channel_name": "test",
-					},
-				},
-			},
-		})
-		s.NoError(err)
-
-		err = s.repository.Rollback(ctx, nil)
-		s.NoError(err)
-
-		fetchedRules, err := s.repository.List(s.ctx, subscription.Filter{
-			NamespaceID: 2,
-		})
-		s.NoError(err)
-		s.Len(fetchedRules, 3)
-	})
 }
 
 func TestSubscriptionRepository(t *testing.T) {

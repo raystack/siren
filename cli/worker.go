@@ -95,7 +95,7 @@ func workerStartNotificationHandlerCommand() *cobra.Command {
 				return fmt.Errorf("cannot initialize encryptor: %w", err)
 			}
 
-			_, _, _, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
+			_, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
 			if err != nil {
 				return err
 			}
@@ -171,7 +171,7 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 				return fmt.Errorf("cannot initialize encryptor: %w", err)
 			}
 
-			_, _, _, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
+			_, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
 			if err != nil {
 				return err
 			}

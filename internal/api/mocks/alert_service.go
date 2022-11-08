@@ -23,50 +23,59 @@ func (_m *AlertService) EXPECT() *AlertService_Expecter {
 	return &AlertService_Expecter{mock: &_m.Mock}
 }
 
-// Create provides a mock function with given fields: _a0, _a1
-func (_m *AlertService) Create(_a0 context.Context, _a1 []*alert.Alert) ([]alert.Alert, error) {
-	ret := _m.Called(_a0, _a1)
+// CreateAlerts provides a mock function with given fields: ctx, providerType, providerID, body
+func (_m *AlertService) CreateAlerts(ctx context.Context, providerType string, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
+	ret := _m.Called(ctx, providerType, providerID, body)
 
-	var r0 []alert.Alert
-	if rf, ok := ret.Get(0).(func(context.Context, []*alert.Alert) []alert.Alert); ok {
-		r0 = rf(_a0, _a1)
+	var r0 []*alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, map[string]interface{}) []*alert.Alert); ok {
+		r0 = rf(ctx, providerType, providerID, body)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]alert.Alert)
+			r0 = ret.Get(0).([]*alert.Alert)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, []*alert.Alert) error); ok {
-		r1 = rf(_a0, _a1)
+	var r1 int
+	if rf, ok := ret.Get(1).(func(context.Context, string, uint64, map[string]interface{}) int); ok {
+		r1 = rf(ctx, providerType, providerID, body)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(int)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, string, uint64, map[string]interface{}) error); ok {
+		r2 = rf(ctx, providerType, providerID, body)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
-// AlertService_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
-type AlertService_Create_Call struct {
+// AlertService_CreateAlerts_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateAlerts'
+type AlertService_CreateAlerts_Call struct {
 	*mock.Call
 }
 
-// Create is a helper method to define mock.On call
-//  - _a0 context.Context
-//  - _a1 []*alert.Alert
-func (_e *AlertService_Expecter) Create(_a0 interface{}, _a1 interface{}) *AlertService_Create_Call {
-	return &AlertService_Create_Call{Call: _e.mock.On("Create", _a0, _a1)}
+// CreateAlerts is a helper method to define mock.On call
+//  - ctx context.Context
+//  - providerType string
+//  - providerID uint64
+//  - body map[string]interface{}
+func (_e *AlertService_Expecter) CreateAlerts(ctx interface{}, providerType interface{}, providerID interface{}, body interface{}) *AlertService_CreateAlerts_Call {
+	return &AlertService_CreateAlerts_Call{Call: _e.mock.On("CreateAlerts", ctx, providerType, providerID, body)}
 }
 
-func (_c *AlertService_Create_Call) Run(run func(_a0 context.Context, _a1 []*alert.Alert)) *AlertService_Create_Call {
+func (_c *AlertService_CreateAlerts_Call) Run(run func(ctx context.Context, providerType string, providerID uint64, body map[string]interface{})) *AlertService_CreateAlerts_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]*alert.Alert))
+		run(args[0].(context.Context), args[1].(string), args[2].(uint64), args[3].(map[string]interface{}))
 	})
 	return _c
 }
 
-func (_c *AlertService_Create_Call) Return(_a0 []alert.Alert, _a1 error) *AlertService_Create_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *AlertService_CreateAlerts_Call) Return(_a0 []*alert.Alert, _a1 int, _a2 error) *AlertService_CreateAlerts_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 

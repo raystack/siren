@@ -5,9 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgerrcode"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/internal/store/postgres/migrations"
@@ -40,15 +39,15 @@ func NewClient(logger log.Logger, dbc *db.Client) (*Client, error) {
 }
 
 func checkPostgresError(err error) error {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		switch pgErr.Code {
-		case pgerrcode.UniqueViolation:
-			return fmt.Errorf("%w [%s]", errDuplicateKey, pgErr.Detail)
-		case pgerrcode.CheckViolation:
-			return fmt.Errorf("%w [%s]", errCheckViolation, pgErr.Detail)
-		case pgerrcode.ForeignKeyViolation:
-			return fmt.Errorf("%w [%s]", errForeignKeyViolation, pgErr.Detail)
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		switch pqErr.Code.Name() {
+		case "unique_violation":
+			return fmt.Errorf("%w [%s]", errDuplicateKey, pqErr.Detail)
+		case "check_violation":
+			return fmt.Errorf("%w [%s]", errCheckViolation, pqErr.Detail)
+		case "foreign_key_violation":
+			return fmt.Errorf("%w [%s]", errForeignKeyViolation, pqErr.Detail)
 		}
 	}
 	return err
