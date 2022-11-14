@@ -18,23 +18,11 @@ As mentioned previously, we will be using [CortexMetrics](https://cortexmetrics.
 
 To create a new provider with CLI, we need to create a `yaml` file that contains provider detail.
 
-```yaml
-# provider.yaml
+```yaml title=provider.yaml
 host: http://localhost:9009
 urn: localhost-dev-cortex
 name: dev-cortex
 type: cortex
-```
-
-If you are in unix system, you could do this
-
-```bash
-cat <<EOT >> provider.yaml
-host: http://localhost:9009
-urn: localhost-dev-cortex
-name: dev-cortex
-type: cortex
-EOT
 ```
 
 Once the file is ready, we can create the provider with Siren CLI.
@@ -74,22 +62,18 @@ The `id` we got from the provider creation is important to create a namespace la
 
 For multi-tenancy scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
 
-```bash
-cat <<EOT >> ns1.yaml
+```bash  title=ns1.yaml
 urn: odpf-ns
 name: odpf-ns
 provider:
     id: 1
-EOT
 ```
 
-```bash
-cat <<EOT >> ns2.yaml
+```bash  title=ns2.yaml
 urn: non-odpf-ns
 name: non-odpf-ns
 provider:
     id: 1
-EOT
 ```
 
 <Tabs groupId="api">
@@ -204,8 +188,7 @@ For details on a namespace, try: siren namespace view <id>
 Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. With `file` receiver, all published notifications will be written to a file. Let's create a receivers `file` using Siren CLI.
 
 Prepare receiver detail and register the receiver with Siren CLI.
-```bash
-cat <<EOT >> receiver_2.yaml
+```bash  title=receiver_2.yaml
 name: file-sink-2
 type: file
 labels:
@@ -213,7 +196,6 @@ labels:
     key2: value2
 configurations:
     url: ./out-file-sink2.json
-EOT
 ```
 
 <Tabs groupId="api">
@@ -258,7 +240,7 @@ In this part we will create alerting rules for our Cortex monitoring provider. R
 ### Creating a Rule's Template
 
 We will create a rule's template to monitor CPU usage. 
-```yaml
+```yaml  title=cpu_template.yaml
 apiVersion: v2
 type: template
 name: CPU
@@ -333,7 +315,7 @@ For details on a template, try: siren template view <name>
 ### Creating a Rule
 
 Now we already have a `CPU` template, we can create a rule based on that template. Let's prepare a rule and save it in a file called `cpu_test.yaml`.
-```yaml
+```yaml  title=cpu_test.yaml
 apiVersion: v2
 type: rule
 namespace: odpf
@@ -421,8 +403,7 @@ resource_name: some-resource
 We want to subscribe all notifications owned by `odpf` team and has severity `WARNING` regardless the service name and route the notification to `file` with receiver id `2` (the one that we created in the [previous](#22-register-a-receiver) part).
 
 Prepare a subscription detail and create a new subscription with Siren CLI.
-```bash
-cat <<EOT >> cpu_subs.yaml
+```bash  title=cpu_subs.yaml
 urn: subscribe-cpu-odpf-warning
 namespace: 1
 receivers:
@@ -431,7 +412,6 @@ receivers:
 match
   team: odpf
   severity: WARNING
-EOT
 ```
 
 <Tabs groupId="api">

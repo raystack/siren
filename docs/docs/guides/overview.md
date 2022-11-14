@@ -1,37 +1,10 @@
-# Usage
+# Overview
 
 The following topics will describe how to use Siren.
 
-## CLI Interface
-
-```text
-Siren provides alerting on metrics of your applications using Cortex metrics
-in a simple DIY configuration. With Siren, you can define templates(using go templates), and
-create/edit/enable/disable prometheus rules on demand.
-
-Available Commands:
-  alert          Manage alerts
-  completion     Generate shell completion scripts
-  config         Manage siren CLI configuration
-  help           Help about any command
-  job            Manage siren jobs
-  namespace      Manage namespaces
-  provider       Manage providers
-  receiver       Manage receivers
-  rule           Manage rules
-  server         Run siren server
-  template       Manage templates
-  worker         Start or manage Siren's workers
-```
-
 ## Managing providers and multi-tenancy
 
-Siren can be used to define alerting rules inside monitoring `providers`. List of supported
-providers:
-
-- [CortexMetrics](http://cortexmetrics.io).
-
-Support for other providers is on the roadmap, feel free to contribute. Siren also respects the multi-tenancy provided by various monitoring providers using `namespaces`. A `namespace` represents a tenant inside your provider. Learn in more detail [here](./provider_and_namespace.md).
+Siren can be used to define alerting rules inside monitoring `provider`. List of supported providers are [here](/docs/docs/concepts/plugin.md#provider-plugin). Support for other providers is on the roadmap, feel free to [contribute](/docs/docs/extend/adding_new_provider.md). Siren also respects the multi-tenancy provided by various monitoring providers using [namespace](./provider_and_namespace.md#namespace). A `namespace` represents a tenant inside a provider. Learn in more detail [here](./provider_and_namespace.md).
 
 ## Managing Templates
 
@@ -39,23 +12,23 @@ Siren templates are abstraction to make data definition reusable (e.g. Prometheu
 
 ## Managing Rules
 
-Siren rules are defined using a template by providing value for the variables defined inside that template. Learn in more details [here](./rule.md)
+Siren rules are defined using a template by providing value for the variables defined inside that template. Learn in more details [here](./rule.md).
 
 ## Managing bulk rules and templates
 
-For org wide use cases, where teams need to manage multiple templates and rules Siren CLI can be highly useful. Think GitOps but for alerting. Learn in More detail [here](./rule.md#bulk-rule-management)
+For org wide use cases, where teams need to manage multiple templates and rules Siren CLI can be highly useful. Think GitOps but for alerting. Learn in more detail [here](./rule.md#bulk-rule-management).
 
-## Notifications
+## Alerts Subscription
 
-Siren capables to send notifications which could route a notification into a specific channel defined by a [receiver](./receiver.md). Siren uses key-value label matching for routing. There are two kind of notification route method, `direct notification to receiver` and `subscription-based notification`.
+Siren capables to subscribe to an alert and route notifications to the registered receivers in a subscription. Siren uses key-value label matching for routing. For each alerts coming to Siren's webhook, a notification will be generated and routed to specific [receivers](./receiver.md) based on the [subscriptions](./subscription.md).
 
-- **Direct Notification to Receiver:** Siren provides a way to the user to send direct notification to a supported receiver by calling an API `/receivers/{receiver_id}/notify` with a specific payload message.
+## Sending On-demand Notifications
 
-- **Subscription-based Notification:** The subscription-based notification is currently only works for triggered alerts. For each alerts coming to Siren's webhook, a notification will be generated and routed to specific [receivers](./receiver.md) based on the [subscriptions](./subscription.md).
+Siren provides a way to the user to send direct notification to a supported [receiver](./receiver.md) by calling an API `/receivers/{receiver_id}/send` with a custom payload message.
 
 ## Receivers
 
-Receivers represent a notification medium e.g. Slack, PagerDuty, HTTP, which can be used to define routing configuration in Siren to control the behaviour of how the notifications are notified. You can use receivers to send notifications on demand as well as on certain matching conditions. Learn in more detail [here](./receiver.md).
+Receivers represent a notification medium e.g. Slack, PagerDuty, HTTP, which can be used in a [subscription](./subscription.md) to define notification routing configuration in Siren. You can use receivers to send notifications on demand as well as on certain matching conditions. Learn in more detail [here](./receiver.md).
 
 ## Subscriptions
 
@@ -63,7 +36,7 @@ Siren can be used to route your notifications (non-alerts or alerts notification
 
 ## Alert History Subscription
 
-Siren expect `provider` to call Siren back when an alert is triggered, allowing storage of triggered alerts and sending notification via Siren. Storing triggered alerts is beneficial to be used for auditing and analytics purposes. Alert History is simply a `subscription` defined using an `HTTP receiver` on all alerts. Learn in more detail [here](./alert_history.md).
+Siren expect [provider](./provider_and_namespace.md) to call Siren back when an alert is triggered, allowing storage of triggered alerts and sending susbcribed notification via Siren. Storing triggered alerts is beneficial to be used for auditing and analytics purposes. Learn in more detail [here](./alert_history.md).
 
 ## Deployment
 

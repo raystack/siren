@@ -58,7 +58,7 @@ scoop update siren
 
 Siren requires the following dependencies:
 
-- Golang (version 1.17 or above)
+- Golang (version 1.16 or above)
 - Git
 
 #### Build
@@ -100,7 +100,7 @@ Start siren server
 $ siren server start -c config.yaml
 ```
 
-Initialise client configurations
+Initialize client configurations
 
 ```
 $ siren config init
@@ -117,7 +117,7 @@ docker pull odpf/siren:latest
 To pull a specific version:
 
 ```
-docker pull odpf/siren:v0.3.2
+docker pull odpf/siren:v0.4.1
 ```
 
 ### Use the Helm chart
@@ -155,6 +155,6 @@ To verify if Siren is properly installed, run `siren --help` on your system. You
 $ siren --help
 ```
 
-### docker-compose.yaml dependencies
+### Dockerized dependencies
 
-  You will notice there is a `docker-compose.yaml` file contains all dependencies that you need to bootstrap Siren. Inside, it has `postgresql` as a main storage, `cortex ruler` and `cortex alertmanager` as monitoring provider, and `minio` as a backend storage for `cortex`.
+  You will notice there is a [`docker-compose.yaml`](https://github.com/odpf/siren/blob/main/docker-compose.yaml) file contains all dependencies that you need to bootstrap Siren. Inside, it has `postgresql` as a main storage, `cortex ruler` and `cortex alertmanager` as monitoring provider, and `minio` as a backend storage for `cortex`.

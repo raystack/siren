@@ -8,7 +8,7 @@ import siteConfig from '/docusaurus.config.js';
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-Siren providers represent a monitoring server. We define alerts and alerts routing configuration inside providers. For example the below provider, describes how a cortex monitoring server info is stored inside Siren.
+Siren provider represents a monitoring server. We define alerts and alerts routing configuration inside providers. For example the below provider, describes how a cortex monitoring server info is stored inside Siren.
 
 ```json
 # provider

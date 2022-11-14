@@ -17,8 +17,7 @@ With `file` receiver, all published notifications will be written to a file. Let
 
 Prepare receiver detail.
 
-```bash
-cat <<EOT >> receiver_1.yaml
+```bash  title=receiver_1.yaml
 name: file-sink-1
 type: file
 labels:
@@ -26,7 +25,6 @@ labels:
     key2: value2
 configurations:
     url: ./out-file-sink1.json
-EOT
 ```
 
 Register the receiver with this command.
@@ -35,7 +33,7 @@ Register the receiver with this command.
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-$ siren receiver create -f receiver_1.yaml
+$ siren receiver create --file receiver_1.yaml
 ```
 
 Once done, you will get a message.
@@ -106,14 +104,12 @@ $ siren receiver view 1
 In the previous [part](#11-register-a-receiver), we have already registered a receiver and got back the receiver ID. We need to prepare the message payload as yaml to be sent by Siren CLI. The message is expected to be in a key value format and placed under `payload.data`.
 
 Prepare a message to send to receiver 1.
-```bash
-cat <<EOT >> message_file_1.yaml
+```bash title=message_file_1.yaml
 payload:
     data:
         text: this is notification to file 1
         a_field: a_value
         another_field: another_value
-EOT
 ```
 Then we can run `receiver send` command and target the receiver id `1` with flag `--id`.
 

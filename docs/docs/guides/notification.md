@@ -8,16 +8,7 @@ import siteConfig from '/docusaurus.config.js';
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-Notification is one of main features in Siren. Siren capables to send notification to various receivers (e.g. Slack, PagerDuty). Notification in Siren could be sent directly to a receiver or user could subscribe notifications by providing key-value label matchers. For the latter, Siren routes notification to specific receivers by matching notification key-value labels with the provided label matchers.
-
-
-## Queue
-
-Queue is used as a buffer for the outbound notifications. Siren has a pluggable queue where user could choose which Queue to use in the [config](../reference/server_configuration.md). Supported Queues are:
-
-- In-Memory
-- PostgreSQl
-
+To understand more concepts of notification in Siren, you can visit this [page](../concepts/notification.md).
 
 ## Sending a message/notification
 
@@ -25,13 +16,30 @@ We could send a notification to a specific receiver by passing a `receiver_id` i
 
 ### Example: Sending Notification to Slack
 
-If receiver is slack, the `payload.data` should be within the expected [slack](#slack) payload format.
+Assuming there is a slack receiver registered in Siren with ID `51`. Sending to that receiver would require us to have a `payload.data` that have the same format as the expected [slack](../receivers/slack.md#message-payload) payload format.
+
+```yaml title=payload.yaml
+payload:
+  data:
+    channel: siren-devs
+    text: an alert or notification
+    icon_emoji: ":smile:"
+    attachments:
+      - blocks: 
+        - type: section
+          text:
+            type: mrkdwn
+            text: |-
+              New Paid Time Off request from <example.com|Fred Enriquez>
+
+              <https://example.com|View request>
+```
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
 
 ```bash
-$ siren receiver create --file receiver.yaml
+$ siren receiver send --id 51 --file payload.yaml
 ```
 
   </TabItem>
@@ -69,4 +77,6 @@ Above end the message to channel name `#siren-devs` with `payload.data` in [slac
 
 ## Alerts Notification
 
-For all incoming alerts via Siren hook API, notifications are also generated and published via subscriptions. Siren will match labels from the alerts with label matchers in subscriptions. The assigned receivers for all matched subscriptions will get the notifications. More details are explained [here](./alert_history.md). Sending notification message requires notification message payload to be in the same format as what receiver expected. The format can be found in the detail in [reference](../reference/receiver.md).
+For all incoming alerts via Siren hook API, notifications are also generated and published via subscriptions. Siren will match labels from the alerts with label matchers in subscriptions. The assigned receivers for all matched subscriptions will get the notifications. More details are explained [here](./alert_history.md). 
+
+Siren has a default template for alerts notification for each receiver. Go to the [Receivers](../receivers/slack.md#default-alert-template) section to explore the default template defined by Siren.

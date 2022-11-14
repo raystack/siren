@@ -6,7 +6,7 @@ This tour introduces you to Siren. Along the way you will learn how to manage al
 
 This tour requires you to have Siren CLI tool installed on your local machine. You can run `siren version` to verify the installation. Please follow [installation](../installation.md) and [configuration](../reference/server_configuration.md) guides if you do not have it installed already.
 
-Siren CLI and clients talks to Siren server to publish and fetch rules, subscriptions, and notifications. Please make sure you also have a Siren server running. You can also run server locally with `siren server start` command. For more details check the [deployment](../guides/deployment.md) guide.
+Siren client CLI talks to Siren server to configure and fetch rules, subscriptions, and notifications. Please make sure you also have a Siren server running. You can also run server locally with `siren server start` command. For more details check the [deployment](../guides/deployment.md) guide.
 
 ## Help
 At any time you can run the following commands.
@@ -42,7 +42,7 @@ ADDITIONAL COMMANDS
   worker          Start or manage Siren's workers
 ```
 
-Help command can also be run on any sub command with syntax `siren <command> <subcommand> --help` Here is an example for the same.
+Help command can also be run on any sub command with syntax `siren <command> <subcommand> --help`. Here is an example for the same.
 
 ```
 $ siren rule --help
@@ -55,10 +55,10 @@ $ siren reference
 ## Background for this tutorial
 
 This tour introduces you to two different scenarios
-1. Sending on-demand notification to a receiver
+1. [Sending on-demand notification to a receiver](./1sending_notifications_overview.md)
     - Register a receiver
     - Send notification to the receiver
-2. Setting up alerting rules and subscribing to the alerts
+2. [Setting up alerting rules and subscribing to the alerts](2alerting_rules_subscriptions_overview.md)
     - Register a CortexMetrics provider
     - Create a new namespace
     - Register a receiver that we want to send the notification to

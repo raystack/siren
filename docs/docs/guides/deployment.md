@@ -1,34 +1,173 @@
-# Deployment
+# Server Installation
 
-Siren docker image can be found on Docker hub [here](https://hub.docker.com/r/odpf/siren). You can run the image with
-its dependencies.
+There are several approaches to setup Siren Server
 
-The dependencies are:
+1. [Using the CLI](#using-the-cli)
+2. [Using the Docker](#use-the-docker-image)
+3. [Using the Helm Chart](#use-the-helm-chart)
 
-1. Postgres DB
-2. Cortex Ruler
-3. Cortex Alertmanager
+## General pre-requisites
 
-Make sure you have the instances running for them.
+- PostgreSQL (version 12 or above)
+- Monitoring Providers
+    - Ex: CortexMetrics
 
-## Deploying to Kubernetes
+## Using the CLI
 
-- Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
+### Pre-requisites for CLI
+- [Create siren config file](/docs/docs/tour/setup_server.md#initialization)
 
-# Monitoring
+To run the Siren server use command:
 
-Siren comes with New relic monitoring in built, which user can enable from inside the `config.yaml`
-
-```yaml
-newrelic:
-  enabled: true
-  appname: siren
-  license: ____LICENSE_STRING_OF_40_CHARACTERS_____
+```sh
+$ siren server start -c <path-to-config>
 ```
 
-If the `enabled` is set to true, with correct `license` key, you will be able to see the API metrics on your New relic
-dashboard.
+## Use the Docker
 
-# Troubleshooting
+To run the Siren server using Docker, you need to have Docker installed on your system. You can find the installation instructions [here](https://docs.docker.com/get-docker/).
 
-TBA
+You can choose to set the configuration using environment variables or a config file. The environment variables will override the config file.
+
+### Using environment variables
+
+All the configs can be passed as environment variables using underscore `_` as the delimiter between nested keys. See the following examples
+
+See [configuration reference](/docs/docs/reference/server_configuration.md) for the list of all the configuration keys.
+
+```sh title=".env"
+DB_DRIVER=postgres
+DB_URL=postgres://postgres:@localhost:5432/siren_development?sslmode=disable
+SERVICE_PORT=8080
+SERVICE_ENCRYPTION_KEY=<32 characters encryption key>
+```
+
+Run the following command to start the server
+
+```sh
+$ docker run -d \
+    --restart=always \
+    -p 8080:8080 \
+    --env-file .env \
+    --name siren-server \
+    odpf/siren:<version> \
+    server start
+```
+
+### Using config file
+
+```yaml title="config.yaml"
+db:
+  driver: postgres
+  url: postgres://postgres:@localhost:5432/siren_integration?sslmode=disable
+service:
+  port: 8080
+  encryption_key: <32 characters encryption key>
+```
+
+Run the following command to start the server
+
+```sh
+$ docker run -d \
+    --restart=always \
+    -p 8080:8080 \
+    -v $(pwd)/config.yaml:/config.yaml \
+    --name siren-server \
+    odpf/siren:<version> \
+    server start -c /config.yaml
+```
+
+## Use the Helm chart
+
+### Pre-requisites for Helm chart
+Siren can be installed in Kubernetes using the Helm chart from https://github.com/odpf/charts.
+
+Ensure that the following requirements are met:
+- Kubernetes 1.14+
+- Helm version 3.x is [installed](https://helm.sh/docs/intro/install/)
+
+### Add ODPF Helm repository
+
+Add ODPF chart repository to Helm:
+
+```
+helm repo add odpf https://odpf.github.io/charts/
+```
+
+You can update the chart repository by running:
+
+```
+helm repo update
+```
+
+### Setup helm values
+
+The following table lists the configurable parameters of the Siren chart and their default values.
+
+See full helm values guide [here](https://github.com/odpf/charts/tree/main/stable/siren#values).
+
+```yaml title="values.yaml"
+app:
+
+  ## Value to fully override guardian.name template
+  nameOverride: ""
+  ## Value to fully override guardian.fullname template
+  fullnameOverride: ""
+
+  image:
+    repository: odpf/siren
+    pullPolicy: Always
+    tag: latest
+  container:
+    args:
+      - server
+      - start
+    livenessProbe:
+      httpGet:
+        path: /ping
+        port: tcp
+    readinessProbe:
+      httpGet:
+        path: /ping
+        port: tcp
+
+  migration:
+    enabled: true
+    args:
+      - server
+      - migrate
+
+  service:
+    annotations:
+      projectcontour.io/upstream-protocol.h2c: tcp
+
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: contour
+    hosts:
+      - host: siren.example.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                # name: backend_01
+                port:
+                  number: 8080
+
+  config:
+    LOG_LEVEL: info
+    SERVICE_PORT: 8080
+
+  secretConfig:
+    ENCRYPTION_SECRET_KEY:
+    NOTIFIER_ACCESS_TOKEN:
+    DB_URL: postgres://siren:<password>@localhost:5432/siren_integration?sslmode=disable
+```
+
+And install it with the helm command line along with the values file:
+
+```sh
+$ helm install my-release -f values.yaml odpf/siren
+```

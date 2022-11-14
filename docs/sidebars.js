@@ -33,7 +33,8 @@ module.exports = {
       items: [
         "concepts/overview",
         "concepts/plugin",
-        "concepts/schema",
+        "concepts/notification",
+        "concepts/glossary",
       ],
     },
     {
@@ -41,6 +42,7 @@ module.exports = {
       label: "Guides",
       items: [
         "guides/overview",
+        "guides/deployment",
         "guides/provider_and_namespace",
         "guides/receiver",
         "guides/subscription",
@@ -48,7 +50,8 @@ module.exports = {
         "guides/template",
         "guides/alert_history",
         "guides/notification",
-        "guides/deployment",
+        "guides/workers",
+        "guides/job",
       ],
     },
     {

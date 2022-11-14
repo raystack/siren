@@ -10,7 +10,7 @@ Dependencies
  - PostgreSQL
  - [CortexMetrics](https://cortexmetrics.io/docs/getting-started/)
 
-You need to prepare and run above dependencies first before running Siren. Siren also has a `docker-compose.yaml` file in its [repo](https://github.com/odpf/siren) that has all required dependencies. If you are interested to use it, you just need to `git clone` the [repo](https://github.com/odpf/siren) and run `docker-compose up` in the root project.
+You need to prepare and run above dependencies first before running Siren. Siren also has a [`docker-compose.yaml`](https://github.com/odpf/siren/blob/main/docker-compose.yaml) file in its repo that has all required dependencies. If you are interested to use it, you just need to `git clone` the [repo](https://github.com/odpf/siren) and run `docker-compose up` in the root project.
 
 ### Initialization
 
@@ -39,7 +39,9 @@ receivers:
     ...
 ```
 
-We are using CortexMetrics as a provider. We need to set the `webhook_base_api` in `providers.cortex` config. If you are using the dockerized CortexMetrics with Docker Desktop, you could put the value as `http://host.docker.internal:8080/v1beta1/alerts/cortex`. This will enable CortexMetrics inside container to talk with Siren in our host machine later. If you are running CortexMetrics inside your host, you could put the value as `http://localhost:8080/v1beta1/alerts/cortex`. You also might want to set the `provider.cortex.group_wait` value to `1s` so alert will be sent to the webhook immediately once it was triggered.
+We are using CortexMetrics as a provider. We need to set the `webhook_base_api` in `providers.cortex` config. If you are using the dockerized CortexMetrics with Docker Desktop, you could put the value as `http://host.docker.internal:8080/v1beta1/alerts/cortex`. This will enable CortexMetrics inside container to talk with Siren in our host machine later. If you are running CortexMetrics inside your host, you could put the value as `http://localhost:8080/v1beta1/alerts/cortex`.
+
+ You also might want to set the `provider.cortex.group_wait` value to `1s` so alert will be sent to the webhook immediately once it was triggered.
 
 > If you're new to YAML and want to learn more, see Learn [YAML in Y minutes](https://learnxinyminutes.com/docs/yaml/).
 
@@ -49,27 +51,27 @@ Database migration is required during the first server initialization. In additi
 To initialize the database schema, Run Migrations with the following command:
 
 ```sh
-$ guardian server migrate
+$ siren server migrate
 ```
 
 To run the Siren server use command:
 
 ```sh
-$ guardian server start
+$ siren server start
 ```
 
 Using `--config` flag
 
 ```sh
-$ guardian server migrate --config=<path-to-file>
+$ siren server migrate --config=<path-to-file>
 ```
 
 ```sh
-$ guardian server start --config=<path-to-file>
+$ siren server start --config=<path-to-file>
 ```
 
 ### Using environment variables
-All the configs can be passed as environment variables using underscore _ as the delimiter between nested keys. See the following examples
+All the configs can be passed as environment variables using underscore `_` as the delimiter between nested keys. See the following examples
 
 ```yaml
 db:
