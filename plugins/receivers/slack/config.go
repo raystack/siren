@@ -70,6 +70,7 @@ type SubscriptionConfig struct {
 func (c *SubscriptionConfig) AsMap() map[string]interface{} {
 	return map[string]interface{}{
 		"channel_name": c.ChannelName,
+		"channel_type": c.ChannelType,
 	}
 }
 
