@@ -3,21 +3,17 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from '@theme/CodeBlock';
 import siteConfig from '/docusaurus.config.js';
 
-# Register provider
+# 2.2 Register a Provider and Namespaces
 
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-## 1. Register the provider
+## Register a Provider
 
-The first things we need to set up before we add receivers and testing alerts and notifications are we need to register our [Cortexmetrics](https://cortexmetrics.io/) as provider and its namespaces.
-
-Siren provides HTTP API where we need to send a request to `POST /v1beta1/providers` with a json body to create a provider. Beside that, Siren also has a CLI that interacts to Siren server and we could use it.
-
-To create a new provider with CLI, we need to create a `yaml` file.
+To create a new provider with CLI, we need to create a `yaml` file that contains provider detail.
 
 ```yaml
-# input.yaml
+# provider.yaml
 host: http://localhost:9009
 urn: localhost-dev-cortex
 name: dev-cortex
@@ -27,7 +23,7 @@ type: cortex
 If you are in unix system, you could do this
 
 ```bash
-cat <<EOT >> input.yaml
+cat <<EOT >> provider.yaml
 host: http://localhost:9009
 urn: localhost-dev-cortex
 name: dev-cortex
@@ -35,13 +31,13 @@ type: cortex
 EOT
 ```
 
-Once the file is ready, we can start creating the provider.
+Once the file is ready, we can create the provider with Siren CLI.
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
 
 ```bash
-siren provider create --file input.yaml
+$ siren provider create --file provider.yaml
 ```
 
 If succeed, you will got this message.
@@ -68,9 +64,9 @@ Provider created with id: 1 ✓
 
 The `id` we got from the provider creation is important to create a namespace later.
 
-## 2. Register namespaces
+## Register Namespaces
 
-For multi-tenancy scenario, which Cortex supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done similar with how we created provider.
+For multi-tenancy scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
 
 ```bash
 cat <<EOT >> ns1.yaml
@@ -94,7 +90,7 @@ EOT
   <TabItem value="cli" label="CLI" default>
 
 ```bash
-./siren namespace create -f ns1.yaml
+$ siren namespace create --file ns1.yaml
 ```
 
   </TabItem>
@@ -118,7 +114,7 @@ EOT
   <TabItem value="cli" label="CLI" default>
 
 ```bash
-./siren namespace create -f ns2.yaml
+$ siren namespace create --file ns2.yaml
 ```
 
   </TabItem>
@@ -138,9 +134,9 @@ EOT
   </TabItem>
 </Tabs>
 
-## 3. Verify Created Providers and Namespaces
+## Verify Created Provider and Namespaces
 
-To make sure all providers and namespaces are properly created, we could try query Siren with Siren CLI.
+To make sure all provider and namespaces are properly created, we could try query Siren with Siren CLI.
 
 See what providers exist in Siren.
 
@@ -148,11 +144,11 @@ See what providers exist in Siren.
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-./siren provider list
+$ siren provider list
 ```
 
 ```shell
-Showing 2 of 2 providers
+Showing 1 of 1 providers
 
 ID      TYPE    URN                     NAME
 1       cortex  localhost-dev-cortex    dev-cortex
@@ -175,7 +171,7 @@ See what namespaces exist in Siren.
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-./siren namespace list
+$ siren namespace list
 ```
 
 ```shell

@@ -3,17 +3,16 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from '@theme/CodeBlock';
 import siteConfig from '/docusaurus.config.js';
 
-# 5 - Configuring Provider Alerting Rules
+# 2.4 Configuring Provider Alerting Rules
 
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-In this part we will create alerting rules for our Cortex monitoring provider. Rules in Siren relies on [template](../guides/template.md) for its abstraction. We need to create a rule's template first before uploading a rule.
+In this part we will create alerting rules for our Cortex monitoring provider. Rules in Siren relies on [template](../guides/template.md) for its abstraction. To create a rule, we need to create a template first.
 
 ## Creating a Rule's Template
 
-For now, we will create a rule's template to monitor CPU usage. More details about template is [here](../guides/template.md).
-
+We will create a rule's template to monitor CPU usage. 
 ```yaml
 apiVersion: v2
 type: template
@@ -48,30 +47,25 @@ tags:
     - systems
 ```
 
-We named the template above as `CPU`, the body in the template is the data that will be interpolated with variables and rendered. Notice that template body format is similar with [Prometheus alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). This is because Cortex uses the same rules as prometheus and Siren will translate the rendered rules to the Cortex alerting rules. Let's save the template above into a file called `cpu_template.yaml`.
-
-Let's upload our template to Siren using Siren CLI.
-```shell
-./siren template upload cpu_template.yaml
-```
+We named the template above as `CPU`, the body in the template is the data that will be interpolated with variables. Notice that template body format is similar with [Prometheus alerting rules](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/). This is because Cortex uses the same rules as prometheus and Siren will translate the rendered rules to the Cortex alerting rules. Let's save the template above into a file called `cpu_template.yaml` and upload our template to Siren using 
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-./siren template upload cpu_template.yaml
+$ siren template upload cpu_template.yaml
 ```
 
   </TabItem>
 </Tabs>
 
-You could verify the newly created template.
+You could verify the newly created template using this command.
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-./siren template list
+$ siren template list
 ```
 ```shell
 Showing 1 of 1 templates
@@ -112,15 +106,13 @@ rules:
             - name: critical
               value: 195
 ```
-Above we defined a rule based on `CPU` template for namespace urn `odpf-ns` and provider urn `localhost-dev-cortex`. The rule group name is `cpuGroup` and there are also some variables to be assign to the template when the template is rendered.
-
-Upload the rule with Siren CLI.
+We defined a rule based on `CPU` template for namespace urn `odpf-ns` and provider urn `localhost-dev-cortex`. The rule group name is `cpuGroup` and there are also some variables to be assign to the template when the template is rendered. Let's upload the rule with Siren CLI.
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
 
 ```shell
-./siren rule upload cpu_test.yaml
+$ siren rule upload cpu_test.yaml
 ```
 If succeed, you will get this message.
 ```shell
@@ -130,10 +122,7 @@ ID: 4
   </TabItem>
 </Tabs>
 
-
-
-You could verify the created rules by getting the added rules from Cortex provider with cURL.
-
+You could verify the created rules by getting all registered rules in CortexMetrics with cURL.
 <Tabs groupId="api">
   <TabItem value="http" label="HTTP">
 
@@ -145,7 +134,7 @@ You could verify the created rules by getting the added rules from Cortex provid
   </TabItem>
 </Tabs>
 
-The response body should be in `yaml` format and like this
+The response body should be in `yaml` format and like this.
 ```yaml
 odpf:
     - name: cpuGroup
@@ -165,3 +154,5 @@ odpf:
           annotations:
             description: CPU has been above 195 for last 15m {{ $labels.host }}
 ```
+
+If there is a response like above, that means the rule that we created in Siren was already synchronized to the provider. Next, we can add a subscription to the alert and try to trigger an alert to verify whether we got a notification alert or not.

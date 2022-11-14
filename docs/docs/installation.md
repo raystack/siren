@@ -91,19 +91,19 @@ make config
 Run database migrations
 
 ```
-./siren server migrate -c config.yaml
+$ siren server migrate -c config.yaml
 ```
 
 Start siren server
 
 ```
-./siren server start -c config.yaml
+$ siren server start -c config.yaml
 ```
 
 Initialise client configurations
 
 ```
-./siren config init
+$ siren config init
 ```
 
 ### Use the Docker image
@@ -154,3 +154,7 @@ To verify if Siren is properly installed, run `siren --help` on your system. You
 ```
 $ siren --help
 ```
+
+### docker-compose.yaml dependencies
+
+  You will notice there is a `docker-compose.yaml` file contains all dependencies that you need to bootstrap Siren. Inside, it has `postgresql` as a main storage, `cortex ruler` and `cortex alertmanager` as monitoring provider, and `minio` as a backend storage for `cortex`.

@@ -249,7 +249,7 @@ The benefits that one gets via this is:
    echo "------------------------------------------------------------"
 
    for FILE in templates/*; do
-     eval ./siren template upload $FILE
+     eval $ siren template upload $FILE
      echo $'\n'
    done
 
@@ -295,7 +295,7 @@ The benefits that one gets via this is:
    echo "------------------------------------------------------------"
 
    for FILE in rules/*; do
-     eval ./siren rule upload $FILE
+     eval $ siren rule upload $FILE
      echo $'\n'
    done
    ```

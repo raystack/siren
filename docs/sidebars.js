@@ -15,18 +15,16 @@ module.exports = {
 
   docsSidebar: [
     'introduction',
+    "use_cases",
     'installation',
     {
       type: "category",
       label: "Tour",
       items: [
-        "tour/overview",
-        "tour/start_server",
-        "tour/registering_provider",
-        "tour/registering_receivers",
-        "tour/sending_notifications_to_receiver",
-        "tour/configuring_provider_alerting_rules",
-        "tour/subscribing_notifications",
+        "tour/introduction",
+        "tour/setup_server",
+        "tour/1sending_notifications_overview",
+        "tour/2alerting_rules_subscriptions_overview",
       ],
     },
     {
@@ -55,12 +53,20 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Contribute",
+      label: "Providers",
       items: [
-        "contribute/contribution",
-        "contribute/receiver",
-        "contribute/provider",
-        "contribute/release"],
+        "providers/cortexmetrics",
+      ],
+    },
+    {
+      type: "category",
+      label: "Receivers",
+      items: [
+        "receivers/slack",
+        "receivers/pagerduty",
+        "receivers/http",
+        "receivers/file",
+      ],
     },
     {
       type: "category",
@@ -69,9 +75,23 @@ module.exports = {
         "reference/api",
         "reference/server_configuration",
         "reference/client_configuration",
-        "reference/receiver",
         "reference/cli",
       ],
+    },
+    {
+      type: "category",
+      label: "Extend",
+      items: [
+        "extend/adding_new_provider",
+        "extend/adding_new_receiver"
+      ],
+    },
+    {
+      type: "category",
+      label: "Contribute",
+      items: [
+        "contribute/contribution",
+        "contribute/release"],
     },
   ],
 };
