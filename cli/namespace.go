@@ -26,8 +26,8 @@ func namespacesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Namespaces are used for multi-tenancy for a given provider.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -50,7 +50,7 @@ func listNamespacesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all registered namespaces.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -111,7 +111,7 @@ func createNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Create a new namespace.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -180,7 +180,7 @@ func getNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren namespace view 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -249,7 +249,7 @@ func updateNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Edit an existing namespace.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -314,7 +314,7 @@ func deleteNamespaceCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren namespace delete 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -26,8 +26,8 @@ func receiversCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Receivers are the medium to send notification for which we intend to mange configuration.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -51,7 +51,7 @@ func listReceiversCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all registered receivers.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -112,7 +112,7 @@ func createReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Create a new receiver.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -181,7 +181,7 @@ func getReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren receiver view 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -253,7 +253,7 @@ func updateReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Note: receiver type is immutable.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -317,7 +317,7 @@ func deleteReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren receiver delete 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -376,7 +376,7 @@ func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Send a notification to receiver.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")

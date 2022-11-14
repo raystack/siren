@@ -26,8 +26,8 @@ func providersCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Providers are the system for which we intend to mange monitoring and alerting.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -50,7 +50,7 @@ func listProvidersCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all registered providers.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -113,7 +113,7 @@ func createProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Create a new provider.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -184,7 +184,7 @@ func getProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren provider view 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -255,7 +255,7 @@ func updateProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Edit an existing provider.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -321,7 +321,7 @@ func deleteProviderCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren provider delete 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

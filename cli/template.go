@@ -28,8 +28,8 @@ func templatesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			templates are used for alert abstraction.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -54,7 +54,7 @@ func listTemplatesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all registered templates.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -119,7 +119,7 @@ func upsertTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Create or edit a new template.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -193,7 +193,7 @@ func getTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren template view <template_name>
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -268,7 +268,7 @@ func deleteTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren template delete 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -317,7 +317,7 @@ func renderTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		Short: "Render a template details",
 
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -375,7 +375,7 @@ func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		Use:   "upload",
 		Short: "Upload Templates YAML file",
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
