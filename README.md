@@ -14,20 +14,13 @@ with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 
 ## Key Features
 
-- **Rule Templates:** Siren provides a way to define templates over prometheus Rule, which can be reused to create
-  multiple instances of same rule with configurable thresholds.
+- **Rule Templates:** Siren provides a way to define templates over alerting rule which can be reused to create multiple instances of the same rule with configurable thresholds.
+- **Subscriptions:** Siren can be used to subscribe to notifications (with desired matching conditions) via the channel of your choice.
 - **Multi-tenancy:** Rules created with Siren are by default multi-tenancy aware.
-- **DIY Interface:** Siren can be used to easily create/edit prometheus rules. It also provides soft delete(disable)
-  so that you can preserve thresholds in case you need to reuse the same alert.
-- **Managing bulk rules:** Siren enables users to manage bulk alerts using YAML files in specified format using simple
-  CLI.
-- **Credentials Management:** Siren can store slack and pagerduty credentials, sync them with Cortex alertmanager to
-  deliver alerts on proper channels, in a multi-tenant fashion. It gives a simple interface to rotate the credentials on
-  demand via HTTP API.
-- **Slack Notifications:** Siren can be used to send out notifications in slack to user's DM, private and public
-  channel.
-- **Alert History:** Siren can store alerts triggered via Cortex Alertmanager, which can be used for audit purposes.
-
+- **DIY Interface:** Siren can be used to easily create/edit alerting rules. It also provides soft-delete (disable) so that you can preserve thresholds in case you need to reuse the same alert.
+- **Managing bulk rules:** Siren enables users to manage bulk alerting rules using YAML files in specified format with simple CLI.
+- **Receivers:** Siren can be used to send out notifications to several channels (slack, pagerduty, email etc).
+- **Alert History:** Siren can store alerts triggered by monitoring & alerting provider e.g. Cortex Alertmanager, which can be used for audit purposes.
 To know more, follow the detailed [documentation](docs)
 
 ## Usage
@@ -76,12 +69,20 @@ $ make test
 # To run tests locally with coverage
 $ make test-coverage
 ```
+## Generate Server Configuration
+
+```sh
+# To generate server configuration
+$ go run main.go server init
+```
+
+This will generate a file `./config.yaml`.
 
 ## Running Server
 
 ```sh
 # To run server locally
-$ go run main.go serve
+$ go run main.go server start
 ```
 
 To view swagger docs of HTTP APIs visit `/documentation` route on the server.
