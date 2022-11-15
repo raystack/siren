@@ -8,9 +8,13 @@ import siteConfig from '/docusaurus.config.js';
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-This tour shows you how could we create alerting rules for the provider and we want to subscribe to a notification that is triggered because of the alert. If you want to know how to send on-demand notification to a receiver, you could go to the [first tour](./1sending_notifications_overview.md).
+This tour shows you how could we create alerting rules and we want to subscribe to a notification triggered by an alert. If you want to know how to send on-demand notification to a receiver, you could go to the [first tour](./1sending_notifications_overview.md).
 
-As mentioned previously, we will be using [CortexMetrics](https://cortexmetrics.io/docs/getting-started/) as a provider. We need to register the provider and create a provider namespace in Siren first before creating any rule and subscription. Once an alert triggered, the subscription labels will be matched with alert's labels. If all subscription labels matched, receiver's subscripton will get the alert notification.
+As mentioned previously, we will be using [CortexMetrics](https://cortexmetrics.io/docs/getting-started/) as a provider. We need to register the provider and create a provider namespace in Siren first before creating any rule and subscription. 
+
+> Provider is implemented as a plugin in Siren. You can learn more about Siren Plugin concepts [here](/docs/docs/concepts/plugin.md). We also welcome all contributions to add new provider plugins. Learn more about how to add a new provider plugin [here](/docs/docs/extend/adding_new_provider.md).
+
+Once an alert triggered, the subscription labels will be matched with alert's labels. If all subscription labels matched, receiver's subscripton will get the alert notification.
 
 ## 2.1 Register a Provider and Namespaces
 
@@ -60,7 +64,7 @@ The `id` we got from the provider creation is important to create a namespace la
 
 ### Register Namespaces
 
-For multi-tenancy scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
+For multi-tenant scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
 
 ```bash  title=ns1.yaml
 urn: odpf-ns
@@ -185,7 +189,11 @@ For details on a namespace, try: siren namespace view <id>
 
 ## 2.2 Register a Receiver
 
-Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. With `file` receiver, all published notifications will be written to a file. Let's create a receivers `file` using Siren CLI.
+Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. If the receiver is not added in Siren yet, you could add one using `siren receiver create`. See [receiver guide](/docs/docs/guides/receiver.md) to explore more on how to work with `siren receiver` command.
+
+With `file` receiver, all published notifications will be written to a file. Let's create a receivers `file` using Siren CLI.
+
+> We welcome all contributions to add new type of receiver plugins. See [Extend](/docs/docs/extend/adding_new_receiver.md) section to explore how to add a new type of receiver plugin to Siren
 
 Prepare receiver detail and register the receiver with Siren CLI.
 ```bash  title=receiver_2.yaml
@@ -235,7 +243,7 @@ Receiver created with id: 2 ✓
 
 ## 2.3 Configuring Provider Alerting Rules
 
-In this part we will create alerting rules for our Cortex monitoring provider. Rules in Siren relies on [template](../guides/template.md) for its abstraction. To create a rule, we need to create a template first.
+In this part, we will create alerting rules for our CortexMetrics monitoring provider. Rules in Siren relies on [template](../guides/template.md) for its abstraction. To create a rule, we need to create a template first.
 
 ### Creating a Rule's Template
 
@@ -388,7 +396,8 @@ If there is a response like above, that means the rule that we created in Siren 
 
 Notifications can be subscribed and routed to the defined receivers by adding a subscription. In this part, we will trigger an alert to CortexMetrics manually by calling CortexMetrics `POST /alerts` API and expect CortexMetrics to trigger webhook-notification and calling Siren alerts hook API. On Siren side, we expect a notification is published everytime the hook API is being called.
 
-> The way CortexMetrics monitor a specific metric and auto-trigger an alert are out of this `tour` scope.
+
+> If you are curious about how notification in Siren works, you can read the concepts [here](/docs/docs/concepts/notification.md).
 
 The first thing that we should do is knowing what would be the labels sent by CortexMetrics. The labels should be defined when we were defining [rules](#23-configuring-provider-alerting-rules). Assuming the labels sent by CortexMetrics are these:
 
@@ -448,7 +457,7 @@ match
   </TabItem>
 </Tabs>
 
-Once a subscription is created, let's manually trigger alert in CortexMetrics with this cURL.
+Once a subscription is created, let's manually trigger alert in CortexMetrics with this cURL. The way CortexMetrics monitor a specific metric and auto-trigger an alert are out of this `tour` scope.
 
 <Tabs groupId="api">
   <TabItem value="http" label="HTTP">
@@ -480,13 +489,10 @@ Once a subscription is created, let's manually trigger alert in CortexMetrics wi
   </TabItem>
 </Tabs>
 
-
-
 If succeed, the response should be like this.
 ```json
 {"status":"success"}
 ```
-
 
 Now, we need to expect CortexMetrics to send alerts notification to our Siren API `/alerts/cortex/:providerId`. If that is the case, the alert should also be stored and published to the receivers in the matching subscriptions. You might want to wait for a CortexMetrics `group_wait` (usually 30s) until alerts are triggered by Cortex Alertmanager.
 

@@ -1,8 +1,8 @@
 # Introduction
 
-This tour introduces you to Siren. Along the way you will learn how to manage alerting rules, notification receivers, and subscribing to notifications.
+This tour introduces you to Siren. Along the way you will learn how to manage alerting rules, notification receivers, and subscribing to alert notifications.
 
-## Prerequisites
+## Pre-requisites
 
 This tour requires you to have Siren CLI tool installed on your local machine. You can run `siren version` to verify the installation. Please follow [installation](../installation.md) and [configuration](../reference/server_configuration.md) guides if you do not have it installed already.
 

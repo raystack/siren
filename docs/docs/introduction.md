@@ -20,11 +20,20 @@ Siren is an Incident Management Platform that orchestrates alerting rules of you
 
 ## How does Siren work?
 
-Monitoring and alerting provider need to be registered to Siren by an administrator. For different tenant, different namespace of provider needs to be created in Siren too.
+Here are the steps to work with Siren.
 
-Alerting rules for a specific namespace could be created by a user and Siren will synchronize the configured rules in the selected monitoring providers.
+1. **Registering Provider:** Monitoring and alerting provider need to be registered to Siren by an administrator. 
 
-User could also set up an alert subscription to be notified if an alert is triggered. User needs to add receivers (e.g. slack, pagerduty) and subscribe to the notification itself by label-matching. In case of on-demand notifications usage, Siren could be used to directly send notification to the registered receivers.
+2. **Adding Namespaces:** For different tenant, different namespace of provider needs to be created in Siren too.
+
+3. **Configuring Alerting Rules:** Alerting rules for a specific namespace could be created by a user and Siren will synchronize the configured rules in the selected monitoring providers.
+
+4. **Registering Receivers:** User needs to add receivers (e.g. slack, pagerduty) for Siren to send notifications to.
+
+5. **Sending Notifications:**
+    - **Subscribing Alerts:** User could set up an alert subscription to be notified if an alert is triggered. User needs to create a subscription to subscribe to the alerts notification by label-matching.
+
+    - **Sending On-demand Notification:** Siren could be used to directly send notification to the registered receivers.
 
 ## Key Features
 
