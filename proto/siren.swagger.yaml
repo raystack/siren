@@ -4,7 +4,7 @@ info:
   description: |-
     Documentation of our Siren API with gRPC and
     gRPC-Gateway.
-  version: 0.4.0
+  version: 0.5.0
 tags:
   - name: SirenService
 schemes:

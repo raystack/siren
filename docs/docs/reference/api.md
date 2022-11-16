@@ -2,7 +2,7 @@
 Documentation of our Siren API with gRPC and
 gRPC-Gateway.
 
-## Version: 0.4.0
+## Version: 0.5.0
 
 ### /v1beta1/alerts/{provider_type}/{provider_id}
 
