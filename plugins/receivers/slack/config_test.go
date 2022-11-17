@@ -113,6 +113,7 @@ func TestNotificationConfig(t *testing.T) {
 
 		if diff := cmp.Diff(map[string]interface{}{
 			"channel_name": "channel",
+			"channel_type": "",
 			"token":        secret.MaskableString("token"),
 			"workspace":    "workspace",
 		}, nc.AsMap()); diff != "" {
