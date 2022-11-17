@@ -201,6 +201,7 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("a token"),
 				"channel_name": "channel",
+				"channel_type": "",
 			},
 			setup: func(e *mocks.Encryptor) {
 				e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
@@ -209,6 +210,7 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("maskable-token"),
 				"channel_name": "channel",
+				"channel_type": "",
 			},
 		},
 	}
@@ -272,6 +274,7 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("a token"),
 				"channel_name": "channel",
+				"channel_type": "",
 			},
 			setup: func(e *mocks.Encryptor) {
 				e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
@@ -280,6 +283,7 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("maskable-token"),
 				"channel_name": "channel",
+				"channel_type": "",
 			},
 		},
 	}
