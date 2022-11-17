@@ -117,15 +117,24 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 		return errors.ErrInvalid.WithCausef("namespace is nil").WithMsgf("incoming namespace is empty")
 	}
 
-	prov, err := s.providerService.Get(ctx, ns.Provider.ID)
+	encryptedNS, err := s.repository.Get(ctx, ns.ID)
 	if err != nil {
 		return err
 	}
 
-	pluginService, err := s.getProviderPluginService(prov.Type)
+	existingNS, err := s.decrypt(encryptedNS)
 	if err != nil {
 		return err
 	}
+
+	pluginService, err := s.getProviderPluginService(existingNS.Provider.Type)
+	if err != nil {
+		return err
+	}
+
+	// urn is immutable
+	ns.URN = existingNS.URN
+	ns.Provider = existingNS.Provider
 
 	encryptedNamespace, err := s.encrypt(ns)
 	if err != nil {
@@ -150,7 +159,7 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	if err := pluginService.SyncRuntimeConfig(ctx, ns.URN, *prov); err != nil {
+	if err := pluginService.SyncRuntimeConfig(ctx, ns.URN, ns.Provider); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}

@@ -140,12 +140,12 @@ func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceURN stri
 		"helper.tmpl": s.helperTemplate,
 	}
 
-	cortexClient, err := s.getCortexClient(prov.Host)
+	cortexClient, err := s.getCortexClient(prov.Host, namespaceURN)
 	if err != nil {
 		return err
 	}
 
-	if err = cortexClient.CreateAlertmanagerConfig(newContextWithTenantID(ctx, namespaceURN), cfg, templates); err != nil {
+	if err = cortexClient.CreateAlertmanagerConfig(ctx, cfg, templates); err != nil {
 		return err
 	}
 	return nil
@@ -164,7 +164,7 @@ func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, pro
 		return err
 	}
 
-	cortexClient, err := s.getCortexClient(prov.Host)
+	cortexClient, err := s.getCortexClient(prov.Host, namespaceURN)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, pro
 		return errors.ErrInvalid.WithMsgf("cannot parse upserted rule").WithCausef(err.Error())
 	}
 
-	cortexRuleGroup, err := cortexClient.GetRuleGroup(newContextWithTenantID(ctx, namespaceURN), rl.Namespace, rl.GroupName)
+	cortexRuleGroup, err := cortexClient.GetRuleGroup(ctx, rl.Namespace, rl.GroupName)
 	if err != nil {
 		if errors.Is(err, client.ErrResourceNotFound) {
 			cortexRuleGroup = &rwrulefmt.RuleGroup{}
@@ -189,7 +189,7 @@ func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, pro
 	}
 
 	if len(newRuleNodes) == 0 {
-		if err := cortexClient.DeleteRuleGroup(newContextWithTenantID(ctx, namespaceURN), rl.Namespace, rl.GroupName); err != nil {
+		if err := cortexClient.DeleteRuleGroup(ctx, rl.Namespace, rl.GroupName); err != nil {
 			if err.Error() == "requested resource not found" {
 				return nil
 			}
@@ -204,7 +204,7 @@ func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, pro
 			Rules: newRuleNodes,
 		},
 	}
-	if err := cortexClient.CreateRuleGroup(newContextWithTenantID(ctx, namespaceURN), rl.Namespace, *cortexRuleGroup); err != nil {
+	if err := cortexClient.CreateRuleGroup(ctx, rl.Namespace, *cortexRuleGroup); err != nil {
 		return fmt.Errorf("error calling cortex: %w", err)
 	}
 	return nil
@@ -265,12 +265,13 @@ func (s *PluginService) generateAlertmanagerConfig(tmplConfig TemplateConfig) (s
 	return configStr, nil
 }
 
-func (s *PluginService) getCortexClient(address string) (CortexCaller, error) {
+func (s *PluginService) getCortexClient(address string, tenant string) (CortexCaller, error) {
 	if s.cortexClient != nil {
 		return s.cortexClient, nil
 	}
 	cortexClient, err := client.New(client.Config{
 		Address: address,
+		ID:      tenant,
 	})
 	if err != nil {
 		return nil, err

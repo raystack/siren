@@ -471,7 +471,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 	type testCase struct {
 		Description string
 		NSpace      *namespace.Namespace
-		Setup       func(*mocks.NamespaceRepository, *mocks.Encryptor, *mocks.ProviderService, *mocks.ConfigSyncer, testCase)
+		Setup       func(*mocks.NamespaceRepository, *mocks.Encryptor, *mocks.ConfigSyncer, testCase)
 		Err         error
 	}
 	var (
@@ -483,8 +483,19 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error if provider service return error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+				},
+				NSpace: &namespace.Namespace{
+					Credentials: map[string]interface{}{},
+				},
+				Err: errors.New("some error"),
+			},
+			{
+				Description: "should return error if decrypt return error",
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{},
@@ -493,8 +504,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error if encrypt return error caused credential is not in json",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 				},
 				NSpace: &namespace.Namespace{
 					Credentials: map[string]interface{}{
@@ -505,8 +517,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error if encrypt return error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
@@ -518,8 +531,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error if update repository error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -537,8 +551,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if update repository return not found error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -556,8 +571,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error not found if update repository return relation error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -575,8 +591,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error conflict if update repository return error duplicate",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -594,8 +611,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return error if sync config return error",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -614,8 +632,9 @@ func TestService_UpdateNamespace(t *testing.T) {
 			},
 			{
 				Description: "should return nil error if update repository success",
-				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, ps *mocks.ProviderService, cs *mocks.ConfigSyncer, tc testCase) {
-					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
+				Setup: func(rr *mocks.NamespaceRepository, e *mocks.Encryptor, cs *mocks.ConfigSyncer, tc testCase) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.EncryptedNamespace{Namespace: &namespace.Namespace{Provider: provider.Provider{Type: testProviderType}}}, nil)
+					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("some-ciphertext", nil)
 					rr.EXPECT().WithTransaction(mock.AnythingOfType("*context.emptyCtx")).Return(ctx)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &namespace.EncryptedNamespace{
@@ -638,19 +657,18 @@ func TestService_UpdateNamespace(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock      = new(mocks.NamespaceRepository)
-				encryptorMock       = new(mocks.Encryptor)
-				providerServiceMock = new(mocks.ProviderService)
-				providerPluginMock  = new(mocks.ConfigSyncer)
+				repositoryMock     = new(mocks.NamespaceRepository)
+				encryptorMock      = new(mocks.Encryptor)
+				providerPluginMock = new(mocks.ConfigSyncer)
 			)
-			svc := namespace.NewService(encryptorMock, repositoryMock, providerServiceMock,
+			svc := namespace.NewService(encryptorMock, repositoryMock, nil,
 				map[string]namespace.ConfigSyncer{
 					testProviderType: providerPluginMock,
 				},
 			)
 
 			if tc.Setup != nil {
-				tc.Setup(repositoryMock, encryptorMock, providerServiceMock, providerPluginMock, tc)
+				tc.Setup(repositoryMock, encryptorMock, providerPluginMock, tc)
 			}
 
 			err := svc.Update(ctx, tc.NSpace)
