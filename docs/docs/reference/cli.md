@@ -49,7 +49,9 @@ Trigger a job
 Cleanup stale messages in queue
 
 ```
--c, --config string   Config file path (default "config.yaml")
+-c, --config string      Config file path (default "config.yaml")
+-s, --pending string     Cleanup treshold for pending messages in string (e.g. 10h, 30m)
+-p, --published string   Cleanup treshold for published messages in string (e.g. 10h, 30m) (default "168h")
 ````
 
 ## `siren namespace`

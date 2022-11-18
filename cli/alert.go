@@ -28,8 +28,8 @@ func alertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren alert list --provider-name=cortex --provider-id=1 --resource-name=demo --start-time=1636959300000 --end-time=1636959369716
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -51,7 +51,7 @@ func listAlertsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all alerts.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")

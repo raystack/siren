@@ -27,8 +27,8 @@ func subscriptionsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Subscribe to a notification with matching label.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -51,7 +51,7 @@ func listSubscriptionsCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all registered subscriptions.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -148,7 +148,7 @@ func viewSubscriptionCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren subscription view 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -224,7 +224,7 @@ func createSubscriptionCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Create a new subscription.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -298,7 +298,7 @@ func updateSubscriptionCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Note: receiver type is immutable.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -369,7 +369,7 @@ func deleteSubscriptionCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			$ siren subscription delete 1
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -2,7 +2,7 @@ NAME="github.com/odpf/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "3e995d8f0898b07bd35576b00012718cd7682b2f"
+PROTON_COMMIT := "45cc543ff18d6efd6d8a39947018c828599b476b"
 
 .PHONY: all build test clean dist vet proto install
 
@@ -64,7 +64,7 @@ clean-doc:
 # remove ansi color & escape html
 doc: clean-doc update-swagger-md
 	@echo "> generate cli docs"
-	@go run . reference -s=false | sed '1 s,.*,# CLI,' > ./docs/docs/reference/cli.md
+	@go run . reference --plain | sed '1 s,.*,# CLI,' > ./docs/docs/reference/cli.md
 
 help: ## Display this help message
 	@cat $(MAKEFILE_LIST) | grep -e "^[a-zA-Z_\-]*: *.*## *" | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

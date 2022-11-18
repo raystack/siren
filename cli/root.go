@@ -18,10 +18,10 @@ func New() *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 			"help:learn": heredoc.Doc(`
 				Use 'siren <command> <subcommand> --help' for more information about a command.
-				Read the manual at https://odpf.gitbook.io/siren/
+				Read the manual at https://odpf.github.io/siren/
 			`),
 			"help:feedback": heredoc.Doc(`
 				Open an issue here https://github.com/odpf/siren/issues

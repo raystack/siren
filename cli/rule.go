@@ -29,8 +29,8 @@ func rulesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			rules are used for alerting within a provider.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
-			"client":     "true",
+			"group":  "core",
+			"client": "true",
 		},
 	}
 
@@ -56,7 +56,7 @@ func listRulesCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			List all rules.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -131,7 +131,7 @@ func updateRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			Edit an existing rule.
 		`),
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			spinner := printer.Spin("")
@@ -200,7 +200,7 @@ func uploadRuleCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		Use:   "upload",
 		Short: "Upload Rules YAML file",
 		Annotations: map[string]string{
-			"group:core": "true",
+			"group": "core",
 		},
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

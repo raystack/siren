@@ -61,7 +61,11 @@ func jobRunCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 }
 
 func jobRunCleanupQueueCommand() *cobra.Command {
-	var configFile string
+	var (
+		configFile        string
+		publishedDuration string
+		pendingDuration   string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "cleanup_queue",
@@ -69,6 +73,7 @@ func jobRunCleanupQueueCommand() *cobra.Command {
 		Long: heredoc.Doc(`
 			Cleaning up all published messages in queue with last updated 
 			more than specific threshold (default 7 days) from now() and
+			
 			(Optional) cleaning up all pending messages in queue with last updated 
 			more than specific threshold (default 7 days) from now().
 		`),
@@ -96,7 +101,10 @@ func jobRunCleanupQueueCommand() *cobra.Command {
 			spinner := printer.Spin("")
 			defer spinner.Stop()
 			printer.Info("Running job cleanup_queue(%s)", cfg.Notification.Queue.Kind.String())
-			if err := queue.Cleanup(cmd.Context(), queues.FilterCleanup{}); err != nil {
+			if err := queue.Cleanup(cmd.Context(), queues.FilterCleanup{
+				MessagePendingTimeThreshold:   pendingDuration,
+				MessagePublishedTimeThreshold: publishedDuration,
+			}); err != nil {
 				return err
 			}
 			spinner.Stop()
@@ -109,5 +117,8 @@ func jobRunCleanupQueueCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&configFile, "config", "c", "config.yaml", "Config file path")
+	cmd.Flags().StringVarP(&publishedDuration, "published", "p", "168h", "Cleanup treshold for published messages in string (e.g. 10h, 30m)")
+	cmd.Flags().StringVarP(&publishedDuration, "pending", "s", "", "Cleanup treshold for pending messages in string (e.g. 10h, 30m)")
+
 	return cmd
 }

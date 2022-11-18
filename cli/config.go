@@ -30,9 +30,6 @@ func configInitCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 		Example: heredoc.Doc(`
 			$ siren config init
 		`),
-		Annotations: map[string]string{
-			"group": "core",
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmdxConfig.Init(&ClientConfig{}); err != nil {
 				return err
@@ -52,9 +49,6 @@ func configListCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 		Example: heredoc.Doc(`
 			$ siren config list
 		`),
-		Annotations: map[string]string{
-			"group": "core",
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			data, err := cmdxConfig.Read()
 			if err != nil {
