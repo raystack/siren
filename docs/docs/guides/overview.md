@@ -4,7 +4,7 @@ The following topics will describe how to use Siren.
 
 ## Managing providers and multi-tenancy
 
-Siren can be used to define alerting rules inside monitoring `provider`. List of supported providers are [here](/docs/docs/concepts/plugin.md#provider-plugin). Support for other providers is on the roadmap, feel free to [contribute](/docs/docs/extend/adding_new_provider.md). Siren also respects the multi-tenancy provided by various monitoring providers using [namespace](./provider_and_namespace.md#namespace). A `namespace` represents a tenant inside a provider. Learn in more detail [here](./provider_and_namespace.md).
+Siren can be used to define alerting rules inside monitoring `provider`. List of supported providers are [here](../concepts/plugin.md#provider-plugin). Support for other providers is on the roadmap, feel free to [contribute](../extend/adding_new_provider.md). Siren also respects the multi-tenancy provided by various monitoring providers using [namespace](./provider_and_namespace.md#namespace). A `namespace` represents a tenant inside a provider. Learn in more detail [here](./provider_and_namespace.md).
 
 ## Managing Templates
 

@@ -8,11 +8,11 @@ import siteConfig from '/docusaurus.config.js';
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-This tour shows you how to send a notification to a receiver. You need to pick to which receiver you want send the notification to. If the receiver is not added in Siren yet, you could add one using `siren receiver create`. See [receiver guide](/docs/docs/guides/receiver.md) to explore more on how to work with `siren receiver` command.
+This tour shows you how to send a notification to a receiver. You need to pick to which receiver you want send the notification to. If the receiver is not added in Siren yet, you could add one using `siren receiver create`. See [receiver guide](../guides/receiver.md) to explore more on how to work with `siren receiver` command.
 
-Receiver in Siren is implemented as a plugin. Read [here](/docs/docs/concepts/plugin.md) to understand the concept about Plugin. There are several [types of receiver](/docs/docs/concepts/plugin.md#receiver-plugin) supported in Siren. In this tour we want to send a notification to a `file` receiver type. More detail about `file` receiver type can be found [here](/docs/docs/receivers/file.md).
+Receiver in Siren is implemented as a plugin. Read [here](../concepts/plugin.md) to understand the concept about Plugin. There are several [types of receiver](../concepts/plugin.md#receiver-plugin) supported in Siren. In this tour we want to send a notification to a `file` receiver type. More detail about `file` receiver type can be found [here](../receivers/file.md).
 
-> We welcome all contributions to add new type of receiver plugins. See [Extend](/docs/docs/extend/adding_new_receiver.md) section to explore how to add a new type of receiver plugin to Siren
+> We welcome all contributions to add new type of receiver plugins. See [Extend](../extend/adding_new_receiver.md) section to explore how to add a new type of receiver plugin to Siren
 
 ## 1.1 Register a Receiver
 
@@ -104,7 +104,7 @@ $ siren receiver view 1
 
 ## 1.2 Sending Notification to a Receiver
 
-In previous [part](#11-register-a-receiver), we have already registered a receiver in Siren and got back the receiver ID. Now, we will send a notification to that receiver. If you are curious about how notification in Siren works, you can read the concepts [here](/docs/docs/concepts/notification.md).
+In previous [part](#11-register-a-receiver), we have already registered a receiver in Siren and got back the receiver ID. Now, we will send a notification to that receiver. If you are curious about how notification in Siren works, you can read the concepts [here](../concepts/notification.md).
 
 To send a notification, we need to prepare the message payload as yaml to be sent by Siren CLI. The message is expected to be in a key-value format and placed under `payload.data`.
 

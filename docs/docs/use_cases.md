@@ -22,7 +22,7 @@ Most monitoring and alerting providers have their own feature to notify a specif
 
 With Siren, notification responsibility will be unified in Siren. This approach will be more maintainable and easier to audit. Siren handles all alert notification subscriptions where user could define subscriptions and Siren publishes notifications if the labels in subscriptions match with the labels in the triggered alerts.
 
-Siren is also designed to be easily extended with a new notification channel as a [new receiver plugin](/docs/docs/extend/adding_new_receiver.md) to support more use cases.
+Siren is also designed to be easily extended with a new notification channel as a [new receiver plugin](./extend/adding_new_receiver.md) to support more use cases.
 
 
 ### Sending On-demand Notification

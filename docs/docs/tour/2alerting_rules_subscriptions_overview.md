@@ -12,7 +12,7 @@ This tour shows you how could we create alerting rules and we want to subscribe 
 
 As mentioned previously, we will be using [CortexMetrics](https://cortexmetrics.io/docs/getting-started/) as a provider. We need to register the provider and create a provider namespace in Siren first before creating any rule and subscription. 
 
-> Provider is implemented as a plugin in Siren. You can learn more about Siren Plugin concepts [here](/docs/docs/concepts/plugin.md). We also welcome all contributions to add new provider plugins. Learn more about how to add a new provider plugin [here](/docs/docs/extend/adding_new_provider.md).
+> Provider is implemented as a plugin in Siren. You can learn more about Siren Plugin concepts [here](../concepts/plugin.md). We also welcome all contributions to add new provider plugins. Learn more about how to add a new provider plugin [here](../extend/adding_new_provider.md).
 
 Once an alert triggered, the subscription labels will be matched with alert's labels. If all subscription labels matched, receiver's subscripton will get the alert notification.
 
@@ -189,11 +189,11 @@ For details on a namespace, try: siren namespace view <id>
 
 ## 2.2 Register a Receiver
 
-Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. If the receiver is not added in Siren yet, you could add one using `siren receiver create`. See [receiver guide](/docs/docs/guides/receiver.md) to explore more on how to work with `siren receiver` command.
+Siren supports several types of receiver to send notification to. For this tour, let's pick the simplest receiver: `file`. If the receiver is not added in Siren yet, you could add one using `siren receiver create`. See [receiver guide](../guides/receiver.md) to explore more on how to work with `siren receiver` command.
 
 With `file` receiver, all published notifications will be written to a file. Let's create a receivers `file` using Siren CLI.
 
-> We welcome all contributions to add new type of receiver plugins. See [Extend](/docs/docs/extend/adding_new_receiver.md) section to explore how to add a new type of receiver plugin to Siren
+> We welcome all contributions to add new type of receiver plugins. See [Extend](../extend/adding_new_receiver.md) section to explore how to add a new type of receiver plugin to Siren
 
 Prepare receiver detail and register the receiver with Siren CLI.
 ```bash  title=receiver_2.yaml
@@ -397,7 +397,7 @@ If there is a response like above, that means the rule that we created in Siren 
 Notifications can be subscribed and routed to the defined receivers by adding a subscription. In this part, we will trigger an alert to CortexMetrics manually by calling CortexMetrics `POST /alerts` API and expect CortexMetrics to trigger webhook-notification and calling Siren alerts hook API. On Siren side, we expect a notification is published everytime the hook API is being called.
 
 
-> If you are curious about how notification in Siren works, you can read the concepts [here](/docs/docs/concepts/notification.md).
+> If you are curious about how notification in Siren works, you can read the concepts [here](../concepts/notification.md).
 
 The first thing that we should do is knowing what would be the labels sent by CortexMetrics. The labels should be defined when we were defining [rules](#23-configuring-provider-alerting-rules). Assuming the labels sent by CortexMetrics are these:
 

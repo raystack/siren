@@ -10,7 +10,7 @@ Below is how the notification is implemented in Siren
 
 ## Notification Message
 
-Each receiver might expect different payload. User needs to pass notification message payload in the same format as what receiver (notification vendor) expected. All message payload contracts could be found under [receivers](/docs/docs/receivers/slack.md).
+Each receiver might expect different payload. User needs to pass notification message payload in the same format as what receiver (notification vendor) expected. All message payload contracts could be found under [receivers](../receivers/slack.md).
 
 ### Templating Notification Message Payload
 
@@ -44,9 +44,9 @@ Siren uses Postgres `SKIP LOCK` feature to implement queues with postgres.
 
 ## Notification Handlers
 
-Notification handler responsibles to dequeue message and send notification to the receivers. There are two kind of Notification Handler in Siren, the main notification handler and the notification dlq handler. Both could be configured in the [server configuration](/docs/docs/reference/server_configuration.md).
+Notification handler responsibles to dequeue message and send notification to the receivers. There are two kind of Notification Handler in Siren, the main notification handler and the notification dlq handler. Both could be configured in the [server configuration](../reference/server_configuration.md).
 
-Notification handlers could be run in the same process inside server or could be run separately as a [worker](../guides/workers.md). It is also possible for the handlers to only process specific receiver types. This can be done by specifying supported `receiver_types` in the [config](/docs/docs/reference/server_configuration.md). One could also configure the notification to be dequeued in batch by specifying `batch_size > 1` in the config.
+Notification handlers could be run in the same process inside server or could be run separately as a [worker](../guides/workers.md). It is also possible for the handlers to only process specific receiver types. This can be done by specifying supported `receiver_types` in the [config](../reference/server_configuration.md). One could also configure the notification to be dequeued in batch by specifying `batch_size > 1` in the config.
 
 ### Notification Message Handler
 
