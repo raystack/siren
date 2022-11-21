@@ -397,16 +397,37 @@ func TestService_UpdateReceiver(t *testing.T) {
 		ctx       = context.TODO()
 		testCases = []testCase{
 			{
-				Description: "should return error if type unknown",
-				Setup:       func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {},
+				Description: "should return error if get receiver return error",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+				},
 				Rcv: &receiver.Receiver{
-					Type: "random",
+					ID: 123,
+				},
+				Err: errors.New("some error"),
+			},
+			{
+				Description: "should return error if type unknown",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+						Type: "random",
+					}, nil)
+				},
+				Rcv: &receiver.Receiver{
+					ID: 123,
 				},
 				Err: errors.New("unsupported receiver type: \"random\""),
 			},
 			{
 				Description: "should return error if PreHookDBTransformConfigs return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+					}, nil)
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
@@ -421,6 +442,13 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if Update repository return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+					}, nil)
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -444,6 +472,13 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if no error returned",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+					}, nil)
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)
@@ -466,6 +501,13 @@ func TestService_UpdateReceiver(t *testing.T) {
 			}, {
 				Description: "should return error not found if repository return not found error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Configurations: map[string]interface{}{
+							"token": "key",
+						},
+					}, nil)
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
 						"token": "encrypted_key",
 					}, nil)

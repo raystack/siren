@@ -251,14 +251,12 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	dummyReq := &sirenv1beta1.UpdateReceiverRequest{
 		Id:             uint64(22),
 		Name:           "foo",
-		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurationsData,
 	}
 	payload := &receiver.Receiver{
 		ID:             uint64(22),
 		Name:           "foo",
-		Type:           "slack",
 		Labels:         labels,
 		Configurations: configurations,
 	}
