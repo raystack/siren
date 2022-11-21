@@ -1,1 +1,0 @@
-CREATE INDEX subscriptions_idx_match ON subscriptions USING GIN(match jsonb_path_ops);
