@@ -9,6 +9,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"go.opencensus.io/plugin/ocgrpc"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
@@ -75,6 +76,7 @@ func RunServer(
 			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zapLogger, loggerOpts...),
 		)),
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 	)
 
 	// init http proxy

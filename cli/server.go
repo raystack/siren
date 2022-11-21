@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/salt/printer"
@@ -127,12 +128,16 @@ func serverMigrateCommand() *cobra.Command {
 }
 
 func StartServer(ctx context.Context, cfg config.Config) error {
-	nr, err := telemetry.New(cfg.NewRelic)
+	logger := initLogger(cfg.Log)
+
+	telemetry.Init(ctx, cfg.Telemetry, logger)
+	nrApp, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(cfg.Telemetry.ServiceName),
+		newrelic.ConfigLicense(cfg.Telemetry.NewRelicAPIKey),
+	)
 	if err != nil {
 		return err
 	}
-
-	logger := initLogger(cfg.Log)
 
 	dbClient, err := db.New(cfg.DB)
 	if err != nil {
@@ -204,7 +209,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		ctx,
 		cfg.Service,
 		logger,
-		nr,
+		nrApp,
 		apiDeps,
 	)
 

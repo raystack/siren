@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	newrelic "github.com/newrelic/go-agent"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -154,6 +156,17 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 
 // Enqueue pushes messages to the queue
 func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
+	nr := newrelic.DatastoreSegment{
+		Product:    nrProductName,
+		Collection: fmt.Sprintf("%s.%s", ns.Name, ns.Set),
+		Operation:  "Fetch",
+		StartTime:  newrelic.FromContext(ctx).StartSegmentNow(),
+	}
+	defer nr.End()
+
+	span := s.startSpan(ctx, "GET", ns)
+	defer span.End()
+
 	messages := []NotificationMessage{}
 	for _, m := range ms {
 		message := &NotificationMessage{}
@@ -230,4 +243,15 @@ func getFilterReceiverTypes(receiverTypes []string) string {
 		receiverTypesQuery += ")"
 	}
 	return receiverTypesQuery
+}
+
+func (q *Queue) startSpan(ctx context.Context, query string) *trace.Span {
+	// Refer https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
+	_, span := trace.StartSpan(ctx, query)
+	span.AddAttributes(
+		trace.StringAttribute("db.system", "postgresql"),
+		trace.StringAttribute("db.name", ns.Name),
+		trace.StringAttribute("db.statement", ns.Set),
+	)
+	return span
 }

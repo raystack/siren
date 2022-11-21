@@ -3,6 +3,8 @@ package httpclient
 import (
 	"net/http"
 	"time"
+
+	"go.opencensus.io/plugin/ochttp"
 )
 
 type ClientOpt func(*Client)
@@ -40,8 +42,9 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 			transport.IdleConnTimeout = time.Duration(c.cfg.IdleConnTimeoutMS)
 		}
 
+		octr := &ochttp.Transport{Base: &http.Transport{}}
 		c.httpClient = &http.Client{
-			Transport: transport,
+			Transport: octr,
 		}
 
 		if c.cfg.TimeoutMS != 0 {
