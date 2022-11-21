@@ -5407,8 +5407,6 @@ func (m *UpdateReceiverRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Type
-
 	// no validation rules for Labels
 
 	if all {

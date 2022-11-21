@@ -18,7 +18,7 @@ RETURNING *
 `
 
 const receiverUpdateQuery = `
-UPDATE receivers SET name=$2, type=$3, labels=$4, configurations=$5, updated_at=now()
+UPDATE receivers SET name=$2, labels=$3, configurations=$4, updated_at=now()
 WHERE id = $1
 RETURNING *
 `
@@ -132,7 +132,6 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 	if err := r.client.db.QueryRowxContext(ctx, receiverUpdateQuery,
 		receiverModel.ID,
 		receiverModel.Name,
-		receiverModel.Type,
 		receiverModel.Labels,
 		receiverModel.Configurations,
 	).StructScan(&updatedReceiver); err != nil {

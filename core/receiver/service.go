@@ -102,6 +102,14 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 }
 
 func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
+	rcv, err := s.repository.Get(ctx, rcv.ID)
+	if err != nil {
+		if errors.As(err, new(NotFoundError)) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
+		}
+		return err
+	}
+
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err

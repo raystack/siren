@@ -426,8 +426,6 @@ paths:
                   type: string
               name:
                 type: string
-              type:
-                type: string
       tags:
         - Receiver
   /v1beta1/receivers/{id}/send:
