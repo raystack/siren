@@ -15,7 +15,7 @@ There are several approaches to setup Siren Server
 ## Using the CLI
 
 ### Pre-requisites for CLI
-- [Create siren config file](/docs/docs/tour/setup_server.md#initialization)
+- [Create siren config file](../tour/setup_server.md#initialization)
 
 To run the Siren server use command:
 
@@ -33,7 +33,7 @@ You can choose to set the configuration using environment variables or a config 
 
 All the configs can be passed as environment variables using underscore `_` as the delimiter between nested keys. See the following examples
 
-See [configuration reference](/docs/docs/reference/server_configuration.md) for the list of all the configuration keys.
+See [configuration reference](../reference/server_configuration.md) for the list of all the configuration keys.
 
 ```sh title=".env"
 DB_DRIVER=postgres

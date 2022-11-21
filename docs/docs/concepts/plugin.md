@@ -1,6 +1,6 @@
 # Plugin
 
-Siren decouples [provider](../providers/plugin_overview.md) and [receiver](../receivers/plugin_overview.md) as a plugin. The purpose is to ease the extension of new plugin. We welcome all contributions to add new plugin. 
+Siren decouples [provider](#provider-plugin) and [receiver](#receiver-plugin) as a plugin. The purpose is to ease the extension of new plugin. We welcome all contributions to add new plugin. 
 
 ## Base Plugin
 
@@ -11,7 +11,7 @@ Siren provides base plugin in  `plugins/providers/base` and `plugins/receivers/b
 
 Provider responsibility is to accept incoming rules configuration from Siren and send alerts to the designated Siren's Hook API. Supported providers are:
 
-- [CortexMetrics](./cortexmetrics.md)
+- [CortexMetrics](../providers/cortexmetrics.md)
 
 See [Extend](../extend/adding_new_provider.md) section for more information about adding new provider plugins.
 ### Interface
@@ -41,10 +41,10 @@ Siren provider plugin could have a server level configuration called `AppConfig`
 
 Receiver defines where a notification Siren sends to. Supported receivers are:
 
-- [Slack](./slack.md)
-- [PagerDuty Events API v1](./pagerduty.md)
-- [HTTP](./http.md)
-- [File](./file.md)
+- [Slack](../receivers/slack.md)
+- [PagerDuty Events API v1](../receivers/pagerduty.md)
+- [HTTP](../receivers/http.md)
+- [File](../receivers/file.md)
 
 See [Extend](../extend/adding_new_receiver.md) section for more information about adding new receiver plugins.
 
