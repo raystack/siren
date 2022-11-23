@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const namespaceInsertQuery = `
@@ -49,12 +50,12 @@ DELETE from namespaces where id=$1
 
 // NamespaceRepository talks to the store to read or insert data
 type NamespaceRepository struct {
-	client    *Client
+	client    *pgc.Client
 	tableName string
 }
 
 // NewNamespaceRepository returns repository struct
-func NewNamespaceRepository(client *Client) *NamespaceRepository {
+func NewNamespaceRepository(client *pgc.Client) *NamespaceRepository {
 	return &NamespaceRepository{client, "namespaces"}
 }
 
@@ -64,12 +65,7 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 		return nil, err
 	}
 
-	ctx, span := r.client.postgresTracer.StartSpan(ctx, OpSelectAll, r.tableName, map[string]string{
-		"db.statement": query,
-	})
-	defer span.End()
-
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -96,18 +92,18 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 	nsModel.FromDomain(*ns)
 
 	var createdNamespace model.Namespace
-	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, namespaceInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, namespaceInsertQuery,
 		nsModel.ProviderID,
 		nsModel.URN,
 		nsModel.Name,
 		nsModel.CredentialString,
 		nsModel.Labels,
 	).StructScan(&createdNamespace); err != nil {
-		err = checkPostgresError(err)
-		if errors.Is(err, errDuplicateKey) {
+		err = pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return namespace.ErrDuplicate
 		}
-		if errors.Is(err, errForeignKeyViolation) {
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return namespace.ErrRelation
 		}
 		return err
@@ -125,7 +121,7 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 	}
 
 	var nsDetailModel model.NamespaceDetail
-	if err := r.client.QueryRowxContext(ctx, OpSelect, r.tableName, query, args...).StructScan(&nsDetailModel); err != nil {
+	if err := r.client.QueryRowxContext(ctx, pgc.OpSelect, r.tableName, query, args...).StructScan(&nsDetailModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, namespace.NotFoundError{ID: id}
 		}
@@ -144,7 +140,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 	namespaceModel.FromDomain(*ns)
 
 	var updatedNamespace model.Namespace
-	if err := r.client.QueryRowxContext(ctx, OpUpdate, r.tableName, namespaceUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, namespaceUpdateQuery,
 		namespaceModel.ID,
 		namespaceModel.ProviderID,
 		namespaceModel.URN,
@@ -152,14 +148,14 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 		namespaceModel.CredentialString,
 		namespaceModel.Labels,
 	).StructScan(&updatedNamespace); err != nil {
-		err := checkPostgresError(err)
+		err := pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return namespace.NotFoundError{ID: namespaceModel.ID}
 		}
-		if errors.Is(err, errDuplicateKey) {
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return namespace.ErrDuplicate
 		}
-		if errors.Is(err, errForeignKeyViolation) {
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return namespace.ErrRelation
 		}
 		return err
@@ -171,7 +167,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 }
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
-	rows, err := r.client.QueryxContext(ctx, OpDelete, r.tableName, namespaceDeleteQuery, id)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpDelete, r.tableName, namespaceDeleteQuery, id)
 	if err != nil {
 		return err
 	}

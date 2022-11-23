@@ -13,6 +13,7 @@ import (
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	"github.com/odpf/siren/plugins/receivers/file"
@@ -24,7 +25,7 @@ import (
 func InitAPIDeps(
 	logger log.Logger,
 	cfg config.Config,
-	pgClient *postgres.Client,
+	pgClient *pgc.Client,
 	encryptor *secret.Crypto,
 	queue notification.Queuer,
 ) (*api.Deps, map[string]notification.Notifier, error) {

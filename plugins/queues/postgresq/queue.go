@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"strings"
 
-	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
-	"github.com/xo/dburl"
 )
 
 const (
-	MESSAGE_QUEUE_TABLE_NAME      = "message_queue"
-	MESSAGE_QUEUE_SCHEMA_NAME     = "notification"
-	MESSAGE_QUEUE_TABLE_FULL_NAME = MESSAGE_QUEUE_SCHEMA_NAME + "." + MESSAGE_QUEUE_TABLE_NAME
+	MessageQueueTableName     = "message_queue"
+	MessageQueueSchemaName    = "notification"
+	MessageQueueTableFullName = MessageQueueSchemaName + "." + MessageQueueTableName
 )
 
 type Strategy string
@@ -30,7 +29,7 @@ const (
 
 type Queue struct {
 	logger         log.Logger
-	dbc            *db.Client
+	pgClient       *pgc.Client
 	strategy       Strategy
 	postgresTracer *telemetry.PostgresSpan
 }
@@ -40,19 +39,19 @@ var (
 UPDATE %s
 SET updated_at = $1, status = $2, try_count = $3
 WHERE id = $4
-`, MESSAGE_QUEUE_TABLE_FULL_NAME)
+`, MessageQueueTableFullName)
 
 	errorCallbackQuery = fmt.Sprintf(`
 UPDATE %s
 SET updated_at = $1, status = $2, try_count = $3, last_error = $4, retryable = $5
 WHERE id = $6
-`, MESSAGE_QUEUE_TABLE_FULL_NAME)
+`, MessageQueueTableFullName)
 
 	queueEnqueueNamedQuery = fmt.Sprintf(`
 INSERT INTO %s
 	(id, status, receiver_type, configs, details, last_error, max_tries, try_count, retryable, expired_at, created_at, updated_at)
     VALUES (:id,:status,:receiver_type,:configs,:details,:last_error,:max_tries,:try_count,:retryable,:expired_at,:created_at,:updated_at)
-`, MESSAGE_QUEUE_TABLE_FULL_NAME)
+`, MessageQueueTableFullName)
 )
 
 func getQueueDequeueQuery(batchSize int, receiverTypesList string) string {
@@ -68,7 +67,7 @@ WHERE id IN (
     LIMIT %d
 )
 RETURNING *
-`, MESSAGE_QUEUE_TABLE_FULL_NAME, notification.MessageStatusPending, MESSAGE_QUEUE_TABLE_FULL_NAME, notification.MessageStatusEnqueued, receiverTypesList, batchSize)
+`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusEnqueued, receiverTypesList, batchSize)
 }
 
 func getDLQDequeueQuery(batchSize int, receiverTypesList string) string {
@@ -84,7 +83,7 @@ WHERE id IN (
     LIMIT %d
 )
 RETURNING *
-`, MESSAGE_QUEUE_TABLE_FULL_NAME, notification.MessageStatusPending, MESSAGE_QUEUE_TABLE_FULL_NAME, notification.MessageStatusFailed, receiverTypesList, batchSize)
+`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusFailed, receiverTypesList, batchSize)
 }
 
 // New creates a new queue instance
@@ -94,36 +93,25 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 		strategy: StrategyDefault,
 	}
 
-	dbURL, err := dburl.Parse(dbConfig.URL)
-	if err != nil {
-		return nil, err
-	}
-
-	dbDriverName, err := ocsql.Register(dbConfig.Driver,
-		ocsql.WithInstanceName(fmt.Sprintf("%s.%s", strings.TrimPrefix(dbURL.EscapedPath(), "/"), "notifications")),
-		ocsql.WithAllTraceOptions(),
-		ocsql.WithDefaultAttributes(),
-		ocsql.WithAllowRoot(true),
-		ocsql.WithPing(false),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	dbConfig.Driver = dbDriverName
 	dbClient, err := db.New(dbConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating db queue client: %w", err)
+	}
+
+	pgClient, err := pgc.NewClient(logger, dbClient)
 	if err != nil {
 		return nil, fmt.Errorf("error creating postgres queue client: %w", err)
 	}
-	q.dbc = dbClient
+
+	q.pgClient = pgClient
 
 	// create schema if not exist
-	_, err = q.dbc.ExecContext(context.Background(), fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", MESSAGE_QUEUE_SCHEMA_NAME))
+	_, err = dbClient.ExecContext(context.Background(), fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", MessageQueueSchemaName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create notification schema: %w", err)
 	}
 
-	dbConfig.URL = dbConfig.URL + fmt.Sprintf("&search_path=%s", MESSAGE_QUEUE_SCHEMA_NAME)
+	dbConfig.URL = dbConfig.URL + fmt.Sprintf("&search_path=%s", MessageQueueSchemaName)
 
 	if err := db.RunMigrations(dbConfig, migrations.FS, migrations.ResourcePath); err != nil {
 		return nil, fmt.Errorf("error migrating postgres queue: %w", err)
@@ -134,7 +122,7 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 	}
 
 	postgresTracer, err := telemetry.InitPostgresSpan(
-		MESSAGE_QUEUE_SCHEMA_NAME,
+		MessageQueueSchemaName,
 		dbClient.ConnectionURL(),
 	)
 	if err != nil {
@@ -160,12 +148,7 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 		dequeueQuery = getQueueDequeueQuery(batchSize, receiverTypesQuery)
 	}
 
-	ctx, span := q.postgresTracer.StartSpan(ctx, "SELECT_UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-		"db.statement": dequeueQuery,
-	})
-	defer span.End()
-
-	rows, err := q.dbc.QueryxContext(ctx, dequeueQuery)
+	rows, err := q.pgClient.QueryxContext(ctx, "SELECT_UPDATE", MessageQueueTableFullName, dequeueQuery)
 	if err != nil {
 		return err
 	}
@@ -203,12 +186,7 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 		messages = append(messages, *message)
 	}
 
-	ctx, span := q.postgresTracer.StartSpan(ctx, "INSERT", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-		"db.statement": queueEnqueueNamedQuery,
-	})
-	defer span.End()
-
-	res, err := q.dbc.NamedExecContext(ctx, queueEnqueueNamedQuery, messages)
+	res, err := q.pgClient.NamedExecContext(ctx, pgc.OpInsert, MessageQueueTableFullName, queueEnqueueNamedQuery, messages)
 	if err != nil {
 		return err
 	}
@@ -224,13 +202,8 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 
 // SuccessCallback is a callback that will be called once the message is succesfully handled by handlerFn
 func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) error {
-	ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-		"db.statement": successCallbackQuery,
-	})
-	defer span.End()
-
 	q.logger.Debug("marking a message as published", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.dbc.ExecContext(ctx, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, pgc.OpUpdate, MessageQueueTableFullName, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
 	if err != nil {
 		return err
 	}
@@ -247,13 +220,8 @@ func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) er
 
 // ErrorCallback is a callback that will be called once the message is failed to be handled by handlerFn
 func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) error {
-	ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-		"db.statement": errorCallbackQuery,
-	})
-	defer span.End()
-
 	q.logger.Debug("marking a message as failed with", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.dbc.ExecContext(ctx, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, pgc.OpUpdate, MessageQueueTableFullName, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
 	if err != nil {
 		return err
 	}
@@ -274,7 +242,7 @@ func (q *Queue) Type() string {
 
 // Stop will close the db
 func (q *Queue) Stop(ctx context.Context) error {
-	return q.dbc.Close()
+	return q.pgClient.Close()
 }
 
 func getFilterReceiverTypes(receiverTypes []string) string {

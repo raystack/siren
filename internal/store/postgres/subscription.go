@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const subscriptionInsertQuery = `
@@ -40,12 +41,12 @@ var subscriptionListQueryBuilder = sq.Select(
 
 // SubscriptionRepository talks to the store to read or insert data
 type SubscriptionRepository struct {
-	client    *Client
+	client    *pgc.Client
 	tableName string
 }
 
 // NewSubscriptionRepository returns SubscriptionRepository struct
-func NewSubscriptionRepository(client *Client) *SubscriptionRepository {
+func NewSubscriptionRepository(client *pgc.Client) *SubscriptionRepository {
 	return &SubscriptionRepository{
 		client:    client,
 		tableName: "subscriptions",
@@ -74,7 +75,7 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,17 +111,17 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, subscriptionInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, subscriptionInsertQuery,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
 	).StructScan(&newSubscriptionModel); err != nil {
-		err := checkPostgresError(err)
-		if errors.Is(err, errDuplicateKey) {
+		err := pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return subscription.ErrDuplicate
 		}
-		if errors.Is(err, errForeignKeyViolation) {
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return subscription.ErrRelation
 		}
 		return err
@@ -138,7 +139,7 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 	}
 
 	var subscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, OpSelect, r.tableName, query, args...).StructScan(&subscriptionModel); err != nil {
+	if err := r.client.QueryRowxContext(ctx, pgc.OpSelect, r.tableName, query, args...).StructScan(&subscriptionModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, subscription.NotFoundError{ID: id}
 		}
@@ -157,21 +158,21 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, OpUpdate, r.tableName, subscriptionUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, subscriptionUpdateQuery,
 		subscriptionModel.ID,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
 	).StructScan(&newSubscriptionModel); err != nil {
-		err := checkPostgresError(err)
+		err := pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return subscription.NotFoundError{ID: subscriptionModel.ID}
 		}
-		if errors.Is(err, errDuplicateKey) {
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return subscription.ErrDuplicate
 		}
-		if errors.Is(err, errForeignKeyViolation) {
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return subscription.ErrRelation
 		}
 		return err
@@ -183,7 +184,7 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 }
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.ExecContext(ctx, OpDelete, r.tableName, subscriptionDeleteQuery, id); err != nil {
+	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, subscriptionDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

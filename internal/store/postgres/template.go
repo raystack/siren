@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const templateUpsertQuery = `
@@ -35,12 +36,12 @@ var templateListQueryBuilder = sq.Select(
 
 // TemplateRepository talks to the store to read or insert data
 type TemplateRepository struct {
-	client    *Client
+	client    *pgc.Client
 	tableName string
 }
 
 // NewTemplateRepository returns repository struct
-func NewTemplateRepository(client *Client) *TemplateRepository {
+func NewTemplateRepository(client *pgc.Client) *TemplateRepository {
 	return &TemplateRepository{client, "templates"}
 }
 
@@ -61,8 +62,8 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 		templateModel.Tags,
 		templateModel.Variables,
 	).StructScan(&upsertedTemplate); err != nil {
-		err = checkPostgresError(err)
-		if errors.Is(err, errDuplicateKey) {
+		err = pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return template.ErrDuplicate
 		}
 		return err
@@ -89,7 +90,7 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 	}
 
 	var templateModel model.Template
-	if err := r.client.GetContext(ctx, OpSelect, r.tableName, &templateModel, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, template.NotFoundError{Name: name}
 		}
@@ -134,7 +135,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
-	if _, err := r.client.ExecContext(ctx, OpDelete, r.tableName, templateDeleteByNameQuery, name); err != nil {
+	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, templateDeleteByNameQuery, name); err != nil {
 		return err
 	}
 	return nil

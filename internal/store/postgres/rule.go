@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const ruleUpsertQuery = `
@@ -38,12 +39,12 @@ var ruleListQueryBuilder = sq.Select(
 
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
-	client    *Client
+	client    *pgc.Client
 	tableName string
 }
 
 // NewRuleRepository returns repository struct
-func NewRuleRepository(client *Client) *RuleRepository {
+func NewRuleRepository(client *pgc.Client) *RuleRepository {
 	return &RuleRepository{client, "rules"}
 }
 
@@ -67,11 +68,11 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 		ruleModel.Variables,
 		ruleModel.ProviderNamespace,
 	).StructScan(&newRuleModel); err != nil {
-		err = checkPostgresError(err)
-		if errors.Is(err, errDuplicateKey) {
+		err = pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return rule.ErrDuplicate
 		}
-		if errors.Is(err, errForeignKeyViolation) {
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return rule.ErrRelation
 		}
 		return err
@@ -110,7 +111,7 @@ func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}

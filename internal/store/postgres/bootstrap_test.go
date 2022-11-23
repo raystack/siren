@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/odpf/salt/db"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
@@ -14,9 +16,60 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
+	"github.com/ory/dockertest/v3"
 )
 
-func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
+const (
+	pgUser   = "test_user"
+	pgPass   = "test_pass"
+	pgDBName = "test_db"
+)
+
+var (
+	dbConfig = db.Config{
+		Driver:          "postgres",
+		MaxIdleConns:    10,
+		MaxOpenConns:    10,
+		ConnMaxLifeTime: 1000,
+		MaxQueryTimeout: 1000,
+	}
+)
+
+func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
+	if err := pool.Purge(resource); err != nil {
+		return fmt.Errorf("could not purge resource: %w", err)
+	}
+	return nil
+}
+
+func migrate(ctx context.Context, logger log.Logger, client *pgc.Client, dbConf db.Config) (err error) {
+	var queries = []string{
+		"DROP SCHEMA public CASCADE",
+		"CREATE SCHEMA public",
+	}
+
+	err = execQueries(ctx, client, queries)
+	if err != nil {
+		return
+	}
+
+	err = pgc.Migrate(dbConf)
+	return
+}
+
+// ExecQueries is used for executing list of db query
+func execQueries(ctx context.Context, client *pgc.Client, queries []string) error {
+	for _, query := range queries {
+		_, err := client.GetDB(ctx).QueryContext(ctx, query)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func bootstrapProvider(client *pgc.Client) ([]provider.Provider, error) {
 	filePath := "./testdata/mock-provider.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -44,7 +97,7 @@ func bootstrapProvider(client *postgres.Client) ([]provider.Provider, error) {
 	return providers, nil
 }
 
-func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace, error) {
+func bootstrapNamespace(client *pgc.Client) ([]namespace.EncryptedNamespace, error) {
 	filePath := "./testdata/mock-namespace.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -77,7 +130,7 @@ func bootstrapNamespace(client *postgres.Client) ([]namespace.EncryptedNamespace
 	return insertedData, nil
 }
 
-func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
+func bootstrapReceiver(client *pgc.Client) ([]receiver.Receiver, error) {
 	filePath := "./testdata/mock-receiver.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -105,7 +158,7 @@ func bootstrapReceiver(client *postgres.Client) ([]receiver.Receiver, error) {
 	return insertedData, nil
 }
 
-func bootstrapAlert(client *postgres.Client) error {
+func bootstrapAlert(client *pgc.Client) error {
 	filePath := "./testdata/mock-alert.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -129,7 +182,7 @@ func bootstrapAlert(client *postgres.Client) error {
 	return nil
 }
 
-func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
+func bootstrapTemplate(client *pgc.Client) ([]template.Template, error) {
 	filePath := "./testdata/mock-template.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -156,7 +209,7 @@ func bootstrapTemplate(client *postgres.Client) ([]template.Template, error) {
 	return insertedData, nil
 }
 
-func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
+func bootstrapRule(client *pgc.Client) ([]rule.Rule, error) {
 	filePath := "./testdata/mock-rule.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
@@ -183,7 +236,7 @@ func bootstrapRule(client *postgres.Client) ([]rule.Rule, error) {
 	return insertedData, nil
 }
 
-func bootstrapSubscription(client *postgres.Client) ([]subscription.Subscription, error) {
+func bootstrapSubscription(client *pgc.Client) ([]subscription.Subscription, error) {
 	filePath := "./testdata/mock-subscription.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {

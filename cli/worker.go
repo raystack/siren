@@ -9,7 +9,7 @@ import (
 	"github.com/odpf/salt/db"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/worker"
 	"github.com/odpf/siren/plugins/queues"
@@ -85,7 +85,7 @@ func workerStartNotificationHandlerCommand() *cobra.Command {
 				return err
 			}
 
-			pgClient, err := postgres.NewClient(logger, dbClient)
+			pgClient, err := pgc.NewClient(logger, dbClient)
 			if err != nil {
 				return err
 			}
@@ -161,7 +161,7 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 				return err
 			}
 
-			pgClient, err := postgres.NewClient(logger, dbClient)
+			pgClient, err := pgc.NewClient(logger, dbClient)
 			if err != nil {
 				return err
 			}

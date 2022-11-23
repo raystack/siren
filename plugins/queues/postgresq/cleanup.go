@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/plugins/queues"
 )
 
@@ -56,12 +57,12 @@ func (q *Queue) Cleanup(ctx context.Context, filter queues.FilterCleanup) error 
 		filterExpr = messagePublishedExpr
 	}
 
-	query, args, err := sq.Delete(MESSAGE_QUEUE_TABLE_NAME).Where(filterExpr).ToSql()
+	query, args, err := sq.Delete(MessageQueueTableFullName).Where(filterExpr).ToSql()
 	if err != nil {
 		return err
 	}
 
-	res, err := q.dbc.ExecContext(ctx, query, args...)
+	res, err := q.pgClient.ExecContext(ctx, pgc.OpDelete, MessageQueueTableFullName, query, args...)
 	if err != nil {
 		return err
 	}

@@ -26,6 +26,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		{
 			name: "should return error if failed to transform notification to messages",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{}, nil)
 			},
 			n: notification.Notification{
@@ -36,6 +37,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		{
 			name: "should return error if there is an error when fetching receiver",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
@@ -43,6 +45,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		{
 			name: "should return error if prehook transform config return error",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 					Type: testPluginType,
 					Configurations: map[string]interface{}{
@@ -56,6 +59,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		{
 			name: "should return error if enqueue error",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 					Type: testPluginType,
 					Configurations: map[string]interface{}{
@@ -65,13 +69,14 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return no error if enqueue success",
 			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 					Type: testPluginType,
 					Configurations: map[string]interface{}{
@@ -81,7 +86,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -124,6 +129,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		{
 			name: "should return error if there is an error when matching labels",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
@@ -131,6 +137,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		{
 			name: "should return error if receiver type of a receiver is unknown",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
@@ -148,6 +155,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		{
 			name: "should return error if there is no matching subscription",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
 			},
 			wantErr: true,
@@ -155,6 +163,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		{
 			name: "should return error if failed to transform notification to messages",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
@@ -175,6 +184,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		{
 			name: "should return error if receiver config is invalid",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
@@ -189,13 +199,14 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("invalid config"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if enqueue error",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
@@ -210,16 +221,17 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return no error if enqueue success",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
@@ -234,10 +246,10 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 							},
 						},
 					}, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{
 					"key": "value",
 				}, nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,
 		},

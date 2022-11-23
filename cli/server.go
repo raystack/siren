@@ -14,7 +14,7 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/worker"
@@ -113,7 +113,7 @@ func serverMigrateCommand() *cobra.Command {
 				return err
 			}
 
-			if err := postgres.Migrate(cfg.DB); err != nil {
+			if err := pgc.Migrate(cfg.DB); err != nil {
 				return err
 			}
 			printer.Success("Migration done")
@@ -144,7 +144,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	pgClient, err := postgres.NewClient(logger, dbClient)
+	pgClient, err := pgc.NewClient(logger, dbClient)
 	if err != nil {
 		return err
 	}

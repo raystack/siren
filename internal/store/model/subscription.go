@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/pkg/pgtype"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 type SubscriptionReceiver struct {
@@ -26,13 +26,13 @@ func (list SubscriptionReceivers) Value() (driver.Value, error) {
 }
 
 type Subscription struct {
-	ID          uint64                 `db:"id"`
-	NamespaceID uint64                 `db:"namespace_id"`
-	URN         string                 `db:"urn"`
-	Receiver    SubscriptionReceivers  `db:"receiver"`
-	Match       pgtype.StringStringMap `db:"match"`
-	CreatedAt   time.Time              `db:"created_at"`
-	UpdatedAt   time.Time              `db:"updated_at"`
+	ID          uint64                `db:"id"`
+	NamespaceID uint64                `db:"namespace_id"`
+	URN         string                `db:"urn"`
+	Receiver    SubscriptionReceivers `db:"receiver"`
+	Match       pgc.StringStringMap   `db:"match"`
+	CreatedAt   time.Time             `db:"created_at"`
+	UpdatedAt   time.Time             `db:"updated_at"`
 }
 
 func (s *Subscription) FromDomain(sub subscription.Subscription) {

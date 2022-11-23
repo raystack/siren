@@ -1,4 +1,4 @@
-package postgres
+package pgc
 
 import (
 	"context"
@@ -26,9 +26,9 @@ const (
 var (
 	transactionContextKey = struct{}{}
 
-	errDuplicateKey        = errors.New("duplicate key")
-	errCheckViolation      = errors.New("check constraint violation")
-	errForeignKeyViolation = errors.New("foreign key violation")
+	ErrDuplicateKey        = errors.New("duplicate key")
+	ErrCheckViolation      = errors.New("check constraint violation")
+	ErrForeignKeyViolation = errors.New("foreign key violation")
 )
 
 type Client struct {
@@ -66,16 +66,16 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func checkPostgresError(err error) error {
+func CheckError(err error) error {
 	var pqErr *pq.Error
 	if errors.As(err, &pqErr) {
 		switch pqErr.Code.Name() {
 		case "unique_violation":
-			return fmt.Errorf("%w [%s]", errDuplicateKey, pqErr.Detail)
+			return fmt.Errorf("%w [%s]", ErrDuplicateKey, pqErr.Detail)
 		case "check_violation":
-			return fmt.Errorf("%w [%s]", errCheckViolation, pqErr.Detail)
+			return fmt.Errorf("%w [%s]", ErrCheckViolation, pqErr.Detail)
 		case "foreign_key_violation":
-			return fmt.Errorf("%w [%s]", errForeignKeyViolation, pqErr.Detail)
+			return fmt.Errorf("%w [%s]", ErrForeignKeyViolation, pqErr.Detail)
 		}
 	}
 	return err
@@ -142,6 +142,24 @@ func (c *Client) ExecContext(ctx context.Context, op string, tableName string, q
 	defer span.End()
 
 	res, err := c.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		span.SetStatus(trace.Status{
+			Code:    trace.StatusCodeUnknown,
+			Message: err.Error(),
+		})
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (c *Client) NamedExecContext(ctx context.Context, op string, tableName string, query string, arg interface{}) (sql.Result, error) {
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
+
+	res, err := c.db.NamedExecContext(ctx, query, arg)
 	if err != nil {
 		span.SetStatus(trace.Status{
 			Code:    trace.StatusCodeUnknown,

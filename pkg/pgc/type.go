@@ -1,4 +1,4 @@
-package pgtype
+package pgc
 
 import (
 	"database/sql/driver"

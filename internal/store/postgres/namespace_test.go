@@ -12,6 +12,7 @@ import (
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,7 +20,7 @@ import (
 type NamespaceRepositoryTestSuite struct {
 	suite.Suite
 	ctx        context.Context
-	client     *postgres.Client
+	client     *pgc.Client
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
 	repository *postgres.NamespaceRepository
@@ -47,7 +48,7 @@ func (s *NamespaceRepositoryTestSuite) SetupSuite() {
 		s.T().Fatal(err)
 	}
 
-	s.client, err = postgres.NewClient(logger, dbc)
+	s.client, err = pgc.NewClient(logger, dbc)
 	if err != nil {
 		s.T().Fatal(err)
 	}
