@@ -41,7 +41,7 @@ type ProviderService interface {
 type ReceiverService interface {
 	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
 	Create(ctx context.Context, rcv *receiver.Receiver) error
-	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
+	Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error)
 	Update(ctx context.Context, rcv *receiver.Receiver) error
 	Delete(ctx context.Context, id uint64) error
 }

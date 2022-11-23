@@ -31,7 +31,7 @@ type Queue struct {
 	logger         log.Logger
 	pgClient       *pgc.Client
 	strategy       Strategy
-	postgresTracer *telemetry.PostgresSpan
+	postgresTracer *telemetry.PostgresTracer
 }
 
 var (
@@ -61,7 +61,7 @@ SET status = '%s', updated_at = now()
 WHERE id IN (
     SELECT id
     FROM %s
-    WHERE status = '%s' AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries %s
+    WHERE status = '%s' AND retryable IS FALSE %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries 
     ORDER BY expired_at
     FOR UPDATE SKIP LOCKED
     LIMIT %d
@@ -77,7 +77,7 @@ SET status = '%s', updated_at = now()
 WHERE id IN (
     SELECT id
     FROM %s
-    WHERE status = '%s' AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries AND retryable IS TRUE %s
+    WHERE status = '%s' AND retryable IS TRUE  %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries
     ORDER BY expired_at
     FOR UPDATE SKIP LOCKED
     LIMIT %d
@@ -121,8 +121,7 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 		opt(q)
 	}
 
-	postgresTracer, err := telemetry.InitPostgresSpan(
-		MessageQueueSchemaName,
+	postgresTracer, err := telemetry.NewPostgresTracer(
 		dbClient.ConnectionURL(),
 	)
 	if err != nil {
@@ -162,7 +161,6 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 
 		messages = append(messages, msgDomain)
 	}
-	// span.End()
 
 	if len(messages) == 0 {
 		return notification.ErrNoMessage
@@ -203,7 +201,7 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 // SuccessCallback is a callback that will be called once the message is succesfully handled by handlerFn
 func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) error {
 	q.logger.Debug("marking a message as published", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.pgClient.ExecContext(ctx, pgc.OpUpdate, MessageQueueTableFullName, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, "UPDATE_SUCCESS", MessageQueueTableFullName, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
 	if err != nil {
 		return err
 	}
@@ -221,7 +219,7 @@ func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) er
 // ErrorCallback is a callback that will be called once the message is failed to be handled by handlerFn
 func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) error {
 	q.logger.Debug("marking a message as failed with", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.pgClient.ExecContext(ctx, pgc.OpUpdate, MessageQueueTableFullName, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, "UPDATE_ERROR", MessageQueueTableFullName, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
 	if err != nil {
 		return err
 	}

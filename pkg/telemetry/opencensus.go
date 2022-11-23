@@ -32,7 +32,7 @@ func setupOpenCensus(ctx context.Context, mux *http.ServeMux, cfg Config) error 
 		}
 	}
 
-	if err := setupViews(cfg.EnableHTTPServerMetrics); err != nil {
+	if err := setupViews(); err != nil {
 		return err
 	}
 
@@ -79,7 +79,7 @@ func setupOpenCensus(ctx context.Context, mux *http.ServeMux, cfg Config) error 
 	return nil
 }
 
-func setupViews(enableHTTPMetrics bool) error {
+func setupViews() error {
 	if err := setupDBViews(); err != nil {
 		return err
 	}
@@ -92,62 +92,11 @@ func setupViews(enableHTTPMetrics bool) error {
 		return err
 	}
 
-	if enableHTTPMetrics {
-		if err := setupHTTPServerViews(); err != nil {
-			return err
-		}
-	}
-
 	if err := setupApplicationViews(); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func setupHTTPServerViews() error {
-	serverHTTPViewTags := []tag.Key{
-		ochttp.KeyServerRoute,
-		ochttp.Method,
-	}
-
-	return view.Register(
-		&view.View{
-			Name:        "opencensus.io/http/server/request_bytes",
-			Description: "Size distribution of HTTP request body",
-			Measure:     ochttp.ServerRequestBytes,
-			Aggregation: ochttp.DefaultSizeDistribution,
-			TagKeys:     serverHTTPViewTags,
-		},
-		&view.View{
-			Name:        "opencensus.io/http/server/response_bytes",
-			Description: "Size distribution of HTTP response body",
-			Measure:     ochttp.ServerResponseBytes,
-			Aggregation: ochttp.DefaultSizeDistribution,
-			TagKeys:     serverHTTPViewTags,
-		},
-		&view.View{
-			Name:        "opencensus.io/http/server/latency",
-			Description: "Latency distribution of HTTP requests",
-			Measure:     ochttp.ServerLatency,
-			Aggregation: ochttp.DefaultLatencyDistribution,
-			TagKeys:     serverHTTPViewTags,
-		},
-		&view.View{
-			Name:        "opencensus.io/http/server/request_count_by_method",
-			Description: "Server request count by HTTP method",
-			Measure:     ochttp.ServerRequestCount,
-			Aggregation: view.Count(),
-			TagKeys:     serverHTTPViewTags,
-		},
-		&view.View{
-			Name:        "opencensus.io/http/server/response_count_by_status_code",
-			Description: "Server response count by status code",
-			TagKeys:     append(serverHTTPViewTags, ochttp.StatusCode),
-			Measure:     ochttp.ServerLatency,
-			Aggregation: view.Count(),
-		},
-	)
 }
 
 func setupGRPCServerViews() error {

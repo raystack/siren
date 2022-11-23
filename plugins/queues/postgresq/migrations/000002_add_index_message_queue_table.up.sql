@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS message_queue_idx ON message_queue (status, retryable, receiver_type, expired_at, try_count);

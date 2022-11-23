@@ -1,43 +1,38 @@
 package telemetry
 
-// import (
-// 	"context"
-// 	"fmt"
+import (
+	"net/http"
 
-// 	"go.opencensus.io/trace"
-// )
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
+)
 
-// type HTTPClientSpan struct {
-// 	host string
-// 	port string
-// }
+type Transport struct {
+	Base http.RoundTripper
+}
 
-// func InitHTTPClientSpan(host string, port string) *HTTPClientSpan {
-// 	return &HTTPClientSpan{
-// 		host: host,
-// 		port: port,
-// 	}
-// }
+func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	rt := t.base()
+	span := trace.FromContext(req.Context())
 
-// func (c HTTPClientSpan) StartSpan(ctx context.Context, method string, route string, url string, spanAttributes map[string]string) (context.Context, *trace.Span) {
-// 	// Refer https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md
-// 	ctx, span := trace.StartSpan(ctx, fmt.Sprintf("HTTP %s %s", method, route), trace.WithSpanKind(trace.SpanKindClient))
+	span.AddAttributes([]trace.Attribute{
+		trace.StringAttribute("span.kind", "client"),
+	}...)
 
-// 	traceAttributes := []trace.Attribute{
-// 		trace.StringAttribute("http.method", method),
-// 		trace.StringAttribute("http.url", route),
-// 		// trace.StringAttribute("http.resend_count", tryCount),
-// 		trace.StringAttribute("net.peer.name", c.host),
-// 		trace.StringAttribute("net.peer.port", c.port),
-// 	}
+	ctx := trace.NewContext(req.Context(), span)
 
-// 	for k, v := range spanAttributes {
-// 		traceAttributes = append(traceAttributes, trace.StringAttribute(k, v))
-// 	}
+	return rt.RoundTrip(req.WithContext(ctx))
+}
 
-// 	span.AddAttributes(
-// 		traceAttributes...,
-// 	)
-
-// 	return ctx, span
-// }
+func (t *Transport) base() http.RoundTripper {
+	if t.Base != nil {
+		return &ochttp.Transport{
+			Base:           t.Base,
+			NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
+		}
+	}
+	return &ochttp.Transport{
+		Base:           http.DefaultTransport,
+		NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
+	}
+}

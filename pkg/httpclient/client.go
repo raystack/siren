@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"go.opencensus.io/plugin/ochttp"
+	"github.com/odpf/siren/pkg/telemetry"
 )
 
 type ClientOpt func(*Client)
@@ -43,9 +43,8 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 		}
 
 		c.httpClient = &http.Client{
-			Transport: &ochttp.Transport{
-				Base:           transport,
-				NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
+			Transport: &telemetry.Transport{
+				Base: transport,
 			},
 		}
 

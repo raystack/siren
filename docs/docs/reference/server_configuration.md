@@ -34,9 +34,6 @@ telemetry:
   # enable_memory enables collection of runtime memory metrics. available via `/metrics`.
   enable_memory: <bool> | default = true
 
-  # enable_http_server_metrics enables collection of http metrics.
-  enable_http_server_metrics: <bool> | default = false
-
   # sampling_fraction indicates the sampling rate for tracing. 1 indicates all traces
   # are collected and 0 means no traces.
   sampling_fraction: <bool> | default = 1
@@ -48,6 +45,9 @@ telemetry:
   # enable_newrelic enables exporting NewRelic instrumentation in addition to the
   # OpenCensus.
   enable_newrelic: <bool> | default = false
+
+  # new relic app name, if left empty, app name will be service_name
+  newrelic_app_name: <string> | default=""
 
   # newrelic_api_key must be a valid NewRelic License key.
   newrelic_api_key: <string> | default = "____LICENSE_STRING_OF_40_CHARACTERS_____"
@@ -71,6 +71,15 @@ log:
 
   # log format will be compatible with gcp logging if this is set to true
   gcp_compatible: <bool> | default=true
+
+providers:
+  cortex:
+    group_wait: <string> | default="30s"
+
+    webhook_base_api: <string> | default="http://localhost:8080/v1beta1/alerts/cortex"
+
+    http_client:
+      <httpclient>
 
 receivers:
   slack:

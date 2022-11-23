@@ -34,7 +34,7 @@ var (
 type Client struct {
 	db             *db.Client
 	logger         log.Logger
-	postgresTracer *telemetry.PostgresSpan
+	postgresTracer *telemetry.PostgresTracer
 }
 
 // NewClient wraps salt/db client
@@ -43,8 +43,7 @@ func NewClient(logger log.Logger, dbc *db.Client) (*Client, error) {
 		return nil, errors.New("error creating postgres client: nil db client")
 	}
 
-	postgresTracer, err := telemetry.InitPostgresSpan(
-		"public",
+	postgresTracer, err := telemetry.NewPostgresTracer(
 		dbc.ConnectionURL(),
 	)
 	if err != nil {

@@ -9,33 +9,31 @@ import (
 	"go.opencensus.io/trace"
 )
 
-type PostgresSpan struct {
+type PostgresTracer struct {
 	dbSystem string
 	dbName   string
-	dbSchema string
 	dbUser   string
 	dbAddr   string
 	dbPort   string
 }
 
-func InitPostgresSpan(dbSchema string, url string) (*PostgresSpan, error) {
+func NewPostgresTracer(url string) (*PostgresTracer, error) {
 	u, err := dburl.Parse(url)
 	if err != nil {
 		return nil, err
 	}
-	return &PostgresSpan{
+	return &PostgresTracer{
 		dbSystem: "postgresql",
 		dbName:   strings.TrimPrefix(u.EscapedPath(), "/"),
-		dbSchema: dbSchema,
 		dbUser:   u.User.Username(),
 		dbAddr:   u.Hostname(),
 		dbPort:   u.Port(),
 	}, err
 }
 
-func (d PostgresSpan) StartSpan(ctx context.Context, op string, tableName string, spanAttributes map[string]string) (context.Context, *trace.Span) {
+func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName string, spanAttributes map[string]string) (context.Context, *trace.Span) {
 	// Refer https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
-	ctx, span := trace.StartSpan(ctx, fmt.Sprintf("%s %s.%s.%s", op, d.dbName, d.dbSchema, tableName), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := trace.StartSpan(ctx, fmt.Sprintf("%s %s.%s", op, d.dbName, tableName), trace.WithSpanKind(trace.SpanKindClient))
 
 	traceAttributes := []trace.Attribute{
 		trace.StringAttribute("db.system", d.dbSystem),

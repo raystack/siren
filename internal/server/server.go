@@ -7,14 +7,12 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"go.opencensus.io/plugin/ocgrpc"
-
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
@@ -24,6 +22,7 @@ import (
 	"github.com/odpf/siren/pkg/zaputil"
 	swagger "github.com/odpf/siren/proto"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -68,7 +67,6 @@ func RunServer(
 			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(zapLogger, loggerOpts...),
-			// otelgrpc.UnaryServerInterceptor(),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
@@ -76,7 +74,6 @@ func RunServer(
 			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zapLogger, loggerOpts...),
-			// otelgrpc.StreamServerInterceptor(),
 		)),
 	)
 
