@@ -52,18 +52,13 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 		return errors.New("rule domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPSERT", r.tableName, map[string]string{
-	// 	"db.statement": ruleUpsertQuery,
-	// })
-	// defer span.End()
-
 	ruleModel := new(model.Rule)
 	if err := ruleModel.FromDomain(*rl); err != nil {
 		return err
 	}
 
 	var newRuleModel model.Rule
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, ruleUpsertQuery,
+	if err := r.client.QueryRowxContext(ctx, "UPSERT", r.tableName, ruleUpsertQuery,
 		ruleModel.Name,
 		ruleModel.Namespace,
 		ruleModel.GroupName,
@@ -115,12 +110,7 @@ func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}

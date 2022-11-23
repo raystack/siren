@@ -11,6 +11,16 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
+	"go.opencensus.io/trace"
+)
+
+const (
+	OpInsert    = "INSERT"
+	OpSelectAll = "SELECT_ALL"
+	OpSelect    = "SELECT"
+	OpUpdate    = "UPDATE"
+	OpDelete    = "DELETE"
 )
 
 var (
@@ -22,9 +32,9 @@ var (
 )
 
 type Client struct {
-	db     *db.Client
-	logger log.Logger
-	// postgresTracer *telemetry.PostgresSpan
+	db             *db.Client
+	logger         log.Logger
+	postgresTracer *telemetry.PostgresSpan
 }
 
 // NewClient wraps salt/db client
@@ -33,19 +43,27 @@ func NewClient(logger log.Logger, dbc *db.Client) (*Client, error) {
 		return nil, errors.New("error creating postgres client: nil db client")
 	}
 
-	// postgresTracer, err := telemetry.InitPostgresSpan(
-	// 	"public",
-	// 	dbc.ConnectionURL(),
-	// )
-	// if err != nil {
-	// 	return nil, err
-	// }
+	postgresTracer, err := telemetry.InitPostgresSpan(
+		"public",
+		dbc.ConnectionURL(),
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
-		db:     dbc,
-		logger: logger,
-		// postgresTracer: postgresTracer,
+		db:             dbc,
+		logger:         logger,
+		postgresTracer: postgresTracer,
 	}, nil
+}
+
+// Close closes the database connection
+func (c *Client) Close() error {
+	if c.db != nil {
+		return c.db.Close()
+	}
+	return nil
 }
 
 func checkPostgresError(err error) error {
@@ -68,6 +86,71 @@ func Migrate(cfg db.Config) error {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) QueryRowxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) *sqlx.Row {
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
+	sqlxRow := c.GetDB(ctx).QueryRowxContext(ctx, query, args...)
+	if sqlxRow.Err() != nil {
+		span.SetStatus(trace.Status{
+			Code:    trace.StatusCodeUnknown,
+			Message: sqlxRow.Err().Error(),
+		})
+	}
+	return sqlxRow
+}
+
+func (c *Client) QueryxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (*sqlx.Rows, error) {
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
+	sqlxRow, err := c.GetDB(ctx).QueryxContext(ctx, query, args...)
+	if err != nil {
+		span.SetStatus(trace.Status{
+			Code:    trace.StatusCodeUnknown,
+			Message: sqlxRow.Err().Error(),
+		})
+	}
+	return sqlxRow, err
+}
+
+func (c *Client) GetContext(ctx context.Context, op string, tableName string, dest interface{}, query string, args ...interface{}) error {
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
+
+	if err := c.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(dest); err != nil {
+		span.SetStatus(trace.Status{
+			Code:    trace.StatusCodeUnknown,
+			Message: err.Error(),
+		})
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) ExecContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (sql.Result, error) {
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
+
+	res, err := c.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		span.SetStatus(trace.Status{
+			Code:    trace.StatusCodeUnknown,
+			Message: err.Error(),
+		})
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c *Client) WithTransaction(ctx context.Context, opts *sql.TxOptions) context.Context {

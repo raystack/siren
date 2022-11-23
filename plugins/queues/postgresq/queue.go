@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
 	"github.com/xo/dburl"
 )
@@ -28,10 +29,10 @@ const (
 )
 
 type Queue struct {
-	logger   log.Logger
-	dbc      *db.Client
-	strategy Strategy
-	// postgresTracer *telemetry.PostgresSpan
+	logger         log.Logger
+	dbc            *db.Client
+	strategy       Strategy
+	postgresTracer *telemetry.PostgresSpan
 }
 
 var (
@@ -132,15 +133,15 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 		opt(q)
 	}
 
-	// postgresTracer, err := telemetry.InitPostgresSpan(
-	// 	MESSAGE_QUEUE_SCHEMA_NAME,
-	// 	dbClient.ConnectionURL(),
-	// )
-	// if err != nil {
-	// 	return nil, err
-	// }
+	postgresTracer, err := telemetry.InitPostgresSpan(
+		MESSAGE_QUEUE_SCHEMA_NAME,
+		dbClient.ConnectionURL(),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	// q.postgresTracer = postgresTracer
+	q.postgresTracer = postgresTracer
 
 	return q, nil
 }
@@ -159,10 +160,10 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 		dequeueQuery = getQueueDequeueQuery(batchSize, receiverTypesQuery)
 	}
 
-	// ctx, span := q.postgresTracer.StartSpan(ctx, "SELECT_UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-	// 	"db.statement": dequeueQuery,
-	// })
-	// defer span.End()
+	ctx, span := q.postgresTracer.StartSpan(ctx, "SELECT_UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
+		"db.statement": dequeueQuery,
+	})
+	defer span.End()
 
 	rows, err := q.dbc.QueryxContext(ctx, dequeueQuery)
 	if err != nil {
@@ -202,10 +203,10 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 		messages = append(messages, *message)
 	}
 
-	// ctx, span := q.postgresTracer.StartSpan(ctx, "INSERT", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-	// 	"db.statement": queueEnqueueNamedQuery,
-	// })
-	// defer span.End()
+	ctx, span := q.postgresTracer.StartSpan(ctx, "INSERT", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
+		"db.statement": queueEnqueueNamedQuery,
+	})
+	defer span.End()
 
 	res, err := q.dbc.NamedExecContext(ctx, queueEnqueueNamedQuery, messages)
 	if err != nil {
@@ -223,10 +224,10 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 
 // SuccessCallback is a callback that will be called once the message is succesfully handled by handlerFn
 func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) error {
-	// ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-	// 	"db.statement": successCallbackQuery,
-	// })
-	// defer span.End()
+	ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
+		"db.statement": successCallbackQuery,
+	})
+	defer span.End()
 
 	q.logger.Debug("marking a message as published", "strategy", q.strategy, "id", ms.ID)
 	res, err := q.dbc.ExecContext(ctx, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
@@ -246,10 +247,10 @@ func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) er
 
 // ErrorCallback is a callback that will be called once the message is failed to be handled by handlerFn
 func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) error {
-	// ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
-	// 	"db.statement": errorCallbackQuery,
-	// })
-	// defer span.End()
+	ctx, span := q.postgresTracer.StartSpan(ctx, "UPDATE", MESSAGE_QUEUE_TABLE_NAME, map[string]string{
+		"db.statement": errorCallbackQuery,
+	})
+	defer span.End()
 
 	q.logger.Debug("marking a message as failed with", "strategy", q.strategy, "id", ms.ID)
 	res, err := q.dbc.ExecContext(ctx, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)

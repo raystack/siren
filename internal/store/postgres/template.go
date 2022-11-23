@@ -49,18 +49,13 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 		return errors.New("template domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPSERT", r.tableName, map[string]string{
-	// 	"db.statement": templateUpsertQuery,
-	// })
-	// defer span.End()
-
 	templateModel := new(model.Template)
 	if err := templateModel.FromDomain(*tmpl); err != nil {
 		return err
 	}
 
 	var upsertedTemplate model.Template
-	if err := r.client.db.QueryRowxContext(ctx, templateUpsertQuery,
+	if err := r.client.QueryRowxContext(ctx, "UPSERT", r.tableName, templateUpsertQuery,
 		templateModel.Name,
 		templateModel.Body,
 		templateModel.Tags,
@@ -94,12 +89,7 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,13 +117,8 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
 	var templateModel model.Template
-	if err := r.client.db.GetContext(ctx, &templateModel, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, OpSelect, r.tableName, &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, template.NotFoundError{Name: name}
 		}
@@ -149,12 +134,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
-	// 	"db.statement": templateDeleteByNameQuery,
-	// })
-	// defer span.End()
-
-	if _, err := r.client.db.ExecContext(ctx, templateDeleteByNameQuery, name); err != nil {
+	if _, err := r.client.ExecContext(ctx, OpDelete, r.tableName, templateDeleteByNameQuery, name); err != nil {
 		return err
 	}
 	return nil

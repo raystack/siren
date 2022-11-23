@@ -59,12 +59,7 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,16 +82,11 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 		return errors.New("receiver domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
-	// 	"db.statement": receiverInsertQuery,
-	// })
-	// defer span.End()
-
 	receiverModel := new(model.Receiver)
 	receiverModel.FromDomain(*rcv)
 
 	var createdReceiver model.Receiver
-	if err := r.client.db.QueryRowxContext(ctx, receiverInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, receiverInsertQuery,
 		receiverModel.Name,
 		receiverModel.Type,
 		receiverModel.Labels,
@@ -120,13 +110,8 @@ func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Recei
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
 	var receiverModel model.Receiver
-	if err := r.client.db.GetContext(ctx, &receiverModel, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, OpSelect, r.tableName, &receiverModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, receiver.NotFoundError{ID: id}
 		}
@@ -141,16 +126,11 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 		return errors.New("receiver domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPDATE", r.tableName, map[string]string{
-	// 	"db.statement": receiverUpdateQuery,
-	// })
-	// defer span.End()
-
 	receiverModel := new(model.Receiver)
 	receiverModel.FromDomain(*rcv)
 
 	var updatedReceiver model.Receiver
-	if err := r.client.db.QueryRowxContext(ctx, receiverUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, OpUpdate, r.tableName, receiverUpdateQuery,
 		receiverModel.ID,
 		receiverModel.Name,
 		receiverModel.Labels,
@@ -168,12 +148,7 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 }
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
-	// 	"db.statement": receiverDeleteQuery,
-	// })
-	// defer span.End()
-
-	if _, err := r.client.db.ExecContext(ctx, receiverDeleteQuery, id); err != nil {
+	if _, err := r.client.ExecContext(ctx, OpDelete, r.tableName, receiverDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

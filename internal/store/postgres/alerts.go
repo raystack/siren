@@ -41,11 +41,6 @@ func NewAlertRepository(client *Client) *AlertRepository {
 }
 
 func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
-	// 	"db.statement": alertInsertQuery,
-	// })
-	// defer span.End()
-
 	if alrt == nil {
 		return errors.New("alert domain is nil")
 	}
@@ -54,7 +49,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 	alertModel.FromDomain(*alrt)
 
 	var newAlertModel model.Alert
-	if err := r.client.db.QueryRowxContext(ctx, alertInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, alertInsertQuery,
 		alertModel.ProviderID,
 		alertModel.ResourceName,
 		alertModel.MetricName,
@@ -95,12 +90,7 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}

@@ -64,10 +64,10 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
+	ctx, span := r.client.postgresTracer.StartSpan(ctx, OpSelectAll, r.tableName, map[string]string{
+		"db.statement": query,
+	})
+	defer span.End()
 
 	rows, err := r.client.db.QueryxContext(ctx, query, args...)
 	if err != nil {
@@ -92,16 +92,11 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 		return errors.New("nil encrypted namespace domain when converting to namespace model")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
-	// 	"db.statement": namespaceInsertQuery,
-	// })
-	// defer span.End()
-
 	nsModel := new(model.Namespace)
 	nsModel.FromDomain(*ns)
 
 	var createdNamespace model.Namespace
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, namespaceInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, namespaceInsertQuery,
 		nsModel.ProviderID,
 		nsModel.URN,
 		nsModel.Name,
@@ -129,13 +124,8 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
 	var nsDetailModel model.NamespaceDetail
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(&nsDetailModel); err != nil {
+	if err := r.client.QueryRowxContext(ctx, OpSelect, r.tableName, query, args...).StructScan(&nsDetailModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, namespace.NotFoundError{ID: id}
 		}
@@ -150,16 +140,11 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 		return errors.New("nil encrypted namespace domain when converting to namespace model")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPDATE", r.tableName, map[string]string{
-	// 	"db.statement": namespaceUpdateQuery,
-	// })
-	// defer span.End()
-
 	namespaceModel := new(model.Namespace)
 	namespaceModel.FromDomain(*ns)
 
 	var updatedNamespace model.Namespace
-	if err := r.client.GetDB(ctx).QueryRowxContext(ctx, namespaceUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, OpUpdate, r.tableName, namespaceUpdateQuery,
 		namespaceModel.ID,
 		namespaceModel.ProviderID,
 		namespaceModel.URN,
@@ -186,12 +171,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 }
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
-	// 	"db.statement": namespaceDeleteQuery,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, namespaceDeleteQuery, id)
+	rows, err := r.client.QueryxContext(ctx, OpDelete, r.tableName, namespaceDeleteQuery, id)
 	if err != nil {
 		return err
 	}

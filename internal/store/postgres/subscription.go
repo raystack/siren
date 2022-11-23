@@ -74,12 +74,7 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.GetDB(ctx).QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,16 +106,11 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 		return errors.New("subscription domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
-	// 	"db.statement": subscriptionInsertQuery,
-	// })
-	// defer span.End()
-
 	subscriptionModel := new(model.Subscription)
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.db.QueryRowxContext(ctx, subscriptionInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, OpInsert, r.tableName, subscriptionInsertQuery,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
@@ -147,13 +137,8 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 		return nil, err
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
-	// 	"db.statement": query,
-	// })
-	// defer span.End()
-
 	var subscriptionModel model.Subscription
-	if err := r.client.db.QueryRowxContext(ctx, query, args...).StructScan(&subscriptionModel); err != nil {
+	if err := r.client.QueryRowxContext(ctx, OpSelect, r.tableName, query, args...).StructScan(&subscriptionModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, subscription.NotFoundError{ID: id}
 		}
@@ -168,16 +153,11 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 		return errors.New("subscription domain is nil")
 	}
 
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPDATE", r.tableName, map[string]string{
-	// 	"db.statement": subscriptionUpdateQuery,
-	// })
-	// defer span.End()
-
 	subscriptionModel := new(model.Subscription)
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.db.QueryRowxContext(ctx, subscriptionUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, OpUpdate, r.tableName, subscriptionUpdateQuery,
 		subscriptionModel.ID,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
@@ -203,15 +183,8 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 }
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
-	// 	"db.statement": subscriptionDeleteQuery,
-	// })
-	// defer span.End()
-
-	rows, err := r.client.db.QueryxContext(ctx, subscriptionDeleteQuery, id)
-	if err != nil {
+	if _, err := r.client.ExecContext(ctx, OpDelete, r.tableName, subscriptionDeleteQuery, id); err != nil {
 		return err
 	}
-	rows.Close()
 	return nil
 }

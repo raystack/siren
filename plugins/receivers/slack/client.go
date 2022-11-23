@@ -67,7 +67,6 @@ type Client struct {
 	cfg        AppConfig
 	httpClient *httpclient.Client
 	retrier    retry.Runner
-	// httpClientTracer *telemetry.HTTPClientSpan
 }
 
 // NewClient is a constructor to create slack client.
@@ -91,16 +90,11 @@ func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
 		c.httpClient = httpclient.New(cfg.HTTPClient)
 	}
 
-	// c.httpClientTracer = telemetry.InitHTTPClientSpan(c.cfg.APIHost, "80")
-
 	return c
 }
 
 // ExchangeAuth submits client ID, client secret, and auth code and retrieve acces token and team name
 func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSecret string) (Credential, error) {
-	// ctx, span := c.httpClientTracer.StartSpan(ctx, http.MethodPost, oAuthSlackPath, c.cfg.APIHost+oAuthSlackPath, nil)
-	// defer span.End()
-
 	data := url.Values{}
 	data.Set("code", authCode)
 	data.Set("client_id", clientID)
@@ -212,9 +206,6 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 }
 
 func (c *Client) sendMessageContext(ctx context.Context, gsc GoSlackCaller, channelID string, channelName string, msgOpts ...goslack.MsgOption) error {
-	// ctx, span := c.httpClientTracer.StartSpan(ctx, http.MethodPost, "SendMessageContext", "SendMessageContext", nil)
-	// defer span.End()
-
 	_, _, _, err := gsc.SendMessageContext(
 		ctx,
 		channelID,
@@ -244,16 +235,13 @@ func (c *Client) getJoinedChannelsList(ctx context.Context, gsc GoSlackCaller) (
 	channelList := make([]goslack.Channel, 0)
 	curr := ""
 	for {
-		// ctx, span := c.httpClientTracer.StartSpan(ctx, http.MethodGet, "GetConversationsForUserContext", "GetConversationsForUserContext", nil)
 		channels, nextCursor, err := gsc.GetConversationsForUserContext(ctx, &goslack.GetConversationsForUserParameters{
 			Types:  []string{"public_channel", "private_channel"},
 			Cursor: curr,
 			Limit:  1000})
 		if err != nil {
-			// span.End()
 			return channelList, err
 		}
-		// span.End()
 
 		channelList = append(channelList, channels...)
 		curr = nextCursor
