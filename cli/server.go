@@ -3,9 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
+	"contrib.go.opencensus.io/integrations/ocsql"
 	"github.com/MakeNowJust/heredoc"
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/db"
@@ -23,6 +25,7 @@ import (
 	"github.com/odpf/siren/plugins/queues/inmemory"
 	"github.com/odpf/siren/plugins/queues/postgresq"
 	"github.com/spf13/cobra"
+	"github.com/xo/dburl"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -139,12 +142,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	dbClient, err := db.New(cfg.DB)
-	if err != nil {
-		return err
-	}
-
-	pgClient, err := postgres.NewClient(logger, dbClient)
+	pgClient, err := initDB(logger, cfg.DB)
 	if err != nil {
 		return err
 	}
@@ -232,6 +230,37 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 
 	return err
+}
+
+func initDB(logger log.Logger, cfg db.Config) (*postgres.Client, error) {
+	dbURL, err := dburl.Parse(cfg.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	dbDriverName, err := ocsql.Register(cfg.Driver,
+		ocsql.WithAllTraceOptions(),
+		ocsql.WithInstanceName(strings.TrimPrefix(dbURL.EscapedPath(), "/")),
+		ocsql.WithAllTraceOptions(),
+		ocsql.WithDefaultAttributes(),
+		ocsql.WithPing(false),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.Driver = dbDriverName
+	dbClient, err := db.New(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	pgClient, err := postgres.NewClient(logger, dbClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return pgClient, nil
 }
 
 func initLogger(cfg config.Log) log.Logger {

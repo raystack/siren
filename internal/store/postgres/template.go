@@ -35,18 +35,24 @@ var templateListQueryBuilder = sq.Select(
 
 // TemplateRepository talks to the store to read or insert data
 type TemplateRepository struct {
-	client *Client
+	client    *Client
+	tableName string
 }
 
 // NewTemplateRepository returns repository struct
 func NewTemplateRepository(client *Client) *TemplateRepository {
-	return &TemplateRepository{client}
+	return &TemplateRepository{client, "templates"}
 }
 
 func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) error {
 	if tmpl == nil {
 		return errors.New("template domain is nil")
 	}
+
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPSERT", r.tableName, map[string]string{
+	// 	"db.statement": templateUpsertQuery,
+	// })
+	// defer span.End()
 
 	templateModel := new(model.Template)
 	if err := templateModel.FromDomain(*tmpl); err != nil {
@@ -88,6 +94,11 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 		return nil, err
 	}
 
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
+	// 	"db.statement": query,
+	// })
+	// defer span.End()
+
 	rows, err := r.client.db.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -116,6 +127,11 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 		return nil, err
 	}
 
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
+	// 	"db.statement": query,
+	// })
+	// defer span.End()
+
 	var templateModel model.Template
 	if err := r.client.db.GetContext(ctx, &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -133,6 +149,11 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
+	// 	"db.statement": templateDeleteByNameQuery,
+	// })
+	// defer span.End()
+
 	if _, err := r.client.db.ExecContext(ctx, templateDeleteByNameQuery, name); err != nil {
 		return err
 	}

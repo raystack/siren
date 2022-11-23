@@ -31,15 +31,21 @@ var alertListQueryBuilder = sq.Select(
 
 // AlertRepository talks to the store to read or insert data
 type AlertRepository struct {
-	client *Client
+	client    *Client
+	tableName string
 }
 
 // NewAlertRepository returns repository struct
 func NewAlertRepository(client *Client) *AlertRepository {
-	return &AlertRepository{client}
+	return &AlertRepository{client, "alerts"}
 }
 
 func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
+	// 	"db.statement": alertInsertQuery,
+	// })
+	// defer span.End()
+
 	if alrt == nil {
 		return errors.New("alert domain is nil")
 	}
@@ -88,6 +94,11 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 	if err != nil {
 		return nil, err
 	}
+
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
+	// 	"db.statement": query,
+	// })
+	// defer span.End()
 
 	rows, err := r.client.db.QueryxContext(ctx, query, args...)
 	if err != nil {

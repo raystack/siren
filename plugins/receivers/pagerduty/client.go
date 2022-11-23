@@ -43,6 +43,7 @@ type Client struct {
 	cfg        AppConfig
 	httpClient *httpclient.Client
 	retrier    retry.Runner
+	// httpClientTracer *telemetry.HTTPClientSpan
 }
 
 func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
@@ -59,8 +60,10 @@ func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
 	}
 
 	if c.httpClient == nil {
-		c.httpClient = httpclient.New(httpclient.Config{})
+		c.httpClient = httpclient.New(cfg.HTTPClient)
 	}
+
+	// c.httpClientTracer = telemetry.InitHTTPClientSpan(c.cfg.APIHost, "80")
 
 	return c
 }
@@ -82,6 +85,9 @@ func (c *Client) notifyV1(ctx context.Context, message MessageV1) error {
 	if err != nil {
 		return err
 	}
+
+	// ctx, span := c.httpClientTracer.StartSpan(ctx, http.MethodPost, "/generic/2010-04-15/create_event.json", c.cfg.APIHost+"/generic/2010-04-15/create_event.json", nil)
+	// defer span.End()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.APIHost+"/generic/2010-04-15/create_event.json", bytes.NewReader(messageJSON))
 	if err != nil {

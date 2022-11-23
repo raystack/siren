@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,6 +29,7 @@ type NotificationService struct {
 	receiverService     ReceiverService
 	subscriptionService SubscriptionService
 	notifierPlugins     map[string]Notifier
+	messagingTracer     *telemetry.MessagingSpan
 }
 
 // NewService creates a new notification service
@@ -44,6 +46,7 @@ func NewService(
 		receiverService:     receiverService,
 		subscriptionService: subscriptionService,
 		notifierPlugins:     notifierPlugins,
+		messagingTracer:     telemetry.InitMessagingSpan(q.Type(), "messages"),
 	}
 }
 
@@ -66,7 +69,7 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 		return err
 	}
 
-	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
+	message, err := n.ToMessage(ctx, rcv.Type, rcv.Configurations)
 	if err != nil {
 		return err
 	}
@@ -79,8 +82,13 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 
 	message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodReceiver.String())
 
-	// supported no templating for now
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", message.ID, map[string]string{
+		"messages.notification_id": n.ID,
+		"messages.routing_method":  string(RoutingMethodReceiver),
+	})
+	span.End()
 
+	// supported no templating for now
 	if err := ns.q.Enqueue(ctx, *message); err != nil {
 		return err
 	}
@@ -102,15 +110,22 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 
 	for _, s := range subscriptions {
 		for _, rcv := range s.Receivers {
+
 			notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 			if err != nil {
 				return err
 			}
 
-			message, err := n.ToMessage(rcv.Type, rcv.Configuration)
+			message, err := n.ToMessage(ctx, rcv.Type, rcv.Configuration)
 			if err != nil {
 				return err
 			}
+
+			ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", message.ID, map[string]string{
+				"messages.notification_id": n.ID,
+				"messages.routing_method":  string(RoutingMethodSubscribers),
+			})
+			defer span.End()
 
 			newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 			if err != nil {
@@ -142,10 +157,16 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 					message.Details = messageDetails
 				}
 			}
+			span.End()
 
 			messages = append(messages, *message)
 		}
 	}
+
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "batch_enqueue", "", map[string]string{
+		"messages.notification_id": n.ID,
+	})
+	defer span.End()
 
 	if err := ns.q.Enqueue(ctx, messages...); err != nil {
 		return err

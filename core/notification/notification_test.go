@@ -1,6 +1,7 @@
 package notification_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -64,7 +65,7 @@ func TestNotification_ToMessage(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tc.n.ToMessage(tc.receiverType, tc.notificationConfigs)
+			got, err := tc.n.ToMessage(context.TODO(), tc.receiverType, tc.notificationConfigs)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Notification.ToMessage() error = %v, wantErr %v", err, tc.wantErr)
 				return

@@ -20,6 +20,7 @@ type Queuer interface {
 	Dequeue(ctx context.Context, receiverTypes []string, batchSize int, handlerFn func(context.Context, []Message) error) error
 	SuccessCallback(ctx context.Context, ms Message) error
 	ErrorCallback(ctx context.Context, ms Message) error
+	Type() string
 	Cleanup(ctx context.Context, filter queues.FilterCleanup) error
 	Stop(ctx context.Context) error
 }

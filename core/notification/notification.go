@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"context"
 	"time"
 
 	"github.com/odpf/siren/pkg/errors"
@@ -17,7 +18,7 @@ type Notification struct {
 }
 
 // ToMessage transforms Notification model to one or several Messages
-func (n Notification) ToMessage(receiverType string, notificationConfigMap map[string]interface{}) (*Message, error) {
+func (n Notification) ToMessage(ctx context.Context, receiverType string, notificationConfigMap map[string]interface{}) (*Message, error) {
 	var (
 		expiryDuration time.Duration
 		err            error
@@ -32,6 +33,7 @@ func (n Notification) ToMessage(receiverType string, notificationConfigMap map[s
 
 	nm := &Message{}
 	nm.Initialize(
+		ctx,
 		n,
 		receiverType,
 		notificationConfigMap,

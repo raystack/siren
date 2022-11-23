@@ -15,6 +15,8 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/salt/mux"
 	"github.com/odpf/siren/internal/api"
@@ -27,9 +29,6 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
-
-	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
-	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const defaultGracePeriod = 5 * time.Second
@@ -62,12 +61,14 @@ func RunServer(
 		grpc_zap.WithTimestampFormat(time.RFC3339Nano),
 	}
 	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
 			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(zapLogger, loggerOpts...),
+			// otelgrpc.UnaryServerInterceptor(),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
@@ -75,8 +76,8 @@ func RunServer(
 			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zapLogger, loggerOpts...),
+			// otelgrpc.StreamServerInterceptor(),
 		)),
-		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 	)
 
 	// init http proxy

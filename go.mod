@@ -5,6 +5,7 @@ go 1.16
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.7.0
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
+	contrib.go.opencensus.io/integrations/ocsql v0.1.7 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/Masterminds/squirrel v1.5.3
 	github.com/benbjohnson/clock v1.3.0 // indirect
@@ -29,7 +30,8 @@ require (
 	github.com/newrelic/go-agent/v3 v3.12.0
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
 	github.com/newrelic/newrelic-opencensus-exporter-go v0.4.0
-	github.com/odpf/salt v0.2.5-0.20221116070316-ac9a011ebd14
+	github.com/newrelic/newrelic-telemetry-sdk-go v0.8.1 // indirect
+	github.com/odpf/salt v0.2.5-0.20221122033807-b6caa1b617bf
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/prometheus/alertmanager v0.21.1-0.20200911160112-1fdff6b3f939
@@ -46,7 +48,10 @@ require (
 	github.com/subosito/gotenv v1.4.0 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
+	github.com/xo/dburl v0.12.4
 	go.opencensus.io v0.24.0
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.36.4
+	go.opentelemetry.io/otel/metric v0.33.0
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.22.0

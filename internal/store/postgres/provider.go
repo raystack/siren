@@ -40,16 +40,16 @@ DELETE from providers where id=$1
 
 // ProviderRepository talks to the store to read or insert data
 type ProviderRepository struct {
-	client *Client
+	client    *Client
+	tableName string
 }
 
 // NewProviderRepository returns repository struct
 func NewProviderRepository(client *Client) *ProviderRepository {
-	return &ProviderRepository{client}
+	return &ProviderRepository{client, "providers"}
 }
 
 func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]provider.Provider, error) {
-
 	var queryBuilder = providerListQueryBuilder
 	if flt.URN != "" {
 		queryBuilder = queryBuilder.Where("urn = ?", flt.URN)
@@ -63,6 +63,11 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]pr
 	if err != nil {
 		return nil, err
 	}
+
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT_ALL", r.tableName, map[string]string{
+	// 	"db.statement": query,
+	// })
+	// defer span.End()
 
 	rows, err := r.client.db.QueryxContext(ctx, query, args...)
 	if err != nil {
@@ -87,6 +92,11 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 	if prov == nil {
 		return errors.New("provider domain is nil")
 	}
+
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "INSERT", r.tableName, map[string]string{
+	// 	"db.statement": providerInsertQuery,
+	// })
+	// defer span.End()
 
 	var provModel model.Provider
 	provModel.FromDomain(*prov)
@@ -120,6 +130,11 @@ func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provi
 		return nil, err
 	}
 
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "SELECT", r.tableName, map[string]string{
+	// 	"db.statement": query,
+	// })
+	// defer span.End()
+
 	var provModel model.Provider
 	if err := r.client.db.GetContext(ctx, &provModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -135,6 +150,11 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 	if provDomain == nil {
 		return errors.New("provider domain is nil")
 	}
+
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "UPDATE", r.tableName, map[string]string{
+	// 	"db.statement": providerUpdateQuery,
+	// })
+	// defer span.End()
 
 	var provModel model.Provider
 	provModel.FromDomain(*provDomain)
@@ -165,6 +185,11 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 }
 
 func (r ProviderRepository) Delete(ctx context.Context, id uint64) error {
+	// ctx, span := r.client.postgresTracer.StartSpan(ctx, "DELETE", r.tableName, map[string]string{
+	// 	"db.statement": providerDeleteQuery,
+	// })
+	// defer span.End()
+
 	if _, err := r.client.db.ExecContext(ctx, providerDeleteQuery, id); err != nil {
 		return err
 	}

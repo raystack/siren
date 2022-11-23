@@ -39,6 +39,10 @@ func NewPluginService(cfg AppConfig, cryptoClient Encryptor, opts ...ServiceOpti
 
 	s.cryptoClient = cryptoClient
 
+	if s.httpClient == nil {
+		s.httpClient = httpclient.New(cfg.HTTPClient)
+	}
+
 	if s.client == nil {
 		s.client = NewClient(cfg, ClientWithHTTPClient(s.httpClient), ClientWithRetrier(s.retrier))
 	}

@@ -124,7 +124,7 @@ func (s *QueueTestSuite) TestSimpleEnqueueDequeue() {
 
 	messages := []notification.Message{}
 	for _, n := range ns {
-		msg, err := n.ToMessage(receiver.TypeSlack, map[string]interface{}{})
+		msg, err := n.ToMessage(context.TODO(), receiver.TypeSlack, map[string]interface{}{})
 		s.Require().NoError(err)
 		messages = append(messages, *msg)
 	}
@@ -185,7 +185,7 @@ func (s *QueueTestSuite) TestEnqueueDequeueWithCallback() {
 	messages := make([]notification.Message, 5)
 
 	for i := 0; i < len(messages); i++ {
-		messages[i].Initialize(notification.Notification{}, receiver.TypeSlack, map[string]interface{}{}, notification.InitWithID(fmt.Sprintf("%d", i+1)))
+		messages[i].Initialize(context.TODO(), notification.Notification{}, receiver.TypeSlack, map[string]interface{}{}, notification.InitWithID(fmt.Sprintf("%d", i+1)))
 	}
 
 	s.Run("should update row with error for id \"5\"", func() {
@@ -240,7 +240,7 @@ func (s *QueueTestSuite) TestEnqueueDequeueDLQ() {
 	messages := make([]notification.Message, 5)
 
 	for i := 0; i < len(messages); i++ {
-		messages[i].Initialize(notification.Notification{}, receiver.TypeSlack, map[string]interface{}{}, notification.InitWithID(fmt.Sprintf("%d", i+1)))
+		messages[i].Initialize(context.TODO(), notification.Notification{}, receiver.TypeSlack, map[string]interface{}{}, notification.InitWithID(fmt.Sprintf("%d", i+1)))
 	}
 
 	s.Run("failed messages should be re-processed by dlq an ignored by main queue", func() {

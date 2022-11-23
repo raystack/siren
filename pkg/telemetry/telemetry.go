@@ -1,8 +1,5 @@
 package telemetry
 
-// Note: this telemetry package is mostly ported from entropy/dex
-// might need to move this to salt eventually
-
 import (
 	"context"
 	"net/http"
@@ -25,12 +22,14 @@ type Config struct {
 	ServiceName string `mapstructure:"service_name" yaml:"service_name" default:"siren"`
 
 	// NewRelic exporter.
-	EnableNewrelic bool   `mapstructure:"enable_newrelic" yaml:"enable_newrelic" default:"false"`
-	NewRelicAPIKey string `mapstructure:"newrelic_api_key" yaml:"newrelic_api_key" default:"____LICENSE_STRING_OF_40_CHARACTERS_____"`
+	EnableNewrelic  bool   `mapstructure:"enable_newrelic" yaml:"enable_newrelic" default:"false"`
+	NewRelicAppName string `mapstructure:"newrelic_app_name"`
+	NewRelicAPIKey  string `mapstructure:"newrelic_api_key" yaml:"newrelic_api_key" default:"____LICENSE_STRING_OF_40_CHARACTERS_____"`
 
 	// OpenTelemetry Agent exporter.
 	EnableOtelAgent  bool   `mapstructure:"enable_otel_agent" yaml:"enable_otel_agent" default:"false"`
 	OpenTelAgentAddr string `mapstructure:"otel_agent_addr" yaml:"otel_agent_addr" default:"localhost:8088"`
+	// EnableDebugTrace bool   `mapstructure:"enable_debug_trace"`
 }
 
 // Init initialises OpenCensus based async-telemetry processes and

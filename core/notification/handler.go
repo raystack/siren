@@ -7,6 +7,7 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
 )
 
 const (
@@ -20,6 +21,7 @@ type Handler struct {
 	identifier             string
 	notifierRegistry       map[string]Notifier
 	supportedReceiverTypes []string
+	messagingTracer        *telemetry.MessagingSpan
 
 	batchSize int
 }
@@ -64,6 +66,8 @@ func NewHandler(cfg HandlerConfig, logger log.Logger, q Queuer, registry map[str
 		opt(h)
 	}
 
+	h.messagingTracer = telemetry.InitMessagingSpan(q.Type(), "messages")
+
 	return h
 }
 
@@ -80,6 +84,9 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 	if len(receiverTypes) == 0 {
 		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
+		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", "", nil)
+		defer span.End()
+
 		h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", runAt, "id", h.identifier)
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if errors.Is(err, ErrNoMessage) {
@@ -114,7 +121,6 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		message.Configs = newConfig
 
 		if retryable, err := notifier.Send(ctx, message); err != nil {
-
 			message.MarkFailed(time.Now(), retryable, err)
 
 			if err := h.q.ErrorCallback(ctx, message); err != nil {

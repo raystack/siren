@@ -42,9 +42,11 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 			transport.IdleConnTimeout = time.Duration(c.cfg.IdleConnTimeoutMS)
 		}
 
-		octr := &ochttp.Transport{Base: &http.Transport{}}
 		c.httpClient = &http.Client{
-			Transport: octr,
+			Transport: &ochttp.Transport{
+				Base:           transport,
+				NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
+			},
 		}
 
 		if c.cfg.TimeoutMS != 0 {
