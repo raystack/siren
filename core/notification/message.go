@@ -21,6 +21,10 @@ const (
 	MessageStatusPublished MessageStatus = "published"
 )
 
+func (ms MessageStatus) String() string {
+	return string(ms)
+}
+
 // MessageOption provides ability to configure the message initialization
 type MessageOption func(*Message)
 

@@ -10,50 +10,85 @@ import (
 var Meter = global.MeterProvider().Meter("siren")
 
 var (
-	TagReceiverType = tag.MustNewKey("receiver_type")
+	TagReceiverType  = tag.MustNewKey("receiver_type")
+	TagRoutingMethod = tag.MustNewKey("routing_method")
+	TagMessageStatus = tag.MustNewKey("status")
 
-	MetricPublishedNotifications = stats.Int64("published_notifications", "published notifications", stats.UnitDimensionless)
-	MetricEnqueueMQ              = stats.Int64("enqueue_message_queue", "enqueued messages to message queue", stats.UnitDimensionless)
-	MetricDequeueMQ              = stats.Int64("dequeue_message_queue", "dequeued messages from message queue", stats.UnitDimensionless)
-	MetricEnqueueDLQ             = stats.Int64("enqueue_dlq", "enqueued messages to dlq", stats.UnitDimensionless)
-	MetricDequeueDLQ             = stats.Int64("dequeue_dlq", "dequeued messages from dlq", stats.UnitDimensionless)
+	MetricNotificationMessageEnqueue   = stats.Int64("notification.message.enqueue", "enqueued notification messages", stats.UnitDimensionless)
+	MetricNotificationMessagePending   = stats.Int64("notification.message.pending", "processed notification messages", stats.UnitDimensionless)
+	MetricNotificationMessageFailed    = stats.Int64("notification.message.failed", "failed to publish notification messages", stats.UnitDimensionless)
+	MetricNotificationMessagePublished = stats.Int64("notification.message.published", "published notification messages", stats.UnitDimensionless)
+
+	MetricNotificationSubscriberNotFound = stats.Int64("notification.subscriber.notfound", "notification does not match any subscription", stats.UnitDimensionless)
+
+	MetricReceiverPreHookDBFailed     = stats.Int64("receiver.prehookdb.failed", "failed prehook db receiver", stats.UnitDimensionless)
+	MetricReceiverPostHookDBFailed    = stats.Int64("receiver.posthookdb.failed", "failed posthook db receiver", stats.UnitDimensionless)
+	MetricReceiverPreHookQueueFailed  = stats.Int64("receiver.prehookqueue.failed", "failed prehook queue receiver", stats.UnitDimensionless)
+	MetricReceiverPostHookQueueFailed = stats.Int64("receiver.posthookqueue.failed", "failed posthook queue receiver", stats.UnitDimensionless)
 )
 
 func setupApplicationViews() error {
 	return view.Register(
 		&view.View{
-			Name:        MetricPublishedNotifications.Name(),
-			Description: MetricPublishedNotifications.Description(),
-			TagKeys:     []tag.Key{TagReceiverType},
-			Measure:     MetricPublishedNotifications,
+			Name:        MetricNotificationMessageEnqueue.Name(),
+			Description: MetricNotificationMessageEnqueue.Description(),
+			TagKeys:     []tag.Key{TagReceiverType, TagRoutingMethod, TagMessageStatus},
+			Measure:     MetricNotificationMessageEnqueue,
 			Aggregation: view.Sum(),
 		},
 		&view.View{
-			Name:        MetricEnqueueMQ.Name(),
-			Description: MetricEnqueueMQ.Description(),
-			TagKeys:     []tag.Key{TagReceiverType},
-			Measure:     MetricEnqueueMQ,
+			Name:        MetricNotificationMessagePending.Name(),
+			Description: MetricNotificationMessagePending.Description(),
+			TagKeys:     []tag.Key{TagReceiverType, TagMessageStatus},
+			Measure:     MetricNotificationMessagePending,
 			Aggregation: view.Sum(),
 		},
 		&view.View{
-			Name:        MetricDequeueMQ.Name(),
-			Description: MetricDequeueMQ.Description(),
-			TagKeys:     []tag.Key{TagReceiverType},
-			Measure:     MetricDequeueMQ,
+			Name:        MetricNotificationMessageFailed.Name(),
+			Description: MetricNotificationMessageFailed.Description(),
+			TagKeys:     []tag.Key{TagReceiverType, TagMessageStatus},
+			Measure:     MetricNotificationMessageFailed,
 			Aggregation: view.Sum(),
 		},
 		&view.View{
-			Name:        MetricEnqueueDLQ.Name(),
-			Description: MetricEnqueueDLQ.Description(),
-			TagKeys:     []tag.Key{TagReceiverType},
-			Measure:     MetricEnqueueDLQ,
+			Name:        MetricNotificationMessagePublished.Name(),
+			Description: MetricNotificationMessagePublished.Description(),
+			TagKeys:     []tag.Key{TagReceiverType, TagMessageStatus},
+			Measure:     MetricNotificationMessagePublished,
 			Aggregation: view.Sum(),
 		},
 		&view.View{
-			Name:        MetricDequeueDLQ.Name(),
-			Description: MetricDequeueMQ.Description(),
+			Name:        MetricNotificationSubscriberNotFound.Name(),
+			Description: MetricNotificationSubscriberNotFound.Description(),
+			Measure:     MetricNotificationSubscriberNotFound,
+			Aggregation: view.Sum(),
+		},
+		&view.View{
+			Name:        MetricReceiverPreHookDBFailed.Name(),
+			Description: MetricReceiverPreHookDBFailed.Description(),
 			TagKeys:     []tag.Key{TagReceiverType},
-			Measure:     MetricDequeueMQ,
+			Measure:     MetricReceiverPreHookDBFailed,
+			Aggregation: view.Sum(),
+		},
+		&view.View{
+			Name:        MetricReceiverPostHookDBFailed.Name(),
+			Description: MetricReceiverPostHookDBFailed.Description(),
+			TagKeys:     []tag.Key{TagReceiverType},
+			Measure:     MetricReceiverPostHookDBFailed,
+			Aggregation: view.Sum(),
+		},
+		&view.View{
+			Name:        MetricReceiverPreHookQueueFailed.Name(),
+			Description: MetricReceiverPreHookQueueFailed.Description(),
+			TagKeys:     []tag.Key{TagReceiverType, TagRoutingMethod},
+			Measure:     MetricReceiverPreHookQueueFailed,
+			Aggregation: view.Sum(),
+		},
+		&view.View{
+			Name:        MetricReceiverPostHookQueueFailed.Name(),
+			Description: MetricReceiverPostHookQueueFailed.Description(),
+			TagKeys:     []tag.Key{TagReceiverType},
+			Measure:     MetricReceiverPostHookQueueFailed,
 			Aggregation: view.Sum(),
 		},
 	)

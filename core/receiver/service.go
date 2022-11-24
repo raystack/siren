@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
+	"go.opencensus.io/tag"
 )
 
 // Service handles business logic
@@ -60,6 +62,9 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookDBFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+
 		return err
 	}
 
@@ -105,6 +110,9 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookDBFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+
 		return nil, err
 	}
 	rcv.Configurations = transformedConfigs

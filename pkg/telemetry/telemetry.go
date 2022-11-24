@@ -6,6 +6,8 @@ import (
 	"net/http/pprof"
 
 	"github.com/odpf/salt/log"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 )
 
 // Init initialises OpenCensus based async-telemetry processes and
@@ -28,4 +30,14 @@ func Init(ctx context.Context, cfg Config, lg log.Logger) {
 			}
 		}()
 	}
+}
+
+func IncrementInt64Counter(ctx context.Context, si64 *stats.Int64Measure, tagMutator ...tag.Mutator) {
+	counterCtx := ctx
+
+	if tagMutator != nil {
+		counterCtx, _ = tag.New(ctx, tagMutator...)
+	}
+
+	stats.Record(counterCtx, si64.M(1))
 }
