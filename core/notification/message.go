@@ -1,7 +1,6 @@
 package notification
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -78,7 +77,6 @@ type Message struct {
 // Initialize initializes the message with some default value
 // or the customized value
 func (m *Message) Initialize(
-	ctx context.Context,
 	n Notification,
 	receiverType string,
 	notificationConfigs map[string]interface{},

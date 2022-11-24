@@ -1,7 +1,6 @@
 package notification_test
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -56,7 +55,6 @@ func TestMessage_Initialize(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &notification.Message{}
 			m.Initialize(
-				context.TODO(),
 				tc.n,
 				tc.receiverType,
 				tc.notificationConfigs,

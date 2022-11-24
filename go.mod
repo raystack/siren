@@ -19,7 +19,6 @@ require (
 	github.com/go-openapi/strfmt v0.20.2 // indirect
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grafana/cortex-tools v0.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.14.0
@@ -31,7 +30,6 @@ require (
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/newrelic/go-agent/v3 v3.12.0
-	github.com/newrelic/go-agent/v3/integrations/nrgorilla v1.1.1 // indirect
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
 	github.com/newrelic/newrelic-opencensus-exporter-go v0.4.0
 	github.com/newrelic/newrelic-telemetry-sdk-go v0.8.1 // indirect

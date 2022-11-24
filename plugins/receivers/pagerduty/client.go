@@ -43,7 +43,6 @@ type Client struct {
 	cfg        AppConfig
 	httpClient *httpclient.Client
 	retrier    retry.Runner
-	// httpClientTracer *telemetry.HTTPClientSpan
 }
 
 func NewClient(cfg AppConfig, opts ...ClientOption) *Client {

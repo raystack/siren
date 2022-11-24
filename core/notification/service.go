@@ -68,12 +68,14 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 		"messages.notification_id": n.ID,
 		"messages.routing_method":  string(RoutingMethodReceiver),
 	})
+	defer span.End()
+
 	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 	if err != nil {
 		return err
 	}
 
-	message, err := n.ToMessage(ctx, rcv.Type, rcv.Configurations)
+	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
 	if err != nil {
 		return err
 	}
@@ -110,6 +112,7 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 		"messages.notification_id": n.ID,
 		"messages.routing_method":  string(RoutingMethodSubscribers),
 	})
+	defer span.End()
 
 	var messages = make([]Message, 0)
 
@@ -121,7 +124,7 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 				return err
 			}
 
-			message, err := n.ToMessage(ctx, rcv.Type, rcv.Configuration)
+			message, err := n.ToMessage(rcv.Type, rcv.Configuration)
 			if err != nil {
 				return err
 			}
@@ -156,7 +159,6 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 					message.Details = messageDetails
 				}
 			}
-			span.End()
 
 			messages = append(messages, *message)
 		}
