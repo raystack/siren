@@ -88,6 +88,14 @@ services:
     depends_on:
       - cortex-am
       - cortex-all
+  # Collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "55678:55678" # Opencensus port
 volumes:
   siren_dbdata:
   data1-1:
