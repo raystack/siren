@@ -16,7 +16,7 @@ extensions:
   health_check:
 
 service:
-  extensions: [health_check, pprof, zpages]
+  extensions: [health_check]
   telemetry:
     logs:
       level: debug

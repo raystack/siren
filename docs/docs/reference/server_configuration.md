@@ -57,7 +57,7 @@ telemetry:
 
   # otel_agent_addr is the addr of OpenTelemetry Collector/Agent. This is where the
   # opene-telemetry exporter will publish the collected traces/views to.
-  otel_agent_addr: <string> | default="localhost:8088"
+  otel_agent_addr: <string> | default="localhost:55678"
 
 service:
   host: <string> | default="localhost"

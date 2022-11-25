@@ -19,5 +19,5 @@ type Config struct {
 
 	// OpenTelemetry Agent exporter.
 	EnableOtelAgent  bool   `mapstructure:"enable_otel_agent" yaml:"enable_otel_agent" default:"false"`
-	OpenTelAgentAddr string `mapstructure:"otel_agent_addr" yaml:"otel_agent_addr" default:"localhost:8088"`
+	OpenTelAgentAddr string `mapstructure:"otel_agent_addr" yaml:"otel_agent_addr" default:"localhost:55678"`
 }
