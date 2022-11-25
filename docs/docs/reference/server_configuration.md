@@ -39,7 +39,7 @@ telemetry:
   sampling_fraction: <bool> | default=1
 
   # service_name is the identifier used in trace exports, NewRelic, etc for the
-  # dex instance.
+  # siren instance.
   service_name: <string> | default="siren"
 
   # enable_newrelic enables exporting NewRelic instrumentation in addition to the
