@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const providerInsertQuery = `
@@ -40,16 +41,16 @@ DELETE from providers where id=$1
 
 // ProviderRepository talks to the store to read or insert data
 type ProviderRepository struct {
-	client *Client
+	client    *pgc.Client
+	tableName string
 }
 
 // NewProviderRepository returns repository struct
-func NewProviderRepository(client *Client) *ProviderRepository {
-	return &ProviderRepository{client}
+func NewProviderRepository(client *pgc.Client) *ProviderRepository {
+	return &ProviderRepository{client, "providers"}
 }
 
 func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]provider.Provider, error) {
-
 	var queryBuilder = providerListQueryBuilder
 	if flt.URN != "" {
 		queryBuilder = queryBuilder.Where("urn = ?", flt.URN)
@@ -64,7 +65,7 @@ func (r ProviderRepository) List(ctx context.Context, flt provider.Filter) ([]pr
 		return nil, err
 	}
 
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 	provModel.FromDomain(*prov)
 
 	var createdProvider model.Provider
-	if err := r.client.db.QueryRowxContext(ctx, providerInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, providerInsertQuery,
 		provModel.Host,
 		provModel.URN,
 		provModel.Name,
@@ -100,8 +101,8 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 		provModel.Credentials,
 		provModel.Labels,
 	).StructScan(&createdProvider); err != nil {
-		err := checkPostgresError(err)
-		if errors.Is(err, errDuplicateKey) {
+		err := pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return provider.ErrDuplicate
 		}
 		return err
@@ -121,7 +122,7 @@ func (r ProviderRepository) Get(ctx context.Context, id uint64) (*provider.Provi
 	}
 
 	var provModel model.Provider
-	if err := r.client.db.GetContext(ctx, &provModel, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &provModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, provider.NotFoundError{ID: id}
 		}
@@ -140,7 +141,7 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 	provModel.FromDomain(*provDomain)
 
 	var updatedProvider model.Provider
-	if err := r.client.db.QueryRowxContext(ctx, providerUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, providerUpdateQuery,
 		provModel.ID,
 		provModel.Host,
 		provModel.URN,
@@ -149,11 +150,11 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 		provModel.Credentials,
 		provModel.Labels,
 	).StructScan(&updatedProvider); err != nil {
-		err := checkPostgresError(err)
+		err := pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return provider.NotFoundError{ID: provModel.ID}
 		}
-		if errors.Is(err, errDuplicateKey) {
+		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return provider.ErrDuplicate
 		}
 		return err
@@ -165,7 +166,7 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 }
 
 func (r ProviderRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.db.ExecContext(ctx, providerDeleteQuery, id); err != nil {
+	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, providerDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

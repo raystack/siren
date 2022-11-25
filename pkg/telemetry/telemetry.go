@@ -1,20 +1,43 @@
 package telemetry
 
 import (
-	"github.com/newrelic/go-agent/v3/newrelic"
+	"context"
+	"net/http"
+	"net/http/pprof"
+
+	"github.com/odpf/salt/log"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 )
 
-// NewRelic contains the New Relic go-agent configuration
-type NewRelicConfig struct {
-	Enabled bool   `mapstructure:"enabled" yaml:"enabled" default:"false"`
-	AppName string `mapstructure:"appname" yaml:"appname" default:"siren"`
-	License string `mapstructure:"license" yaml:"license" default:"____LICENSE_STRING_OF_40_CHARACTERS_____"`
+// Init initialises OpenCensus based async-telemetry processes and
+// returns (i.e., it does not block).
+func Init(ctx context.Context, cfg Config, lg log.Logger) {
+	mux := http.NewServeMux()
+	mux.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	mux.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	mux.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	mux.Handle("/debug/pprof/block", pprof.Handler("block"))
+
+	if err := setupOpenCensus(ctx, mux, cfg); err != nil {
+		lg.Error("failed to setup OpenCensus", "err", err.Error())
+	}
+
+	if cfg.Debug != "" {
+		go func() {
+			if err := http.ListenAndServe(cfg.Debug, mux); err != nil {
+				lg.Error("debug server exited due to error", "err", err.Error())
+			}
+		}()
+	}
 }
 
-func New(c NewRelicConfig) (*newrelic.Application, error) {
-	return newrelic.NewApplication(
-		newrelic.ConfigAppName(c.AppName),
-		newrelic.ConfigEnabled(c.Enabled),
-		newrelic.ConfigLicense(c.License),
-	)
+func IncrementInt64Counter(ctx context.Context, si64 *stats.Int64Measure, tagMutator ...tag.Mutator) {
+	counterCtx := ctx
+
+	if tagMutator != nil {
+		counterCtx, _ = tag.New(ctx, tagMutator...)
+	}
+
+	stats.Record(counterCtx, si64.M(1))
 }

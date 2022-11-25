@@ -12,6 +12,7 @@ import (
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
@@ -21,7 +22,7 @@ type AlertsRepositoryTestSuite struct {
 	ctx        context.Context
 	pool       *dockertest.Pool
 	resource   *dockertest.Resource
-	client     *postgres.Client
+	client     *pgc.Client
 	repository *postgres.AlertRepository
 }
 
@@ -47,7 +48,7 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 		s.T().Fatal(err)
 	}
 
-	s.client, err = postgres.NewClient(logger, dbc)
+	s.client, err = pgc.NewClient(logger, dbc)
 	if err != nil {
 		s.T().Fatal(err)
 	}

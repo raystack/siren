@@ -16,6 +16,7 @@ import (
 	"github.com/odpf/siren/core/rule"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/httpclient"
 	"github.com/odpf/siren/plugins/receivers/base"
 	promconfig "github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
@@ -40,6 +41,7 @@ type PluginService struct {
 	helperTemplate string
 	configYaml     string
 	cortexClient   CortexCaller
+	httpClient     *httpclient.Client
 }
 
 // NewPluginService returns cortex service provider plugin struct
@@ -49,6 +51,7 @@ func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOpt
 		appConfig:      appConfig,
 		helperTemplate: HelperTemplateString,
 		configYaml:     ConfigYamlString,
+		httpClient:     httpclient.New(appConfig.HTTPClient),
 	}
 
 	for _, opt := range opts {
@@ -276,5 +279,8 @@ func (s *PluginService) getCortexClient(address string, tenant string) (CortexCa
 	if err != nil {
 		return nil, err
 	}
+
+	cortexClient.Client = *s.httpClient.HTTP()
+
 	return cortexClient, nil
 }

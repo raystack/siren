@@ -3,6 +3,8 @@ package httpclient
 import (
 	"net/http"
 	"time"
+
+	"github.com/odpf/siren/pkg/telemetry"
 )
 
 type ClientOpt func(*Client)
@@ -41,7 +43,9 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 		}
 
 		c.httpClient = &http.Client{
-			Transport: transport,
+			Transport: &telemetry.Transport{
+				Base: transport,
+			},
 		}
 
 		if c.cfg.TimeoutMS != 0 {

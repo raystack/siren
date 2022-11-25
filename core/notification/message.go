@@ -21,6 +21,10 @@ const (
 	MessageStatusPublished MessageStatus = "published"
 )
 
+func (ms MessageStatus) String() string {
+	return string(ms)
+}
+
 // MessageOption provides ability to configure the message initialization
 type MessageOption func(*Message)
 
@@ -96,6 +100,7 @@ func (m *Message) Initialize(
 	for k, v := range n.Data {
 		details[k] = v
 	}
+
 	m.Details = details
 
 	m.MaxTries = DefaultMaxTries

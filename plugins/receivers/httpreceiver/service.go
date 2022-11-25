@@ -34,7 +34,7 @@ func NewPluginService(logger log.Logger, cfg AppConfig, opts ...ServiceOption) *
 	s.logger = logger
 
 	if s.httpClient == nil {
-		s.httpClient = httpclient.New(httpclient.Config{})
+		s.httpClient = httpclient.New(cfg.HTTPClient)
 	}
 
 	return s

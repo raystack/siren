@@ -8,6 +8,8 @@ import (
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
+	"go.opencensus.io/tag"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,7 +20,7 @@ type SubscriptionService interface {
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
-	Get(ctx context.Context, id uint64) (*receiver.Receiver, error)
+	Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error)
 }
 
 // NotificationService is a service for notification domain
@@ -28,6 +30,7 @@ type NotificationService struct {
 	receiverService     ReceiverService
 	subscriptionService SubscriptionService
 	notifierPlugins     map[string]Notifier
+	messagingTracer     *telemetry.MessagingTracer
 }
 
 // NewService creates a new notification service
@@ -44,6 +47,7 @@ func NewService(
 		receiverService:     receiverService,
 		subscriptionService: subscriptionService,
 		notifierPlugins:     notifierPlugins,
+		messagingTracer:     telemetry.NewMessagingTracer(q.Type()),
 	}
 }
 
@@ -56,14 +60,20 @@ func (ns *NotificationService) getNotifierPlugin(receiverType string) (Notifier,
 }
 
 func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
-	rcv, err := ns.receiverService.Get(ctx, receiverID)
+	rcv, err := ns.receiverService.Get(ctx, receiverID, receiver.GetWithData(false))
 	if err != nil {
 		return err
 	}
 
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", map[string]string{
+		"messages.notification_id": n.ID,
+		"messages.routing_method":  RoutingMethodReceiver.String(),
+	})
+	defer span.End()
+
 	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf("invalid receiver type: %s", err.Error())
 	}
 
 	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
@@ -73,14 +83,24 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 
 	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 	if err != nil {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookQueueFailed,
+			tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
 		return err
 	}
 	message.Configs = newConfigs
 
 	message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodReceiver.String())
 
-	// supported no templating for now
+	span.End()
 
+	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageEnqueue,
+		tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
+		tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+		tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
+	// supported no templating for now
 	if err := ns.q.Enqueue(ctx, *message); err != nil {
 		return err
 	}
@@ -95,13 +115,21 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 	}
 
 	if len(subscriptions) == 0 {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationSubscriberNotFound)
 		return errors.ErrInvalid.WithMsgf("not matching any subscription")
 	}
+
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", map[string]string{
+		"messages.notification_id": n.ID,
+		"messages.routing_method":  RoutingMethodSubscribers.String(),
+	})
+	defer span.End()
 
 	var messages = make([]Message, 0)
 
 	for _, s := range subscriptions {
 		for _, rcv := range s.Receivers {
+
 			notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
 			if err != nil {
 				return err
@@ -114,6 +142,11 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 
 			newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 			if err != nil {
+				telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookQueueFailed,
+					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
+					tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
+				)
+
 				return err
 			}
 			message.Configs = newConfigs
@@ -132,20 +165,27 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 				if templateBody != "" {
 					renderedDetailString, err := template.RenderBody(templateBody, n)
 					if err != nil {
-						return errors.ErrInvalid.WithMsgf(err.Error())
+						return errors.ErrInvalid.WithMsgf("failed to render template: %s", err.Error())
 					}
 
 					var messageDetails map[string]interface{}
 					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
-						return err
+						return errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template: %s", err.Error())
 					}
 					message.Details = messageDetails
 				}
 			}
 
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageEnqueue,
+				tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
+				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
 			messages = append(messages, *message)
 		}
 	}
+
+	span.End()
 
 	if err := ns.q.Enqueue(ctx, messages...); err != nil {
 		return err

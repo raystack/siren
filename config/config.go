@@ -37,11 +37,11 @@ type Log struct {
 
 // Config contains the application configuration
 type Config struct {
-	DB           db.Config                `mapstructure:"db"`
-	NewRelic     telemetry.NewRelicConfig `mapstructure:"newrelic" yaml:"newrelic"`
-	Service      server.Config            `mapstructure:"service" yaml:"service"`
-	Log          Log                      `mapstructure:"log" yaml:"log"`
-	Providers    providers.Config         `mapstructure:"providers" yaml:"providers"`
-	Receivers    receivers.Config         `mapstructure:"receivers" yaml:"receivers"`
-	Notification notification.Config      `mapstructure:"notification" yaml:"notification"`
+	DB           db.Config           `mapstructure:"db"`
+	Telemetry    telemetry.Config    `mapstructure:"telemetry" yaml:"telemetry"`
+	Service      server.Config       `mapstructure:"service" yaml:"service"`
+	Log          Log                 `mapstructure:"log" yaml:"log"`
+	Providers    providers.Config    `mapstructure:"providers" yaml:"providers"`
+	Receivers    receivers.Config    `mapstructure:"receivers" yaml:"receivers"`
+	Notification notification.Config `mapstructure:"notification" yaml:"notification"`
 }

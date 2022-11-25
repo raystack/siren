@@ -59,7 +59,7 @@ func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
 	}
 
 	if c.httpClient == nil {
-		c.httpClient = httpclient.New(httpclient.Config{})
+		c.httpClient = httpclient.New(cfg.HTTPClient)
 	}
 
 	return c

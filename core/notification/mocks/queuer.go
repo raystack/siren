@@ -267,6 +267,42 @@ func (_c *Queuer_SuccessCallback_Call) Return(_a0 error) *Queuer_SuccessCallback
 	return _c
 }
 
+// Type provides a mock function with given fields:
+func (_m *Queuer) Type() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// Queuer_Type_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Type'
+type Queuer_Type_Call struct {
+	*mock.Call
+}
+
+// Type is a helper method to define mock.On call
+func (_e *Queuer_Expecter) Type() *Queuer_Type_Call {
+	return &Queuer_Type_Call{Call: _e.mock.On("Type")}
+}
+
+func (_c *Queuer_Type_Call) Run(run func()) *Queuer_Type_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Queuer_Type_Call) Return(_a0 string) *Queuer_Type_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 type mockConstructorTestingTNewQueuer interface {
 	mock.TestingT
 	Cleanup(func())

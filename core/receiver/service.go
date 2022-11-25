@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
+	"go.opencensus.io/tag"
 )
 
 // Service handles business logic
@@ -60,6 +62,9 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookDBFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+
 		return err
 	}
 
@@ -71,7 +76,25 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 	return nil
 }
 
-func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
+type getOpts struct {
+	withData bool
+}
+
+type GetOption func(*getOpts)
+
+func GetWithData(withData bool) GetOption {
+	return func(g *getOpts) {
+		g.withData = withData
+	}
+}
+
+func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Receiver, error) {
+	opt := &getOpts{}
+
+	for _, g := range gopts {
+		g(opt)
+	}
+
 	rcv, err := s.repository.Get(ctx, id)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
@@ -87,16 +110,21 @@ func (s *Service) Get(ctx context.Context, id uint64) (*Receiver, error) {
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookDBFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+
 		return nil, err
 	}
 	rcv.Configurations = transformedConfigs
 
-	populatedData, err := receiverPlugin.BuildData(ctx, rcv.Configurations)
-	if err != nil {
-		return nil, err
-	}
+	if opt.withData {
+		populatedData, err := receiverPlugin.BuildData(ctx, rcv.Configurations)
+		if err != nil {
+			return nil, err
+		}
 
-	rcv.Data = populatedData
+		rcv.Data = populatedData
+	}
 
 	return rcv, nil
 }

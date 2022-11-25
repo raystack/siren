@@ -54,7 +54,8 @@ func TestMessage_Initialize(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &notification.Message{}
-			m.Initialize(tc.n,
+			m.Initialize(
+				tc.n,
 				tc.receiverType,
 				tc.notificationConfigs,
 				notification.InitWithID(testID),

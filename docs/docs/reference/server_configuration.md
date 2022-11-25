@@ -22,12 +22,42 @@ db:
   # db connection max query timeout config e.g. 100ms
   max_query_timeout: <string duration> | default="100ms"
 
-newrelic:
-  enabled: <string> | default = false
-  
-  appname: <string> | default = "siren"
-  
-  license: <string> | default = "____LICENSE_STRING_OF_40_CHARACTERS_____"
+# instrumentation/metrics related configurations.
+telemetry:
+  # debug_addr is used for exposing the pprof, zpages & `/metrics` endpoints. if
+  # not set, all of the above are disabled.
+  debug_addr: <string> | default="localhost:8081"
+
+  # enable_cpu enables collection of runtime CPU metrics. available in `/metrics`.
+  enable_cpu: <bool> | default=true
+
+  # enable_memory enables collection of runtime memory metrics. available via `/metrics`.
+  enable_memory: <bool> | default=true
+
+  # sampling_fraction indicates the sampling rate for tracing. 1 indicates all traces
+  # are collected and 0 means no traces.
+  sampling_fraction: <bool> | default=1
+
+  # service_name is the identifier used in trace exports, NewRelic, etc for the
+  # siren instance.
+  service_name: <string> | default="siren"
+
+  # enable_newrelic enables exporting NewRelic instrumentation in addition to the
+  # OpenCensus.
+  enable_newrelic: <bool> | default=false
+
+  # new relic app name, if left empty, app name will be service_name
+  newrelic_app_name: <string> | default=""
+
+  # newrelic_api_key must be a valid NewRelic License key.
+  newrelic_api_key: <string> | default="____LICENSE_STRING_OF_40_CHARACTERS_____"
+
+  # enable_otel_agent enables the OpenTelemetry Exporter for both traces and views.
+  enable_otel_agent: <bool> | default=false
+
+  # otel_agent_addr is the addr of OpenTelemetry Collector/Agent. This is where the
+  # opene-telemetry exporter will publish the collected traces/views to.
+  otel_agent_addr: <string> | default="localhost:55678"
 
 service:
   host: <string> | default="localhost"
@@ -41,6 +71,15 @@ log:
 
   # log format will be compatible with gcp logging if this is set to true
   gcp_compatible: <bool> | default=true
+
+providers:
+  cortex:
+    group_wait: <string> | default="30s"
+
+    webhook_base_api: <string> | default="http://localhost:8080/v1beta1/alerts/cortex"
+
+    http_client:
+      <httpclient>
 
 receivers:
   slack:

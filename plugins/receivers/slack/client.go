@@ -87,7 +87,7 @@ func NewClient(cfg AppConfig, opts ...ClientOption) *Client {
 	c.cfg.APIHost = c.cfg.APIHost + "/"
 
 	if c.httpClient == nil {
-		c.httpClient = httpclient.New(httpclient.Config{})
+		c.httpClient = httpclient.New(cfg.HTTPClient)
 	}
 
 	return c
@@ -101,7 +101,7 @@ func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSec
 	data.Set("client_secret", clientSecret)
 
 	response := codeExchangeHTTPResponse{}
-	req, err := http.NewRequest(http.MethodPost, c.cfg.APIHost+oAuthSlackPath, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.APIHost+oAuthSlackPath, strings.NewReader(data.Encode()))
 	if err != nil {
 		return Credential{}, fmt.Errorf("failed to create request body: %w", err)
 	}
@@ -133,7 +133,11 @@ func (c *Client) ExchangeAuth(ctx context.Context, authCode, clientID, clientSec
 
 // GetWorkspaceChannels fetches list of joined channel of a client
 func (c *Client) GetWorkspaceChannels(ctx context.Context, token secret.MaskableString) ([]Channel, error) {
-	gsc := goslack.New(token.UnmaskedString(), goslack.OptionAPIURL(c.cfg.APIHost))
+	gsc := goslack.New(
+		token.UnmaskedString(),
+		goslack.OptionAPIURL(c.cfg.APIHost),
+		goslack.OptionHTTPClient(c.httpClient.HTTP()),
+	)
 
 	joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 	if err != nil {
@@ -152,7 +156,12 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, token secret.Maskable
 
 // Notify sends message to a specific slack channel
 func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Message) error {
-	gsc := goslack.New(conf.ReceiverConfig.Token.UnmaskedString(), goslack.OptionAPIURL(c.cfg.APIHost))
+
+	gsc := goslack.New(
+		conf.ReceiverConfig.Token.UnmaskedString(),
+		goslack.OptionAPIURL(c.cfg.APIHost),
+		goslack.OptionHTTPClient(c.httpClient.HTTP()),
+	)
 
 	var channelID string
 	switch conf.ChannelType {
@@ -233,6 +242,7 @@ func (c *Client) getJoinedChannelsList(ctx context.Context, gsc GoSlackCaller) (
 		if err != nil {
 			return channelList, err
 		}
+
 		channelList = append(channelList, channels...)
 		curr = nextCursor
 		if curr == "" {

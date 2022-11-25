@@ -8,6 +8,7 @@ import (
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/pgc"
 )
 
 const alertInsertQuery = `
@@ -31,12 +32,13 @@ var alertListQueryBuilder = sq.Select(
 
 // AlertRepository talks to the store to read or insert data
 type AlertRepository struct {
-	client *Client
+	client    *pgc.Client
+	tableName string
 }
 
 // NewAlertRepository returns repository struct
-func NewAlertRepository(client *Client) *AlertRepository {
-	return &AlertRepository{client}
+func NewAlertRepository(client *pgc.Client) *AlertRepository {
+	return &AlertRepository{client, "alerts"}
 }
 
 func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
@@ -48,7 +50,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 	alertModel.FromDomain(*alrt)
 
 	var newAlertModel model.Alert
-	if err := r.client.db.QueryRowxContext(ctx, alertInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, alertInsertQuery,
 		alertModel.ProviderID,
 		alertModel.ResourceName,
 		alertModel.MetricName,
@@ -59,8 +61,8 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 		alertModel.CreatedAt,
 		alertModel.UpdatedAt,
 	).StructScan(&newAlertModel); err != nil {
-		err := checkPostgresError(err)
-		if errors.Is(err, errForeignKeyViolation) {
+		err := pgc.CheckError(err)
+		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return alert.ErrRelation
 		}
 		return err
@@ -89,7 +91,7 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 		return nil, err
 	}
 
-	rows, err := r.client.db.QueryxContext(ctx, query, args...)
+	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
 	if err != nil {
 		return nil, err
 	}

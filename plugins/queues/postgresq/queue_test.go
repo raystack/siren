@@ -86,7 +86,7 @@ func (s *QueueTestSuite) TearDownSuite() {
 }
 
 func (s *QueueTestSuite) cleanup() error {
-	_, err := s.dbc.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", postgresq.MESSAGE_QUEUE_TABLE_NAME))
+	_, err := s.dbc.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", postgresq.MessageQueueTableFullName))
 	if err != nil {
 		return err
 	}
@@ -95,41 +95,47 @@ func (s *QueueTestSuite) cleanup() error {
 
 func (s *QueueTestSuite) TestSimpleEnqueueDequeue() {
 	timeNow := time.Now()
-	ns := []notification.Notification{
-		{
-			ID:        uuid.NewString(),
-			Data:      map[string]interface{}{},
-			Labels:    map[string]string{},
-			CreatedAt: timeNow,
-		},
-		{
-			ID:        uuid.NewString(),
-			Data:      map[string]interface{}{},
-			Labels:    map[string]string{},
-			CreatedAt: timeNow,
-		},
-		{
-			ID:        uuid.NewString(),
-			Data:      map[string]interface{}{},
-			Labels:    map[string]string{},
-			CreatedAt: timeNow,
-		},
-		{
-			ID:        uuid.NewString(),
-			Data:      map[string]interface{}{},
-			Labels:    map[string]string{},
-			CreatedAt: timeNow,
-		},
-	}
 
-	messages := []notification.Message{}
-	for _, n := range ns {
-		msg, err := n.ToMessage(receiver.TypeSlack, map[string]interface{}{})
-		s.Require().NoError(err)
-		messages = append(messages, *msg)
+	messagesGenerator := func() []notification.Message {
+		ns := []notification.Notification{
+			{
+				ID:        uuid.NewString(),
+				Data:      map[string]interface{}{},
+				Labels:    map[string]string{},
+				CreatedAt: timeNow,
+			},
+			{
+				ID:        uuid.NewString(),
+				Data:      map[string]interface{}{},
+				Labels:    map[string]string{},
+				CreatedAt: timeNow,
+			},
+			{
+				ID:        uuid.NewString(),
+				Data:      map[string]interface{}{},
+				Labels:    map[string]string{},
+				CreatedAt: timeNow,
+			},
+			{
+				ID:        uuid.NewString(),
+				Data:      map[string]interface{}{},
+				Labels:    map[string]string{},
+				CreatedAt: timeNow,
+			},
+		}
+
+		messages := []notification.Message{}
+		for _, n := range ns {
+			msg, err := n.ToMessage(receiver.TypeSlack, map[string]interface{}{})
+			s.Require().NoError(err)
+			messages = append(messages, *msg)
+		}
+
+		return messages
 	}
 
 	s.Run("should return no error if all messages are successfully processed", func() {
+		messages := messagesGenerator()
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			s.Assert().Len(messages, 1)
 			return nil
@@ -147,6 +153,7 @@ func (s *QueueTestSuite) TestSimpleEnqueueDequeue() {
 	})
 
 	s.Run("should return no error if all messages are successfully processed with different batch", func() {
+		messages := messagesGenerator()
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			s.Assert().Len(messages, 2)
 			return nil
@@ -164,6 +171,7 @@ func (s *QueueTestSuite) TestSimpleEnqueueDequeue() {
 	})
 
 	s.Run("should return an error if a message is failed to process", func() {
+		messages := messagesGenerator()
 		handlerFn := func(ctx context.Context, messages []notification.Message) error {
 			return errors.New("some error")
 		}
@@ -203,7 +211,7 @@ func (s *QueueTestSuite) TestEnqueueDequeueWithCallback() {
 		}
 
 		tempMessage := &postgresq.NotificationMessage{}
-		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s WHERE id = '5'", postgresq.MESSAGE_QUEUE_TABLE_NAME))
+		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s WHERE id = '5'", postgresq.MessageQueueTableFullName))
 		s.Require().NoError(err)
 
 		s.Assert().Equal(string(notification.MessageStatusFailed), tempMessage.Status)
@@ -225,7 +233,7 @@ func (s *QueueTestSuite) TestEnqueueDequeueWithCallback() {
 		}
 
 		tempMessage := &postgresq.NotificationMessage{}
-		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MESSAGE_QUEUE_TABLE_NAME))
+		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MessageQueueTableFullName))
 		s.Require().NoError(err)
 
 		s.Assert().Equal(string(notification.MessageStatusPublished), tempMessage.Status)
@@ -265,7 +273,7 @@ func (s *QueueTestSuite) TestEnqueueDequeueDLQ() {
 		})
 
 		tempMessage := &postgresq.NotificationMessage{}
-		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MESSAGE_QUEUE_TABLE_NAME))
+		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MessageQueueTableFullName))
 		s.Require().NoError(err)
 
 		s.Assert().Equal(string(notification.MessageStatusPending), tempMessage.Status)

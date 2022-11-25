@@ -23,13 +23,20 @@ func (_m *ReceiverService) EXPECT() *ReceiverService_Expecter {
 	return &ReceiverService_Expecter{mock: &_m.Mock}
 }
 
-// Get provides a mock function with given fields: ctx, id
-func (_m *ReceiverService) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
-	ret := _m.Called(ctx, id)
+// Get provides a mock function with given fields: ctx, id, gopts
+func (_m *ReceiverService) Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error) {
+	_va := make([]interface{}, len(gopts))
+	for _i := range gopts {
+		_va[_i] = gopts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, id)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 *receiver.Receiver
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) *receiver.Receiver); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, ...receiver.GetOption) *receiver.Receiver); ok {
+		r0 = rf(ctx, id, gopts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*receiver.Receiver)
@@ -37,8 +44,8 @@ func (_m *ReceiverService) Get(ctx context.Context, id uint64) (*receiver.Receiv
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, ...receiver.GetOption) error); ok {
+		r1 = rf(ctx, id, gopts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -54,13 +61,21 @@ type ReceiverService_Get_Call struct {
 // Get is a helper method to define mock.On call
 //  - ctx context.Context
 //  - id uint64
-func (_e *ReceiverService_Expecter) Get(ctx interface{}, id interface{}) *ReceiverService_Get_Call {
-	return &ReceiverService_Get_Call{Call: _e.mock.On("Get", ctx, id)}
+//  - gopts ...receiver.GetOption
+func (_e *ReceiverService_Expecter) Get(ctx interface{}, id interface{}, gopts ...interface{}) *ReceiverService_Get_Call {
+	return &ReceiverService_Get_Call{Call: _e.mock.On("Get",
+		append([]interface{}{ctx, id}, gopts...)...)}
 }
 
-func (_c *ReceiverService_Get_Call) Run(run func(ctx context.Context, id uint64)) *ReceiverService_Get_Call {
+func (_c *ReceiverService_Get_Call) Run(run func(ctx context.Context, id uint64, gopts ...receiver.GetOption)) *ReceiverService_Get_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64))
+		variadicArgs := make([]receiver.GetOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(receiver.GetOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(uint64), variadicArgs...)
 	})
 	return _c
 }

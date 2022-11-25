@@ -7,6 +7,8 @@ import (
 
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
+	"go.opencensus.io/tag"
 )
 
 const (
@@ -20,6 +22,7 @@ type Handler struct {
 	identifier             string
 	notifierRegistry       map[string]Notifier
 	supportedReceiverTypes []string
+	messagingTracer        *telemetry.MessagingTracer
 
 	batchSize int
 }
@@ -64,6 +67,8 @@ func NewHandler(cfg HandlerConfig, logger log.Logger, q Queuer, registry map[str
 		opt(h)
 	}
 
+	h.messagingTracer = telemetry.NewMessagingTracer(q.Type())
+
 	return h
 }
 
@@ -80,6 +85,9 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 	if len(receiverTypes) == 0 {
 		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
+		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", nil)
+		defer span.End()
+
 		h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", runAt, "id", h.identifier)
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if errors.Is(err, ErrNoMessage) {
@@ -95,6 +103,7 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
 	for _, message := range messages {
+
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)
 		if err != nil {
 			return err
@@ -102,9 +111,20 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePending,
+			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
 		newConfig, err := notifier.PostHookQueueTransformConfigs(ctx, message.Configs)
 		if err != nil {
 			message.MarkFailed(time.Now(), false, err)
+
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookQueueFailed,
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
+				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
 			if err := h.q.ErrorCallback(ctx, message); err != nil {
 				return err
@@ -114,8 +134,11 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		message.Configs = newConfig
 
 		if retryable, err := notifier.Send(ctx, message); err != nil {
-
 			message.MarkFailed(time.Now(), retryable, err)
+
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
+				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
 			if err := h.q.ErrorCallback(ctx, message); err != nil {
 				return err
@@ -124,6 +147,10 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		}
 
 		message.MarkPublished(time.Now())
+
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePublished,
+			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
 		if err := h.q.SuccessCallback(ctx, message); err != nil {
 			return err

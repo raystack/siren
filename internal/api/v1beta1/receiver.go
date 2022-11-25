@@ -67,7 +67,7 @@ func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.Creat
 }
 
 func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.GetReceiverResponse, error) {
-	rcv, err := s.receiverService.Get(ctx, req.GetId())
+	rcv, err := s.receiverService.Get(ctx, req.GetId(), receiver.GetWithData(true))
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

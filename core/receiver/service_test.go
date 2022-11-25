@@ -371,7 +371,7 @@ func TestService_GetReceiver(t *testing.T) {
 
 			tc.Setup(repositoryMock, resolverMock)
 
-			got, err := svc.Get(ctx, testID)
+			got, err := svc.Get(ctx, testID, receiver.GetWithData(true))
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())

@@ -1,0 +1,33 @@
+receivers:
+  opencensus:
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: https://otlp.nr-data.net:4317
+    headers:
+      "api-key": "NEW_RELIC_API_KEY"
+  logging:
+    loglevel: debug
+
+extensions:
+  health_check:
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: debug
+      initial_fields:
+        service: my-instance
+  pipelines:
+    traces:
+      receivers: [opencensus]
+      processors: [batch]
+      exporters: [otlp, logging]
+    metrics:
+      receivers: [opencensus]
+      processors: [batch]
+      exporters: [otlp, logging]

@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store/postgres"
+	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
 	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/worker"
@@ -112,7 +113,7 @@ func serverMigrateCommand() *cobra.Command {
 				return err
 			}
 
-			if err := postgres.Migrate(cfg.DB); err != nil {
+			if err := pgc.Migrate(cfg.DB); err != nil {
 				return err
 			}
 			printer.Success("Migration done")
@@ -127,19 +128,23 @@ func serverMigrateCommand() *cobra.Command {
 }
 
 func StartServer(ctx context.Context, cfg config.Config) error {
-	nr, err := telemetry.New(cfg.NewRelic)
+	logger := initLogger(cfg.Log)
+
+	telemetry.Init(ctx, cfg.Telemetry, logger)
+	nrApp, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(cfg.Telemetry.ServiceName),
+		newrelic.ConfigLicense(cfg.Telemetry.NewRelicAPIKey),
+	)
 	if err != nil {
 		return err
 	}
-
-	logger := initLogger(cfg.Log)
 
 	dbClient, err := db.New(cfg.DB)
 	if err != nil {
 		return err
 	}
 
-	pgClient, err := postgres.NewClient(logger, dbClient)
+	pgClient, err := pgc.NewClient(logger, dbClient)
 	if err != nil {
 		return err
 	}
@@ -204,7 +209,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		ctx,
 		cfg.Service,
 		logger,
-		nr,
+		nrApp,
 		apiDeps,
 	)
 
@@ -224,6 +229,10 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 	if err := dlq.Stop(timeoutCtx); err != nil {
 		logger.Error("error stopping dlq", "error", err)
+	}
+
+	if err := pgClient.Close(); err != nil {
+		return err
 	}
 
 	return err
