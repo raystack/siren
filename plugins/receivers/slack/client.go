@@ -154,8 +154,19 @@ func (c *Client) GetWorkspaceChannels(ctx context.Context, token secret.Maskable
 	return result, nil
 }
 
-// Notify sends message to a specific slack channel
 func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Message) error {
+	if c.retrier != nil {
+		if err := c.retrier.Run(ctx, func(ctx context.Context) error {
+			return c.notify(ctx, conf, message)
+		}); err != nil {
+			return err
+		}
+	}
+	return c.notify(ctx, conf, message)
+}
+
+// Notify sends message to a specific slack channel
+func (c *Client) notify(ctx context.Context, conf NotificationConfig, message Message) error {
 
 	gsc := goslack.New(
 		conf.ReceiverConfig.Token.UnmaskedString(),
@@ -168,6 +179,9 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 	case TypeChannelChannel:
 		joinedChannelList, err := c.getJoinedChannelsList(ctx, gsc)
 		if err != nil {
+			if err := c.checkSlackErrorRetryable(err); errors.As(err, new(retry.RetryableError)) {
+				return err
+			}
 			return fmt.Errorf("failed to fetch joined channel list: %w", err)
 		}
 		channelID = searchChannelId(joinedChannelList, message.Channel)
@@ -181,7 +195,7 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 			if err.Error() == "users_not_found" {
 				return fmt.Errorf("failed to get id for %q", message.Channel)
 			}
-			return err
+			return c.checkSlackErrorRetryable(err)
 		}
 		channelID = user.ID
 	default:
@@ -193,16 +207,14 @@ func (c *Client) Notify(ctx context.Context, conf NotificationConfig, message Me
 		return err
 	}
 
-	if c.retrier != nil {
-		if err := c.retrier.Run(ctx, func(ctx context.Context) error {
-			return c.sendMessageContext(ctx, gsc, channelID, message.Channel, msgOptions...)
-		}); err != nil {
+	if err := c.sendMessageContext(ctx, gsc, channelID, message.Channel, msgOptions...); err != nil {
+		if err := c.checkSlackErrorRetryable(err); errors.As(err, new(retry.RetryableError)) {
 			return err
 		}
-		return nil
-	} else {
-		return c.sendMessageContext(ctx, gsc, channelID, message.Channel, msgOptions...)
+		return fmt.Errorf("failed to send message to %q: %w", message.Channel, err)
 	}
+
+	return nil
 }
 
 func (c *Client) sendMessageContext(ctx context.Context, gsc GoSlackCaller, channelID string, channelName string, msgOpts ...goslack.MsgOption) error {
@@ -212,23 +224,27 @@ func (c *Client) sendMessageContext(ctx context.Context, gsc GoSlackCaller, chan
 		msgOpts...,
 	)
 	if err != nil {
-		// if 429 or 5xx do retry
-		var scErr goslack.StatusCodeError
-		isit := errors.As(err, &scErr)
-		if isit {
-			if scErr.Retryable() {
-				return retry.RetryableError{Err: err}
-			}
-		}
-		var rlErr *goslack.RateLimitedError
-		if errors.As(err, &rlErr) {
-			if rlErr.Retryable() {
-				return retry.RetryableError{Err: err}
-			}
-		}
-		return fmt.Errorf("failed to send message to %q: %w", channelName, err)
+		return c.checkSlackErrorRetryable(err)
 	}
 	return nil
+}
+
+func (c *Client) checkSlackErrorRetryable(err error) error {
+	// if 429 or 5xx do retry
+	var scErr goslack.StatusCodeError
+	isit := errors.As(err, &scErr)
+	if isit {
+		if scErr.Retryable() {
+			return retry.RetryableError{Err: err}
+		}
+	}
+	var rlErr *goslack.RateLimitedError
+	if errors.As(err, &rlErr) {
+		if rlErr.Retryable() {
+			return retry.RetryableError{Err: err}
+		}
+	}
+	return err
 }
 
 func (c *Client) getJoinedChannelsList(ctx context.Context, gsc GoSlackCaller) ([]goslack.Channel, error) {

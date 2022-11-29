@@ -61,13 +61,13 @@ SET status = '%s', updated_at = now()
 WHERE id IN (
     SELECT id
     FROM %s
-    WHERE status = '%s' AND retryable IS FALSE %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries 
+    WHERE (status = '%s' OR status = '%s') AND retryable IS FALSE %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries AND last_error IS NULL
     ORDER BY expired_at
     FOR UPDATE SKIP LOCKED
     LIMIT %d
 )
 RETURNING *
-`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusEnqueued, receiverTypesList, batchSize)
+`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusEnqueued, notification.MessageStatusPending, receiverTypesList, batchSize)
 }
 
 func getDLQDequeueQuery(batchSize int, receiverTypesList string) string {
@@ -77,13 +77,13 @@ SET status = '%s', updated_at = now()
 WHERE id IN (
     SELECT id
     FROM %s
-    WHERE status = '%s' AND retryable IS TRUE  %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries
+    WHERE (status = '%s' OR status = '%s') AND retryable IS TRUE  %s AND (expired_at < now() OR expired_at IS NULL) AND try_count < max_tries AND last_error IS NOT NULL
     ORDER BY expired_at
     FOR UPDATE SKIP LOCKED
     LIMIT %d
 )
 RETURNING *
-`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusFailed, receiverTypesList, batchSize)
+`, MessageQueueTableFullName, notification.MessageStatusPending, MessageQueueTableFullName, notification.MessageStatusFailed, notification.MessageStatusPending, receiverTypesList, batchSize)
 }
 
 // New creates a new queue instance

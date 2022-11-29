@@ -116,7 +116,7 @@ func workerStartNotificationHandlerCommand() *cobra.Command {
 						- postgres
 						`, cfg.Notification.Queue.Kind.String()))
 			}
-			workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration))
+			workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration), worker.WithID("message-worker"))
 			notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, queue, notifierRegistry,
 				notification.HandlerWithIdentifier(workerTicker.GetID()))
 			go func() {
@@ -193,7 +193,7 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 						`, string(cfg.Notification.Queue.Kind)))
 			}
 
-			workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration))
+			workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration), worker.WithID("dlq-worker"))
 			notificationHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, queue, notifierRegistry,
 				notification.HandlerWithIdentifier("dlq-"+workerTicker.GetID()))
 			go func() {

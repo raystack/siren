@@ -101,7 +101,7 @@ func TestClient_NotifyChannel(t *testing.T) {
 			},
 			slack.Message{})
 
-		assert.EqualError(t, err, "failed to fetch joined channel list: slack server error: 502 Bad Gateway")
+		assert.EqualError(t, err, "slack server error: 502 Bad Gateway")
 
 		testServer.Close()
 	})

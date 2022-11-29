@@ -181,7 +181,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	wg := &sync.WaitGroup{}
 
 	if cfg.Notification.MessageHandler.Enabled {
-		workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration))
+		workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration), worker.WithID("message-handler"))
 		notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, queue, notifierRegistry,
 			notification.HandlerWithIdentifier(workerTicker.GetID()))
 		wg.Add(1)
@@ -193,9 +193,9 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		}()
 	}
 	if cfg.Notification.DLQHandler.Enabled {
-		workerDLQTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration))
+		workerDLQTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration), worker.WithID("dlq-handler"))
 		notificationDLQHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, dlq, notifierRegistry,
-			notification.HandlerWithIdentifier("dlq"+workerDLQTicker.GetID()))
+			notification.HandlerWithIdentifier(workerDLQTicker.GetID()))
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
