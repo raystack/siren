@@ -228,7 +228,7 @@ func getFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-func StartSiren(cfg config.Config) {
+func StartSirenServer(cfg config.Config) {
 	logger := log.NewZap()
 	logger.Info("starting up siren...")
 	go func() {
@@ -238,4 +238,27 @@ func StartSiren(cfg config.Config) {
 	}()
 	logger.Info("siren is up")
 
+}
+
+func StartSirenMessageWorker(cfg config.Config, closeChannel chan struct{}) error {
+	logger := log.NewZap()
+	logger.Info("starting up siren notification message worker...")
+
+	if err := cli.StartNotificationHandlerWorker(context.Background(), cfg, closeChannel); err != nil {
+		return err
+	}
+	logger.Info("siren notification message is running")
+	return nil
+}
+
+func StartSirenDLQWorker(cfg config.Config, closeChannel chan struct{}) error {
+	logger := log.NewZap()
+	logger.Info("starting up siren notification dlq worker...")
+
+	if err := cli.StartNotificationDLQHandlerWorker(context.Background(), cfg, closeChannel); err != nil {
+		return err
+	}
+
+	logger.Info("siren notification dlq is running")
+	return nil
 }

@@ -53,7 +53,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 	s.appConfig.Notification.MessageHandler.Enabled = true
 	s.appConfig.Notification.DLQHandler.Enabled = true
 
-	StartSiren(*s.appConfig)
+	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
 	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))

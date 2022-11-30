@@ -111,7 +111,7 @@ func (c *Client) QueryxContext(ctx context.Context, op string, tableName string,
 	if err != nil {
 		span.SetStatus(trace.Status{
 			Code:    trace.StatusCodeUnknown,
-			Message: sqlxRow.Err().Error(),
+			Message: err.Error(),
 		})
 	}
 	return sqlxRow, err
