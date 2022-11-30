@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
+	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/plugins/queues"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
@@ -42,6 +42,9 @@ func (s *NotificationTestSuite) SetupTest() {
 		Service: server.Config{
 			Port:          apiPort,
 			EncryptionKey: testEncryptionKey,
+		},
+		Telemetry: telemetry.Config{
+			Debug: "",
 		},
 		Notification: notification.Config{
 			Queue: queues.Config{
@@ -90,15 +93,7 @@ func (s *NotificationTestSuite) TearDownTest() {
 
 func (s *NotificationTestSuite) TestSendNotification() {
 	expectedNotification := `{"icon_emoji":":smile:","routing_method":"receiver","text":"test send notification"}`
-	payload := `
-	{
-		"payload": {
-			"data": {
-				"text": "test send notification",
-				"icon_emoji": ":smile:"
-			}	
-		}
-	}`
+
 	ctx := context.Background()
 
 	controlChan := make(chan struct{}, 1)
@@ -126,10 +121,21 @@ func (s *NotificationTestSuite) TestSendNotification() {
 	})
 	s.Require().NoError(err)
 
-	notifyAPI := fmt.Sprintf("http://localhost:%d/v1beta1/receivers/%d/send", s.appConfig.Service.Port, rcv.GetId())
+	time.Sleep(100 * time.Millisecond)
 
-	bodyBytes := []byte(payload)
-	_, err = http.Post(notifyAPI, "application/json", bytes.NewReader(bodyBytes))
+	_, err = s.client.NotifyReceiver(ctx, &sirenv1beta1.NotifyReceiverRequest{
+		Id: rcv.GetId(),
+		Payload: &structpb.Struct{
+			Fields: map[string]*structpb.Value{
+				"data": structpb.NewStructValue(&structpb.Struct{
+					Fields: map[string]*structpb.Value{
+						"text":       structpb.NewStringValue("test send notification"),
+						"icon_emoji": structpb.NewStringValue(":smile:"),
+					},
+				}),
+			},
+		},
+	})
 	s.Require().NoError(err)
 
 	<-controlChan
