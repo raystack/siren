@@ -41,14 +41,20 @@ func NewService(
 	subscriptionService SubscriptionService,
 	notifierPlugins map[string]Notifier,
 ) *NotificationService {
-	return &NotificationService{
+	ns := &NotificationService{
 		logger:              logger,
 		q:                   q,
 		receiverService:     receiverService,
 		subscriptionService: subscriptionService,
 		notifierPlugins:     notifierPlugins,
-		messagingTracer:     telemetry.NewMessagingTracer(q.Type()),
 	}
+
+	ns.messagingTracer = telemetry.NewMessagingTracer("default")
+	if q != nil {
+		ns.messagingTracer = telemetry.NewMessagingTracer(q.Type())
+	}
+
+	return ns
 }
 
 func (ns *NotificationService) getNotifierPlugin(receiverType string) (Notifier, error) {
