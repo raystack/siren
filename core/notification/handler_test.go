@@ -41,8 +41,8 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
-				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: true,
 		},
@@ -55,8 +55,8 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
-				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -69,9 +69,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
-				n.EXPECT().Send(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
-				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
+				n.EXPECT().Send(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -84,9 +84,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
-				n.EXPECT().Send(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
-				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
+				n.EXPECT().Send(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
+				q.EXPECT().ErrorCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: true,
 		},
@@ -99,9 +99,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
-				n.EXPECT().Send(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
-				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
+				n.EXPECT().Send(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
+				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -114,9 +114,9 @@ func TestHandler_MessageHandler(t *testing.T) {
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
-				n.EXPECT().Send(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
-				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.cancelCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
+				n.EXPECT().Send(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
+				q.EXPECT().SuccessCallback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 			wantErr: false,
 		},

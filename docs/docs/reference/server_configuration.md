@@ -167,7 +167,7 @@ message_handler:
     # types of receiver that need to be supported by the handler (e.g. slack, http, pagerduty, file)
     receiver_types: <list of string> | default="[slack, http, pagerduty, file]"\
 
-    # number of messages to dequeue and publish at once, this is the number of goroutine that will be spawned
+    # number of messages to dequeue and publish at once
     batch_size: <int> | default=1
 ```
 

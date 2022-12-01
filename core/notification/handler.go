@@ -9,7 +9,6 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -103,71 +102,61 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
-	g, ctx := errgroup.WithContext(ctx)
-
 	for _, msg := range messages {
 
 		message := msg
 
-		g.Go(func() error {
-			notifier, err := h.getNotifierPlugin(message.ReceiverType)
-			if err != nil {
-				return err
-			}
+		notifier, err := h.getNotifierPlugin(message.ReceiverType)
+		if err != nil {
+			return err
+		}
 
-			message.MarkPending(time.Now())
+		message.MarkPending(time.Now())
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePending,
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePending,
+			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
+		newConfig, err := notifier.PostHookQueueTransformConfigs(ctx, message.Configs)
+		if err != nil {
+			message.MarkFailed(time.Now(), false, err)
+
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookQueueFailed,
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
 				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
-			newConfig, err := notifier.PostHookQueueTransformConfigs(ctx, message.Configs)
-			if err != nil {
-				message.MarkFailed(time.Now(), false, err)
-
-				telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookQueueFailed,
-					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
-				telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
-					tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
-				if err := h.q.ErrorCallback(ctx, message); err != nil {
-					return err
-				}
+			if err := h.q.ErrorCallback(ctx, message); err != nil {
 				return err
 			}
-			message.Configs = newConfig
+			return err
+		}
+		message.Configs = newConfig
 
-			if retryable, err := notifier.Send(ctx, message); err != nil {
-				message.MarkFailed(time.Now(), retryable, err)
+		if retryable, err := notifier.Send(ctx, message); err != nil {
+			message.MarkFailed(time.Now(), retryable, err)
 
-				telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
-					tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
-				if err := h.q.ErrorCallback(ctx, message); err != nil {
-					return err
-				}
-				return err
-			}
-
-			message.MarkPublished(time.Now())
-
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePublished,
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
 				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
-			if err := h.q.SuccessCallback(ctx, message); err != nil {
+			if err := h.q.ErrorCallback(ctx, message); err != nil {
 				return err
 			}
+			return err
+		}
 
-			return nil
-		})
-	}
+		message.MarkPublished(time.Now())
 
-	if err := g.Wait(); err != nil {
-		return err
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePublished,
+			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
+		if err := h.q.SuccessCallback(ctx, message); err != nil {
+			return err
+		}
 	}
 
 	return nil
