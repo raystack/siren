@@ -102,10 +102,7 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
-	for _, msg := range messages {
-
-		message := msg
-
+	for _, message := range messages {
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)
 		if err != nil {
 			return err
