@@ -11,7 +11,9 @@ import (
 
 	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/config"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
+	"github.com/odpf/siren/pkg/telemetry"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -33,9 +35,20 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 		Log: config.Log{
 			Level: "debug",
 		},
+		Telemetry: telemetry.Config{
+			Debug: "",
+		},
 		Service: server.Config{
 			Port:          apiPort,
 			EncryptionKey: testEncryptionKey,
+		},
+		Notification: notification.Config{
+			MessageHandler: notification.HandlerConfig{
+				Enabled: false,
+			},
+			DLQHandler: notification.HandlerConfig{
+				Enabled: false,
+			},
 		},
 	}
 
@@ -53,7 +66,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 	s.appConfig.Notification.MessageHandler.Enabled = true
 	s.appConfig.Notification.DLQHandler.Enabled = true
 
-	StartSiren(*s.appConfig)
+	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
 	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))

@@ -11,3 +11,10 @@ func WithTickerDuration(pollDuration time.Duration) TickerOption {
 		wt.pollDuration = pollDuration
 	}
 }
+
+// WithID sets worker id
+func WithID(id string) TickerOption {
+	return func(wt *Ticker) {
+		wt.id = id
+	}
+}

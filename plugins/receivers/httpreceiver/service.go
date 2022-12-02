@@ -107,7 +107,7 @@ func (s *PluginService) notify(ctx context.Context, apiURL string, body []byte) 
 
 	resp, err := s.httpClient.HTTP().Do(req)
 	if err != nil {
-		return fmt.Errorf("failure in http call: %w", err)
+		return retry.RetryableError{Err: fmt.Errorf("failure in http call: %w", err)}
 	}
 	defer resp.Body.Close()
 

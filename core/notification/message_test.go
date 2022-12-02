@@ -27,6 +27,7 @@ func TestMessage_Initialize(t *testing.T) {
 		{
 			name: "all notification labels and data should be merged to message detail and data takes precedence if key conflict",
 			n: notification.Notification{
+				ID: "notification-id",
 				Labels: map[string]string{
 					"labelkey1": "value1",
 					"samekey":   "label_value",

@@ -88,11 +88,8 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", nil)
 		defer span.End()
 
-		h.logger.Debug("dequeueing and publishing messages", "scope", "notification.handler", "receivers", receiverTypes, "batch size", h.batchSize, "running_at", runAt, "id", h.identifier)
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
-			if errors.Is(err, ErrNoMessage) {
-				h.logger.Debug(err.Error(), "id", h.identifier)
-			} else {
+			if !errors.Is(err, ErrNoMessage) {
 				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
 			}
 		}
@@ -103,7 +100,6 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
 	for _, message := range messages {
-
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)
 		if err != nil {
 			return err
@@ -155,7 +151,6 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		if err := h.q.SuccessCallback(ctx, message); err != nil {
 			return err
 		}
-
 	}
 
 	return nil

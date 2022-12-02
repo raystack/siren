@@ -22,12 +22,15 @@ type Ticker struct {
 // NewTicker creates a new worker that does an action periodically
 func NewTicker(logger log.Logger, opts ...TickerOption) *Ticker {
 	wt := &Ticker{
-		id:     uuid.NewString(),
 		logger: logger,
 	}
 
 	for _, opt := range opts {
 		opt(wt)
+	}
+
+	if wt.id == "" {
+		wt.id = uuid.NewString()
 	}
 
 	if wt.pollDuration == 0 {
