@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -90,6 +91,10 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if !errors.Is(err, ErrNoMessage) {
+				span.SetStatus(trace.Status{
+					Code:    trace.StatusCodeUnknown,
+					Message: err.Error(),
+				})
 				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
 			}
 		}
