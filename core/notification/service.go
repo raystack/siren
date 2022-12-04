@@ -73,8 +73,8 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 	}
 
 	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
-		trace.StringAttribute("messages.notification_id", n.ID),
-		trace.StringAttribute("messages.routing_method", RoutingMethodReceiver.String()),
+		trace.StringAttribute("messaging.notification_id", n.ID),
+		trace.StringAttribute("messaging.routing_method", RoutingMethodReceiver.String()),
 	)
 	defer span.End()
 
@@ -127,8 +127,8 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 	}
 
 	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
-		trace.StringAttribute("messages.notification_id", n.ID),
-		trace.StringAttribute("messages.routing_method", RoutingMethodSubscribers.String()),
+		trace.StringAttribute("messaging.notification_id", n.ID),
+		trace.StringAttribute("messaging.routing_method", RoutingMethodSubscribers.String()),
 	)
 	defer span.End()
 

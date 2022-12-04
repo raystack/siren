@@ -37,11 +37,7 @@ func setupOpenCensus(ctx context.Context, mux *http.ServeMux, cfg Config) error 
 	}
 
 	if cfg.EnableNewrelic {
-		nrAppName := cfg.ServiceName
-		if cfg.NewRelicAppName != "" {
-			nrAppName = cfg.NewRelicAppName
-		}
-		exporter, err := nrcensus.NewExporter(nrAppName, cfg.NewRelicAPIKey)
+		exporter, err := nrcensus.NewExporter(cfg.ServiceName, cfg.NewRelicAPIKey)
 		if err != nil {
 			return err
 		}

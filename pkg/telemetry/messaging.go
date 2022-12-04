@@ -28,6 +28,8 @@ func (msg MessagingTracer) StartSpan(ctx context.Context, op string, spanAttribu
 		trace.StringAttribute("messaging.operation", op),
 	}
 
+	traceAttributes = append(traceAttributes, spanAttributes...)
+
 	span.AddAttributes(
 		traceAttributes...,
 	)

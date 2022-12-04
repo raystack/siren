@@ -93,6 +93,7 @@ func (m *Message) Initialize(
 
 	m.ReceiverType = receiverType
 	m.Configs = notificationConfigs
+
 	details := make(map[string]interface{})
 	for k, v := range n.Labels {
 		details[k] = v
