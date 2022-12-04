@@ -31,7 +31,7 @@ func NewPostgresTracer(url string) (*PostgresTracer, error) {
 	}, err
 }
 
-func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName string, spanAttributes map[string]string) (context.Context, *trace.Span) {
+func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName string, spanAttributes ...trace.Attribute) (context.Context, *trace.Span) {
 	// Refer https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
 	ctx, span := trace.StartSpan(ctx, fmt.Sprintf("%s %s.%s", op, d.dbName, tableName), trace.WithSpanKind(trace.SpanKindClient))
 
@@ -45,9 +45,7 @@ func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName stri
 		trace.StringAttribute("db.sql.table", tableName),
 	}
 
-	for k, v := range spanAttributes {
-		traceAttributes = append(traceAttributes, trace.StringAttribute(k, v))
-	}
+	traceAttributes = append(traceAttributes, spanAttributes...)
 
 	span.AddAttributes(
 		traceAttributes...,

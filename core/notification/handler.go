@@ -86,7 +86,7 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 	if len(receiverTypes) == 0 {
 		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
-		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", nil)
+		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
 		defer span.End()
 
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
