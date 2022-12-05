@@ -14,6 +14,8 @@ var (
 	TagRoutingMethod = tag.MustNewKey("routing_method")
 	TagMessageStatus = tag.MustNewKey("status")
 
+	MetricNotificationMessageQueueTime = stats.Int64("notification.message.queue.time", "time of message from enqueued to be picked up", stats.UnitMilliseconds)
+
 	MetricNotificationMessageEnqueue   = stats.Int64("notification.message.enqueue", "enqueued notification messages", stats.UnitDimensionless)
 	MetricNotificationMessagePending   = stats.Int64("notification.message.pending", "processed notification messages", stats.UnitDimensionless)
 	MetricNotificationMessageFailed    = stats.Int64("notification.message.failed", "failed to publish notification messages", stats.UnitDimensionless)
@@ -29,6 +31,13 @@ var (
 
 func setupApplicationViews() error {
 	return view.Register(
+		&view.View{
+			Name:        MetricNotificationMessageQueueTime.Name(),
+			Description: MetricNotificationMessageQueueTime.Description(),
+			TagKeys:     []tag.Key{TagReceiverType},
+			Measure:     MetricNotificationMessageQueueTime,
+			Aggregation: view.Distribution(),
+		},
 		&view.View{
 			Name:        MetricNotificationMessageEnqueue.Name(),
 			Description: MetricNotificationMessageEnqueue.Description(),

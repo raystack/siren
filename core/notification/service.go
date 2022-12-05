@@ -10,6 +10,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 	"gopkg.in/yaml.v3"
 )
 
@@ -71,10 +72,10 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 		return err
 	}
 
-	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", map[string]string{
-		"messages.notification_id": n.ID,
-		"messages.routing_method":  RoutingMethodReceiver.String(),
-	})
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
+		trace.StringAttribute("messaging.notification_id", n.ID),
+		trace.StringAttribute("messaging.routing_method", RoutingMethodReceiver.String()),
+	)
 	defer span.End()
 
 	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
@@ -125,10 +126,10 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Noti
 		return errors.ErrInvalid.WithMsgf("not matching any subscription")
 	}
 
-	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue", map[string]string{
-		"messages.notification_id": n.ID,
-		"messages.routing_method":  RoutingMethodSubscribers.String(),
-	})
+	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
+		trace.StringAttribute("messaging.notification_id", n.ID),
+		trace.StringAttribute("messaging.routing_method", RoutingMethodSubscribers.String()),
+	)
 	defer span.End()
 
 	var messages = make([]Message, 0)

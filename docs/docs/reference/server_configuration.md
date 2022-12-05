@@ -46,9 +46,6 @@ telemetry:
   # OpenCensus.
   enable_newrelic: <bool> | default=false
 
-  # new relic app name, if left empty, app name will be service_name
-  newrelic_app_name: <string> | default=""
-
   # newrelic_api_key must be a valid NewRelic License key.
   newrelic_api_key: <string> | default="____LICENSE_STRING_OF_40_CHARACTERS_____"
 

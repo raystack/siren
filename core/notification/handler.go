@@ -9,6 +9,7 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -85,11 +86,15 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 	if len(receiverTypes) == 0 {
 		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
-		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", nil)
+		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
 		defer span.End()
 
 		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if !errors.Is(err, ErrNoMessage) {
+				span.SetStatus(trace.Status{
+					Code:    trace.StatusCodeUnknown,
+					Message: err.Error(),
+				})
 				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
 			}
 		}
@@ -100,6 +105,10 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
 	for _, message := range messages {
+
+		telemetry.GaugeMillisecond(ctx, telemetry.MetricNotificationMessageQueueTime, time.Since(message.UpdatedAt).Milliseconds(),
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)
 		if err != nil {
 			return err

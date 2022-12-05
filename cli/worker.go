@@ -11,6 +11,7 @@ import (
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
+	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/worker"
 	"github.com/odpf/siren/plugins/queues"
 	"github.com/odpf/siren/plugins/queues/postgresq"
@@ -133,6 +134,8 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := initLogger(cfg.Log)
 
+	telemetry.Init(ctx, cfg.Telemetry, logger)
+
 	dbClient, err := db.New(cfg.DB)
 	if err != nil {
 		return err
@@ -181,6 +184,8 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 
 func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := initLogger(cfg.Log)
+
+	telemetry.Init(ctx, cfg.Telemetry, logger)
 
 	dbClient, err := db.New(cfg.DB)
 	if err != nil {
