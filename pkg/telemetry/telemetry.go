@@ -41,3 +41,13 @@ func IncrementInt64Counter(ctx context.Context, si64 *stats.Int64Measure, tagMut
 
 	stats.Record(counterCtx, si64.M(1))
 }
+
+func GaugeMillisecond(ctx context.Context, si64 *stats.Int64Measure, value int64, tagMutator ...tag.Mutator) {
+	counterCtx := ctx
+
+	if tagMutator != nil {
+		counterCtx, _ = tag.New(ctx, tagMutator...)
+	}
+
+	stats.Record(counterCtx, si64.M(value))
+}
