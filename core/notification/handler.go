@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	"github.com/odpf/siren/pkg/errors"
+	"github.com/odpf/siren/pkg/telemetry"
 )
 
 const (
@@ -86,10 +87,10 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 	if len(receiverTypes) == 0 {
 		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
-		ctx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
+		traceCtx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
 		defer span.End()
 
-		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
+		if err := h.q.Dequeue(traceCtx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if !errors.Is(err, ErrNoMessage) {
 				span.SetStatus(trace.Status{
 					Code:    trace.StatusCodeUnknown,
@@ -116,7 +117,7 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePending,
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
@@ -124,15 +125,17 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		if err != nil {
 			message.MarkFailed(time.Now(), false, err)
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookQueueFailed,
-				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
+				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
+				tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPostHookQueue),
+			)
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
-			if err := h.q.ErrorCallback(ctx, message); err != nil {
-				return err
+			if cerr := h.q.ErrorCallback(ctx, message); cerr != nil {
+				return cerr
 			}
 			return err
 		}
@@ -141,19 +144,19 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		if retryable, err := notifier.Send(ctx, message); err != nil {
 			message.MarkFailed(time.Now(), retryable, err)
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageFailed,
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
-			if err := h.q.ErrorCallback(ctx, message); err != nil {
-				return err
+			if cerr := h.q.ErrorCallback(ctx, message); cerr != nil {
+				return cerr
 			}
 			return err
 		}
 
 		message.MarkPublished(time.Now())
 
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessagePublished,
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 

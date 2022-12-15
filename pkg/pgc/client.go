@@ -9,7 +9,6 @@ import (
 	"github.com/lib/pq"
 	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/internal/store/postgres/migrations"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/trace"
@@ -80,13 +79,6 @@ func CheckError(err error) error {
 	return err
 }
 
-func Migrate(cfg db.Config) error {
-	if err := db.RunMigrations(cfg, migrations.FS, migrations.ResourcePath); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *Client) QueryRowxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) *sqlx.Row {
 	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
 		trace.StringAttribute("db.statement", query),
@@ -107,14 +99,14 @@ func (c *Client) QueryxContext(ctx context.Context, op string, tableName string,
 		trace.StringAttribute("db.statement", query),
 	)
 	defer span.End()
-	sqlxRow, err := c.GetDB(ctx).QueryxContext(ctx, query, args...)
+	sqlxRows, err := c.GetDB(ctx).QueryxContext(ctx, query, args...)
 	if err != nil {
 		span.SetStatus(trace.Status{
 			Code:    trace.StatusCodeUnknown,
 			Message: err.Error(),
 		})
 	}
-	return sqlxRow, err
+	return sqlxRows, err
 }
 
 func (c *Client) GetContext(ctx context.Context, op string, tableName string, dest interface{}, query string, args ...interface{}) error {

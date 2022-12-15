@@ -119,7 +119,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 	}
 
 	var templateModel model.Template
-	if err := r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &templateModel, query, args...); err != nil {
+	if err = r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, template.NotFoundError{Name: name}
 		}

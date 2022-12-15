@@ -53,7 +53,7 @@ func (s *RuleRepositoryTestSuite) SetupSuite() {
 	}
 
 	s.ctx = context.TODO()
-	migrate(s.ctx, logger, s.client, dbConfig)
+	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
 	s.repository = postgres.NewRuleRepository(s.client)
 
 	_, err = bootstrapProvider(s.client)

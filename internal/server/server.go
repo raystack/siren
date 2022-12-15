@@ -33,9 +33,10 @@ import (
 const defaultGracePeriod = 5 * time.Second
 
 type Config struct {
-	Host          string `mapstructure:"host" yaml:"host" default:"localhost"`
-	Port          int    `mapstructure:"port" yaml:"port" default:"8080"`
-	EncryptionKey string `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
+	Host          string            `mapstructure:"host" yaml:"host" default:"localhost"`
+	Port          int               `mapstructure:"port" yaml:"port" default:"8080"`
+	EncryptionKey string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
+	APIHeaders    api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
 }
 
 func (cfg Config) addr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
@@ -99,6 +100,9 @@ func RunServer(
 			},
 		}),
 		runtime.WithHealthEndpointAt(grpc_health_v1.NewHealthClient(grpcConn), "/ping"),
+		runtime.WithIncomingHeaderMatcher(func(key string) (string, bool) {
+			return key, api.SupportedHeaders(c.APIHeaders)[key]
+		}),
 	)
 
 	reflection.Register(grpcServer)
@@ -109,6 +113,7 @@ func RunServer(
 	sirenServiceRPC := v1beta1.NewGRPCServer(
 		nr,
 		logger,
+		c.APIHeaders,
 		apiDeps,
 	)
 	grpcServer.RegisterService(&sirenv1beta1.SirenService_ServiceDesc, sirenServiceRPC)

@@ -60,7 +60,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 		alertModel.Rule,
 		alertModel.TriggeredAt,
 	).StructScan(&newAlertModel); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrForeignKeyViolation) {
 			return alert.ErrRelation
 		}

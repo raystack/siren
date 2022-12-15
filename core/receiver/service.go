@@ -62,8 +62,10 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookDBFailed,
-			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type),
+			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookDB),
+		)
 
 		return err
 	}
@@ -110,8 +112,10 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPostHookDBFailed,
-			tag.Upsert(telemetry.TagReceiverType, rcv.Type))
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
+			tag.Upsert(telemetry.TagReceiverType, rcv.Type),
+			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPostHookDB),
+		)
 
 		return nil, err
 	}

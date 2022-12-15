@@ -62,6 +62,10 @@ service:
   port: <int> | default=8080
   
   encryption_key: <string> | default="_ENCRYPTIONKEY_OF_32_CHARACTERS_"
+
+  api_headers:
+
+    idempotency_key: <string> | default="Idempotency-Key"
   
 log:
   level: <string> | default="info"

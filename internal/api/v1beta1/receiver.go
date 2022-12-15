@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/notification"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/secret"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	"google.golang.org/protobuf/types/known/structpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
@@ -121,22 +120,6 @@ func (s *GRPCServer) DeleteReceiver(ctx context.Context, req *sirenv1beta1.Delet
 	}
 
 	return &sirenv1beta1.DeleteReceiverResponse{}, nil
-}
-
-func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.NotifyReceiverRequest) (*sirenv1beta1.NotifyReceiverResponse, error) {
-	payloadMap := req.GetPayload().AsMap()
-
-	n := notification.Notification{}
-	if err := mapstructure.Decode(payloadMap, &n); err != nil {
-		err = errors.ErrInvalid.WithMsgf("failed to parse payload to notification: %s", err.Error())
-		return nil, s.generateRPCErr(err)
-	}
-
-	if err := s.notificationService.DispatchToReceiver(ctx, n, req.GetId()); err != nil {
-		return nil, s.generateRPCErr(err)
-	}
-
-	return &sirenv1beta1.NotifyReceiverResponse{}, nil
 }
 
 // sanitizeConfigMap does all sanitization to present receiver configurations to the user

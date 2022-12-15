@@ -6,12 +6,8 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/db"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/pgc"
-	"github.com/odpf/siren/pkg/secret"
-	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/pkg/worker"
 	"github.com/odpf/siren/plugins/queues"
 	"github.com/odpf/siren/plugins/queues/postgresq"
@@ -134,24 +130,7 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := initLogger(cfg.Log)
 
-	telemetry.Init(ctx, cfg.Telemetry, logger)
-
-	dbClient, err := db.New(cfg.DB)
-	if err != nil {
-		return err
-	}
-
-	pgClient, err := pgc.NewClient(logger, dbClient)
-	if err != nil {
-		return err
-	}
-
-	encryptor, err := secret.New(cfg.Service.EncryptionKey)
-	if err != nil {
-		return fmt.Errorf("cannot initialize encryptor: %w", err)
-	}
-
-	_, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
+	_, _, pgClient, notifierRegistry, err := InitDeps(ctx, logger, cfg, nil)
 	if err != nil {
 		return err
 	}
@@ -173,10 +152,16 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 	workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration), worker.WithID("message-worker"))
 	notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, queue, notifierRegistry,
 		notification.HandlerWithIdentifier(workerTicker.GetID()))
+
 	go func() {
 		workerTicker.Run(ctx, cancelWorkerChan, func(ctx context.Context, runningAt time.Time) error {
 			return notificationHandler.Process(ctx, runningAt)
 		})
+
+		logger.Info("closing all clients")
+		if err := pgClient.Close(); err != nil {
+			logger.Error(err.Error())
+		}
 	}()
 
 	return nil
@@ -185,24 +170,7 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := initLogger(cfg.Log)
 
-	telemetry.Init(ctx, cfg.Telemetry, logger)
-
-	dbClient, err := db.New(cfg.DB)
-	if err != nil {
-		return err
-	}
-
-	pgClient, err := pgc.NewClient(logger, dbClient)
-	if err != nil {
-		return err
-	}
-
-	encryptor, err := secret.New(cfg.Service.EncryptionKey)
-	if err != nil {
-		return fmt.Errorf("cannot initialize encryptor: %w", err)
-	}
-
-	_, notifierRegistry, err := InitAPIDeps(logger, cfg, pgClient, encryptor, nil)
+	_, _, pgClient, notifierRegistry, err := InitDeps(ctx, logger, cfg, nil)
 	if err != nil {
 		return err
 	}
@@ -229,6 +197,11 @@ func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, c
 		workerTicker.Run(ctx, cancelWorkerChan, func(ctx context.Context, runningAt time.Time) error {
 			return notificationHandler.Process(ctx, runningAt)
 		})
+
+		logger.Info("closing all clients")
+		if err := pgClient.Close(); err != nil {
+			logger.Error(err.Error())
+		}
 	}()
 
 	return nil

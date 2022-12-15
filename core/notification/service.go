@@ -2,17 +2,27 @@ package notification
 
 import (
 	"context"
+	"time"
 
 	"github.com/odpf/salt/log"
+	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
+	"gopkg.in/yaml.v3"
+
+	"github.com/odpf/siren/core/idempotency"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
-	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
-	"gopkg.in/yaml.v3"
 )
+
+//go:generate mockery --name=IdempotencyRepository -r --case underscore --with-expecter --structname IdempotencyRepository --filename idempotency_repository.go --output=./mocks
+type IdempotencyRepository interface {
+	InsertOnConflictReturning(context.Context, string, string) (*idempotency.Idempotency, error)
+	UpdateSuccess(context.Context, uint64, bool) error
+	Delete(context.Context, idempotency.Filter) error
+}
 
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
 type SubscriptionService interface {
@@ -24,30 +34,33 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error)
 }
 
-// NotificationService is a service for notification domain
-type NotificationService struct {
-	logger              log.Logger
-	q                   Queuer
-	receiverService     ReceiverService
-	subscriptionService SubscriptionService
-	notifierPlugins     map[string]Notifier
-	messagingTracer     *telemetry.MessagingTracer
+// Service is a service for notification domain
+type Service struct {
+	logger                log.Logger
+	q                     Queuer
+	idempotencyRepository IdempotencyRepository
+	receiverService       ReceiverService
+	subscriptionService   SubscriptionService
+	notifierPlugins       map[string]Notifier
+	messagingTracer       *telemetry.MessagingTracer
 }
 
 // NewService creates a new notification service
 func NewService(
 	logger log.Logger,
 	q Queuer,
+	idempotencyRepository IdempotencyRepository,
 	receiverService ReceiverService,
 	subscriptionService SubscriptionService,
 	notifierPlugins map[string]Notifier,
-) *NotificationService {
-	ns := &NotificationService{
-		logger:              logger,
-		q:                   q,
-		receiverService:     receiverService,
-		subscriptionService: subscriptionService,
-		notifierPlugins:     notifierPlugins,
+) *Service {
+	ns := &Service{
+		logger:                logger,
+		q:                     q,
+		idempotencyRepository: idempotencyRepository,
+		receiverService:       receiverService,
+		subscriptionService:   subscriptionService,
+		notifierPlugins:       notifierPlugins,
 	}
 
 	ns.messagingTracer = telemetry.NewMessagingTracer("default")
@@ -58,7 +71,7 @@ func NewService(
 	return ns
 }
 
-func (ns *NotificationService) getNotifierPlugin(receiverType string) (Notifier, error) {
+func (ns *Service) getNotifierPlugin(receiverType string) (Notifier, error) {
 	notifierPlugin, exist := ns.notifierPlugins[receiverType]
 	if !exist {
 		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
@@ -66,7 +79,7 @@ func (ns *NotificationService) getNotifierPlugin(receiverType string) (Notifier,
 	return notifierPlugin, nil
 }
 
-func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
+func (ns *Service) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
 	rcv, err := ns.receiverService.Get(ctx, receiverID, receiver.GetWithData(false))
 	if err != nil {
 		return err
@@ -90,9 +103,11 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 
 	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookQueueFailed,
+		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
 			tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
-			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
+			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
+		)
 
 		return err
 	}
@@ -102,10 +117,11 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 
 	span.End()
 
-	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageEnqueue,
+	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 		tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
 		tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-		tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
+		tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
+	)
 
 	// supported no templating for now
 	if err := ns.q.Enqueue(ctx, *message); err != nil {
@@ -115,7 +131,7 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 	return nil
 }
 
-func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, namespaceID uint64, n Notification) error {
+func (ns *Service) DispatchToSubscribers(ctx context.Context, namespaceID uint64, n Notification) error {
 	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, namespaceID, n.Labels)
 	if err != nil {
 		return err
@@ -149,9 +165,10 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, namesp
 
 			newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
 			if err != nil {
-				telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverPreHookQueueFailed,
+				telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
 					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
 					tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
+					tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
 				)
 
 				return err
@@ -183,7 +200,7 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, namesp
 				}
 			}
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageEnqueue,
+			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
 				tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
 				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
 				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
@@ -199,4 +216,27 @@ func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, namesp
 	}
 
 	return nil
+}
+
+func (s *Service) CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error) {
+	idempt, err := s.idempotencyRepository.InsertOnConflictReturning(ctx, scope, key)
+	if err != nil {
+		return 0, err
+	}
+
+	if idempt.Success {
+		return 0, errors.ErrConflict
+	}
+
+	return idempt.ID, nil
+}
+
+func (s *Service) MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error {
+	return s.idempotencyRepository.UpdateSuccess(ctx, id, true)
+}
+
+func (s *Service) RemoveIdempotencies(ctx context.Context, TTL time.Duration) error {
+	return s.idempotencyRepository.Delete(ctx, idempotency.Filter{
+		TTL: TTL,
+	})
 }

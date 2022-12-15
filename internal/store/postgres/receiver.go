@@ -93,7 +93,7 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 		receiverModel.Labels,
 		receiverModel.Configurations,
 	).StructScan(&createdReceiver); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return provider.ErrDuplicate
 		}

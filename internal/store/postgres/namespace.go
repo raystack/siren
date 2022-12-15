@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
@@ -148,7 +149,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 		namespaceModel.CredentialString,
 		namespaceModel.Labels,
 	).StructScan(&updatedNamespace); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return namespace.NotFoundError{ID: namespaceModel.ID}
 		}

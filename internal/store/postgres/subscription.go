@@ -115,7 +115,7 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
 	).StructScan(&newSubscriptionModel); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return subscription.ErrDuplicate
 		}
@@ -163,7 +163,7 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
 	).StructScan(&newSubscriptionModel); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return subscription.NotFoundError{ID: subscriptionModel.ID}
 		}
