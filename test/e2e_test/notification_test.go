@@ -13,8 +13,6 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/odpf/siren/plugins/queues"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -35,31 +33,26 @@ func (s *NotificationTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
-	s.appConfig = &config.Config{
-		Log: config.Log{
-			Level: "debug",
-		},
-		Service: server.Config{
-			Port:          apiPort,
-			EncryptionKey: testEncryptionKey,
-		},
-		Telemetry: telemetry.Config{
-			Debug: "",
-		},
-		Notification: notification.Config{
-			Queue: queues.Config{
-				Kind: queues.KindPostgres,
-			},
-			MessageHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-			DLQHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-		},
-	}
+	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
+
+	s.appConfig.Log.Level = "error"
+	s.appConfig.Service = server.Config{
+		Port:          apiPort,
+		EncryptionKey: testEncryptionKey,
+	}
+	s.appConfig.Notification = notification.Config{
+		MessageHandler: notification.HandlerConfig{
+			Enabled: true,
+		},
+		DLQHandler: notification.HandlerConfig{
+			Enabled: false,
+		},
+	}
+	s.appConfig.Telemetry.Debug = ""
+	s.appConfig.Telemetry.EnableNewrelic = false
+	s.appConfig.Telemetry.EnableOtelAgent = false
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
