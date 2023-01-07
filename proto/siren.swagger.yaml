@@ -85,11 +85,6 @@ paths:
           required: true
           schema:
             type: object
-        - name: namespace_id
-          in: query
-          required: false
-          type: string
-          format: uint64
       tags:
         - Alert
   /v1beta1/alerts/{provider_type}/{provider_id}/{namespace_id}:
@@ -100,7 +95,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/CreateAlertsResponse'
+            $ref: '#/definitions/CreateAlertsWithNamespaceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -816,6 +811,13 @@ definitions:
         type: string
     additionalProperties: {}
   CreateAlertsResponse:
+    type: object
+    properties:
+      alerts:
+        type: array
+        items:
+          $ref: '#/definitions/Alert'
+  CreateAlertsWithNamespaceResponse:
     type: object
     properties:
       alerts:

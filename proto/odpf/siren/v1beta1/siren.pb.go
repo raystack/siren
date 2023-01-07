@@ -2928,7 +2928,6 @@ type CreateAlertsRequest struct {
 	ProviderType string           `protobuf:"bytes,1,opt,name=provider_type,json=providerType,proto3" json:"provider_type,omitempty"`
 	ProviderId   uint64           `protobuf:"varint,2,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
 	Body         *structpb.Struct `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
-	NamespaceId  uint64           `protobuf:"varint,4,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
 }
 
 func (x *CreateAlertsRequest) Reset() {
@@ -2984,13 +2983,6 @@ func (x *CreateAlertsRequest) GetBody() *structpb.Struct {
 	return nil
 }
 
-func (x *CreateAlertsRequest) GetNamespaceId() uint64 {
-	if x != nil {
-		return x.NamespaceId
-	}
-	return 0
-}
-
 type CreateAlertsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3038,6 +3030,124 @@ func (x *CreateAlertsResponse) GetAlerts() []*Alert {
 	return nil
 }
 
+type CreateAlertsWithNamespaceRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ProviderType string           `protobuf:"bytes,1,opt,name=provider_type,json=providerType,proto3" json:"provider_type,omitempty"`
+	ProviderId   uint64           `protobuf:"varint,2,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
+	Body         *structpb.Struct `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	NamespaceId  uint64           `protobuf:"varint,4,opt,name=namespace_id,json=namespaceId,proto3" json:"namespace_id,omitempty"`
+}
+
+func (x *CreateAlertsWithNamespaceRequest) Reset() {
+	*x = CreateAlertsWithNamespaceRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[52]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreateAlertsWithNamespaceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAlertsWithNamespaceRequest) ProtoMessage() {}
+
+func (x *CreateAlertsWithNamespaceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[52]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAlertsWithNamespaceRequest.ProtoReflect.Descriptor instead.
+func (*CreateAlertsWithNamespaceRequest) Descriptor() ([]byte, []int) {
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *CreateAlertsWithNamespaceRequest) GetProviderType() string {
+	if x != nil {
+		return x.ProviderType
+	}
+	return ""
+}
+
+func (x *CreateAlertsWithNamespaceRequest) GetProviderId() uint64 {
+	if x != nil {
+		return x.ProviderId
+	}
+	return 0
+}
+
+func (x *CreateAlertsWithNamespaceRequest) GetBody() *structpb.Struct {
+	if x != nil {
+		return x.Body
+	}
+	return nil
+}
+
+func (x *CreateAlertsWithNamespaceRequest) GetNamespaceId() uint64 {
+	if x != nil {
+		return x.NamespaceId
+	}
+	return 0
+}
+
+type CreateAlertsWithNamespaceResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Alerts []*Alert `protobuf:"bytes,1,rep,name=alerts,proto3" json:"alerts,omitempty"`
+}
+
+func (x *CreateAlertsWithNamespaceResponse) Reset() {
+	*x = CreateAlertsWithNamespaceResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[53]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreateAlertsWithNamespaceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAlertsWithNamespaceResponse) ProtoMessage() {}
+
+func (x *CreateAlertsWithNamespaceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[53]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAlertsWithNamespaceResponse.ProtoReflect.Descriptor instead.
+func (*CreateAlertsWithNamespaceResponse) Descriptor() ([]byte, []int) {
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *CreateAlertsWithNamespaceResponse) GetAlerts() []*Alert {
+	if x != nil {
+		return x.Alerts
+	}
+	return nil
+}
+
 type Annotations struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3052,7 +3162,7 @@ type Annotations struct {
 func (x *Annotations) Reset() {
 	*x = Annotations{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[52]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3065,7 +3175,7 @@ func (x *Annotations) String() string {
 func (*Annotations) ProtoMessage() {}
 
 func (x *Annotations) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[52]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3078,7 +3188,7 @@ func (x *Annotations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Annotations.ProtoReflect.Descriptor instead.
 func (*Annotations) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{52}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *Annotations) GetMetricName() string {
@@ -3120,7 +3230,7 @@ type Labels struct {
 func (x *Labels) Reset() {
 	*x = Labels{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[53]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3133,7 +3243,7 @@ func (x *Labels) String() string {
 func (*Labels) ProtoMessage() {}
 
 func (x *Labels) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[53]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3146,7 +3256,7 @@ func (x *Labels) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Labels.ProtoReflect.Descriptor instead.
 func (*Labels) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{53}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *Labels) GetSeverity() string {
@@ -3176,7 +3286,7 @@ type Rule struct {
 func (x *Rule) Reset() {
 	*x = Rule{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[54]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3189,7 +3299,7 @@ func (x *Rule) String() string {
 func (*Rule) ProtoMessage() {}
 
 func (x *Rule) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[54]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3202,7 +3312,7 @@ func (x *Rule) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Rule.ProtoReflect.Descriptor instead.
 func (*Rule) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{54}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *Rule) GetId() uint64 {
@@ -3289,7 +3399,7 @@ type Variables struct {
 func (x *Variables) Reset() {
 	*x = Variables{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[55]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3302,7 +3412,7 @@ func (x *Variables) String() string {
 func (*Variables) ProtoMessage() {}
 
 func (x *Variables) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[55]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3315,7 +3425,7 @@ func (x *Variables) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Variables.ProtoReflect.Descriptor instead.
 func (*Variables) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{55}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *Variables) GetName() string {
@@ -3361,7 +3471,7 @@ type ListRulesRequest struct {
 func (x *ListRulesRequest) Reset() {
 	*x = ListRulesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[56]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3374,7 +3484,7 @@ func (x *ListRulesRequest) String() string {
 func (*ListRulesRequest) ProtoMessage() {}
 
 func (x *ListRulesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[56]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3387,7 +3497,7 @@ func (x *ListRulesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRulesRequest.ProtoReflect.Descriptor instead.
 func (*ListRulesRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{56}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *ListRulesRequest) GetName() string {
@@ -3436,7 +3546,7 @@ type ListRulesResponse struct {
 func (x *ListRulesResponse) Reset() {
 	*x = ListRulesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[57]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3449,7 +3559,7 @@ func (x *ListRulesResponse) String() string {
 func (*ListRulesResponse) ProtoMessage() {}
 
 func (x *ListRulesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[57]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3462,7 +3572,7 @@ func (x *ListRulesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRulesResponse.ProtoReflect.Descriptor instead.
 func (*ListRulesResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{57}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ListRulesResponse) GetRules() []*Rule {
@@ -3488,7 +3598,7 @@ type UpdateRuleRequest struct {
 func (x *UpdateRuleRequest) Reset() {
 	*x = UpdateRuleRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[58]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3501,7 +3611,7 @@ func (x *UpdateRuleRequest) String() string {
 func (*UpdateRuleRequest) ProtoMessage() {}
 
 func (x *UpdateRuleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[58]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3514,7 +3624,7 @@ func (x *UpdateRuleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRuleRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRuleRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{58}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *UpdateRuleRequest) GetEnabled() bool {
@@ -3570,7 +3680,7 @@ type UpdateRuleResponse struct {
 func (x *UpdateRuleResponse) Reset() {
 	*x = UpdateRuleResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[59]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3583,7 +3693,7 @@ func (x *UpdateRuleResponse) String() string {
 func (*UpdateRuleResponse) ProtoMessage() {}
 
 func (x *UpdateRuleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[59]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3596,7 +3706,7 @@ func (x *UpdateRuleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRuleResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRuleResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{59}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *UpdateRuleResponse) GetId() uint64 {
@@ -3620,7 +3730,7 @@ type TemplateVariables struct {
 func (x *TemplateVariables) Reset() {
 	*x = TemplateVariables{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[60]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3633,7 +3743,7 @@ func (x *TemplateVariables) String() string {
 func (*TemplateVariables) ProtoMessage() {}
 
 func (x *TemplateVariables) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[60]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3646,7 +3756,7 @@ func (x *TemplateVariables) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TemplateVariables.ProtoReflect.Descriptor instead.
 func (*TemplateVariables) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{60}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *TemplateVariables) GetName() string {
@@ -3694,7 +3804,7 @@ type Template struct {
 func (x *Template) Reset() {
 	*x = Template{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[61]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3707,7 +3817,7 @@ func (x *Template) String() string {
 func (*Template) ProtoMessage() {}
 
 func (x *Template) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[61]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3720,7 +3830,7 @@ func (x *Template) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Template.ProtoReflect.Descriptor instead.
 func (*Template) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{61}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *Template) GetId() uint64 {
@@ -3783,7 +3893,7 @@ type ListTemplatesRequest struct {
 func (x *ListTemplatesRequest) Reset() {
 	*x = ListTemplatesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[62]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3796,7 +3906,7 @@ func (x *ListTemplatesRequest) String() string {
 func (*ListTemplatesRequest) ProtoMessage() {}
 
 func (x *ListTemplatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[62]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3809,7 +3919,7 @@ func (x *ListTemplatesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplatesRequest.ProtoReflect.Descriptor instead.
 func (*ListTemplatesRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{62}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ListTemplatesRequest) GetTag() string {
@@ -3830,7 +3940,7 @@ type ListTemplatesResponse struct {
 func (x *ListTemplatesResponse) Reset() {
 	*x = ListTemplatesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[63]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3843,7 +3953,7 @@ func (x *ListTemplatesResponse) String() string {
 func (*ListTemplatesResponse) ProtoMessage() {}
 
 func (x *ListTemplatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[63]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3856,7 +3966,7 @@ func (x *ListTemplatesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplatesResponse.ProtoReflect.Descriptor instead.
 func (*ListTemplatesResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{63}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *ListTemplatesResponse) GetTemplates() []*Template {
@@ -3881,7 +3991,7 @@ type UpsertTemplateRequest struct {
 func (x *UpsertTemplateRequest) Reset() {
 	*x = UpsertTemplateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[64]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3894,7 +4004,7 @@ func (x *UpsertTemplateRequest) String() string {
 func (*UpsertTemplateRequest) ProtoMessage() {}
 
 func (x *UpsertTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[64]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3907,7 +4017,7 @@ func (x *UpsertTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertTemplateRequest.ProtoReflect.Descriptor instead.
 func (*UpsertTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{64}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *UpsertTemplateRequest) GetId() uint64 {
@@ -3956,7 +4066,7 @@ type UpsertTemplateResponse struct {
 func (x *UpsertTemplateResponse) Reset() {
 	*x = UpsertTemplateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[65]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3969,7 +4079,7 @@ func (x *UpsertTemplateResponse) String() string {
 func (*UpsertTemplateResponse) ProtoMessage() {}
 
 func (x *UpsertTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[65]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3982,7 +4092,7 @@ func (x *UpsertTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertTemplateResponse.ProtoReflect.Descriptor instead.
 func (*UpsertTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{65}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *UpsertTemplateResponse) GetId() uint64 {
@@ -4003,7 +4113,7 @@ type GetTemplateRequest struct {
 func (x *GetTemplateRequest) Reset() {
 	*x = GetTemplateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[66]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4016,7 +4126,7 @@ func (x *GetTemplateRequest) String() string {
 func (*GetTemplateRequest) ProtoMessage() {}
 
 func (x *GetTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[66]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4029,7 +4139,7 @@ func (x *GetTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTemplateRequest.ProtoReflect.Descriptor instead.
 func (*GetTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{66}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *GetTemplateRequest) GetName() string {
@@ -4050,7 +4160,7 @@ type GetTemplateResponse struct {
 func (x *GetTemplateResponse) Reset() {
 	*x = GetTemplateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[67]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4063,7 +4173,7 @@ func (x *GetTemplateResponse) String() string {
 func (*GetTemplateResponse) ProtoMessage() {}
 
 func (x *GetTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[67]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4076,7 +4186,7 @@ func (x *GetTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTemplateResponse.ProtoReflect.Descriptor instead.
 func (*GetTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{67}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *GetTemplateResponse) GetTemplate() *Template {
@@ -4097,7 +4207,7 @@ type DeleteTemplateRequest struct {
 func (x *DeleteTemplateRequest) Reset() {
 	*x = DeleteTemplateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[68]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4110,7 +4220,7 @@ func (x *DeleteTemplateRequest) String() string {
 func (*DeleteTemplateRequest) ProtoMessage() {}
 
 func (x *DeleteTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[68]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4123,7 +4233,7 @@ func (x *DeleteTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{68}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *DeleteTemplateRequest) GetName() string {
@@ -4142,7 +4252,7 @@ type DeleteTemplateResponse struct {
 func (x *DeleteTemplateResponse) Reset() {
 	*x = DeleteTemplateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[69]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4155,7 +4265,7 @@ func (x *DeleteTemplateResponse) String() string {
 func (*DeleteTemplateResponse) ProtoMessage() {}
 
 func (x *DeleteTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[69]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4168,7 +4278,7 @@ func (x *DeleteTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{69}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{71}
 }
 
 type RenderTemplateRequest struct {
@@ -4183,7 +4293,7 @@ type RenderTemplateRequest struct {
 func (x *RenderTemplateRequest) Reset() {
 	*x = RenderTemplateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[70]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4196,7 +4306,7 @@ func (x *RenderTemplateRequest) String() string {
 func (*RenderTemplateRequest) ProtoMessage() {}
 
 func (x *RenderTemplateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[70]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4209,7 +4319,7 @@ func (x *RenderTemplateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenderTemplateRequest.ProtoReflect.Descriptor instead.
 func (*RenderTemplateRequest) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{70}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *RenderTemplateRequest) GetName() string {
@@ -4237,7 +4347,7 @@ type RenderTemplateResponse struct {
 func (x *RenderTemplateResponse) Reset() {
 	*x = RenderTemplateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[71]
+		mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4250,7 +4360,7 @@ func (x *RenderTemplateResponse) String() string {
 func (*RenderTemplateResponse) ProtoMessage() {}
 
 func (x *RenderTemplateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[71]
+	mi := &file_odpf_siren_v1beta1_siren_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4263,7 +4373,7 @@ func (x *RenderTemplateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenderTemplateResponse.ProtoReflect.Descriptor instead.
 func (*RenderTemplateResponse) Descriptor() ([]byte, []int) {
-	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{71}
+	return file_odpf_siren_v1beta1_siren_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *RenderTemplateResponse) GetBody() string {
@@ -4717,7 +4827,7 @@ var file_odpf_siren_v1beta1_siren_proto_rawDesc = []byte{
 	0x31, 0x0a, 0x06, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
 	0x19, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x52, 0x06, 0x61, 0x6c, 0x65, 0x72,
-	0x74, 0x73, 0x22, 0xab, 0x01, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65,
+	0x74, 0x73, 0x22, 0x88, 0x01, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65,
 	0x72, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x70, 0x72,
 	0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x0c, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12,
@@ -4725,10 +4835,25 @@ var file_odpf_siren_v1beta1_siren_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x49, 0x64,
 	0x12, 0x2b, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x12, 0x21, 0x0a,
-	0x0c, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x0b, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x49, 0x64,
-	0x22, 0x49, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73,
+	0x2e, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x22, 0x49, 0x0a,
+	0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72,
+	0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x6c, 0x65, 0x72, 0x74,
+	0x52, 0x06, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x22, 0xb8, 0x01, 0x0a, 0x20, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x57, 0x69, 0x74, 0x68, 0x4e, 0x61, 0x6d,
+	0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a,
+	0x0d, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x54, 0x79,
+	0x70, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x5f, 0x69,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65,
+	0x72, 0x49, 0x64, 0x12, 0x2b, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x17, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79,
+	0x12, 0x21, 0x0a, 0x0c, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x49, 0x64, 0x22, 0x56, 0x0a, 0x21, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65,
+	0x72, 0x74, 0x73, 0x57, 0x69, 0x74, 0x68, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x61, 0x6c, 0x65, 0x72,
 	0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e,
 	0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x41, 0x6c,
@@ -4901,7 +5026,7 @@ var file_odpf_siren_v1beta1_siren_proto_rawDesc = []byte{
 	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x2c, 0x0a, 0x16, 0x52, 0x65,
 	0x6e, 0x64, 0x65, 0x72, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x32, 0xa1, 0x2a, 0x0a, 0x0c, 0x53, 0x69, 0x72,
+	0x28, 0x09, 0x52, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x32, 0xbb, 0x2a, 0x0a, 0x0c, 0x53, 0x69, 0x72,
 	0x65, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x9d, 0x01, 0x0a, 0x0d, 0x4c, 0x69,
 	0x73, 0x74, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x12, 0x28, 0x2e, 0x6f, 0x64,
 	0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
@@ -5154,104 +5279,106 @@ var file_odpf_siren_v1beta1_siren_proto_rawDesc = []byte{
 	0x93, 0x02, 0x35, 0x3a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x22, 0x2d, 0x2f, 0x76, 0x31, 0x62, 0x65,
 	0x74, 0x61, 0x31, 0x2f, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76,
 	0x69, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x7d, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76,
-	0x69, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xe2, 0x01, 0x0a, 0x19, 0x43, 0x72, 0x65,
+	0x69, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xfc, 0x01, 0x0a, 0x19, 0x43, 0x72, 0x65,
 	0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x57, 0x69, 0x74, 0x68, 0x4e, 0x61, 0x6d,
-	0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x27, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69,
+	0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x34, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69,
 	0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x28, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x72, 0x92, 0x41, 0x25, 0x0a, 0x05,
-	0x41, 0x6c, 0x65, 0x72, 0x74, 0x12, 0x1c, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x20, 0x61, 0x6c,
-	0x65, 0x72, 0x74, 0x73, 0x20, 0x77, 0x69, 0x74, 0x68, 0x20, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70,
-	0x61, 0x63, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x44, 0x3a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x22,
-	0x3c, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73,
-	0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x7d,
-	0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b,
-	0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x85, 0x01,
-	0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x12, 0x24, 0x2e, 0x6f, 0x64,
-	0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x25, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x75, 0x6c, 0x65, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2b, 0x92, 0x41, 0x12, 0x0a, 0x04, 0x52,
-	0x75, 0x6c, 0x65, 0x12, 0x0a, 0x6c, 0x69, 0x73, 0x74, 0x20, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x82,
-	0xd3, 0xe4, 0x93, 0x02, 0x10, 0x12, 0x0e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
-	0x72, 0x75, 0x6c, 0x65, 0x73, 0x12, 0x92, 0x01, 0x0a, 0x0a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x52, 0x75, 0x6c, 0x65, 0x12, 0x25, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65,
-	0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x52, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x6f, 0x64,
-	0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x35, 0x92, 0x41, 0x19, 0x0a, 0x04, 0x52, 0x75, 0x6c, 0x65, 0x12, 0x11,
-	0x61, 0x64, 0x64, 0x2f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x20, 0x61, 0x20, 0x72, 0x75, 0x6c,
-	0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x13, 0x3a, 0x01, 0x2a, 0x1a, 0x0e, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2f, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x12, 0x9d, 0x01, 0x0a, 0x0d, 0x4c,
-	0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x12, 0x28, 0x2e, 0x6f,
+	0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x57, 0x69, 0x74, 0x68, 0x4e, 0x61, 0x6d, 0x65,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x35, 0x2e, 0x6f,
 	0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69,
-	0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
-	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x37, 0x92, 0x41, 0x1a, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
-	0x12, 0x0e, 0x6c, 0x69, 0x73, 0x74, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x14, 0x12, 0x12, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x12, 0x9e, 0x01, 0x0a, 0x0b, 0x47,
-	0x65, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x26, 0x2e, 0x6f, 0x64, 0x70,
-	0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x47, 0x65, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x27, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c,
-	0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e, 0x92, 0x41, 0x1a,
-	0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x0e, 0x67, 0x65, 0x74, 0x20,
-	0x61, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b,
-	0x12, 0x19, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
-	0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x12, 0xaa, 0x01, 0x0a, 0x0e,
-	0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x29,
-	0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x6f, 0x64, 0x70, 0x66,
-	0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x55,
-	0x70, 0x73, 0x65, 0x72, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x92, 0x41, 0x21, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70,
-	0x6c, 0x61, 0x74, 0x65, 0x12, 0x15, 0x61, 0x64, 0x64, 0x2f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02,
-	0x17, 0x3a, 0x01, 0x2a, 0x1a, 0x12, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74,
-	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x12, 0xaa, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6c,
-	0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x6f, 0x64,
+	0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x57, 0x69,
+	0x74, 0x68, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x72, 0x92, 0x41, 0x25, 0x0a, 0x05, 0x41, 0x6c, 0x65, 0x72, 0x74, 0x12,
+	0x1c, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x20, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x20, 0x77,
+	0x69, 0x74, 0x68, 0x20, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x44, 0x3a, 0x04, 0x62, 0x6f, 0x64, 0x79, 0x22, 0x3c, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x61, 0x6c, 0x65, 0x72, 0x74, 0x73, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76,
+	0x69, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x7d, 0x2f, 0x7b, 0x70, 0x72, 0x6f, 0x76,
+	0x69, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x85, 0x01, 0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74,
+	0x52, 0x75, 0x6c, 0x65, 0x73, 0x12, 0x24, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72,
+	0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52,
+	0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x6f, 0x64,
 	0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69,
-	0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65,
-	0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x41, 0x92, 0x41, 0x1d, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
-	0x65, 0x12, 0x11, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70,
-	0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b, 0x2a, 0x19, 0x2f, 0x76, 0x31, 0x62,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x75, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x2b, 0x92, 0x41, 0x12, 0x0a, 0x04, 0x52, 0x75, 0x6c, 0x65, 0x12, 0x0a, 0x6c,
+	0x69, 0x73, 0x74, 0x20, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x10, 0x12,
+	0x0e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x72, 0x75, 0x6c, 0x65, 0x73, 0x12,
+	0x92, 0x01, 0x0a, 0x0a, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x75, 0x6c, 0x65, 0x12, 0x25,
+	0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x75, 0x6c, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72,
+	0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x52, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x92,
+	0x41, 0x19, 0x0a, 0x04, 0x52, 0x75, 0x6c, 0x65, 0x12, 0x11, 0x61, 0x64, 0x64, 0x2f, 0x75, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x20, 0x61, 0x20, 0x72, 0x75, 0x6c, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x13, 0x3a, 0x01, 0x2a, 0x1a, 0x0e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x72,
+	0x75, 0x6c, 0x65, 0x73, 0x12, 0x9d, 0x01, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x12, 0x28, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69,
+	0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x29, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x37, 0x92, 0x41, 0x1a,
+	0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x0e, 0x6c, 0x69, 0x73, 0x74,
+	0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x14,
+	0x12, 0x12, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x73, 0x12, 0x9e, 0x01, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x12, 0x26, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65,
+	0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x6f,
+	0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x47, 0x65, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e, 0x92, 0x41, 0x1a, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x12, 0x0e, 0x67, 0x65, 0x74, 0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b,
-	0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x12, 0xb4, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x6e, 0x64, 0x65, 0x72,
+	0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x12, 0xaa, 0x01, 0x0a, 0x0e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74,
 	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e,
-	0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x52, 0x65,
-	0x6e, 0x64, 0x65, 0x72, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x55, 0x70,
+	0x73, 0x65, 0x72, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x52, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x54,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x54,
 	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x4b, 0x92, 0x41, 0x1d, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x11,
-	0x72, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
-	0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x25, 0x3a, 0x01, 0x2a, 0x22, 0x20, 0x2f, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b,
-	0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x2f, 0x72, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x42, 0xb2, 0x01, 0x0a,
-	0x14, 0x69, 0x6f, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x6e, 0x2e,
-	0x73, 0x69, 0x72, 0x65, 0x6e, 0x42, 0x0e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x4d, 0x61,
-	0x6e, 0x61, 0x67, 0x65, 0x72, 0x50, 0x01, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x64, 0x70, 0x66, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x6e, 0x2f,
-	0x73, 0x69, 0x72, 0x65, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x69,
-	0x72, 0x65, 0x6e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x92, 0x41, 0x54, 0x12, 0x4f, 0x0a,
-	0x0a, 0x53, 0x69, 0x72, 0x65, 0x6e, 0x20, 0x41, 0x50, 0x49, 0x73, 0x12, 0x3a, 0x44, 0x6f, 0x63,
-	0x75, 0x6d, 0x65, 0x6e, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x6f, 0x66, 0x20, 0x6f, 0x75,
-	0x72, 0x20, 0x53, 0x69, 0x72, 0x65, 0x6e, 0x20, 0x41, 0x50, 0x49, 0x20, 0x77, 0x69, 0x74, 0x68,
-	0x20, 0x67, 0x52, 0x50, 0x43, 0x20, 0x61, 0x6e, 0x64, 0x0a, 0x67, 0x52, 0x50, 0x43, 0x2d, 0x47,
-	0x61, 0x74, 0x65, 0x77, 0x61, 0x79, 0x2e, 0x32, 0x05, 0x30, 0x2e, 0x35, 0x2e, 0x30, 0x2a, 0x01,
-	0x01, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x41, 0x92, 0x41, 0x21, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x15,
+	0x61, 0x64, 0x64, 0x2f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x20, 0x61, 0x20, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x17, 0x3a, 0x01, 0x2a, 0x1a, 0x12,
+	0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x73, 0x12, 0xaa, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72,
+	0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x2a, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x92, 0x41,
+	0x1d, 0x0a, 0x08, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x11, 0x64, 0x65, 0x6c,
+	0x65, 0x74, 0x65, 0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x1b, 0x2a, 0x19, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x12,
+	0xb4, 0x01, 0x0a, 0x0e, 0x52, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x12, 0x29, 0x2e, 0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x52, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e,
+	0x6f, 0x64, 0x70, 0x66, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x52, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4b, 0x92, 0x41, 0x1d, 0x0a, 0x08,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x11, 0x72, 0x65, 0x6e, 0x64, 0x65, 0x72,
+	0x20, 0x61, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x25, 0x3a, 0x01, 0x2a, 0x22, 0x20, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x2f,
+	0x72, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x42, 0xb2, 0x01, 0x0a, 0x14, 0x69, 0x6f, 0x2e, 0x6f, 0x64,
+	0x70, 0x66, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x6e, 0x2e, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x42,
+	0x0e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x50,
+	0x01, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x64,
+	0x70, 0x66, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x6e, 0x2f, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x69, 0x72, 0x65, 0x6e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x92, 0x41, 0x54, 0x12, 0x4f, 0x0a, 0x0a, 0x53, 0x69, 0x72, 0x65, 0x6e,
+	0x20, 0x41, 0x50, 0x49, 0x73, 0x12, 0x3a, 0x44, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x20, 0x6f, 0x66, 0x20, 0x6f, 0x75, 0x72, 0x20, 0x53, 0x69, 0x72, 0x65,
+	0x6e, 0x20, 0x41, 0x50, 0x49, 0x20, 0x77, 0x69, 0x74, 0x68, 0x20, 0x67, 0x52, 0x50, 0x43, 0x20,
+	0x61, 0x6e, 0x64, 0x0a, 0x67, 0x52, 0x50, 0x43, 0x2d, 0x47, 0x61, 0x74, 0x65, 0x77, 0x61, 0x79,
+	0x2e, 0x32, 0x05, 0x30, 0x2e, 0x35, 0x2e, 0x30, 0x2a, 0x01, 0x01, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -5266,225 +5393,229 @@ func file_odpf_siren_v1beta1_siren_proto_rawDescGZIP() []byte {
 	return file_odpf_siren_v1beta1_siren_proto_rawDescData
 }
 
-var file_odpf_siren_v1beta1_siren_proto_msgTypes = make([]protoimpl.MessageInfo, 85)
+var file_odpf_siren_v1beta1_siren_proto_msgTypes = make([]protoimpl.MessageInfo, 87)
 var file_odpf_siren_v1beta1_siren_proto_goTypes = []interface{}{
-	(*Provider)(nil),                   // 0: odpf.siren.v1beta1.Provider
-	(*ListProvidersRequest)(nil),       // 1: odpf.siren.v1beta1.ListProvidersRequest
-	(*ListProvidersResponse)(nil),      // 2: odpf.siren.v1beta1.ListProvidersResponse
-	(*CreateProviderRequest)(nil),      // 3: odpf.siren.v1beta1.CreateProviderRequest
-	(*CreateProviderResponse)(nil),     // 4: odpf.siren.v1beta1.CreateProviderResponse
-	(*GetProviderRequest)(nil),         // 5: odpf.siren.v1beta1.GetProviderRequest
-	(*GetProviderResponse)(nil),        // 6: odpf.siren.v1beta1.GetProviderResponse
-	(*UpdateProviderRequest)(nil),      // 7: odpf.siren.v1beta1.UpdateProviderRequest
-	(*UpdateProviderResponse)(nil),     // 8: odpf.siren.v1beta1.UpdateProviderResponse
-	(*DeleteProviderRequest)(nil),      // 9: odpf.siren.v1beta1.DeleteProviderRequest
-	(*DeleteProviderResponse)(nil),     // 10: odpf.siren.v1beta1.DeleteProviderResponse
-	(*Namespace)(nil),                  // 11: odpf.siren.v1beta1.Namespace
-	(*ListNamespacesRequest)(nil),      // 12: odpf.siren.v1beta1.ListNamespacesRequest
-	(*ListNamespacesResponse)(nil),     // 13: odpf.siren.v1beta1.ListNamespacesResponse
-	(*CreateNamespaceRequest)(nil),     // 14: odpf.siren.v1beta1.CreateNamespaceRequest
-	(*CreateNamespaceResponse)(nil),    // 15: odpf.siren.v1beta1.CreateNamespaceResponse
-	(*GetNamespaceRequest)(nil),        // 16: odpf.siren.v1beta1.GetNamespaceRequest
-	(*GetNamespaceResponse)(nil),       // 17: odpf.siren.v1beta1.GetNamespaceResponse
-	(*UpdateNamespaceRequest)(nil),     // 18: odpf.siren.v1beta1.UpdateNamespaceRequest
-	(*UpdateNamespaceResponse)(nil),    // 19: odpf.siren.v1beta1.UpdateNamespaceResponse
-	(*DeleteNamespaceRequest)(nil),     // 20: odpf.siren.v1beta1.DeleteNamespaceRequest
-	(*DeleteNamespaceResponse)(nil),    // 21: odpf.siren.v1beta1.DeleteNamespaceResponse
-	(*ReceiverMetadata)(nil),           // 22: odpf.siren.v1beta1.ReceiverMetadata
-	(*Subscription)(nil),               // 23: odpf.siren.v1beta1.Subscription
-	(*ListSubscriptionsRequest)(nil),   // 24: odpf.siren.v1beta1.ListSubscriptionsRequest
-	(*ListSubscriptionsResponse)(nil),  // 25: odpf.siren.v1beta1.ListSubscriptionsResponse
-	(*CreateSubscriptionRequest)(nil),  // 26: odpf.siren.v1beta1.CreateSubscriptionRequest
-	(*CreateSubscriptionResponse)(nil), // 27: odpf.siren.v1beta1.CreateSubscriptionResponse
-	(*GetSubscriptionRequest)(nil),     // 28: odpf.siren.v1beta1.GetSubscriptionRequest
-	(*GetSubscriptionResponse)(nil),    // 29: odpf.siren.v1beta1.GetSubscriptionResponse
-	(*UpdateSubscriptionRequest)(nil),  // 30: odpf.siren.v1beta1.UpdateSubscriptionRequest
-	(*UpdateSubscriptionResponse)(nil), // 31: odpf.siren.v1beta1.UpdateSubscriptionResponse
-	(*DeleteSubscriptionRequest)(nil),  // 32: odpf.siren.v1beta1.DeleteSubscriptionRequest
-	(*DeleteSubscriptionResponse)(nil), // 33: odpf.siren.v1beta1.DeleteSubscriptionResponse
-	(*Receiver)(nil),                   // 34: odpf.siren.v1beta1.Receiver
-	(*ListReceiversRequest)(nil),       // 35: odpf.siren.v1beta1.ListReceiversRequest
-	(*ListReceiversResponse)(nil),      // 36: odpf.siren.v1beta1.ListReceiversResponse
-	(*CreateReceiverRequest)(nil),      // 37: odpf.siren.v1beta1.CreateReceiverRequest
-	(*CreateReceiverResponse)(nil),     // 38: odpf.siren.v1beta1.CreateReceiverResponse
-	(*GetReceiverRequest)(nil),         // 39: odpf.siren.v1beta1.GetReceiverRequest
-	(*GetReceiverResponse)(nil),        // 40: odpf.siren.v1beta1.GetReceiverResponse
-	(*UpdateReceiverRequest)(nil),      // 41: odpf.siren.v1beta1.UpdateReceiverRequest
-	(*UpdateReceiverResponse)(nil),     // 42: odpf.siren.v1beta1.UpdateReceiverResponse
-	(*DeleteReceiverRequest)(nil),      // 43: odpf.siren.v1beta1.DeleteReceiverRequest
-	(*DeleteReceiverResponse)(nil),     // 44: odpf.siren.v1beta1.DeleteReceiverResponse
-	(*NotifyReceiverRequest)(nil),      // 45: odpf.siren.v1beta1.NotifyReceiverRequest
-	(*NotifyReceiverResponse)(nil),     // 46: odpf.siren.v1beta1.NotifyReceiverResponse
-	(*Alert)(nil),                      // 47: odpf.siren.v1beta1.Alert
-	(*ListAlertsRequest)(nil),          // 48: odpf.siren.v1beta1.ListAlertsRequest
-	(*ListAlertsResponse)(nil),         // 49: odpf.siren.v1beta1.ListAlertsResponse
-	(*CreateAlertsRequest)(nil),        // 50: odpf.siren.v1beta1.CreateAlertsRequest
-	(*CreateAlertsResponse)(nil),       // 51: odpf.siren.v1beta1.CreateAlertsResponse
-	(*Annotations)(nil),                // 52: odpf.siren.v1beta1.Annotations
-	(*Labels)(nil),                     // 53: odpf.siren.v1beta1.Labels
-	(*Rule)(nil),                       // 54: odpf.siren.v1beta1.Rule
-	(*Variables)(nil),                  // 55: odpf.siren.v1beta1.Variables
-	(*ListRulesRequest)(nil),           // 56: odpf.siren.v1beta1.ListRulesRequest
-	(*ListRulesResponse)(nil),          // 57: odpf.siren.v1beta1.ListRulesResponse
-	(*UpdateRuleRequest)(nil),          // 58: odpf.siren.v1beta1.UpdateRuleRequest
-	(*UpdateRuleResponse)(nil),         // 59: odpf.siren.v1beta1.UpdateRuleResponse
-	(*TemplateVariables)(nil),          // 60: odpf.siren.v1beta1.TemplateVariables
-	(*Template)(nil),                   // 61: odpf.siren.v1beta1.Template
-	(*ListTemplatesRequest)(nil),       // 62: odpf.siren.v1beta1.ListTemplatesRequest
-	(*ListTemplatesResponse)(nil),      // 63: odpf.siren.v1beta1.ListTemplatesResponse
-	(*UpsertTemplateRequest)(nil),      // 64: odpf.siren.v1beta1.UpsertTemplateRequest
-	(*UpsertTemplateResponse)(nil),     // 65: odpf.siren.v1beta1.UpsertTemplateResponse
-	(*GetTemplateRequest)(nil),         // 66: odpf.siren.v1beta1.GetTemplateRequest
-	(*GetTemplateResponse)(nil),        // 67: odpf.siren.v1beta1.GetTemplateResponse
-	(*DeleteTemplateRequest)(nil),      // 68: odpf.siren.v1beta1.DeleteTemplateRequest
-	(*DeleteTemplateResponse)(nil),     // 69: odpf.siren.v1beta1.DeleteTemplateResponse
-	(*RenderTemplateRequest)(nil),      // 70: odpf.siren.v1beta1.RenderTemplateRequest
-	(*RenderTemplateResponse)(nil),     // 71: odpf.siren.v1beta1.RenderTemplateResponse
-	nil,                                // 72: odpf.siren.v1beta1.Provider.LabelsEntry
-	nil,                                // 73: odpf.siren.v1beta1.CreateProviderRequest.LabelsEntry
-	nil,                                // 74: odpf.siren.v1beta1.UpdateProviderRequest.LabelsEntry
-	nil,                                // 75: odpf.siren.v1beta1.Namespace.LabelsEntry
-	nil,                                // 76: odpf.siren.v1beta1.CreateNamespaceRequest.LabelsEntry
-	nil,                                // 77: odpf.siren.v1beta1.UpdateNamespaceRequest.LabelsEntry
-	nil,                                // 78: odpf.siren.v1beta1.Subscription.MatchEntry
-	nil,                                // 79: odpf.siren.v1beta1.CreateSubscriptionRequest.MatchEntry
-	nil,                                // 80: odpf.siren.v1beta1.UpdateSubscriptionRequest.MatchEntry
-	nil,                                // 81: odpf.siren.v1beta1.Receiver.LabelsEntry
-	nil,                                // 82: odpf.siren.v1beta1.CreateReceiverRequest.LabelsEntry
-	nil,                                // 83: odpf.siren.v1beta1.UpdateReceiverRequest.LabelsEntry
-	nil,                                // 84: odpf.siren.v1beta1.RenderTemplateRequest.VariablesEntry
-	(*structpb.Struct)(nil),            // 85: google.protobuf.Struct
-	(*timestamppb.Timestamp)(nil),      // 86: google.protobuf.Timestamp
+	(*Provider)(nil),                          // 0: odpf.siren.v1beta1.Provider
+	(*ListProvidersRequest)(nil),              // 1: odpf.siren.v1beta1.ListProvidersRequest
+	(*ListProvidersResponse)(nil),             // 2: odpf.siren.v1beta1.ListProvidersResponse
+	(*CreateProviderRequest)(nil),             // 3: odpf.siren.v1beta1.CreateProviderRequest
+	(*CreateProviderResponse)(nil),            // 4: odpf.siren.v1beta1.CreateProviderResponse
+	(*GetProviderRequest)(nil),                // 5: odpf.siren.v1beta1.GetProviderRequest
+	(*GetProviderResponse)(nil),               // 6: odpf.siren.v1beta1.GetProviderResponse
+	(*UpdateProviderRequest)(nil),             // 7: odpf.siren.v1beta1.UpdateProviderRequest
+	(*UpdateProviderResponse)(nil),            // 8: odpf.siren.v1beta1.UpdateProviderResponse
+	(*DeleteProviderRequest)(nil),             // 9: odpf.siren.v1beta1.DeleteProviderRequest
+	(*DeleteProviderResponse)(nil),            // 10: odpf.siren.v1beta1.DeleteProviderResponse
+	(*Namespace)(nil),                         // 11: odpf.siren.v1beta1.Namespace
+	(*ListNamespacesRequest)(nil),             // 12: odpf.siren.v1beta1.ListNamespacesRequest
+	(*ListNamespacesResponse)(nil),            // 13: odpf.siren.v1beta1.ListNamespacesResponse
+	(*CreateNamespaceRequest)(nil),            // 14: odpf.siren.v1beta1.CreateNamespaceRequest
+	(*CreateNamespaceResponse)(nil),           // 15: odpf.siren.v1beta1.CreateNamespaceResponse
+	(*GetNamespaceRequest)(nil),               // 16: odpf.siren.v1beta1.GetNamespaceRequest
+	(*GetNamespaceResponse)(nil),              // 17: odpf.siren.v1beta1.GetNamespaceResponse
+	(*UpdateNamespaceRequest)(nil),            // 18: odpf.siren.v1beta1.UpdateNamespaceRequest
+	(*UpdateNamespaceResponse)(nil),           // 19: odpf.siren.v1beta1.UpdateNamespaceResponse
+	(*DeleteNamespaceRequest)(nil),            // 20: odpf.siren.v1beta1.DeleteNamespaceRequest
+	(*DeleteNamespaceResponse)(nil),           // 21: odpf.siren.v1beta1.DeleteNamespaceResponse
+	(*ReceiverMetadata)(nil),                  // 22: odpf.siren.v1beta1.ReceiverMetadata
+	(*Subscription)(nil),                      // 23: odpf.siren.v1beta1.Subscription
+	(*ListSubscriptionsRequest)(nil),          // 24: odpf.siren.v1beta1.ListSubscriptionsRequest
+	(*ListSubscriptionsResponse)(nil),         // 25: odpf.siren.v1beta1.ListSubscriptionsResponse
+	(*CreateSubscriptionRequest)(nil),         // 26: odpf.siren.v1beta1.CreateSubscriptionRequest
+	(*CreateSubscriptionResponse)(nil),        // 27: odpf.siren.v1beta1.CreateSubscriptionResponse
+	(*GetSubscriptionRequest)(nil),            // 28: odpf.siren.v1beta1.GetSubscriptionRequest
+	(*GetSubscriptionResponse)(nil),           // 29: odpf.siren.v1beta1.GetSubscriptionResponse
+	(*UpdateSubscriptionRequest)(nil),         // 30: odpf.siren.v1beta1.UpdateSubscriptionRequest
+	(*UpdateSubscriptionResponse)(nil),        // 31: odpf.siren.v1beta1.UpdateSubscriptionResponse
+	(*DeleteSubscriptionRequest)(nil),         // 32: odpf.siren.v1beta1.DeleteSubscriptionRequest
+	(*DeleteSubscriptionResponse)(nil),        // 33: odpf.siren.v1beta1.DeleteSubscriptionResponse
+	(*Receiver)(nil),                          // 34: odpf.siren.v1beta1.Receiver
+	(*ListReceiversRequest)(nil),              // 35: odpf.siren.v1beta1.ListReceiversRequest
+	(*ListReceiversResponse)(nil),             // 36: odpf.siren.v1beta1.ListReceiversResponse
+	(*CreateReceiverRequest)(nil),             // 37: odpf.siren.v1beta1.CreateReceiverRequest
+	(*CreateReceiverResponse)(nil),            // 38: odpf.siren.v1beta1.CreateReceiverResponse
+	(*GetReceiverRequest)(nil),                // 39: odpf.siren.v1beta1.GetReceiverRequest
+	(*GetReceiverResponse)(nil),               // 40: odpf.siren.v1beta1.GetReceiverResponse
+	(*UpdateReceiverRequest)(nil),             // 41: odpf.siren.v1beta1.UpdateReceiverRequest
+	(*UpdateReceiverResponse)(nil),            // 42: odpf.siren.v1beta1.UpdateReceiverResponse
+	(*DeleteReceiverRequest)(nil),             // 43: odpf.siren.v1beta1.DeleteReceiverRequest
+	(*DeleteReceiverResponse)(nil),            // 44: odpf.siren.v1beta1.DeleteReceiverResponse
+	(*NotifyReceiverRequest)(nil),             // 45: odpf.siren.v1beta1.NotifyReceiverRequest
+	(*NotifyReceiverResponse)(nil),            // 46: odpf.siren.v1beta1.NotifyReceiverResponse
+	(*Alert)(nil),                             // 47: odpf.siren.v1beta1.Alert
+	(*ListAlertsRequest)(nil),                 // 48: odpf.siren.v1beta1.ListAlertsRequest
+	(*ListAlertsResponse)(nil),                // 49: odpf.siren.v1beta1.ListAlertsResponse
+	(*CreateAlertsRequest)(nil),               // 50: odpf.siren.v1beta1.CreateAlertsRequest
+	(*CreateAlertsResponse)(nil),              // 51: odpf.siren.v1beta1.CreateAlertsResponse
+	(*CreateAlertsWithNamespaceRequest)(nil),  // 52: odpf.siren.v1beta1.CreateAlertsWithNamespaceRequest
+	(*CreateAlertsWithNamespaceResponse)(nil), // 53: odpf.siren.v1beta1.CreateAlertsWithNamespaceResponse
+	(*Annotations)(nil),                       // 54: odpf.siren.v1beta1.Annotations
+	(*Labels)(nil),                            // 55: odpf.siren.v1beta1.Labels
+	(*Rule)(nil),                              // 56: odpf.siren.v1beta1.Rule
+	(*Variables)(nil),                         // 57: odpf.siren.v1beta1.Variables
+	(*ListRulesRequest)(nil),                  // 58: odpf.siren.v1beta1.ListRulesRequest
+	(*ListRulesResponse)(nil),                 // 59: odpf.siren.v1beta1.ListRulesResponse
+	(*UpdateRuleRequest)(nil),                 // 60: odpf.siren.v1beta1.UpdateRuleRequest
+	(*UpdateRuleResponse)(nil),                // 61: odpf.siren.v1beta1.UpdateRuleResponse
+	(*TemplateVariables)(nil),                 // 62: odpf.siren.v1beta1.TemplateVariables
+	(*Template)(nil),                          // 63: odpf.siren.v1beta1.Template
+	(*ListTemplatesRequest)(nil),              // 64: odpf.siren.v1beta1.ListTemplatesRequest
+	(*ListTemplatesResponse)(nil),             // 65: odpf.siren.v1beta1.ListTemplatesResponse
+	(*UpsertTemplateRequest)(nil),             // 66: odpf.siren.v1beta1.UpsertTemplateRequest
+	(*UpsertTemplateResponse)(nil),            // 67: odpf.siren.v1beta1.UpsertTemplateResponse
+	(*GetTemplateRequest)(nil),                // 68: odpf.siren.v1beta1.GetTemplateRequest
+	(*GetTemplateResponse)(nil),               // 69: odpf.siren.v1beta1.GetTemplateResponse
+	(*DeleteTemplateRequest)(nil),             // 70: odpf.siren.v1beta1.DeleteTemplateRequest
+	(*DeleteTemplateResponse)(nil),            // 71: odpf.siren.v1beta1.DeleteTemplateResponse
+	(*RenderTemplateRequest)(nil),             // 72: odpf.siren.v1beta1.RenderTemplateRequest
+	(*RenderTemplateResponse)(nil),            // 73: odpf.siren.v1beta1.RenderTemplateResponse
+	nil,                                       // 74: odpf.siren.v1beta1.Provider.LabelsEntry
+	nil,                                       // 75: odpf.siren.v1beta1.CreateProviderRequest.LabelsEntry
+	nil,                                       // 76: odpf.siren.v1beta1.UpdateProviderRequest.LabelsEntry
+	nil,                                       // 77: odpf.siren.v1beta1.Namespace.LabelsEntry
+	nil,                                       // 78: odpf.siren.v1beta1.CreateNamespaceRequest.LabelsEntry
+	nil,                                       // 79: odpf.siren.v1beta1.UpdateNamespaceRequest.LabelsEntry
+	nil,                                       // 80: odpf.siren.v1beta1.Subscription.MatchEntry
+	nil,                                       // 81: odpf.siren.v1beta1.CreateSubscriptionRequest.MatchEntry
+	nil,                                       // 82: odpf.siren.v1beta1.UpdateSubscriptionRequest.MatchEntry
+	nil,                                       // 83: odpf.siren.v1beta1.Receiver.LabelsEntry
+	nil,                                       // 84: odpf.siren.v1beta1.CreateReceiverRequest.LabelsEntry
+	nil,                                       // 85: odpf.siren.v1beta1.UpdateReceiverRequest.LabelsEntry
+	nil,                                       // 86: odpf.siren.v1beta1.RenderTemplateRequest.VariablesEntry
+	(*structpb.Struct)(nil),                   // 87: google.protobuf.Struct
+	(*timestamppb.Timestamp)(nil),             // 88: google.protobuf.Timestamp
 }
 var file_odpf_siren_v1beta1_siren_proto_depIdxs = []int32{
-	85, // 0: odpf.siren.v1beta1.Provider.credentials:type_name -> google.protobuf.Struct
-	72, // 1: odpf.siren.v1beta1.Provider.labels:type_name -> odpf.siren.v1beta1.Provider.LabelsEntry
-	86, // 2: odpf.siren.v1beta1.Provider.created_at:type_name -> google.protobuf.Timestamp
-	86, // 3: odpf.siren.v1beta1.Provider.updated_at:type_name -> google.protobuf.Timestamp
+	87, // 0: odpf.siren.v1beta1.Provider.credentials:type_name -> google.protobuf.Struct
+	74, // 1: odpf.siren.v1beta1.Provider.labels:type_name -> odpf.siren.v1beta1.Provider.LabelsEntry
+	88, // 2: odpf.siren.v1beta1.Provider.created_at:type_name -> google.protobuf.Timestamp
+	88, // 3: odpf.siren.v1beta1.Provider.updated_at:type_name -> google.protobuf.Timestamp
 	0,  // 4: odpf.siren.v1beta1.ListProvidersResponse.providers:type_name -> odpf.siren.v1beta1.Provider
-	85, // 5: odpf.siren.v1beta1.CreateProviderRequest.credentials:type_name -> google.protobuf.Struct
-	73, // 6: odpf.siren.v1beta1.CreateProviderRequest.labels:type_name -> odpf.siren.v1beta1.CreateProviderRequest.LabelsEntry
+	87, // 5: odpf.siren.v1beta1.CreateProviderRequest.credentials:type_name -> google.protobuf.Struct
+	75, // 6: odpf.siren.v1beta1.CreateProviderRequest.labels:type_name -> odpf.siren.v1beta1.CreateProviderRequest.LabelsEntry
 	0,  // 7: odpf.siren.v1beta1.GetProviderResponse.provider:type_name -> odpf.siren.v1beta1.Provider
-	85, // 8: odpf.siren.v1beta1.UpdateProviderRequest.credentials:type_name -> google.protobuf.Struct
-	74, // 9: odpf.siren.v1beta1.UpdateProviderRequest.labels:type_name -> odpf.siren.v1beta1.UpdateProviderRequest.LabelsEntry
-	85, // 10: odpf.siren.v1beta1.Namespace.credentials:type_name -> google.protobuf.Struct
-	75, // 11: odpf.siren.v1beta1.Namespace.labels:type_name -> odpf.siren.v1beta1.Namespace.LabelsEntry
-	86, // 12: odpf.siren.v1beta1.Namespace.created_at:type_name -> google.protobuf.Timestamp
-	86, // 13: odpf.siren.v1beta1.Namespace.updated_at:type_name -> google.protobuf.Timestamp
+	87, // 8: odpf.siren.v1beta1.UpdateProviderRequest.credentials:type_name -> google.protobuf.Struct
+	76, // 9: odpf.siren.v1beta1.UpdateProviderRequest.labels:type_name -> odpf.siren.v1beta1.UpdateProviderRequest.LabelsEntry
+	87, // 10: odpf.siren.v1beta1.Namespace.credentials:type_name -> google.protobuf.Struct
+	77, // 11: odpf.siren.v1beta1.Namespace.labels:type_name -> odpf.siren.v1beta1.Namespace.LabelsEntry
+	88, // 12: odpf.siren.v1beta1.Namespace.created_at:type_name -> google.protobuf.Timestamp
+	88, // 13: odpf.siren.v1beta1.Namespace.updated_at:type_name -> google.protobuf.Timestamp
 	11, // 14: odpf.siren.v1beta1.ListNamespacesResponse.namespaces:type_name -> odpf.siren.v1beta1.Namespace
-	85, // 15: odpf.siren.v1beta1.CreateNamespaceRequest.credentials:type_name -> google.protobuf.Struct
-	76, // 16: odpf.siren.v1beta1.CreateNamespaceRequest.labels:type_name -> odpf.siren.v1beta1.CreateNamespaceRequest.LabelsEntry
-	86, // 17: odpf.siren.v1beta1.CreateNamespaceRequest.created_at:type_name -> google.protobuf.Timestamp
-	86, // 18: odpf.siren.v1beta1.CreateNamespaceRequest.updated_at:type_name -> google.protobuf.Timestamp
+	87, // 15: odpf.siren.v1beta1.CreateNamespaceRequest.credentials:type_name -> google.protobuf.Struct
+	78, // 16: odpf.siren.v1beta1.CreateNamespaceRequest.labels:type_name -> odpf.siren.v1beta1.CreateNamespaceRequest.LabelsEntry
+	88, // 17: odpf.siren.v1beta1.CreateNamespaceRequest.created_at:type_name -> google.protobuf.Timestamp
+	88, // 18: odpf.siren.v1beta1.CreateNamespaceRequest.updated_at:type_name -> google.protobuf.Timestamp
 	11, // 19: odpf.siren.v1beta1.GetNamespaceResponse.namespace:type_name -> odpf.siren.v1beta1.Namespace
-	85, // 20: odpf.siren.v1beta1.UpdateNamespaceRequest.credentials:type_name -> google.protobuf.Struct
-	77, // 21: odpf.siren.v1beta1.UpdateNamespaceRequest.labels:type_name -> odpf.siren.v1beta1.UpdateNamespaceRequest.LabelsEntry
-	85, // 22: odpf.siren.v1beta1.ReceiverMetadata.configuration:type_name -> google.protobuf.Struct
+	87, // 20: odpf.siren.v1beta1.UpdateNamespaceRequest.credentials:type_name -> google.protobuf.Struct
+	79, // 21: odpf.siren.v1beta1.UpdateNamespaceRequest.labels:type_name -> odpf.siren.v1beta1.UpdateNamespaceRequest.LabelsEntry
+	87, // 22: odpf.siren.v1beta1.ReceiverMetadata.configuration:type_name -> google.protobuf.Struct
 	22, // 23: odpf.siren.v1beta1.Subscription.receivers:type_name -> odpf.siren.v1beta1.ReceiverMetadata
-	78, // 24: odpf.siren.v1beta1.Subscription.match:type_name -> odpf.siren.v1beta1.Subscription.MatchEntry
-	86, // 25: odpf.siren.v1beta1.Subscription.created_at:type_name -> google.protobuf.Timestamp
-	86, // 26: odpf.siren.v1beta1.Subscription.updated_at:type_name -> google.protobuf.Timestamp
+	80, // 24: odpf.siren.v1beta1.Subscription.match:type_name -> odpf.siren.v1beta1.Subscription.MatchEntry
+	88, // 25: odpf.siren.v1beta1.Subscription.created_at:type_name -> google.protobuf.Timestamp
+	88, // 26: odpf.siren.v1beta1.Subscription.updated_at:type_name -> google.protobuf.Timestamp
 	23, // 27: odpf.siren.v1beta1.ListSubscriptionsResponse.subscriptions:type_name -> odpf.siren.v1beta1.Subscription
 	22, // 28: odpf.siren.v1beta1.CreateSubscriptionRequest.receivers:type_name -> odpf.siren.v1beta1.ReceiverMetadata
-	79, // 29: odpf.siren.v1beta1.CreateSubscriptionRequest.match:type_name -> odpf.siren.v1beta1.CreateSubscriptionRequest.MatchEntry
+	81, // 29: odpf.siren.v1beta1.CreateSubscriptionRequest.match:type_name -> odpf.siren.v1beta1.CreateSubscriptionRequest.MatchEntry
 	23, // 30: odpf.siren.v1beta1.GetSubscriptionResponse.subscription:type_name -> odpf.siren.v1beta1.Subscription
 	22, // 31: odpf.siren.v1beta1.UpdateSubscriptionRequest.receivers:type_name -> odpf.siren.v1beta1.ReceiverMetadata
-	80, // 32: odpf.siren.v1beta1.UpdateSubscriptionRequest.match:type_name -> odpf.siren.v1beta1.UpdateSubscriptionRequest.MatchEntry
-	81, // 33: odpf.siren.v1beta1.Receiver.labels:type_name -> odpf.siren.v1beta1.Receiver.LabelsEntry
-	85, // 34: odpf.siren.v1beta1.Receiver.configurations:type_name -> google.protobuf.Struct
-	85, // 35: odpf.siren.v1beta1.Receiver.data:type_name -> google.protobuf.Struct
-	86, // 36: odpf.siren.v1beta1.Receiver.created_at:type_name -> google.protobuf.Timestamp
-	86, // 37: odpf.siren.v1beta1.Receiver.updated_at:type_name -> google.protobuf.Timestamp
+	82, // 32: odpf.siren.v1beta1.UpdateSubscriptionRequest.match:type_name -> odpf.siren.v1beta1.UpdateSubscriptionRequest.MatchEntry
+	83, // 33: odpf.siren.v1beta1.Receiver.labels:type_name -> odpf.siren.v1beta1.Receiver.LabelsEntry
+	87, // 34: odpf.siren.v1beta1.Receiver.configurations:type_name -> google.protobuf.Struct
+	87, // 35: odpf.siren.v1beta1.Receiver.data:type_name -> google.protobuf.Struct
+	88, // 36: odpf.siren.v1beta1.Receiver.created_at:type_name -> google.protobuf.Timestamp
+	88, // 37: odpf.siren.v1beta1.Receiver.updated_at:type_name -> google.protobuf.Timestamp
 	34, // 38: odpf.siren.v1beta1.ListReceiversResponse.receivers:type_name -> odpf.siren.v1beta1.Receiver
-	82, // 39: odpf.siren.v1beta1.CreateReceiverRequest.labels:type_name -> odpf.siren.v1beta1.CreateReceiverRequest.LabelsEntry
-	85, // 40: odpf.siren.v1beta1.CreateReceiverRequest.configurations:type_name -> google.protobuf.Struct
+	84, // 39: odpf.siren.v1beta1.CreateReceiverRequest.labels:type_name -> odpf.siren.v1beta1.CreateReceiverRequest.LabelsEntry
+	87, // 40: odpf.siren.v1beta1.CreateReceiverRequest.configurations:type_name -> google.protobuf.Struct
 	34, // 41: odpf.siren.v1beta1.GetReceiverResponse.receiver:type_name -> odpf.siren.v1beta1.Receiver
-	83, // 42: odpf.siren.v1beta1.UpdateReceiverRequest.labels:type_name -> odpf.siren.v1beta1.UpdateReceiverRequest.LabelsEntry
-	85, // 43: odpf.siren.v1beta1.UpdateReceiverRequest.configurations:type_name -> google.protobuf.Struct
-	85, // 44: odpf.siren.v1beta1.NotifyReceiverRequest.payload:type_name -> google.protobuf.Struct
-	86, // 45: odpf.siren.v1beta1.Alert.triggered_at:type_name -> google.protobuf.Timestamp
+	85, // 42: odpf.siren.v1beta1.UpdateReceiverRequest.labels:type_name -> odpf.siren.v1beta1.UpdateReceiverRequest.LabelsEntry
+	87, // 43: odpf.siren.v1beta1.UpdateReceiverRequest.configurations:type_name -> google.protobuf.Struct
+	87, // 44: odpf.siren.v1beta1.NotifyReceiverRequest.payload:type_name -> google.protobuf.Struct
+	88, // 45: odpf.siren.v1beta1.Alert.triggered_at:type_name -> google.protobuf.Timestamp
 	47, // 46: odpf.siren.v1beta1.ListAlertsResponse.alerts:type_name -> odpf.siren.v1beta1.Alert
-	85, // 47: odpf.siren.v1beta1.CreateAlertsRequest.body:type_name -> google.protobuf.Struct
+	87, // 47: odpf.siren.v1beta1.CreateAlertsRequest.body:type_name -> google.protobuf.Struct
 	47, // 48: odpf.siren.v1beta1.CreateAlertsResponse.alerts:type_name -> odpf.siren.v1beta1.Alert
-	55, // 49: odpf.siren.v1beta1.Rule.variables:type_name -> odpf.siren.v1beta1.Variables
-	86, // 50: odpf.siren.v1beta1.Rule.created_at:type_name -> google.protobuf.Timestamp
-	86, // 51: odpf.siren.v1beta1.Rule.updated_at:type_name -> google.protobuf.Timestamp
-	54, // 52: odpf.siren.v1beta1.ListRulesResponse.rules:type_name -> odpf.siren.v1beta1.Rule
-	55, // 53: odpf.siren.v1beta1.UpdateRuleRequest.variables:type_name -> odpf.siren.v1beta1.Variables
-	86, // 54: odpf.siren.v1beta1.Template.created_at:type_name -> google.protobuf.Timestamp
-	86, // 55: odpf.siren.v1beta1.Template.updated_at:type_name -> google.protobuf.Timestamp
-	60, // 56: odpf.siren.v1beta1.Template.variables:type_name -> odpf.siren.v1beta1.TemplateVariables
-	61, // 57: odpf.siren.v1beta1.ListTemplatesResponse.templates:type_name -> odpf.siren.v1beta1.Template
-	60, // 58: odpf.siren.v1beta1.UpsertTemplateRequest.variables:type_name -> odpf.siren.v1beta1.TemplateVariables
-	61, // 59: odpf.siren.v1beta1.GetTemplateResponse.template:type_name -> odpf.siren.v1beta1.Template
-	84, // 60: odpf.siren.v1beta1.RenderTemplateRequest.variables:type_name -> odpf.siren.v1beta1.RenderTemplateRequest.VariablesEntry
-	1,  // 61: odpf.siren.v1beta1.SirenService.ListProviders:input_type -> odpf.siren.v1beta1.ListProvidersRequest
-	3,  // 62: odpf.siren.v1beta1.SirenService.CreateProvider:input_type -> odpf.siren.v1beta1.CreateProviderRequest
-	5,  // 63: odpf.siren.v1beta1.SirenService.GetProvider:input_type -> odpf.siren.v1beta1.GetProviderRequest
-	7,  // 64: odpf.siren.v1beta1.SirenService.UpdateProvider:input_type -> odpf.siren.v1beta1.UpdateProviderRequest
-	9,  // 65: odpf.siren.v1beta1.SirenService.DeleteProvider:input_type -> odpf.siren.v1beta1.DeleteProviderRequest
-	45, // 66: odpf.siren.v1beta1.SirenService.NotifyReceiver:input_type -> odpf.siren.v1beta1.NotifyReceiverRequest
-	12, // 67: odpf.siren.v1beta1.SirenService.ListNamespaces:input_type -> odpf.siren.v1beta1.ListNamespacesRequest
-	14, // 68: odpf.siren.v1beta1.SirenService.CreateNamespace:input_type -> odpf.siren.v1beta1.CreateNamespaceRequest
-	16, // 69: odpf.siren.v1beta1.SirenService.GetNamespace:input_type -> odpf.siren.v1beta1.GetNamespaceRequest
-	18, // 70: odpf.siren.v1beta1.SirenService.UpdateNamespace:input_type -> odpf.siren.v1beta1.UpdateNamespaceRequest
-	20, // 71: odpf.siren.v1beta1.SirenService.DeleteNamespace:input_type -> odpf.siren.v1beta1.DeleteNamespaceRequest
-	24, // 72: odpf.siren.v1beta1.SirenService.ListSubscriptions:input_type -> odpf.siren.v1beta1.ListSubscriptionsRequest
-	26, // 73: odpf.siren.v1beta1.SirenService.CreateSubscription:input_type -> odpf.siren.v1beta1.CreateSubscriptionRequest
-	28, // 74: odpf.siren.v1beta1.SirenService.GetSubscription:input_type -> odpf.siren.v1beta1.GetSubscriptionRequest
-	30, // 75: odpf.siren.v1beta1.SirenService.UpdateSubscription:input_type -> odpf.siren.v1beta1.UpdateSubscriptionRequest
-	32, // 76: odpf.siren.v1beta1.SirenService.DeleteSubscription:input_type -> odpf.siren.v1beta1.DeleteSubscriptionRequest
-	35, // 77: odpf.siren.v1beta1.SirenService.ListReceivers:input_type -> odpf.siren.v1beta1.ListReceiversRequest
-	37, // 78: odpf.siren.v1beta1.SirenService.CreateReceiver:input_type -> odpf.siren.v1beta1.CreateReceiverRequest
-	39, // 79: odpf.siren.v1beta1.SirenService.GetReceiver:input_type -> odpf.siren.v1beta1.GetReceiverRequest
-	41, // 80: odpf.siren.v1beta1.SirenService.UpdateReceiver:input_type -> odpf.siren.v1beta1.UpdateReceiverRequest
-	43, // 81: odpf.siren.v1beta1.SirenService.DeleteReceiver:input_type -> odpf.siren.v1beta1.DeleteReceiverRequest
-	48, // 82: odpf.siren.v1beta1.SirenService.ListAlerts:input_type -> odpf.siren.v1beta1.ListAlertsRequest
-	50, // 83: odpf.siren.v1beta1.SirenService.CreateAlerts:input_type -> odpf.siren.v1beta1.CreateAlertsRequest
-	50, // 84: odpf.siren.v1beta1.SirenService.CreateAlertsWithNamespace:input_type -> odpf.siren.v1beta1.CreateAlertsRequest
-	56, // 85: odpf.siren.v1beta1.SirenService.ListRules:input_type -> odpf.siren.v1beta1.ListRulesRequest
-	58, // 86: odpf.siren.v1beta1.SirenService.UpdateRule:input_type -> odpf.siren.v1beta1.UpdateRuleRequest
-	62, // 87: odpf.siren.v1beta1.SirenService.ListTemplates:input_type -> odpf.siren.v1beta1.ListTemplatesRequest
-	66, // 88: odpf.siren.v1beta1.SirenService.GetTemplate:input_type -> odpf.siren.v1beta1.GetTemplateRequest
-	64, // 89: odpf.siren.v1beta1.SirenService.UpsertTemplate:input_type -> odpf.siren.v1beta1.UpsertTemplateRequest
-	68, // 90: odpf.siren.v1beta1.SirenService.DeleteTemplate:input_type -> odpf.siren.v1beta1.DeleteTemplateRequest
-	70, // 91: odpf.siren.v1beta1.SirenService.RenderTemplate:input_type -> odpf.siren.v1beta1.RenderTemplateRequest
-	2,  // 92: odpf.siren.v1beta1.SirenService.ListProviders:output_type -> odpf.siren.v1beta1.ListProvidersResponse
-	4,  // 93: odpf.siren.v1beta1.SirenService.CreateProvider:output_type -> odpf.siren.v1beta1.CreateProviderResponse
-	6,  // 94: odpf.siren.v1beta1.SirenService.GetProvider:output_type -> odpf.siren.v1beta1.GetProviderResponse
-	8,  // 95: odpf.siren.v1beta1.SirenService.UpdateProvider:output_type -> odpf.siren.v1beta1.UpdateProviderResponse
-	10, // 96: odpf.siren.v1beta1.SirenService.DeleteProvider:output_type -> odpf.siren.v1beta1.DeleteProviderResponse
-	46, // 97: odpf.siren.v1beta1.SirenService.NotifyReceiver:output_type -> odpf.siren.v1beta1.NotifyReceiverResponse
-	13, // 98: odpf.siren.v1beta1.SirenService.ListNamespaces:output_type -> odpf.siren.v1beta1.ListNamespacesResponse
-	15, // 99: odpf.siren.v1beta1.SirenService.CreateNamespace:output_type -> odpf.siren.v1beta1.CreateNamespaceResponse
-	17, // 100: odpf.siren.v1beta1.SirenService.GetNamespace:output_type -> odpf.siren.v1beta1.GetNamespaceResponse
-	19, // 101: odpf.siren.v1beta1.SirenService.UpdateNamespace:output_type -> odpf.siren.v1beta1.UpdateNamespaceResponse
-	21, // 102: odpf.siren.v1beta1.SirenService.DeleteNamespace:output_type -> odpf.siren.v1beta1.DeleteNamespaceResponse
-	25, // 103: odpf.siren.v1beta1.SirenService.ListSubscriptions:output_type -> odpf.siren.v1beta1.ListSubscriptionsResponse
-	27, // 104: odpf.siren.v1beta1.SirenService.CreateSubscription:output_type -> odpf.siren.v1beta1.CreateSubscriptionResponse
-	29, // 105: odpf.siren.v1beta1.SirenService.GetSubscription:output_type -> odpf.siren.v1beta1.GetSubscriptionResponse
-	31, // 106: odpf.siren.v1beta1.SirenService.UpdateSubscription:output_type -> odpf.siren.v1beta1.UpdateSubscriptionResponse
-	33, // 107: odpf.siren.v1beta1.SirenService.DeleteSubscription:output_type -> odpf.siren.v1beta1.DeleteSubscriptionResponse
-	36, // 108: odpf.siren.v1beta1.SirenService.ListReceivers:output_type -> odpf.siren.v1beta1.ListReceiversResponse
-	38, // 109: odpf.siren.v1beta1.SirenService.CreateReceiver:output_type -> odpf.siren.v1beta1.CreateReceiverResponse
-	40, // 110: odpf.siren.v1beta1.SirenService.GetReceiver:output_type -> odpf.siren.v1beta1.GetReceiverResponse
-	42, // 111: odpf.siren.v1beta1.SirenService.UpdateReceiver:output_type -> odpf.siren.v1beta1.UpdateReceiverResponse
-	44, // 112: odpf.siren.v1beta1.SirenService.DeleteReceiver:output_type -> odpf.siren.v1beta1.DeleteReceiverResponse
-	49, // 113: odpf.siren.v1beta1.SirenService.ListAlerts:output_type -> odpf.siren.v1beta1.ListAlertsResponse
-	51, // 114: odpf.siren.v1beta1.SirenService.CreateAlerts:output_type -> odpf.siren.v1beta1.CreateAlertsResponse
-	51, // 115: odpf.siren.v1beta1.SirenService.CreateAlertsWithNamespace:output_type -> odpf.siren.v1beta1.CreateAlertsResponse
-	57, // 116: odpf.siren.v1beta1.SirenService.ListRules:output_type -> odpf.siren.v1beta1.ListRulesResponse
-	59, // 117: odpf.siren.v1beta1.SirenService.UpdateRule:output_type -> odpf.siren.v1beta1.UpdateRuleResponse
-	63, // 118: odpf.siren.v1beta1.SirenService.ListTemplates:output_type -> odpf.siren.v1beta1.ListTemplatesResponse
-	67, // 119: odpf.siren.v1beta1.SirenService.GetTemplate:output_type -> odpf.siren.v1beta1.GetTemplateResponse
-	65, // 120: odpf.siren.v1beta1.SirenService.UpsertTemplate:output_type -> odpf.siren.v1beta1.UpsertTemplateResponse
-	69, // 121: odpf.siren.v1beta1.SirenService.DeleteTemplate:output_type -> odpf.siren.v1beta1.DeleteTemplateResponse
-	71, // 122: odpf.siren.v1beta1.SirenService.RenderTemplate:output_type -> odpf.siren.v1beta1.RenderTemplateResponse
-	92, // [92:123] is the sub-list for method output_type
-	61, // [61:92] is the sub-list for method input_type
-	61, // [61:61] is the sub-list for extension type_name
-	61, // [61:61] is the sub-list for extension extendee
-	0,  // [0:61] is the sub-list for field type_name
+	87, // 49: odpf.siren.v1beta1.CreateAlertsWithNamespaceRequest.body:type_name -> google.protobuf.Struct
+	47, // 50: odpf.siren.v1beta1.CreateAlertsWithNamespaceResponse.alerts:type_name -> odpf.siren.v1beta1.Alert
+	57, // 51: odpf.siren.v1beta1.Rule.variables:type_name -> odpf.siren.v1beta1.Variables
+	88, // 52: odpf.siren.v1beta1.Rule.created_at:type_name -> google.protobuf.Timestamp
+	88, // 53: odpf.siren.v1beta1.Rule.updated_at:type_name -> google.protobuf.Timestamp
+	56, // 54: odpf.siren.v1beta1.ListRulesResponse.rules:type_name -> odpf.siren.v1beta1.Rule
+	57, // 55: odpf.siren.v1beta1.UpdateRuleRequest.variables:type_name -> odpf.siren.v1beta1.Variables
+	88, // 56: odpf.siren.v1beta1.Template.created_at:type_name -> google.protobuf.Timestamp
+	88, // 57: odpf.siren.v1beta1.Template.updated_at:type_name -> google.protobuf.Timestamp
+	62, // 58: odpf.siren.v1beta1.Template.variables:type_name -> odpf.siren.v1beta1.TemplateVariables
+	63, // 59: odpf.siren.v1beta1.ListTemplatesResponse.templates:type_name -> odpf.siren.v1beta1.Template
+	62, // 60: odpf.siren.v1beta1.UpsertTemplateRequest.variables:type_name -> odpf.siren.v1beta1.TemplateVariables
+	63, // 61: odpf.siren.v1beta1.GetTemplateResponse.template:type_name -> odpf.siren.v1beta1.Template
+	86, // 62: odpf.siren.v1beta1.RenderTemplateRequest.variables:type_name -> odpf.siren.v1beta1.RenderTemplateRequest.VariablesEntry
+	1,  // 63: odpf.siren.v1beta1.SirenService.ListProviders:input_type -> odpf.siren.v1beta1.ListProvidersRequest
+	3,  // 64: odpf.siren.v1beta1.SirenService.CreateProvider:input_type -> odpf.siren.v1beta1.CreateProviderRequest
+	5,  // 65: odpf.siren.v1beta1.SirenService.GetProvider:input_type -> odpf.siren.v1beta1.GetProviderRequest
+	7,  // 66: odpf.siren.v1beta1.SirenService.UpdateProvider:input_type -> odpf.siren.v1beta1.UpdateProviderRequest
+	9,  // 67: odpf.siren.v1beta1.SirenService.DeleteProvider:input_type -> odpf.siren.v1beta1.DeleteProviderRequest
+	45, // 68: odpf.siren.v1beta1.SirenService.NotifyReceiver:input_type -> odpf.siren.v1beta1.NotifyReceiverRequest
+	12, // 69: odpf.siren.v1beta1.SirenService.ListNamespaces:input_type -> odpf.siren.v1beta1.ListNamespacesRequest
+	14, // 70: odpf.siren.v1beta1.SirenService.CreateNamespace:input_type -> odpf.siren.v1beta1.CreateNamespaceRequest
+	16, // 71: odpf.siren.v1beta1.SirenService.GetNamespace:input_type -> odpf.siren.v1beta1.GetNamespaceRequest
+	18, // 72: odpf.siren.v1beta1.SirenService.UpdateNamespace:input_type -> odpf.siren.v1beta1.UpdateNamespaceRequest
+	20, // 73: odpf.siren.v1beta1.SirenService.DeleteNamespace:input_type -> odpf.siren.v1beta1.DeleteNamespaceRequest
+	24, // 74: odpf.siren.v1beta1.SirenService.ListSubscriptions:input_type -> odpf.siren.v1beta1.ListSubscriptionsRequest
+	26, // 75: odpf.siren.v1beta1.SirenService.CreateSubscription:input_type -> odpf.siren.v1beta1.CreateSubscriptionRequest
+	28, // 76: odpf.siren.v1beta1.SirenService.GetSubscription:input_type -> odpf.siren.v1beta1.GetSubscriptionRequest
+	30, // 77: odpf.siren.v1beta1.SirenService.UpdateSubscription:input_type -> odpf.siren.v1beta1.UpdateSubscriptionRequest
+	32, // 78: odpf.siren.v1beta1.SirenService.DeleteSubscription:input_type -> odpf.siren.v1beta1.DeleteSubscriptionRequest
+	35, // 79: odpf.siren.v1beta1.SirenService.ListReceivers:input_type -> odpf.siren.v1beta1.ListReceiversRequest
+	37, // 80: odpf.siren.v1beta1.SirenService.CreateReceiver:input_type -> odpf.siren.v1beta1.CreateReceiverRequest
+	39, // 81: odpf.siren.v1beta1.SirenService.GetReceiver:input_type -> odpf.siren.v1beta1.GetReceiverRequest
+	41, // 82: odpf.siren.v1beta1.SirenService.UpdateReceiver:input_type -> odpf.siren.v1beta1.UpdateReceiverRequest
+	43, // 83: odpf.siren.v1beta1.SirenService.DeleteReceiver:input_type -> odpf.siren.v1beta1.DeleteReceiverRequest
+	48, // 84: odpf.siren.v1beta1.SirenService.ListAlerts:input_type -> odpf.siren.v1beta1.ListAlertsRequest
+	50, // 85: odpf.siren.v1beta1.SirenService.CreateAlerts:input_type -> odpf.siren.v1beta1.CreateAlertsRequest
+	52, // 86: odpf.siren.v1beta1.SirenService.CreateAlertsWithNamespace:input_type -> odpf.siren.v1beta1.CreateAlertsWithNamespaceRequest
+	58, // 87: odpf.siren.v1beta1.SirenService.ListRules:input_type -> odpf.siren.v1beta1.ListRulesRequest
+	60, // 88: odpf.siren.v1beta1.SirenService.UpdateRule:input_type -> odpf.siren.v1beta1.UpdateRuleRequest
+	64, // 89: odpf.siren.v1beta1.SirenService.ListTemplates:input_type -> odpf.siren.v1beta1.ListTemplatesRequest
+	68, // 90: odpf.siren.v1beta1.SirenService.GetTemplate:input_type -> odpf.siren.v1beta1.GetTemplateRequest
+	66, // 91: odpf.siren.v1beta1.SirenService.UpsertTemplate:input_type -> odpf.siren.v1beta1.UpsertTemplateRequest
+	70, // 92: odpf.siren.v1beta1.SirenService.DeleteTemplate:input_type -> odpf.siren.v1beta1.DeleteTemplateRequest
+	72, // 93: odpf.siren.v1beta1.SirenService.RenderTemplate:input_type -> odpf.siren.v1beta1.RenderTemplateRequest
+	2,  // 94: odpf.siren.v1beta1.SirenService.ListProviders:output_type -> odpf.siren.v1beta1.ListProvidersResponse
+	4,  // 95: odpf.siren.v1beta1.SirenService.CreateProvider:output_type -> odpf.siren.v1beta1.CreateProviderResponse
+	6,  // 96: odpf.siren.v1beta1.SirenService.GetProvider:output_type -> odpf.siren.v1beta1.GetProviderResponse
+	8,  // 97: odpf.siren.v1beta1.SirenService.UpdateProvider:output_type -> odpf.siren.v1beta1.UpdateProviderResponse
+	10, // 98: odpf.siren.v1beta1.SirenService.DeleteProvider:output_type -> odpf.siren.v1beta1.DeleteProviderResponse
+	46, // 99: odpf.siren.v1beta1.SirenService.NotifyReceiver:output_type -> odpf.siren.v1beta1.NotifyReceiverResponse
+	13, // 100: odpf.siren.v1beta1.SirenService.ListNamespaces:output_type -> odpf.siren.v1beta1.ListNamespacesResponse
+	15, // 101: odpf.siren.v1beta1.SirenService.CreateNamespace:output_type -> odpf.siren.v1beta1.CreateNamespaceResponse
+	17, // 102: odpf.siren.v1beta1.SirenService.GetNamespace:output_type -> odpf.siren.v1beta1.GetNamespaceResponse
+	19, // 103: odpf.siren.v1beta1.SirenService.UpdateNamespace:output_type -> odpf.siren.v1beta1.UpdateNamespaceResponse
+	21, // 104: odpf.siren.v1beta1.SirenService.DeleteNamespace:output_type -> odpf.siren.v1beta1.DeleteNamespaceResponse
+	25, // 105: odpf.siren.v1beta1.SirenService.ListSubscriptions:output_type -> odpf.siren.v1beta1.ListSubscriptionsResponse
+	27, // 106: odpf.siren.v1beta1.SirenService.CreateSubscription:output_type -> odpf.siren.v1beta1.CreateSubscriptionResponse
+	29, // 107: odpf.siren.v1beta1.SirenService.GetSubscription:output_type -> odpf.siren.v1beta1.GetSubscriptionResponse
+	31, // 108: odpf.siren.v1beta1.SirenService.UpdateSubscription:output_type -> odpf.siren.v1beta1.UpdateSubscriptionResponse
+	33, // 109: odpf.siren.v1beta1.SirenService.DeleteSubscription:output_type -> odpf.siren.v1beta1.DeleteSubscriptionResponse
+	36, // 110: odpf.siren.v1beta1.SirenService.ListReceivers:output_type -> odpf.siren.v1beta1.ListReceiversResponse
+	38, // 111: odpf.siren.v1beta1.SirenService.CreateReceiver:output_type -> odpf.siren.v1beta1.CreateReceiverResponse
+	40, // 112: odpf.siren.v1beta1.SirenService.GetReceiver:output_type -> odpf.siren.v1beta1.GetReceiverResponse
+	42, // 113: odpf.siren.v1beta1.SirenService.UpdateReceiver:output_type -> odpf.siren.v1beta1.UpdateReceiverResponse
+	44, // 114: odpf.siren.v1beta1.SirenService.DeleteReceiver:output_type -> odpf.siren.v1beta1.DeleteReceiverResponse
+	49, // 115: odpf.siren.v1beta1.SirenService.ListAlerts:output_type -> odpf.siren.v1beta1.ListAlertsResponse
+	51, // 116: odpf.siren.v1beta1.SirenService.CreateAlerts:output_type -> odpf.siren.v1beta1.CreateAlertsResponse
+	53, // 117: odpf.siren.v1beta1.SirenService.CreateAlertsWithNamespace:output_type -> odpf.siren.v1beta1.CreateAlertsWithNamespaceResponse
+	59, // 118: odpf.siren.v1beta1.SirenService.ListRules:output_type -> odpf.siren.v1beta1.ListRulesResponse
+	61, // 119: odpf.siren.v1beta1.SirenService.UpdateRule:output_type -> odpf.siren.v1beta1.UpdateRuleResponse
+	65, // 120: odpf.siren.v1beta1.SirenService.ListTemplates:output_type -> odpf.siren.v1beta1.ListTemplatesResponse
+	69, // 121: odpf.siren.v1beta1.SirenService.GetTemplate:output_type -> odpf.siren.v1beta1.GetTemplateResponse
+	67, // 122: odpf.siren.v1beta1.SirenService.UpsertTemplate:output_type -> odpf.siren.v1beta1.UpsertTemplateResponse
+	71, // 123: odpf.siren.v1beta1.SirenService.DeleteTemplate:output_type -> odpf.siren.v1beta1.DeleteTemplateResponse
+	73, // 124: odpf.siren.v1beta1.SirenService.RenderTemplate:output_type -> odpf.siren.v1beta1.RenderTemplateResponse
+	94, // [94:125] is the sub-list for method output_type
+	63, // [63:94] is the sub-list for method input_type
+	63, // [63:63] is the sub-list for extension type_name
+	63, // [63:63] is the sub-list for extension extendee
+	0,  // [0:63] is the sub-list for field type_name
 }
 
 func init() { file_odpf_siren_v1beta1_siren_proto_init() }
@@ -6118,7 +6249,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Annotations); i {
+			switch v := v.(*CreateAlertsWithNamespaceRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6130,7 +6261,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Labels); i {
+			switch v := v.(*CreateAlertsWithNamespaceResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6142,7 +6273,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Rule); i {
+			switch v := v.(*Annotations); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6154,7 +6285,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Variables); i {
+			switch v := v.(*Labels); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6166,7 +6297,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListRulesRequest); i {
+			switch v := v.(*Rule); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6178,7 +6309,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListRulesResponse); i {
+			switch v := v.(*Variables); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6190,7 +6321,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateRuleRequest); i {
+			switch v := v.(*ListRulesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6202,7 +6333,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateRuleResponse); i {
+			switch v := v.(*ListRulesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6214,7 +6345,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TemplateVariables); i {
+			switch v := v.(*UpdateRuleRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6226,7 +6357,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Template); i {
+			switch v := v.(*UpdateRuleResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6238,7 +6369,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListTemplatesRequest); i {
+			switch v := v.(*TemplateVariables); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6250,7 +6381,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListTemplatesResponse); i {
+			switch v := v.(*Template); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6262,7 +6393,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpsertTemplateRequest); i {
+			switch v := v.(*ListTemplatesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6274,7 +6405,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpsertTemplateResponse); i {
+			switch v := v.(*ListTemplatesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6286,7 +6417,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetTemplateRequest); i {
+			switch v := v.(*UpsertTemplateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6298,7 +6429,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetTemplateResponse); i {
+			switch v := v.(*UpsertTemplateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6310,7 +6441,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteTemplateRequest); i {
+			switch v := v.(*GetTemplateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6322,7 +6453,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteTemplateResponse); i {
+			switch v := v.(*GetTemplateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6334,7 +6465,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RenderTemplateRequest); i {
+			switch v := v.(*DeleteTemplateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -6346,6 +6477,30 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			}
 		}
 		file_odpf_siren_v1beta1_siren_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_odpf_siren_v1beta1_siren_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RenderTemplateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_odpf_siren_v1beta1_siren_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*RenderTemplateResponse); i {
 			case 0:
 				return &v.state
@@ -6364,7 +6519,7 @@ func file_odpf_siren_v1beta1_siren_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_odpf_siren_v1beta1_siren_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   85,
+			NumMessages:   87,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

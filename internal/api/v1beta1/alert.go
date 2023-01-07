@@ -42,17 +42,31 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 }
 
 func (s *GRPCServer) CreateAlerts(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
-	return s.createAlerts(ctx, req)
-}
-
-func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
-	return s.createAlerts(ctx, req)
-}
-
-func (s *GRPCServer) createAlerts(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
-	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetNamespaceId(), req.GetBody().AsMap())
+	items, err := s.createAlerts(ctx, req.GetProviderType(), req.GetProviderId(), 0, req.GetBody().AsMap())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
+	}
+
+	return &sirenv1beta1.CreateAlertsResponse{
+		Alerts: items,
+	}, nil
+}
+
+func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1beta1.CreateAlertsWithNamespaceRequest) (*sirenv1beta1.CreateAlertsWithNamespaceResponse, error) {
+	items, err := s.createAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetNamespaceId(), req.GetBody().AsMap())
+	if err != nil {
+		return nil, s.generateRPCErr(err)
+	}
+
+	return &sirenv1beta1.CreateAlertsWithNamespaceResponse{
+		Alerts: items,
+	}, nil
+}
+
+func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*sirenv1beta1.Alert, error) {
+	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, providerType, providerID, namespaceID, body)
+	if err != nil {
+		return nil, err
 	}
 
 	items := []*sirenv1beta1.Alert{}
@@ -70,20 +84,16 @@ func (s *GRPCServer) createAlerts(ctx context.Context, req *sirenv1beta1.CreateA
 		items = append(items, alertHistoryItem)
 	}
 
-	result := &sirenv1beta1.CreateAlertsResponse{
-		Alerts: items,
-	}
-
 	// Publish to notification service
 	for _, a := range createdAlerts {
 		n := AlertPBToNotification(a, firingLen, a.GroupKey, time.Now())
 
-		if err := s.notificationService.DispatchToSubscribers(ctx, req.GetNamespaceId(), n); err != nil {
+		if err := s.notificationService.DispatchToSubscribers(ctx, namespaceID, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}
 
-	return result, nil
+	return items, nil
 }
 
 // Transform alerts and populate Data and Labels to be interpolated to the system-default template

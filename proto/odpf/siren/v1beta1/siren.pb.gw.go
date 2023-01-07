@@ -1103,10 +1103,6 @@ func local_request_SirenService_ListAlerts_0(ctx context.Context, marshaler runt
 
 }
 
-var (
-	filter_SirenService_CreateAlerts_0 = &utilities.DoubleArray{Encoding: map[string]int{"body": 0, "provider_type": 1, "provider_id": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
-)
-
 func request_SirenService_CreateAlerts_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq CreateAlertsRequest
 	var metadata runtime.ServerMetadata
@@ -1144,13 +1140,6 @@ func request_SirenService_CreateAlerts_0(ctx context.Context, marshaler runtime.
 	protoReq.ProviderId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_CreateAlerts_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.CreateAlerts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1197,20 +1186,13 @@ func local_request_SirenService_CreateAlerts_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "provider_id", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_SirenService_CreateAlerts_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
 	msg, err := server.CreateAlerts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 func request_SirenService_CreateAlertsWithNamespace_0(ctx context.Context, marshaler runtime.Marshaler, client SirenServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateAlertsRequest
+	var protoReq CreateAlertsWithNamespaceRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1264,7 +1246,7 @@ func request_SirenService_CreateAlertsWithNamespace_0(ctx context.Context, marsh
 }
 
 func local_request_SirenService_CreateAlertsWithNamespace_0(ctx context.Context, marshaler runtime.Marshaler, server SirenServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq CreateAlertsRequest
+	var protoReq CreateAlertsWithNamespaceRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

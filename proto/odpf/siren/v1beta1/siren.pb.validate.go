@@ -6515,8 +6515,6 @@ func (m *CreateAlertsRequest) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for NamespaceId
-
 	if len(errors) > 0 {
 		return CreateAlertsRequestMultiError(errors)
 	}
@@ -6730,6 +6728,283 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateAlertsResponseValidationError{}
+
+// Validate checks the field values on CreateAlertsWithNamespaceRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *CreateAlertsWithNamespaceRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAlertsWithNamespaceRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// CreateAlertsWithNamespaceRequestMultiError, or nil if none found.
+func (m *CreateAlertsWithNamespaceRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAlertsWithNamespaceRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProviderType
+
+	// no validation rules for ProviderId
+
+	if all {
+		switch v := interface{}(m.GetBody()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateAlertsWithNamespaceRequestValidationError{
+					field:  "Body",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateAlertsWithNamespaceRequestValidationError{
+					field:  "Body",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetBody()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateAlertsWithNamespaceRequestValidationError{
+				field:  "Body",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for NamespaceId
+
+	if len(errors) > 0 {
+		return CreateAlertsWithNamespaceRequestMultiError(errors)
+	}
+	return nil
+}
+
+// CreateAlertsWithNamespaceRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// CreateAlertsWithNamespaceRequest.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAlertsWithNamespaceRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAlertsWithNamespaceRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAlertsWithNamespaceRequestMultiError) AllErrors() []error { return m }
+
+// CreateAlertsWithNamespaceRequestValidationError is the validation error
+// returned by CreateAlertsWithNamespaceRequest.Validate if the designated
+// constraints aren't met.
+type CreateAlertsWithNamespaceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAlertsWithNamespaceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAlertsWithNamespaceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAlertsWithNamespaceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAlertsWithNamespaceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAlertsWithNamespaceRequestValidationError) ErrorName() string {
+	return "CreateAlertsWithNamespaceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAlertsWithNamespaceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAlertsWithNamespaceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAlertsWithNamespaceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAlertsWithNamespaceRequestValidationError{}
+
+// Validate checks the field values on CreateAlertsWithNamespaceResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *CreateAlertsWithNamespaceResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateAlertsWithNamespaceResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// CreateAlertsWithNamespaceResponseMultiError, or nil if none found.
+func (m *CreateAlertsWithNamespaceResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateAlertsWithNamespaceResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetAlerts() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, CreateAlertsWithNamespaceResponseValidationError{
+						field:  fmt.Sprintf("Alerts[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, CreateAlertsWithNamespaceResponseValidationError{
+						field:  fmt.Sprintf("Alerts[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return CreateAlertsWithNamespaceResponseValidationError{
+					field:  fmt.Sprintf("Alerts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return CreateAlertsWithNamespaceResponseMultiError(errors)
+	}
+	return nil
+}
+
+// CreateAlertsWithNamespaceResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// CreateAlertsWithNamespaceResponse.ValidateAll() if the designated
+// constraints aren't met.
+type CreateAlertsWithNamespaceResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateAlertsWithNamespaceResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateAlertsWithNamespaceResponseMultiError) AllErrors() []error { return m }
+
+// CreateAlertsWithNamespaceResponseValidationError is the validation error
+// returned by CreateAlertsWithNamespaceResponse.Validate if the designated
+// constraints aren't met.
+type CreateAlertsWithNamespaceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateAlertsWithNamespaceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateAlertsWithNamespaceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateAlertsWithNamespaceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateAlertsWithNamespaceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateAlertsWithNamespaceResponseValidationError) ErrorName() string {
+	return "CreateAlertsWithNamespaceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateAlertsWithNamespaceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateAlertsWithNamespaceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateAlertsWithNamespaceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateAlertsWithNamespaceResponseValidationError{}
 
 // Validate checks the field values on Annotations with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
