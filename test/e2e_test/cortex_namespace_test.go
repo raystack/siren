@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
@@ -98,7 +99,7 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 		expectedScenarioCortexAM, err := os.ReadFile("testdata/cortex/expected-cortexamconfig-scenario.yaml")
 		s.Require().NoError(err)
 
-		s.Assert().Empty(diffYaml(bodyBytes, expectedScenarioCortexAM))
+		s.Assert().Empty(cmp.Diff(bodyBytes, expectedScenarioCortexAM))
 	})
 }
 

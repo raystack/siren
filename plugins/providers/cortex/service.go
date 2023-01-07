@@ -62,7 +62,7 @@ func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOpt
 }
 
 // TransformToAlerts is a function to transform alert body in hook API to []*alert.Alert
-func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
+func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
 	var groupAlert = &GroupAlert{}
 	if err := mapstructure.Decode(body, groupAlert); err != nil {
 		return nil, 0, err
@@ -93,9 +93,10 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 
 		alrt := &alert.Alert{
 			ProviderID:   providerID,
+			NamespaceID:  namespaceID,
 			ResourceName: item.Annotations["resource"],
-			MetricName:   item.Annotations["metricName"],
-			MetricValue:  item.Annotations["metricValue"],
+			MetricName:   item.Annotations["metric_name"],
+			MetricValue:  item.Annotations["metric_value"],
 			Severity:     severity,
 			Rule:         item.Annotations["template"],
 			TriggeredAt:  startsAt,
@@ -123,16 +124,18 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 }
 
 // SyncRuntimeConfig synchronizes runtime configuration of provider
-func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceURN string, prov provider.Provider) error {
+func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
 	if s.appConfig.WebhookBaseAPI == "" {
 		return errors.New("Cortex webhook base api string in config cannot be empty")
 	}
 
-	webhookURL := fmt.Sprintf("%s/%d", s.appConfig.WebhookBaseAPI, prov.ID)
+	webhookURL := fmt.Sprintf("%s/%d/%d", s.appConfig.WebhookBaseAPI, prov.ID, namespaceID)
 
 	tmplConfig := TemplateConfig{
-		GroupWaitDuration: s.appConfig.GroupWaitDuration,
-		WebhookURL:        webhookURL,
+		GroupWaitDuration:      s.appConfig.GroupWaitDuration,
+		GroupIntervalDuration:  s.appConfig.GroupIntervalDuration,
+		RepeatIntervalDuration: s.appConfig.RepeatIntervalDuration,
+		WebhookURL:             webhookURL,
 	}
 
 	cfg, err := s.generateAlertmanagerConfig(tmplConfig)

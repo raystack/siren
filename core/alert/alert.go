@@ -14,6 +14,7 @@ type Repository interface {
 type Alert struct {
 	ID           uint64    `json:"id"`
 	ProviderID   uint64    `json:"provider_id"`
+	NamespaceID  uint64    `json:"namespace_id"`
 	ResourceName string    `json:"resource_name"`
 	MetricName   string    `json:"metric_name"`
 	MetricValue  string    `json:"metric_value"`

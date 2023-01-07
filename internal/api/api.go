@@ -15,7 +15,7 @@ import (
 
 //go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
 type AlertService interface {
-	CreateAlerts(ctx context.Context, providerType string, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error)
+	CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error)
 	List(context.Context, alert.Filter) ([]alert.Alert, error)
 }
 

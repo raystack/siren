@@ -313,7 +313,7 @@ func TestService_CreateNamespace(t *testing.T) {
 						Namespace:        tc.NSpace,
 						CredentialString: "some-ciphertext",
 					}).Return(nil)
-					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(errors.New("some error"))
+					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
@@ -333,7 +333,7 @@ func TestService_CreateNamespace(t *testing.T) {
 						Namespace:        tc.NSpace,
 						CredentialString: "some-ciphertext",
 					}).Return(nil)
-					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(nil)
+					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(nil)
 					rr.EXPECT().Commit(mock.AnythingOfType("*context.emptyCtx")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
@@ -620,7 +620,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 						Namespace:        tc.NSpace,
 						CredentialString: "some-ciphertext",
 					}).Return(nil)
-					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(errors.New("some error"))
+					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
@@ -641,7 +641,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 						Namespace:        tc.NSpace,
 						CredentialString: "some-ciphertext",
 					}).Return(nil)
-					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(nil)
+					cs.EXPECT().SyncRuntimeConfig(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider")).Return(nil)
 					rr.EXPECT().Commit(mock.AnythingOfType("*context.emptyCtx")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{

@@ -42,7 +42,15 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 }
 
 func (s *GRPCServer) CreateAlerts(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
-	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetBody().AsMap())
+	return s.createAlerts(ctx, req)
+}
+
+func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
+	return s.createAlerts(ctx, req)
+}
+
+func (s *GRPCServer) createAlerts(ctx context.Context, req *sirenv1beta1.CreateAlertsRequest) (*sirenv1beta1.CreateAlertsResponse, error) {
+	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetNamespaceId(), req.GetBody().AsMap())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

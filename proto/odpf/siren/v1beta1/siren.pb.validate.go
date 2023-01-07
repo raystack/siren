@@ -6123,6 +6123,8 @@ func (m *Alert) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for NamespaceId
+
 	if len(errors) > 0 {
 		return AlertMultiError(errors)
 	}
@@ -6239,6 +6241,8 @@ func (m *ListAlertsRequest) validate(all bool) error {
 	// no validation rules for StartTime
 
 	// no validation rules for EndTime
+
+	// no validation rules for NamespaceId
 
 	if len(errors) > 0 {
 		return ListAlertsRequestMultiError(errors)
@@ -6510,6 +6514,8 @@ func (m *CreateAlertsRequest) validate(all bool) error {
 			}
 		}
 	}
+
+	// no validation rules for NamespaceId
 
 	if len(errors) > 0 {
 		return CreateAlertsRequestMultiError(errors)

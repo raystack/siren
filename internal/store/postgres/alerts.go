@@ -12,8 +12,8 @@ import (
 )
 
 const alertInsertQuery = `
-INSERT INTO alerts (provider_id, resource_name, metric_name, metric_value, severity, rule, triggered_at, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO alerts (provider_id, namespace_id, resource_name, metric_name, metric_value, severity, rule, triggered_at, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING *
 `
 
@@ -52,6 +52,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 	var newAlertModel model.Alert
 	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, alertInsertQuery,
 		alertModel.ProviderID,
+		alertModel.NamespaceID,
 		alertModel.ResourceName,
 		alertModel.MetricName,
 		alertModel.MetricValue,
@@ -73,6 +74,9 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 
 func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {
 	var queryBuilder = alertListQueryBuilder
+	if flt.NamespaceID != 0 {
+		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
+	}
 	if flt.ResourceName != "" {
 		queryBuilder = queryBuilder.Where("resource_name = ?", flt.ResourceName)
 	}

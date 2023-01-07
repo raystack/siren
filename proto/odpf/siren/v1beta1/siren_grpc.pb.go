@@ -41,6 +41,7 @@ type SirenServiceClient interface {
 	DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error)
 	ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*ListAlertsResponse, error)
 	CreateAlerts(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error)
+	CreateAlertsWithNamespace(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error)
 	ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error)
 	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*UpdateRuleResponse, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error)
@@ -265,6 +266,15 @@ func (c *sirenServiceClient) CreateAlerts(ctx context.Context, in *CreateAlertsR
 	return out, nil
 }
 
+func (c *sirenServiceClient) CreateAlertsWithNamespace(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error) {
+	out := new(CreateAlertsResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateAlertsWithNamespace", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sirenServiceClient) ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error) {
 	out := new(ListRulesResponse)
 	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListRules", in, out, opts...)
@@ -355,6 +365,7 @@ type SirenServiceServer interface {
 	DeleteReceiver(context.Context, *DeleteReceiverRequest) (*DeleteReceiverResponse, error)
 	ListAlerts(context.Context, *ListAlertsRequest) (*ListAlertsResponse, error)
 	CreateAlerts(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error)
+	CreateAlertsWithNamespace(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error)
 	ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error)
 	UpdateRule(context.Context, *UpdateRuleRequest) (*UpdateRuleResponse, error)
 	ListTemplates(context.Context, *ListTemplatesRequest) (*ListTemplatesResponse, error)
@@ -437,6 +448,9 @@ func (UnimplementedSirenServiceServer) ListAlerts(context.Context, *ListAlertsRe
 }
 func (UnimplementedSirenServiceServer) CreateAlerts(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAlerts not implemented")
+}
+func (UnimplementedSirenServiceServer) CreateAlertsWithNamespace(context.Context, *CreateAlertsRequest) (*CreateAlertsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertsWithNamespace not implemented")
 }
 func (UnimplementedSirenServiceServer) ListRules(context.Context, *ListRulesRequest) (*ListRulesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRules not implemented")
@@ -886,6 +900,24 @@ func _SirenService_CreateAlerts_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_CreateAlertsWithNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAlertsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).CreateAlertsWithNamespace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateAlertsWithNamespace",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).CreateAlertsWithNamespace(ctx, req.(*CreateAlertsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SirenService_ListRules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRulesRequest)
 	if err := dec(in); err != nil {
@@ -1110,6 +1142,10 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateAlerts",
 			Handler:    _SirenService_CreateAlerts_Handler,
+		},
+		{
+			MethodName: "CreateAlertsWithNamespace",
+			Handler:    _SirenService_CreateAlertsWithNamespace_Handler,
 		},
 		{
 			MethodName: "ListRules",

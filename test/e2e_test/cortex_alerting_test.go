@@ -105,7 +105,6 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 
 	s.Run("Triggering cortex alert with matching subscription labels should trigger notification", func() {
 		configs, err := structpb.NewStruct(map[string]interface{}{
-			//
 			"url": "http://some-url",
 		})
 		s.Require().NoError(err)

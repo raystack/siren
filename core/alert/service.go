@@ -18,13 +18,13 @@ func NewService(repository Repository, registry map[string]AlertTransformer) *Se
 	return &Service{repository, registry}
 }
 
-func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, body map[string]interface{}) ([]*Alert, int, error) {
+func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*Alert, int, error) {
 	pluginService, err := s.getProviderPluginService(providerType)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	alerts, firingLen, err := pluginService.TransformToAlerts(ctx, providerID, body)
+	alerts, firingLen, err := pluginService.TransformToAlerts(ctx, providerID, namespaceID, body)
 	if err != nil {
 		return nil, 0, err
 	}
