@@ -130,7 +130,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			name: "should return error if there is an error when matching labels",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
+				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -139,7 +139,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
 						{
 							Receivers: []subscription.Receiver{
@@ -156,7 +156,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			name: "should return error if there is no matching subscription",
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
-				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
+				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
 			},
 			wantErr: true,
 		},
@@ -165,7 +165,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
 						{
 							Receivers: []subscription.Receiver{
@@ -186,7 +186,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
 						{
 							Receivers: []subscription.Receiver{
@@ -208,7 +208,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
 						{
 							Receivers: []subscription.Receiver{
@@ -233,7 +233,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
-					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]string")).
+					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
 					Return([]subscription.Subscription{
 						{
 							Receivers: []subscription.Receiver{
@@ -271,7 +271,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 					testPluginType: mockNotifier,
 				})
 
-			if err := ns.DispatchToSubscribers(context.Background(), tc.n); (err != nil) != tc.wantErr {
+			if err := ns.DispatchToSubscribers(context.Background(), 1, tc.n); (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.Dispatch() error = %v, wantErr %v", err, tc.wantErr)
 			}
 

@@ -16,7 +16,7 @@ import (
 
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
 type SubscriptionService interface {
-	MatchByLabels(ctx context.Context, labels map[string]string) ([]subscription.Subscription, error)
+	MatchByLabels(ctx context.Context, namespaceID uint64, labels map[string]string) ([]subscription.Subscription, error)
 }
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
@@ -115,8 +115,8 @@ func (ns *NotificationService) DispatchToReceiver(ctx context.Context, n Notific
 	return nil
 }
 
-func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, n Notification) error {
-	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, n.Labels)
+func (ns *NotificationService) DispatchToSubscribers(ctx context.Context, namespaceID uint64, n Notification) error {
+	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, namespaceID, n.Labels)
 	if err != nil {
 		return err
 	}

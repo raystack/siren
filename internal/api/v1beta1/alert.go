@@ -78,7 +78,7 @@ func (s *GRPCServer) createAlerts(ctx context.Context, req *sirenv1beta1.CreateA
 	for _, a := range createdAlerts {
 		n := AlertPBToNotification(a, firingLen, a.GroupKey, time.Now())
 
-		if err := s.notificationService.DispatchToSubscribers(ctx, n); err != nil {
+		if err := s.notificationService.DispatchToSubscribers(ctx, req.GetNamespaceId(), n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	}
