@@ -3,8 +3,6 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/mitchellh/mapstructure"
-
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/pkg/errors"
@@ -33,13 +31,12 @@ func (s *GRPCServer) NotifyReceiver(ctx context.Context, req *sirenv1beta1.Notif
 		}
 	}
 
-	n := notification.Notification{}
-	if err := mapstructure.Decode(payloadMap, &n); err != nil {
-		err = errors.ErrInvalid.WithMsgf("failed to parse payload to notification: %s", err.Error())
+	n, err := notification.BuildTypeReceiver(req.GetId(), payloadMap)
+	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
-	if err := s.notificationService.DispatchToReceiver(ctx, n, req.GetId()); err != nil {
+	if err := s.notificationService.Dispatch(ctx, n); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 

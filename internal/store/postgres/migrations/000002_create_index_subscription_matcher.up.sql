@@ -1,1 +1,1 @@
-CREATE INDEX IF NOT EXISTS  subscriptions_idx_match ON subscriptions USING GIN(match jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS subscriptions_idx_match ON subscriptions USING GIN(match jsonb_path_ops);

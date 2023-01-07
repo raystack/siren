@@ -49,6 +49,10 @@ type SirenServiceClient interface {
 	UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*UpsertTemplateResponse, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error)
 	RenderTemplate(ctx context.Context, in *RenderTemplateRequest, opts ...grpc.CallOption) (*RenderTemplateResponse, error)
+	CreateSilence(ctx context.Context, in *CreateSilenceRequest, opts ...grpc.CallOption) (*CreateSilenceResponse, error)
+	ListSilences(ctx context.Context, in *ListSilencesRequest, opts ...grpc.CallOption) (*ListSilencesResponse, error)
+	GetSilence(ctx context.Context, in *GetSilenceRequest, opts ...grpc.CallOption) (*GetSilenceResponse, error)
+	ExpireSilence(ctx context.Context, in *ExpireSilenceRequest, opts ...grpc.CallOption) (*ExpireSilenceResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -338,6 +342,42 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 	return out, nil
 }
 
+func (c *sirenServiceClient) CreateSilence(ctx context.Context, in *CreateSilenceRequest, opts ...grpc.CallOption) (*CreateSilenceResponse, error) {
+	out := new(CreateSilenceResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateSilence", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) ListSilences(ctx context.Context, in *ListSilencesRequest, opts ...grpc.CallOption) (*ListSilencesResponse, error) {
+	out := new(ListSilencesResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListSilences", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) GetSilence(ctx context.Context, in *GetSilenceRequest, opts ...grpc.CallOption) (*GetSilenceResponse, error) {
+	out := new(GetSilenceResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetSilence", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sirenServiceClient) ExpireSilence(ctx context.Context, in *ExpireSilenceRequest, opts ...grpc.CallOption) (*ExpireSilenceResponse, error) {
+	out := new(ExpireSilenceResponse)
+	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ExpireSilence", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -373,6 +413,10 @@ type SirenServiceServer interface {
 	UpsertTemplate(context.Context, *UpsertTemplateRequest) (*UpsertTemplateResponse, error)
 	DeleteTemplate(context.Context, *DeleteTemplateRequest) (*DeleteTemplateResponse, error)
 	RenderTemplate(context.Context, *RenderTemplateRequest) (*RenderTemplateResponse, error)
+	CreateSilence(context.Context, *CreateSilenceRequest) (*CreateSilenceResponse, error)
+	ListSilences(context.Context, *ListSilencesRequest) (*ListSilencesResponse, error)
+	GetSilence(context.Context, *GetSilenceRequest) (*GetSilenceResponse, error)
+	ExpireSilence(context.Context, *ExpireSilenceRequest) (*ExpireSilenceResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -472,6 +516,18 @@ func (UnimplementedSirenServiceServer) DeleteTemplate(context.Context, *DeleteTe
 }
 func (UnimplementedSirenServiceServer) RenderTemplate(context.Context, *RenderTemplateRequest) (*RenderTemplateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RenderTemplate not implemented")
+}
+func (UnimplementedSirenServiceServer) CreateSilence(context.Context, *CreateSilenceRequest) (*CreateSilenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSilence not implemented")
+}
+func (UnimplementedSirenServiceServer) ListSilences(context.Context, *ListSilencesRequest) (*ListSilencesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSilences not implemented")
+}
+func (UnimplementedSirenServiceServer) GetSilence(context.Context, *GetSilenceRequest) (*GetSilenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSilence not implemented")
+}
+func (UnimplementedSirenServiceServer) ExpireSilence(context.Context, *ExpireSilenceRequest) (*ExpireSilenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpireSilence not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -1044,6 +1100,78 @@ func _SirenService_RenderTemplate_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_CreateSilence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSilenceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).CreateSilence(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateSilence",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).CreateSilence(ctx, req.(*CreateSilenceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_ListSilences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSilencesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).ListSilences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/ListSilences",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).ListSilences(ctx, req.(*ListSilencesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_GetSilence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSilenceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).GetSilence(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/GetSilence",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).GetSilence(ctx, req.(*GetSilenceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SirenService_ExpireSilence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExpireSilenceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).ExpireSilence(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/odpf.siren.v1beta1.SirenService/ExpireSilence",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).ExpireSilence(ctx, req.(*ExpireSilenceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1174,6 +1302,22 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RenderTemplate",
 			Handler:    _SirenService_RenderTemplate_Handler,
+		},
+		{
+			MethodName: "CreateSilence",
+			Handler:    _SirenService_CreateSilence_Handler,
+		},
+		{
+			MethodName: "ListSilences",
+			Handler:    _SirenService_ListSilences_Handler,
+		},
+		{
+			MethodName: "GetSilence",
+			Handler:    _SirenService_GetSilence_Handler,
+		},
+		{
+			MethodName: "ExpireSilence",
+			Handler:    _SirenService_ExpireSilence_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

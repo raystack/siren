@@ -70,13 +70,13 @@ func (_c *NotificationService_CheckAndInsertIdempotency_Call) Return(_a0 uint64,
 	return _c
 }
 
-// DispatchToReceiver provides a mock function with given fields: ctx, n, receiverID
-func (_m *NotificationService) DispatchToReceiver(ctx context.Context, n notification.Notification, receiverID uint64) error {
-	ret := _m.Called(ctx, n, receiverID)
+// Dispatch provides a mock function with given fields: ctx, n
+func (_m *NotificationService) Dispatch(ctx context.Context, n notification.Notification) error {
+	ret := _m.Called(ctx, n)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, notification.Notification, uint64) error); ok {
-		r0 = rf(ctx, n, receiverID)
+	if rf, ok := ret.Get(0).(func(context.Context, notification.Notification) error); ok {
+		r0 = rf(ctx, n)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -84,66 +84,26 @@ func (_m *NotificationService) DispatchToReceiver(ctx context.Context, n notific
 	return r0
 }
 
-// NotificationService_DispatchToReceiver_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DispatchToReceiver'
-type NotificationService_DispatchToReceiver_Call struct {
+// NotificationService_Dispatch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Dispatch'
+type NotificationService_Dispatch_Call struct {
 	*mock.Call
 }
 
-// DispatchToReceiver is a helper method to define mock.On call
+// Dispatch is a helper method to define mock.On call
 //   - ctx context.Context
 //   - n notification.Notification
-//   - receiverID uint64
-func (_e *NotificationService_Expecter) DispatchToReceiver(ctx interface{}, n interface{}, receiverID interface{}) *NotificationService_DispatchToReceiver_Call {
-	return &NotificationService_DispatchToReceiver_Call{Call: _e.mock.On("DispatchToReceiver", ctx, n, receiverID)}
+func (_e *NotificationService_Expecter) Dispatch(ctx interface{}, n interface{}) *NotificationService_Dispatch_Call {
+	return &NotificationService_Dispatch_Call{Call: _e.mock.On("Dispatch", ctx, n)}
 }
 
-func (_c *NotificationService_DispatchToReceiver_Call) Run(run func(ctx context.Context, n notification.Notification, receiverID uint64)) *NotificationService_DispatchToReceiver_Call {
+func (_c *NotificationService_Dispatch_Call) Run(run func(ctx context.Context, n notification.Notification)) *NotificationService_Dispatch_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(notification.Notification), args[2].(uint64))
+		run(args[0].(context.Context), args[1].(notification.Notification))
 	})
 	return _c
 }
 
-func (_c *NotificationService_DispatchToReceiver_Call) Return(_a0 error) *NotificationService_DispatchToReceiver_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-// DispatchToSubscribers provides a mock function with given fields: ctx, namespaceID, n
-func (_m *NotificationService) DispatchToSubscribers(ctx context.Context, namespaceID uint64, n notification.Notification) error {
-	ret := _m.Called(ctx, namespaceID, n)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, notification.Notification) error); ok {
-		r0 = rf(ctx, namespaceID, n)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// NotificationService_DispatchToSubscribers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DispatchToSubscribers'
-type NotificationService_DispatchToSubscribers_Call struct {
-	*mock.Call
-}
-
-// DispatchToSubscribers is a helper method to define mock.On call
-//   - ctx context.Context
-//   - namespaceID uint64
-//   - n notification.Notification
-func (_e *NotificationService_Expecter) DispatchToSubscribers(ctx interface{}, namespaceID interface{}, n interface{}) *NotificationService_DispatchToSubscribers_Call {
-	return &NotificationService_DispatchToSubscribers_Call{Call: _e.mock.On("DispatchToSubscribers", ctx, namespaceID, n)}
-}
-
-func (_c *NotificationService_DispatchToSubscribers_Call) Run(run func(ctx context.Context, namespaceID uint64, n notification.Notification)) *NotificationService_DispatchToSubscribers_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(notification.Notification))
-	})
-	return _c
-}
-
-func (_c *NotificationService_DispatchToSubscribers_Call) Return(_a0 error) *NotificationService_DispatchToSubscribers_Call {
+func (_c *NotificationService_Dispatch_Call) Return(_a0 error) *NotificationService_Dispatch_Call {
 	_c.Call.Return(_a0)
 	return _c
 }

@@ -2,26 +2,23 @@ package notification
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/odpf/salt/log"
-	"go.opencensus.io/tag"
+	saltlog "github.com/odpf/salt/log"
 	"go.opencensus.io/trace"
-	"gopkg.in/yaml.v3"
 
-	"github.com/odpf/siren/core/idempotency"
+	"github.com/odpf/siren/core/log"
 	"github.com/odpf/siren/core/receiver"
+	"github.com/odpf/siren/core/silence"
 	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/telemetry"
 )
 
-//go:generate mockery --name=IdempotencyRepository -r --case underscore --with-expecter --structname IdempotencyRepository --filename idempotency_repository.go --output=./mocks
-type IdempotencyRepository interface {
-	InsertOnConflictReturning(context.Context, string, string) (*idempotency.Idempotency, error)
-	UpdateSuccess(context.Context, uint64, bool) error
-	Delete(context.Context, idempotency.Filter) error
+//go:generate mockery --name=Dispatcher -r --case underscore --with-expecter --structname Dispatcher --filename dispatcher.go --output=./mocks
+type Dispatcher interface {
+	PrepareMessage(ctx context.Context, n Notification) ([]Message, []log.Notification, bool, error)
 }
 
 //go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
@@ -34,33 +31,82 @@ type ReceiverService interface {
 	Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error)
 }
 
+//go:generate mockery --name=SilenceService -r --case underscore --with-expecter --structname SilenceService --filename silence_service.go --output=./mocks
+type SilenceService interface {
+	List(ctx context.Context, filter silence.Filter) ([]silence.Silence, error)
+}
+
+//go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
+type AlertService interface {
+	UpdateSilenceStatus(ctx context.Context, alertIDs []int64, hasSilenced bool, hasNonSilenced bool) error
+}
+
+//go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks
+type LogService interface {
+	LogNotifications(ctx context.Context, nlogs ...log.Notification) error
+}
+
 // Service is a service for notification domain
 type Service struct {
-	logger                log.Logger
+	logger                saltlog.Logger
 	q                     Queuer
 	idempotencyRepository IdempotencyRepository
+	logService            LogService
+	repository            Repository
 	receiverService       ReceiverService
 	subscriptionService   SubscriptionService
+	silenceService        SilenceService
+	alertService          AlertService
 	notifierPlugins       map[string]Notifier
+	dispatcher            map[string]Dispatcher
 	messagingTracer       *telemetry.MessagingTracer
+}
+
+type Deps struct {
+	IdempotencyRepository     IdempotencyRepository
+	LogService                LogService
+	ReceiverService           ReceiverService
+	SubscriptionService       SubscriptionService
+	SilenceService            SilenceService
+	AlertService              AlertService
+	DispatchReceiverService   Dispatcher
+	DispatchSubscriberService Dispatcher
 }
 
 // NewService creates a new notification service
 func NewService(
-	logger log.Logger,
+	logger saltlog.Logger,
+	repository Repository,
 	q Queuer,
-	idempotencyRepository IdempotencyRepository,
-	receiverService ReceiverService,
-	subscriptionService SubscriptionService,
 	notifierPlugins map[string]Notifier,
+	deps Deps,
 ) *Service {
+	var (
+		dispatchReceiverService   = deps.DispatchReceiverService
+		dispatchSubscriberService = deps.DispatchSubscriberService
+	)
+	if deps.DispatchReceiverService == nil {
+		dispatchReceiverService = NewDispatchReceiverService(deps.ReceiverService, notifierPlugins)
+	}
+	if deps.DispatchSubscriberService == nil {
+		dispatchSubscriberService = NewDispatchSubscriberService(logger, deps.SubscriptionService, deps.SilenceService, notifierPlugins)
+	}
+
 	ns := &Service{
 		logger:                logger,
 		q:                     q,
-		idempotencyRepository: idempotencyRepository,
-		receiverService:       receiverService,
-		subscriptionService:   subscriptionService,
-		notifierPlugins:       notifierPlugins,
+		repository:            repository,
+		idempotencyRepository: deps.IdempotencyRepository,
+		logService:            deps.LogService,
+		receiverService:       deps.ReceiverService,
+		subscriptionService:   deps.SubscriptionService,
+		silenceService:        deps.SilenceService,
+		alertService:          deps.AlertService,
+		dispatcher: map[string]Dispatcher{
+			TypeReceiver:   dispatchReceiverService,
+			TypeSubscriber: dispatchSubscriberService,
+		},
+		notifierPlugins: notifierPlugins,
 	}
 
 	ns.messagingTracer = telemetry.NewMessagingTracer("default")
@@ -71,148 +117,60 @@ func NewService(
 	return ns
 }
 
-func (ns *Service) getNotifierPlugin(receiverType string) (Notifier, error) {
-	notifierPlugin, exist := ns.notifierPlugins[receiverType]
+func (s *Service) getDispatcherService(notificationType string) (Dispatcher, error) {
+	selectedDispatcher, exist := s.dispatcher[notificationType]
 	if !exist {
-		return nil, errors.ErrInvalid.WithMsgf("unsupported receiver type: %q", receiverType)
+		return nil, errors.ErrInvalid.WithMsgf("unsupported notification type: %q", notificationType)
 	}
-	return notifierPlugin, nil
+	return selectedDispatcher, nil
 }
 
-func (ns *Service) DispatchToReceiver(ctx context.Context, n Notification, receiverID uint64) error {
-	rcv, err := ns.receiverService.Get(ctx, receiverID, receiver.GetWithData(false))
+func (s *Service) Dispatch(ctx context.Context, n Notification) error {
+	if err := n.Validate(); err != nil {
+		return err
+	}
+
+	no, err := s.repository.Create(ctx, n)
 	if err != nil {
 		return err
 	}
 
-	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
+	n.EnrichID(no.ID)
+
+	dispatcherService, err := s.getDispatcherService(n.Type)
+	if err != nil {
+		return err
+	}
+
+	ctx, span := s.messagingTracer.StartSpan(ctx, "prepare_message",
 		trace.StringAttribute("messaging.notification_id", n.ID),
-		trace.StringAttribute("messaging.routing_method", RoutingMethodReceiver.String()),
+		trace.StringAttribute("messaging.routing_method", n.Type),
 	)
-	defer span.End()
-
-	notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
-	if err != nil {
-		return errors.ErrInvalid.WithMsgf("invalid receiver type: %s", err.Error())
-	}
-
-	message, err := n.ToMessage(rcv.Type, rcv.Configurations)
-	if err != nil {
-		return err
-	}
-
-	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
-	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-			tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
-			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
-			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
-		)
-
-		return err
-	}
-	message.Configs = newConfigs
-
-	message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodReceiver.String())
-
+	messages, notificationLogs, hasSilenced, err := dispatcherService.PrepareMessage(ctx, n)
 	span.End()
-
-	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-		tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodReceiver.String()),
-		tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-		tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
-	)
-
-	// supported no templating for now
-	if err := ns.q.Enqueue(ctx, *message); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ns *Service) DispatchToSubscribers(ctx context.Context, namespaceID uint64, n Notification) error {
-	subscriptions, err := ns.subscriptionService.MatchByLabels(ctx, namespaceID, n.Labels)
 	if err != nil {
 		return err
 	}
 
-	if len(subscriptions) == 0 {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationSubscriberNotFound)
-		return errors.ErrInvalid.WithMsgf("not matching any subscription")
+	if len(messages) == 0 && len(notificationLogs) == 0 {
+		return fmt.Errorf("something wrong and no messages will be sent with notification: %v", n)
 	}
 
-	ctx, span := ns.messagingTracer.StartSpan(ctx, "prepare_enqueue",
-		trace.StringAttribute("messaging.notification_id", n.ID),
-		trace.StringAttribute("messaging.routing_method", RoutingMethodSubscribers.String()),
-	)
-	defer span.End()
-
-	var messages = make([]Message, 0)
-
-	for _, s := range subscriptions {
-		for _, rcv := range s.Receivers {
-
-			notifierPlugin, err := ns.getNotifierPlugin(rcv.Type)
-			if err != nil {
-				return err
-			}
-
-			message, err := n.ToMessage(rcv.Type, rcv.Configuration)
-			if err != nil {
-				return err
-			}
-
-			newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, message.Configs)
-			if err != nil {
-				telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-					tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
-					tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
-					tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
-				)
-
-				return err
-			}
-			message.Configs = newConfigs
-
-			message.AddStringDetail(DetailsKeyRoutingMethod, RoutingMethodSubscribers.String())
-
-			//TODO fetch template if any, if not exist, check provider type, if exist use the default template, if not pass as-is
-			// if there is template, render and replace detail with the new one
-			if n.Template != "" {
-				var templateBody string
-
-				if template.IsReservedName(n.Template) {
-					templateBody = notifierPlugin.GetSystemDefaultTemplate()
-				}
-
-				if templateBody != "" {
-					renderedDetailString, err := template.RenderBody(templateBody, n)
-					if err != nil {
-						return errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", rcv.Type, err.Error())
-					}
-
-					var messageDetails map[string]interface{}
-					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
-						return errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", rcv.Type, err.Error(), renderedDetailString)
-					}
-					message.Details = messageDetails
-				}
-			}
-
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-				tag.Upsert(telemetry.TagRoutingMethod, RoutingMethodSubscribers.String()),
-				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
-			messages = append(messages, *message)
-		}
+	if err := s.logService.LogNotifications(ctx, notificationLogs...); err != nil {
+		return fmt.Errorf("failed logging notifications: %w", err)
 	}
 
-	span.End()
+	if err := s.alertService.UpdateSilenceStatus(ctx, n.AlertIDs, hasSilenced, len(messages) != 0); err != nil {
+		return fmt.Errorf("failed updating silence status: %w", err)
+	}
 
-	if err := ns.q.Enqueue(ctx, messages...); err != nil {
-		return err
+	if len(messages) == 0 {
+		s.logger.Info("no messages to enqueue")
+		return nil
+	}
+
+	if err := s.q.Enqueue(ctx, messages...); err != nil {
+		return fmt.Errorf("failed enqueuing messages: %w", err)
 	}
 
 	return nil
@@ -236,7 +194,7 @@ func (s *Service) MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error
 }
 
 func (s *Service) RemoveIdempotencies(ctx context.Context, TTL time.Duration) error {
-	return s.idempotencyRepository.Delete(ctx, idempotency.Filter{
+	return s.idempotencyRepository.Delete(ctx, IdempotencyFilter{
 		TTL: TTL,
 	})
 }
