@@ -1,0 +1,22 @@
+[
+    {
+        "namespace_id": 1,
+        "type": "receiver",
+        "data": {
+            "data-key": "data-value"
+        },
+        "labels": {},
+        "template": ""
+    },
+    {
+        "namespace_id": 1,
+        "type": "subscriber",
+        "data": {
+            "data-key": "data-value"
+        },
+        "labels": {
+            "label-key": "label-value"
+        },
+        "template": ""
+    }
+]

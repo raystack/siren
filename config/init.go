@@ -5,7 +5,7 @@ import (
 
 	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/core/receiver"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func Init(configFile string) error {

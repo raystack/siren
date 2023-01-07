@@ -33,6 +33,7 @@ func (s *SubscriptionRepositoryTestSuite) SetupSuite() {
 		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
+		dockertestx.PostgresWithVersionTag("13"),
 	)
 	if err != nil {
 		s.T().Fatal(err)
@@ -54,6 +55,7 @@ func (s *SubscriptionRepositoryTestSuite) SetupSuite() {
 
 	s.ctx = context.TODO()
 	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
+
 	s.repository = postgres.NewSubscriptionRepository(s.client)
 
 	_, err = bootstrapProvider(s.client)
@@ -188,7 +190,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 		{
 			Description: "should get filtered subscriptions by match labels",
 			Filter: subscription.Filter{
-				Labels: map[string]string{
+				NotificationMatch: map[string]string{
 					"environment": "production",
 					"severity":    "CRITICAL",
 					"team":        "odpf-app",

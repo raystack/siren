@@ -78,7 +78,7 @@ func (s *CortexNamespaceTestSuite) TearDownTest() {
 func (s *CortexNamespaceTestSuite) TestNamespace() {
 	ctx := context.Background()
 
-	s.Run("Initial state alert config not set, add a namespace will set config for the provider tenant", func() {
+	s.Run("initial state alert config not set, add a namespace will set config for the provider tenant", func() {
 		_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
 			Name:        "new-odpf-1",
 			Urn:         "new-odpf-1",

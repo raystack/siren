@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/odpf/siren/core/idempotency"
+	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/pgc"
@@ -36,7 +36,7 @@ func NewIdempotencyRepository(client *pgc.Client) *IdempotencyRepository {
 	return &IdempotencyRepository{client, "idempotencies"}
 }
 
-func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, scope, key string) (*idempotency.Idempotency, error) {
+func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, scope, key string) (*notification.Idempotency, error) {
 	var idempotencyModel model.Idempotency
 	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, idempotencyInsertQuery,
 		scope, key,
@@ -67,7 +67,7 @@ func (r *IdempotencyRepository) UpdateSuccess(ctx context.Context, id uint64, su
 	return nil
 }
 
-func (r *IdempotencyRepository) Delete(ctx context.Context, filter idempotency.Filter) error {
+func (r *IdempotencyRepository) Delete(ctx context.Context, filter notification.IdempotencyFilter) error {
 
 	if filter.TTL == 0 {
 		return errors.ErrInvalid.WithCausef("cannot delete with ttl 0")

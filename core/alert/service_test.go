@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestService_Get(t *testing.T) {
+func TestService_List(t *testing.T) {
 	ctx := context.TODO()
 
 	t.Run("should call repository List method with proper arguments and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock, nil)
+		dummyService := alert.NewService(repositoryMock, nil, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
@@ -45,7 +45,7 @@ func TestService_Get(t *testing.T) {
 
 	t.Run("should call repository List method with proper arguments if endtime is zero", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock, nil)
+		dummyService := alert.NewService(repositoryMock, nil, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
 			{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "baz", MetricValue: "20",
@@ -67,7 +67,7 @@ func TestService_Get(t *testing.T) {
 
 	t.Run("should call repository List method and handle errors", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
-		dummyService := alert.NewService(repositoryMock, nil)
+		dummyService := alert.NewService(repositoryMock, nil, nil)
 		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).
 			Return(nil, errors.New("random error"))
 		actualAlerts, err := dummyService.List(ctx, alert.Filter{
@@ -81,7 +81,7 @@ func TestService_Get(t *testing.T) {
 	})
 }
 
-func TestService_Create(t *testing.T) {
+func TestService_CreateAlerts(t *testing.T) {
 	var (
 		ctx               = context.TODO()
 		timenow           = time.Now()
@@ -175,7 +175,7 @@ func TestService_Create(t *testing.T) {
 				tc.setup(repositoryMock, alertTransformerMock)
 			}
 
-			svc := alert.NewService(repositoryMock, map[string]alert.AlertTransformer{
+			svc := alert.NewService(repositoryMock, nil, map[string]alert.AlertTransformer{
 				testType: alertTransformerMock,
 			})
 			actualAlerts, firingLen, err := svc.CreateAlerts(ctx, testType, 1, 1, tc.alertsToBeCreated)
