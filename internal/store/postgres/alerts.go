@@ -13,7 +13,7 @@ import (
 
 const alertInsertQuery = `
 INSERT INTO alerts (provider_id, namespace_id, resource_name, metric_name, metric_value, severity, rule, triggered_at, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())
 RETURNING *
 `
 
@@ -59,8 +59,6 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 		alertModel.Severity,
 		alertModel.Rule,
 		alertModel.TriggeredAt,
-		alertModel.CreatedAt,
-		alertModel.UpdatedAt,
 	).StructScan(&newAlertModel); err != nil {
 		err := pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrForeignKeyViolation) {
