@@ -100,12 +100,11 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-// TODO we might want to add filter by namespace id too here
-// to filter by tenant
-func (s *Service) MatchByLabels(ctx context.Context, labels map[string]string) ([]Subscription, error) {
+func (s *Service) MatchByLabels(ctx context.Context, namespaceID uint64, labels map[string]string) ([]Subscription, error) {
 	// fetch all subscriptions by matching labels.
 	subscriptionsByLabels, err := s.repository.List(ctx, Filter{
-		Labels: labels,
+		NamespaceID: namespaceID,
+		Labels:      labels,
 	})
 	if err != nil {
 		return nil, err

@@ -12,7 +12,7 @@ import (
 // UnimplementedService is a base receiver provider service layer
 type UnimplementedService struct{}
 
-func (s *UnimplementedService) SyncRuntimeConfig(ctx context.Context, namespaceURN string, prov provider.Provider) error {
+func (s *UnimplementedService) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
 	return nil
 }
 

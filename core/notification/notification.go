@@ -8,7 +8,7 @@ import (
 
 // Notification is a model of notification
 type Notification struct {
-	ID                  string
+	ID                  string                 `json:"id"`
 	Data                map[string]interface{} `json:"data"`
 	Labels              map[string]string      `json:"labels"`
 	ValidDurationString string                 `json:"valid_duration"`

@@ -9,6 +9,17 @@ exporters:
     endpoint: https://otlp.nr-data.net:4317
     headers:
       "api-key": "NEW_RELIC_API_KEY"
+  prometheusremotewrite:
+    endpoint: http://host.docker.internal:9009/api/v1/push
+    tls:
+      insecure: true
+    headers:
+      X-Scope-OrgID: odpf
+    external_labels:
+      service: siren
+      team: odpf-infra
+      environment: development
+      host: local
   logging:
     loglevel: debug
 
@@ -30,4 +41,4 @@ service:
     metrics:
       receivers: [opencensus]
       processors: [batch]
-      exporters: [otlp, logging]
+      exporters: [prometheusremotewrite,otlp, logging]

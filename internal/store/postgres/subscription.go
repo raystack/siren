@@ -56,18 +56,16 @@ func NewSubscriptionRepository(client *pgc.Client) *SubscriptionRepository {
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
 	var queryBuilder = subscriptionListQueryBuilder
 
-	// If filter by Labels and namespace ID exist, filter by namespace should be done in app
-	// to make use of search by labels with GIN index
+	if flt.NamespaceID != 0 {
+		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
+	}
+
 	if len(flt.Labels) != 0 {
 		labelsJSON, err := json.Marshal(flt.Labels)
 		if err != nil {
 			return nil, errors.ErrInvalid.WithCausef("problem marshalling json to string with err: %s", err.Error())
 		}
 		queryBuilder = queryBuilder.Where(fmt.Sprintf("match <@ '%s'::jsonb", string(json.RawMessage(labelsJSON))))
-	} else {
-		if flt.NamespaceID != 0 {
-			queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
-		}
 	}
 
 	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()

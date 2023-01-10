@@ -22,7 +22,7 @@ type ProviderPlugin interface {
 	TransformToAlerts(ctx context.Context, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) 
 
 	// ConfigSyncer
-	SyncRuntimeConfig(ctx context.Context, namespaceURN string, prov provider.Provider) error
+	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error
 	
 	// RuleUploader
 	UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error

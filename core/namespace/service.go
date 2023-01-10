@@ -84,7 +84,7 @@ func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	if err := pluginService.SyncRuntimeConfig(ctx, ns.URN, *prov); err != nil {
+	if err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, ns.URN, *prov); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	if err := pluginService.SyncRuntimeConfig(ctx, ns.URN, ns.Provider); err != nil {
+	if err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, ns.URN, ns.Provider); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}

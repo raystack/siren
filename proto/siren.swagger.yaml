@@ -51,6 +51,11 @@ paths:
           required: false
           type: string
           format: uint64
+        - name: namespace_id
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - Alert
     post:
@@ -71,6 +76,41 @@ paths:
           required: true
           type: string
         - name: provider_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      tags:
+        - Alert
+  /v1beta1/alerts/{provider_type}/{provider_id}/{namespace_id}:
+    post:
+      summary: create alerts with namespace
+      operationId: SirenService_CreateAlertsWithNamespace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/CreateAlertsWithNamespaceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/Status'
+      parameters:
+        - name: provider_type
+          in: path
+          required: true
+          type: string
+        - name: provider_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: namespace_id
           in: path
           required: true
           type: string
@@ -749,6 +789,9 @@ definitions:
         type: string
       metric_value:
         type: string
+      namespace_id:
+        type: string
+        format: uint64
       provider_id:
         type: string
         format: uint64
@@ -768,6 +811,13 @@ definitions:
         type: string
     additionalProperties: {}
   CreateAlertsResponse:
+    type: object
+    properties:
+      alerts:
+        type: array
+        items:
+          $ref: '#/definitions/Alert'
+  CreateAlertsWithNamespaceResponse:
     type: object
     properties:
       alerts:

@@ -1,22 +1,24 @@
 package model
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/odpf/siren/core/alert"
 )
 
 type Alert struct {
-	ID           uint64    `db:"id"`
-	ProviderID   uint64    `db:"provider_id"`
-	ResourceName string    `db:"resource_name"`
-	MetricName   string    `db:"metric_name"`
-	MetricValue  string    `db:"metric_value"`
-	Severity     string    `db:"severity"`
-	Rule         string    `db:"rule"`
-	TriggeredAt  time.Time `db:"triggered_at"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	ID           uint64        `db:"id"`
+	NamespaceID  sql.NullInt64 `db:"namespace_id"`
+	ProviderID   uint64        `db:"provider_id"`
+	ResourceName string        `db:"resource_name"`
+	MetricName   string        `db:"metric_name"`
+	MetricValue  string        `db:"metric_value"`
+	Severity     string        `db:"severity"`
+	Rule         string        `db:"rule"`
+	TriggeredAt  time.Time     `db:"triggered_at"`
+	CreatedAt    time.Time     `db:"created_at"`
+	UpdatedAt    time.Time     `db:"updated_at"`
 }
 
 func (a *Alert) FromDomain(alrt alert.Alert) {
@@ -30,10 +32,21 @@ func (a *Alert) FromDomain(alrt alert.Alert) {
 	a.TriggeredAt = alrt.TriggeredAt
 	a.CreatedAt = alrt.CreatedAt
 	a.UpdatedAt = alrt.UpdatedAt
+
+	if alrt.NamespaceID == 0 {
+		a.NamespaceID = sql.NullInt64{
+			Valid: false,
+		}
+	} else {
+		a.NamespaceID = sql.NullInt64{
+			Valid: true,
+			Int64: int64(alrt.NamespaceID),
+		}
+	}
 }
 
 func (a *Alert) ToDomain() *alert.Alert {
-	return &alert.Alert{
+	alrt := &alert.Alert{
 		ID:           a.ID,
 		ProviderID:   a.ProviderID,
 		ResourceName: a.ResourceName,
@@ -45,4 +58,10 @@ func (a *Alert) ToDomain() *alert.Alert {
 		CreatedAt:    a.CreatedAt,
 		UpdatedAt:    a.UpdatedAt,
 	}
+
+	if a.NamespaceID.Valid {
+		alrt.NamespaceID = uint64(a.NamespaceID.Int64)
+	}
+
+	return alrt
 }

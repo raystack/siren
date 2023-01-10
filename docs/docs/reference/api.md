@@ -20,6 +20,7 @@ list alerts
 | resource_name | query |  | No | string |
 | start_time | query |  | No | string (uint64) |
 | end_time | query |  | No | string (uint64) |
+| namespace_id | query |  | No | string (uint64) |
 
 ##### Responses
 
@@ -46,6 +47,29 @@ create alerts
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
 | 200 | A successful response. | [CreateAlertsResponse](#createalertsresponse) |
+| default | An unexpected error response. | [Status](#status) |
+
+### /v1beta1/alerts/{provider_type}/{provider_id}/{namespace_id}
+
+#### POST
+##### Summary
+
+create alerts with namespace
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| provider_type | path |  | Yes | string |
+| provider_id | path |  | Yes | string (uint64) |
+| namespace_id | path |  | Yes | string (uint64) |
+| body | body |  | Yes | object |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | A successful response. | [CreateAlertsWithNamespaceResponse](#createalertswithnamespaceresponse) |
 | default | An unexpected error response. | [Status](#status) |
 
 ### /v1beta1/namespaces
@@ -580,6 +604,7 @@ render a template
 | id | string (uint64) |  | No |
 | metric_name | string |  | No |
 | metric_value | string |  | No |
+| namespace_id | string (uint64) |  | No |
 | provider_id | string (uint64) |  | No |
 | resource_name | string |  | No |
 | rule | string |  | No |
@@ -593,6 +618,12 @@ render a template
 | @type | string |  | No |
 
 #### CreateAlertsResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| alerts | [ [Alert](#alert) ] |  | No |
+
+#### CreateAlertsWithNamespaceResponse
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |

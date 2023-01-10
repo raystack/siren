@@ -18,5 +18,5 @@ route:
     - time_stamp
     - identifier
   group_wait: [[.GroupWaitDuration]]
-  group_interval: 30m
-  repeat_interval: 4h
+  group_interval: [[.GroupIntervalDuration]]
+  repeat_interval: [[.RepeatIntervalDuration]]

@@ -15,7 +15,7 @@ import (
 
 //go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
 type AlertService interface {
-	CreateAlerts(ctx context.Context, providerType string, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error)
+	CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error)
 	List(context.Context, alert.Filter) ([]alert.Alert, error)
 }
 
@@ -73,7 +73,7 @@ type TemplateService interface {
 //go:generate mockery --name=NotificationService -r --case underscore --with-expecter --structname NotificationService --filename notification_service.go --output=./mocks
 type NotificationService interface {
 	DispatchToReceiver(ctx context.Context, n notification.Notification, receiverID uint64) error
-	DispatchToSubscribers(ctx context.Context, n notification.Notification) error
+	DispatchToSubscribers(ctx context.Context, namespaceID uint64, n notification.Notification) error
 }
 
 type Deps struct {

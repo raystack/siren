@@ -4,10 +4,7 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"go.opentelemetry.io/otel/metric/global"
 )
-
-var Meter = global.MeterProvider().Meter("siren")
 
 var (
 	TagReceiverType  = tag.MustNewKey("receiver_type")

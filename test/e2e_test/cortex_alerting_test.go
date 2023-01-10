@@ -13,7 +13,6 @@ import (
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/pkg/telemetry"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -31,28 +30,26 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
-	s.appConfig = &config.Config{
-		Log: config.Log{
-			Level: "debug",
-		},
-		Telemetry: telemetry.Config{
-			Debug: "",
-		},
-		Service: server.Config{
-			Port:          apiPort,
-			EncryptionKey: testEncryptionKey,
-		},
-		Notification: notification.Config{
-			MessageHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-			DLQHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-		},
-	}
+	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
+
+	s.appConfig.Log.Level = "error"
+	s.appConfig.Service = server.Config{
+		Port:          apiPort,
+		EncryptionKey: testEncryptionKey,
+	}
+	s.appConfig.Notification = notification.Config{
+		MessageHandler: notification.HandlerConfig{
+			Enabled: false,
+		},
+		DLQHandler: notification.HandlerConfig{
+			Enabled: false,
+		},
+	}
+	s.appConfig.Telemetry.Debug = ""
+	s.appConfig.Telemetry.EnableNewrelic = false
+	s.appConfig.Telemetry.EnableOtelAgent = false
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
@@ -105,7 +102,6 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 
 	s.Run("Triggering cortex alert with matching subscription labels should trigger notification", func() {
 		configs, err := structpb.NewStruct(map[string]interface{}{
-			//
 			"url": "http://some-url",
 		})
 		s.Require().NoError(err)
@@ -149,8 +145,8 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 				},
 				"annotations": {
 					"resource": "test_alert",
-					"metricName": "test_alert",
-					"metricValue": "1",
+					"metric_name": "test_alert",
+					"metric_value": "1",
 					"template": "alert_test"
 				}
 			}
@@ -194,7 +190,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			defer r.Body.Close()
 			s.Assert().NoError(err)
 
-			expectedBody := `{"alertname":"some alert name","environment":"integration","generatorUrl":"","groupKey":"{}/{environment=\"integration\",team=\"odpf\"}:{}","id":"cortex-684c979dcb5ffb96","key1":"value1","key2":"value2","metricName":"test_alert","metricValue":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
+			expectedBody := `{"alertname":"some alert name","environment":"integration","generatorUrl":"","groupKey":"{}/{environment=\"integration\",team=\"odpf\"}:{}","id":"cortex-684c979dcb5ffb96","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
 			s.Assert().Equal(expectedBody, string(body))
 			close(waitChan)
 		}))
@@ -250,8 +246,8 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 						"team": "odpf"
 					},
 					"annotations": {
-						"metricName": "test_alert",
-						"metricValue": "1",
+						"metric_name": "test_alert",
+						"metric_value": "1",
 						"resource": "test_alert",
 						"template": "alert_test",
 						"summary": "this is test alert"
@@ -268,8 +264,8 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 				"team": "odpf"
 			},
 			"commonAnnotations": {
-				"metricName": "test_alert",
-				"metricValue": "1",
+				"metric_name": "test_alert",
+				"metric_value": "1",
 				"resource": "test_alert",
 				"template": "alert_test"
 			},
@@ -279,7 +275,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			"truncatedAlerts": 0
 		}`
 
-		res, err := http.DefaultClient.Post(fmt.Sprintf("http://localhost:%d/v1beta1/alerts/cortex/1", s.appConfig.Service.Port), "application/json", bytes.NewBufferString(triggerAlertBody))
+		res, err := http.DefaultClient.Post(fmt.Sprintf("http://localhost:%d/v1beta1/alerts/cortex/1/1", s.appConfig.Service.Port), "application/json", bytes.NewBufferString(triggerAlertBody))
 		s.Require().NoError(err)
 
 		bodyJSon, _ := io.ReadAll(res.Body)

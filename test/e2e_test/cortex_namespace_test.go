@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/pkg/telemetry"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 )
@@ -27,28 +27,26 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
-	s.appConfig = &config.Config{
-		Log: config.Log{
-			Level: "debug",
-		},
-		Telemetry: telemetry.Config{
-			Debug: "",
-		},
-		Service: server.Config{
-			Port:          apiPort,
-			EncryptionKey: testEncryptionKey,
-		},
-		Notification: notification.Config{
-			MessageHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-			DLQHandler: notification.HandlerConfig{
-				Enabled: false,
-			},
-		},
-	}
+	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
+
+	s.appConfig.Log.Level = "error"
+	s.appConfig.Service = server.Config{
+		Port:          apiPort,
+		EncryptionKey: testEncryptionKey,
+	}
+	s.appConfig.Notification = notification.Config{
+		MessageHandler: notification.HandlerConfig{
+			Enabled: false,
+		},
+		DLQHandler: notification.HandlerConfig{
+			Enabled: false,
+		},
+	}
+	s.appConfig.Telemetry.Debug = ""
+	s.appConfig.Telemetry.EnableNewrelic = false
+	s.appConfig.Telemetry.EnableOtelAgent = false
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)
@@ -98,7 +96,7 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 		expectedScenarioCortexAM, err := os.ReadFile("testdata/cortex/expected-cortexamconfig-scenario.yaml")
 		s.Require().NoError(err)
 
-		s.Assert().Empty(diffYaml(bodyBytes, expectedScenarioCortexAM))
+		s.Assert().Empty(cmp.Diff(bodyBytes, expectedScenarioCortexAM))
 	})
 }
 
