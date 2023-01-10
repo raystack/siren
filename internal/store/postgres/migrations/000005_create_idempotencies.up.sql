@@ -7,4 +7,4 @@ CREATE TABLE IF NOT EXISTS idempotencies (
     updated_at timestamptz not null
 );
 
-CREATE UNIQUE INDEX idempotencies_keys_scope_key ON idempotencies (scope, key);
+CREATE UNIQUE INDEX IF NOT EXISTS idempotencies_keys_scope_key ON idempotencies (scope, key);
