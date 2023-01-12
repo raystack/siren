@@ -101,7 +101,7 @@ func (r ProviderRepository) Create(ctx context.Context, prov *provider.Provider)
 		provModel.Credentials,
 		provModel.Labels,
 	).StructScan(&createdProvider); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrDuplicateKey) {
 			return provider.ErrDuplicate
 		}
@@ -150,7 +150,7 @@ func (r ProviderRepository) Update(ctx context.Context, provDomain *provider.Pro
 		provModel.Credentials,
 		provModel.Labels,
 	).StructScan(&updatedProvider); err != nil {
-		err := pgc.CheckError(err)
+		err = pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return provider.NotFoundError{ID: provModel.ID}
 		}

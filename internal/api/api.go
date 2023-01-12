@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"time"
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/namespace"
@@ -74,6 +75,9 @@ type TemplateService interface {
 type NotificationService interface {
 	DispatchToReceiver(ctx context.Context, n notification.Notification, receiverID uint64) error
 	DispatchToSubscribers(ctx context.Context, namespaceID uint64, n notification.Notification) error
+	CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error)
+	MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error
+	RemoveIdempotencies(ctx context.Context, TTL time.Duration) error
 }
 
 type Deps struct {

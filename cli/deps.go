@@ -1,6 +1,11 @@
 package cli
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/odpf/salt/db"
 	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
@@ -15,6 +20,7 @@ import (
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/pgc"
 	"github.com/odpf/siren/pkg/secret"
+	"github.com/odpf/siren/pkg/telemetry"
 	"github.com/odpf/siren/plugins/providers/cortex"
 	"github.com/odpf/siren/plugins/receivers/file"
 	"github.com/odpf/siren/plugins/receivers/httpreceiver"
@@ -22,13 +28,38 @@ import (
 	"github.com/odpf/siren/plugins/receivers/slack"
 )
 
-func InitAPIDeps(
+func InitDeps(
+	ctx context.Context,
 	logger log.Logger,
 	cfg config.Config,
-	pgClient *pgc.Client,
-	encryptor *secret.Crypto,
 	queue notification.Queuer,
-) (*api.Deps, map[string]notification.Notifier, error) {
+) (*api.Deps, *newrelic.Application, *pgc.Client, map[string]notification.Notifier, error) {
+
+	telemetry.Init(ctx, cfg.Telemetry, logger)
+	nrApp, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(cfg.Telemetry.ServiceName),
+		newrelic.ConfigLicense(cfg.Telemetry.NewRelicAPIKey),
+	)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	dbClient, err := db.New(cfg.DB)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	pgClient, err := pgc.NewClient(logger, dbClient)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	encryptor, err := secret.New(cfg.Service.EncryptionKey)
+	if err != nil {
+		return nil, nil, nil, nil, fmt.Errorf("cannot initialize encryptor: %w", err)
+	}
+
+	idempotencyRepository := postgres.NewIdempotencyRepository(pgClient)
 	templateRepository := postgres.NewTemplateRepository(pgClient)
 	templateService := template.NewService(templateRepository)
 
@@ -90,7 +121,7 @@ func InitAPIDeps(
 		receiver.TypeFile:      filePluginService,
 	}
 
-	notificationService := notification.NewService(logger, queue, receiverService, subscriptionService, notifierRegistry)
+	notificationService := notification.NewService(logger, queue, idempotencyRepository, receiverService, subscriptionService, notifierRegistry)
 
 	return &api.Deps{
 			TemplateService:     templateService,
@@ -101,6 +132,6 @@ func InitAPIDeps(
 			ReceiverService:     receiverService,
 			SubscriptionService: subscriptionService,
 			NotificationService: notificationService,
-		}, notifierRegistry,
+		}, nrApp, pgClient, notifierRegistry,
 		nil
 }

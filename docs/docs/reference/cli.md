@@ -44,6 +44,15 @@ Manage siren jobs
 
 Trigger a job
 
+#### `siren job run cleanup_idempotency [flags]`
+
+Cleanup idempotencies outside TTL
+
+```
+-c, --config string   Config file path (default "config.yaml")
+-t, --ttl string      TTL duration of idempotency data in golang duration format (e.g. 10h, 30m) (default "24h")
+````
+
 #### `siren job run cleanup_queue [flags]`
 
 Cleanup stale messages in queue

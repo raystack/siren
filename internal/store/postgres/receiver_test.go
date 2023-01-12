@@ -52,7 +52,7 @@ func (s *ReceiverRepositoryTestSuite) SetupSuite() {
 		s.T().Fatal(err)
 	}
 	s.ctx = context.TODO()
-	migrate(s.ctx, logger, s.client, dbConfig)
+	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
 	s.repository = postgres.NewReceiverRepository(s.client)
 }
 

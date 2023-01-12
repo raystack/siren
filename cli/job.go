@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/odpf/salt/cmdx"
@@ -9,6 +10,8 @@ import (
 	"github.com/odpf/salt/printer"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/internal/jobs"
+	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/plugins/queues"
 	"github.com/odpf/siren/plugins/queues/postgresq"
 	"github.com/spf13/cobra"
@@ -26,6 +29,7 @@ func jobCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			The Job is usually run as a CronJob to be executed on a specified time.
 		`),
 		Example: heredoc.Doc(`
+			$ siren job run cleanup_idempotency
 			$ siren job run cleanup_queue
 		`),
 	}
@@ -47,14 +51,17 @@ func jobRunCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 		Args: cobra.ExactValidArgs(1),
 		ValidArgs: []string{
 			"cleanup_queue",
+			"cleanup_idempotency",
 		},
 		Example: heredoc.Doc(`
+			$ siren job run cleanup_idempotency
 			$ siren job run cleanup_queue
 		`),
 	}
 
 	cmd.AddCommand(
 		jobRunCleanupQueueCommand(),
+		jobRunCleanupIdempotencyCommand(),
 	)
 
 	return cmd
@@ -100,7 +107,7 @@ func jobRunCleanupQueueCommand() *cobra.Command {
 
 			spinner := printer.Spin("")
 			defer spinner.Stop()
-			printer.Info("Running job cleanup_queue(%s)", cfg.Notification.Queue.Kind.String())
+			printer.Infof("Running job cleanup_queue(%s)\n", cfg.Notification.Queue.Kind.String())
 			if err := queue.Cleanup(cmd.Context(), queues.FilterCleanup{
 				MessagePendingTimeThreshold:   pendingDuration,
 				MessagePublishedTimeThreshold: publishedDuration,
@@ -119,6 +126,74 @@ func jobRunCleanupQueueCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&configFile, "config", "c", "config.yaml", "Config file path")
 	cmd.Flags().StringVarP(&publishedDuration, "published", "p", "168h", "Cleanup treshold for published messages in string (e.g. 10h, 30m)")
 	cmd.Flags().StringVarP(&publishedDuration, "pending", "s", "", "Cleanup treshold for pending messages in string (e.g. 10h, 30m)")
+
+	return cmd
+}
+
+func jobRunCleanupIdempotencyCommand() *cobra.Command {
+	var (
+		configFile  string
+		ttlDuration string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "cleanup_idempotency",
+		Short: "Cleanup idempotencies outside TTL",
+		Long: heredoc.Doc(`
+			Cleaning up all idempotencies data outside TTL.
+
+			Default value is 24 hours.
+		`),
+		Example: heredoc.Doc(`
+			$ siren job run cleanup_idempotency
+		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load(configFile)
+			if err != nil {
+				return err
+			}
+
+			logger := initLogger(cfg.Log)
+
+			apiDeps, _, pgClient, _, err := InitDeps(cmd.Context(), logger, cfg, nil)
+			if err != nil {
+				return err
+			}
+
+			spinner := printer.Spin("")
+			defer spinner.Stop()
+			printer.Infof("Running job cleanup_idempotency with ttl %s\n", ttlDuration)
+
+			ttlInTimeDuration, err := time.ParseDuration(ttlDuration)
+			if err != nil {
+				return err
+			}
+
+			jobHandler := jobs.NewHandler(logger, apiDeps.NotificationService)
+			if err := jobHandler.CleanupIdempotencies(cmd.Context(), ttlInTimeDuration); err != nil {
+				spinner.Stop()
+				if errors.Is(err, errors.ErrNotFound) {
+					printer.Success(fmt.Sprintf("No data outside TTL %s", ttlDuration))
+				} else {
+					logger.Error(err.Error())
+				}
+			} else {
+				spinner.Stop()
+				printer.Success("Job cleanup_idempotency finished")
+				printer.Space()
+				printer.SuccessIcon()
+			}
+
+			if err := pgClient.Close(); err != nil {
+				logger.Error(err.Error())
+			}
+
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVarP(&configFile, "config", "c", "config.yaml", "Config file path")
+	cmd.Flags().StringVarP(&ttlDuration, "ttl", "t", "24h", "TTL duration of idempotency data in golang duration format (e.g. 10h, 30m)")
 
 	return cmd
 }

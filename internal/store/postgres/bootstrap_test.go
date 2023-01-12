@@ -43,19 +43,17 @@ func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	return nil
 }
 
-func migrate(ctx context.Context, logger log.Logger, client *pgc.Client, dbConf db.Config) (err error) {
+func migrate(ctx context.Context, logger log.Logger, client *pgc.Client, dbConf db.Config) error {
 	var queries = []string{
 		"DROP SCHEMA public CASCADE",
 		"CREATE SCHEMA public",
 	}
 
-	err = execQueries(ctx, client, queries)
-	if err != nil {
-		return
+	if err := execQueries(ctx, client, queries); err != nil {
+		return err
 	}
 
-	err = pgc.Migrate(dbConf)
-	return
+	return postgres.Migrate(dbConf)
 }
 
 // ExecQueries is used for executing list of db query
@@ -84,8 +82,8 @@ func bootstrapProvider(client *pgc.Client) ([]provider.Provider, error) {
 	}
 
 	for _, d := range data {
-		if err := repo.Create(context.Background(), &d); err != nil {
-			return nil, err
+		if cerr := repo.Create(context.Background(), &d); cerr != nil {
+			return nil, cerr
 		}
 	}
 
@@ -117,8 +115,8 @@ func bootstrapNamespace(client *pgc.Client) ([]namespace.EncryptedNamespace, err
 			Namespace:        &d,
 			CredentialString: fmt.Sprintf("%+v", d.Credentials),
 		}
-		if err := repo.Create(context.Background(), &encryptedNS); err != nil {
-			return nil, err
+		if cerr := repo.Create(context.Background(), &encryptedNS); cerr != nil {
+			return nil, cerr
 		}
 	}
 
@@ -145,8 +143,8 @@ func bootstrapReceiver(client *pgc.Client) ([]receiver.Receiver, error) {
 	}
 
 	for _, d := range data {
-		if err := repo.Create(context.Background(), &d); err != nil {
-			return nil, err
+		if cerr := repo.Create(context.Background(), &d); cerr != nil {
+			return nil, cerr
 		}
 	}
 
@@ -197,8 +195,8 @@ func bootstrapTemplate(client *pgc.Client) ([]template.Template, error) {
 	repo := postgres.NewTemplateRepository(client)
 
 	for _, d := range data {
-		if err := repo.Upsert(context.Background(), &d); err != nil {
-			return nil, err
+		if cerr := repo.Upsert(context.Background(), &d); cerr != nil {
+			return nil, cerr
 		}
 	}
 

@@ -49,7 +49,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 			},
 		}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{RuleService: mockedRuleService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 
 		mockedRuleService.EXPECT().List(ctx, rule.Filter{
 			Name:         dummyPayload.Name,
@@ -73,7 +73,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{RuleService: mockedRuleService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 		mockedRuleService.EXPECT().List(ctx, rule.Filter{
 			Name:         dummyPayload.Name,
 			Namespace:    dummyPayload.Namespace,
@@ -124,7 +124,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	t.Run("should update rule", func(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{RuleService: mockedRuleService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 		dummyResult := &rule.Rule{}
 		*dummyResult = *dummyPayload
 		dummyResult.Enabled = false
@@ -145,7 +145,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{RuleService: mockedRuleService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.ErrConflict).Once()
 
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
@@ -157,7 +157,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		ctx := context.Background()
 		mockedRuleService := &mocks.RuleService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), &api.Deps{RuleService: mockedRuleService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 		mockedRuleService.EXPECT().Upsert(ctx, dummyPayload).Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)

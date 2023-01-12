@@ -54,7 +54,7 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 	}
 
 	s.ctx = context.TODO()
-	migrate(s.ctx, logger, s.client, dbConfig)
+	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
 	s.repository = postgres.NewAlertRepository(s.client)
 
 	_, err = bootstrapProvider(s.client)

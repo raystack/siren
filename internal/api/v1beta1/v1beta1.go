@@ -3,16 +3,18 @@ package v1beta1
 import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/odpf/siren/internal/api"
 	"github.com/odpf/siren/pkg/errors"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type GRPCServer struct {
 	newrelic *newrelic.Application
 	logger   log.Logger
+	headers  api.HeadersConfig
 	sirenv1beta1.UnimplementedSirenServiceServer
 	templateService     api.TemplateService
 	ruleService         api.RuleService
@@ -27,9 +29,11 @@ type GRPCServer struct {
 func NewGRPCServer(
 	nr *newrelic.Application,
 	logger log.Logger,
+	headers api.HeadersConfig,
 	apiDeps *api.Deps) *GRPCServer {
 	return &GRPCServer{
 		newrelic:            nr,
+		headers:             headers,
 		logger:              logger,
 		templateService:     apiDeps.TemplateService,
 		ruleService:         apiDeps.RuleService,

@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/odpf/salt/log"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/notification/mocks"
-	"github.com/stretchr/testify/mock"
 )
 
 const testReceiverType = "test"
@@ -27,7 +28,7 @@ func TestHandler_MessageHandler(t *testing.T) {
 					ReceiverType: "random",
 				},
 			},
-			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 			},
 			wantErr: true,

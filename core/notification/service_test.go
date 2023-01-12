@@ -2,30 +2,31 @@ package notification_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/odpf/salt/log"
+	"github.com/stretchr/testify/mock"
+
+	"github.com/odpf/siren/core/idempotency"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/notification/mocks"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/subscription"
-	"github.com/stretchr/testify/mock"
+	"github.com/odpf/siren/pkg/errors"
 )
 
 const testPluginType = "test"
 
-func TestNotificationService_DispatchToReceiver(t *testing.T) {
+func TestService_DispatchToReceiver(t *testing.T) {
 	testCases := []struct {
 		name    string
 		setup   func(*mocks.ReceiverService, *mocks.Queuer, *mocks.Notifier)
 		n       notification.Notification
 		wantErr bool
 	}{
-
 		{
 			name: "should return error if failed to transform notification to messages",
-			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(&receiver.Receiver{}, nil)
 			},
@@ -36,7 +37,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 		},
 		{
 			name: "should return error if there is an error when fetching receiver",
-			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(rs *mocks.ReceiverService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(nil, errors.New("some error"))
 			},
@@ -104,7 +105,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 			}
 
 			ns := notification.NewService(
-				log.NewNoop(), mockQueuer, mockReceiverService, nil, map[string]notification.Notifier{
+				log.NewNoop(), mockQueuer, nil, mockReceiverService, nil, map[string]notification.Notifier{
 					testPluginType: mockNotifier,
 				})
 
@@ -119,7 +120,7 @@ func TestNotificationService_DispatchToReceiver(t *testing.T) {
 	}
 }
 
-func TestNotificationService_DispatchToSubscribers(t *testing.T) {
+func TestService_DispatchToSubscribers(t *testing.T) {
 	testCases := []struct {
 		name    string
 		setup   func(*mocks.SubscriptionService, *mocks.Queuer, *mocks.Notifier)
@@ -128,7 +129,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 	}{
 		{
 			name: "should return error if there is an error when matching labels",
-			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
 			},
@@ -136,7 +137,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		},
 		{
 			name: "should return error if receiver type of a receiver is unknown",
-			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
@@ -154,7 +155,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		},
 		{
 			name: "should return error if there is no matching subscription",
-			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
 			},
@@ -162,7 +163,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 		},
 		{
 			name: "should return error if failed to transform notification to messages",
-			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, n *mocks.Notifier) {
+			setup: func(ss *mocks.SubscriptionService, q *mocks.Queuer, _ *mocks.Notifier) {
 				q.EXPECT().Type().Return("postgresql")
 				ss.EXPECT().
 					MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).
@@ -267,7 +268,7 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			}
 
 			ns := notification.NewService(
-				log.NewNoop(), mockQueuer, nil, mockSubscriptionService, map[string]notification.Notifier{
+				log.NewNoop(), mockQueuer, nil, nil, mockSubscriptionService, map[string]notification.Notifier{
 					testPluginType: mockNotifier,
 				})
 
@@ -278,6 +279,70 @@ func TestNotificationService_DispatchToSubscribers(t *testing.T) {
 			mockSubscriptionService.AssertExpectations(t)
 			mockQueuer.AssertExpectations(t)
 			mockNotifier.AssertExpectations(t)
+		})
+	}
+}
+
+func TestService_CheckAndInsertIdempotency(t *testing.T) {
+	var (
+		scope = "test-scope"
+		key   = "test-key"
+	)
+	testCases := []struct {
+		name    string
+		setup   func(*mocks.IdempotencyRepository)
+		scope   string
+		key     string
+		wantErr bool
+	}{
+		{
+			name: "should return error if idempotency exist and success",
+			setup: func(ir *mocks.IdempotencyRepository) {
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(nil, errors.ErrConflict)
+			},
+			scope:   scope,
+			key:     key,
+			wantErr: true,
+		},
+		{
+			name: "should return error if repository returning some error",
+			setup: func(ir *mocks.IdempotencyRepository) {
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(nil, errors.New("some error"))
+			},
+			scope:   scope,
+			key:     key,
+			wantErr: true,
+		},
+		{
+			name: "should return id and nil error if no idempotency exists",
+			setup: func(ir *mocks.IdempotencyRepository) {
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(&idempotency.Idempotency{
+					ID: 1,
+				}, nil)
+			},
+			scope:   scope,
+			key:     key,
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockIdempotencyRepository := new(mocks.IdempotencyRepository)
+
+			if tc.setup != nil {
+				tc.setup(mockIdempotencyRepository)
+			}
+
+			ns := notification.NewService(
+				log.NewNoop(), nil, mockIdempotencyRepository, nil, nil, nil)
+
+			_, err := ns.CheckAndInsertIdempotency(context.Background(), tc.scope, tc.key)
+
+			if (err != nil) != tc.wantErr {
+				t.Errorf("NotificationService.CheckAndInsertIdempotency() error = %v, wantErr %v", err, tc.wantErr)
+			}
+
+			mockIdempotencyRepository.AssertExpectations(t)
 		})
 	}
 }
