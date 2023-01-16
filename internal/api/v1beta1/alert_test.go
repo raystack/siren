@@ -159,7 +159,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		mockNotificationService := new(mocks.NotificationService)
 
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -266,7 +266,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 				},
 			},
 		}
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ID:           1,
 			ProviderID:   1,
 			ResourceName: "foo",
@@ -444,7 +444,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		}
 
-		dummyAlerts := []*alert.Alert{{
+		dummyAlerts := []alert.Alert{{
 			ProviderID:   1,
 			ResourceName: "foo",
 			MetricName:   "bar",

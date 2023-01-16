@@ -41,13 +41,9 @@ func NewAlertRepository(client *pgc.Client) *AlertRepository {
 	return &AlertRepository{client, "alerts"}
 }
 
-func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
-	if alrt == nil {
-		return errors.New("alert domain is nil")
-	}
-
+func (r AlertRepository) Create(ctx context.Context, alrt alert.Alert) (alert.Alert, error) {
 	var alertModel model.Alert
-	alertModel.FromDomain(*alrt)
+	alertModel.FromDomain(alrt)
 
 	var newAlertModel model.Alert
 	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, alertInsertQuery,
@@ -62,12 +58,12 @@ func (r AlertRepository) Create(ctx context.Context, alrt *alert.Alert) error {
 	).StructScan(&newAlertModel); err != nil {
 		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrForeignKeyViolation) {
-			return alert.ErrRelation
+			return alert.Alert{}, alert.ErrRelation
 		}
-		return err
+		return alert.Alert{}, err
 	}
 
-	return nil
+	return *newAlertModel.ToDomain(), nil
 }
 
 func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {

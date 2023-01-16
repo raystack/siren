@@ -23,8 +23,8 @@ type Alert struct {
 	EndsAt       string            `mapstructure:"endsAt"`
 }
 
-func isValidCortexAlert(alrt *alert.Alert) bool {
-	return alrt != nil && !(alrt.ResourceName == "" || alrt.Rule == "" ||
+func isValidCortexAlert(alrt alert.Alert) bool {
+	return !(alrt.ResourceName == "" || alrt.Rule == "" ||
 		alrt.MetricValue == "" || alrt.MetricName == "" ||
 		alrt.Severity == "")
 }

@@ -109,7 +109,7 @@ func TestService_Create(t *testing.T) {
 		name              string
 		setup             func(*mocks.AlertRepository, *mocks.AlertTransformer)
 		alertsToBeCreated map[string]interface{}
-		expectedAlerts    []*alert.Alert
+		expectedAlerts    []alert.Alert
 		expectedFiringLen int
 		wantErr           bool
 	}{
@@ -124,15 +124,16 @@ func TestService_Create(t *testing.T) {
 		{
 			name: "should call repository Create method with proper arguments",
 			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
-				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
 				}, 1, nil)
-				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*alert.Alert")).Return(nil)
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("alert.Alert")).Return(alert.Alert{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
+					Rule: "lagHigh", TriggeredAt: timenow}, nil)
 			},
 			alertsToBeCreated: alertsToBeCreated,
 			expectedFiringLen: 1,
-			expectedAlerts: []*alert.Alert{
+			expectedAlerts: []alert.Alert{
 				{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 					Rule: "lagHigh", TriggeredAt: timenow},
 			},
@@ -140,11 +141,11 @@ func TestService_Create(t *testing.T) {
 		{
 			name: "should return error not found if repository return err relation",
 			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
-				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
 				}, 1, nil)
-				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(alert.ErrRelation)
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(alert.Alert{}, alert.ErrRelation)
 			},
 			alertsToBeCreated: alertsToBeCreated,
 			wantErr:           true,
@@ -152,11 +153,11 @@ func TestService_Create(t *testing.T) {
 		{
 			name: "should handle errors from repository",
 			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
-				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]*alert.Alert{
+				at.EXPECT().TransformToAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
 				}, 1, nil)
-				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(errors.New("random error"))
+				ar.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.Anything).Return(alert.Alert{}, errors.New("random error"))
 			},
 			alertsToBeCreated: alertsToBeCreated,
 			wantErr:           true,

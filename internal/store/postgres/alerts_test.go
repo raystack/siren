@@ -158,7 +158,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 func (s *AlertsRepositoryTestSuite) TestCreate() {
 	type testCase struct {
 		Description   string
-		AlertToCreate *alert.Alert
+		AlertToCreate alert.Alert
 		ExpectedID    uint64
 		ErrString     string
 	}
@@ -166,7 +166,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 	var testCases = []testCase{
 		{
 			Description: "should create an alert",
-			AlertToCreate: &alert.Alert{
+			AlertToCreate: alert.Alert{
 				ProviderID:   1,
 				ResourceName: "odpf-kafka-stream",
 				MetricName:   "cpu_usage_user",
@@ -178,7 +178,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 		},
 		{
 			Description: "should return error foreign key if provider id does not exist",
-			AlertToCreate: &alert.Alert{
+			AlertToCreate: alert.Alert{
 				ProviderID:   1000,
 				ResourceName: "odpf-kafka-stream",
 				MetricName:   "cpu_usage_user",
@@ -188,15 +188,11 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			},
 			ErrString: "provider id does not exist",
 		},
-		{
-			Description: "should return error if alert is nil",
-			ErrString:   "alert domain is nil",
-		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			err := s.repository.Create(s.ctx, tc.AlertToCreate)
+			_, err := s.repository.Create(s.ctx, tc.AlertToCreate)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
