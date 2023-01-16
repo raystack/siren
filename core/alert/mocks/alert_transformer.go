@@ -24,15 +24,15 @@ func (_m *AlertTransformer) EXPECT() *AlertTransformer_Expecter {
 }
 
 // TransformToAlerts provides a mock function with given fields: ctx, providerID, namespaceID, body
-func (_m *AlertTransformer) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
+func (_m *AlertTransformer) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]alert.Alert, int, error) {
 	ret := _m.Called(ctx, providerID, namespaceID, body)
 
-	var r0 []*alert.Alert
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, map[string]interface{}) []*alert.Alert); ok {
+	var r0 []alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, map[string]interface{}) []alert.Alert); ok {
 		r0 = rf(ctx, providerID, namespaceID, body)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*alert.Alert)
+			r0 = ret.Get(0).([]alert.Alert)
 		}
 	}
 
@@ -74,7 +74,7 @@ func (_c *AlertTransformer_TransformToAlerts_Call) Run(run func(ctx context.Cont
 	return _c
 }
 
-func (_c *AlertTransformer_TransformToAlerts_Call) Return(_a0 []*alert.Alert, _a1 int, _a2 error) *AlertTransformer_TransformToAlerts_Call {
+func (_c *AlertTransformer_TransformToAlerts_Call) Return(_a0 []alert.Alert, _a1 int, _a2 error) *AlertTransformer_TransformToAlerts_Call {
 	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }

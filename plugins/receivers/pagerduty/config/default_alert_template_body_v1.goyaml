@@ -1,4 +1,4 @@
-[[define "pagerduty.event_type" -]]
+[[- define "pagerduty.event_type" -]]
   [[if eq .Data.status "firing" -]]
   trigger
   [[- else if eq .Data.status "resolved" -]]
@@ -16,8 +16,8 @@ description: ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .
 client: Siren
 details:
   Labels:
-  [[ range $index, $element := .Labels ]]- [[ $index ]] = [[ $element ]]
+  [[ range $index, $element := .Labels ]]- "[[ $index ]] = [[ $element ]]"
   [[ end ]]
   Annotations:
-  [[ range $index, $element := .Data ]]- [[ $index  ]] = [[ $element ]]
-  [[ end ]][[if .Data.generatorUrl ]]Source: [[ .Data.generatorUrl ]][[ end ]]
+  [[ range $index, $element := .Data ]]- "[[ $index  ]] = [[ $element ]]"
+  [[ end ]]

@@ -24,15 +24,15 @@ func (_m *AlertService) EXPECT() *AlertService_Expecter {
 }
 
 // CreateAlerts provides a mock function with given fields: ctx, providerType, providerID, namespaceID, body
-func (_m *AlertService) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
+func (_m *AlertService) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]alert.Alert, int, error) {
 	ret := _m.Called(ctx, providerType, providerID, namespaceID, body)
 
-	var r0 []*alert.Alert
-	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64, map[string]interface{}) []*alert.Alert); ok {
+	var r0 []alert.Alert
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64, uint64, map[string]interface{}) []alert.Alert); ok {
 		r0 = rf(ctx, providerType, providerID, namespaceID, body)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*alert.Alert)
+			r0 = ret.Get(0).([]alert.Alert)
 		}
 	}
 
@@ -75,7 +75,7 @@ func (_c *AlertService_CreateAlerts_Call) Run(run func(ctx context.Context, prov
 	return _c
 }
 
-func (_c *AlertService_CreateAlerts_Call) Return(_a0 []*alert.Alert, _a1 int, _a2 error) *AlertService_CreateAlerts_Call {
+func (_c *AlertService_CreateAlerts_Call) Return(_a0 []alert.Alert, _a1 int, _a2 error) *AlertService_CreateAlerts_Call {
 	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }

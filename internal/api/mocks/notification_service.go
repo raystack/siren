@@ -51,9 +51,9 @@ type NotificationService_CheckAndInsertIdempotency_Call struct {
 }
 
 // CheckAndInsertIdempotency is a helper method to define mock.On call
-//  - ctx context.Context
-//  - scope string
-//  - key string
+//   - ctx context.Context
+//   - scope string
+//   - key string
 func (_e *NotificationService_Expecter) CheckAndInsertIdempotency(ctx interface{}, scope interface{}, key interface{}) *NotificationService_CheckAndInsertIdempotency_Call {
 	return &NotificationService_CheckAndInsertIdempotency_Call{Call: _e.mock.On("CheckAndInsertIdempotency", ctx, scope, key)}
 }
@@ -168,8 +168,8 @@ type NotificationService_MarkIdempotencyAsSuccess_Call struct {
 }
 
 // MarkIdempotencyAsSuccess is a helper method to define mock.On call
-//  - ctx context.Context
-//  - id uint64
+//   - ctx context.Context
+//   - id uint64
 func (_e *NotificationService_Expecter) MarkIdempotencyAsSuccess(ctx interface{}, id interface{}) *NotificationService_MarkIdempotencyAsSuccess_Call {
 	return &NotificationService_MarkIdempotencyAsSuccess_Call{Call: _e.mock.On("MarkIdempotencyAsSuccess", ctx, id)}
 }
@@ -206,8 +206,8 @@ type NotificationService_RemoveIdempotencies_Call struct {
 }
 
 // RemoveIdempotencies is a helper method to define mock.On call
-//  - ctx context.Context
-//  - TTL time.Duration
+//   - ctx context.Context
+//   - TTL time.Duration
 func (_e *NotificationService_Expecter) RemoveIdempotencies(ctx interface{}, TTL interface{}) *NotificationService_RemoveIdempotencies_Call {
 	return &NotificationService_RemoveIdempotencies_Call{Call: _e.mock.On("RemoveIdempotencies", ctx, TTL)}
 }

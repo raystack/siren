@@ -18,7 +18,7 @@ func NewService(repository Repository, registry map[string]AlertTransformer) *Se
 	return &Service{repository, registry}
 }
 
-func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*Alert, int, error) {
+func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]Alert, int, error) {
 	pluginService, err := s.getProviderPluginService(providerType)
 	if err != nil {
 		return nil, 0, err
@@ -30,13 +30,16 @@ func (s *Service) CreateAlerts(ctx context.Context, providerType string, provide
 	}
 
 	for _, alrt := range alerts {
-		if err := s.repository.Create(ctx, alrt); err != nil {
+		createdAlert, err := s.repository.Create(ctx, alrt)
+		if err != nil {
 			if errors.Is(err, ErrRelation) {
 				return nil, 0, errors.ErrNotFound.WithMsgf(err.Error())
 			}
 			return nil, 0, err
 		}
+		alrt.ID = createdAlert.ID
 	}
+
 	return alerts, firingLen, nil
 }
 

@@ -189,12 +189,12 @@ func (ns *Service) DispatchToSubscribers(ctx context.Context, namespaceID uint64
 				if templateBody != "" {
 					renderedDetailString, err := template.RenderBody(templateBody, n)
 					if err != nil {
-						return errors.ErrInvalid.WithMsgf("failed to render template: %s", err.Error())
+						return errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", rcv.Type, err.Error())
 					}
 
 					var messageDetails map[string]interface{}
 					if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
-						return errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template: %s", err.Error())
+						return errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", rcv.Type, err.Error(), renderedDetailString)
 					}
 					message.Details = messageDetails
 				}

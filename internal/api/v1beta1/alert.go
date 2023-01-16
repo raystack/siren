@@ -2,6 +2,7 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/odpf/siren/core/alert"
@@ -84,13 +85,15 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 		items = append(items, alertHistoryItem)
 	}
 
-	// Publish to notification service
-	for _, a := range createdAlerts {
-		n := AlertPBToNotification(a, firingLen, a.GroupKey, time.Now())
+	if len(createdAlerts) > 0 {
+		// Publish to notification service
+		n := AlertsToNotification(createdAlerts, firingLen, time.Now())
 
 		if err := s.notificationService.DispatchToSubscribers(ctx, namespaceID, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
+	} else {
+		s.logger.Warn("failed to send alert a as notification, empty created alerts")
 	}
 
 	return items, nil
@@ -102,8 +105,8 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 // - status "FIRING"/"RESOLVED"
 // - resource
 // - template
-// - metricValue
-// - metricName
+// - metric_value
+// - metric_name
 // - generatorUrl
 // - numAlertsFiring
 // - dashboard
@@ -113,31 +116,70 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 // - severity "WARNING"/"CRITICAL"
 // - alertname
 // - (others labels defined in rules)
-func AlertPBToNotification(
-	a *alert.Alert,
+func AlertsToNotification(
+	as []alert.Alert,
 	firingLen int,
-	groupKey string,
 	createdTime time.Time,
 ) notification.Notification {
-	id := "cortex-" + a.Fingerprint
+	sampleAlert := as[0]
+	id := "cortex-" + sampleAlert.Fingerprint
 
 	data := map[string]interface{}{}
 
-	for k, v := range a.Annotations {
-		data[k] = v
+	mergedAnnotations := map[string][]string{}
+	for _, a := range as {
+		for k, v := range a.Annotations {
+			mergedAnnotations[k] = append(mergedAnnotations[k], v)
+		}
 	}
 
-	data["status"] = a.Status
-	data["generatorUrl"] = a.GeneratorURL
+	// make unique
+	for k, v := range mergedAnnotations {
+		mergedAnnotations[k] = removeDuplicateStringValues(v)
+	}
+
+	// render annotations
+	for k, vSlice := range mergedAnnotations {
+		for _, v := range vSlice {
+			if _, ok := data[k]; ok {
+				data[k] = fmt.Sprintf("%s\n%s", data[k], v)
+			} else {
+				data[k] = v
+			}
+		}
+	}
+
+	data["status"] = sampleAlert.Status
+	data["generatorUrl"] = sampleAlert.GeneratorURL
 	data["numAlertsFiring"] = firingLen
-	data["groupKey"] = groupKey
 	data["id"] = id
+
+	labels := map[string]string{}
+
+	for _, a := range as {
+		for k, v := range a.Labels {
+			labels[k] = v
+		}
+	}
 
 	return notification.Notification{
 		ID:        id,
 		Data:      data,
-		Labels:    a.Labels,
+		Labels:    labels,
 		Template:  template.ReservedName_SystemDefault,
 		CreatedAt: createdTime,
 	}
+}
+
+func removeDuplicateStringValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, v := range strSlice {
+		if _, value := keys[v]; !value {
+			keys[v] = true
+			list = append(list, v)
+		}
+	}
+	return list
 }

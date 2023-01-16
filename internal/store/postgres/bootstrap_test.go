@@ -171,7 +171,7 @@ func bootstrapAlert(client *pgc.Client) error {
 	repo := postgres.NewAlertRepository(client)
 
 	for _, d := range data {
-		err := repo.Create(context.Background(), &d)
+		_, err := repo.Create(context.Background(), d)
 		if err != nil {
 			return err
 		}

@@ -62,14 +62,14 @@ func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOpt
 }
 
 // TransformToAlerts is a function to transform alert body in hook API to []*alert.Alert
-func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) {
+func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]alert.Alert, int, error) {
 	var groupAlert = &GroupAlert{}
 	if err := mapstructure.Decode(body, groupAlert); err != nil {
 		return nil, 0, err
 	}
 
 	var (
-		alerts        = make([]*alert.Alert, 0)
+		alerts        = make([]alert.Alert, 0)
 		badAlertCount = 0
 		firingLen     = 0
 	)
@@ -91,7 +91,7 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 			break
 		}
 
-		alrt := &alert.Alert{
+		alrt := alert.Alert{
 			ProviderID:   providerID,
 			NamespaceID:  namespaceID,
 			ResourceName: item.Annotations["resource"],
@@ -109,6 +109,7 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 			Fingerprint:  item.Fingerprint,
 		}
 		if !isValidCortexAlert(alrt) {
+			s.logger.Error("invalid alerts", "group key", groupAlert.GroupKey, "alert detail", alrt)
 			badAlertCount++
 			continue
 		}
@@ -116,7 +117,7 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 	}
 
 	if badAlertCount > 0 {
-		s.logger.Error("parameters are missing for alert", "alert count", badAlertCount)
+		s.logger.Error("parameters are missing for alert", "group key", groupAlert.GroupKey, "alert count", badAlertCount)
 		return alerts, firingLen, nil
 	}
 

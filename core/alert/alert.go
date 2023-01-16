@@ -7,7 +7,7 @@ import (
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname AlertRepository --filename alert_repository.go --output=./mocks
 type Repository interface {
-	Create(context.Context, *Alert) error
+	Create(context.Context, Alert) (Alert, error)
 	List(context.Context, Filter) ([]Alert, error)
 }
 
