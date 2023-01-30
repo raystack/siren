@@ -21,8 +21,8 @@ require (
 	github.com/lib/pq v1.10.4
 	github.com/mcuadros/go-defaults v1.2.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/newrelic/go-agent/v3 v3.12.0
-	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.1
+	github.com/newrelic/go-agent/v3 v3.20.2
+	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.2
 	github.com/newrelic/newrelic-opencensus-exporter-go v0.4.0
 	github.com/odpf/salt v0.2.5-0.20221122033807-b6caa1b617bf
 	github.com/ory/dockertest/v3 v3.9.1
