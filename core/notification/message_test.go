@@ -1,6 +1,7 @@
 package notification_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -8,9 +9,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/notification/mocks"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestMessage_Initialize(t *testing.T) {
+func TestMessage_InitMessage(t *testing.T) {
 	var (
 		testID             = "some-id"
 		testTimeNow        = time.Now()
@@ -18,16 +21,20 @@ func TestMessage_Initialize(t *testing.T) {
 	)
 	testCases := []struct {
 		name                string
+		setup               func(*mocks.Notifier)
 		n                   notification.Notification
 		receiverType        string
 		notificationConfigs map[string]interface{}
-		want                *notification.Message
-		wantErr             bool
+		want                notification.Message
+		errString           string
 	}{
 		{
 			name: "all notification labels and data should be merged to message detail and data takes precedence if key conflict",
+			setup: func(n *mocks.Notifier) {
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, nil)
+			},
 			n: notification.Notification{
-				ID: "notification-id",
+				Type: notification.TypeSubscriber,
 				Labels: map[string]string{
 					"labelkey1": "value1",
 					"samekey":   "label_value",
@@ -37,15 +44,15 @@ func TestMessage_Initialize(t *testing.T) {
 					"samekey": "var_value",
 				},
 			},
-			want: &notification.Message{
+			want: notification.Message{
 				ID:     testID,
 				Status: notification.MessageStatusEnqueued,
 				Details: map[string]interface{}{
-					"labelkey1": "value1",
-					"varkey1":   "value1",
-					"samekey":   "var_value",
+					"labelkey1":                             "value1",
+					"varkey1":                               "value1",
+					"samekey":                               "var_value",
+					notification.DetailsKeyNotificationType: notification.TypeSubscriber,
 				},
-				MaxTries:  notification.DefaultMaxTries,
 				CreatedAt: testTimeNow,
 				UpdatedAt: testTimeNow,
 				ExpiredAt: testTimeNow.Add(testExpiryDuration),
@@ -54,8 +61,15 @@ func TestMessage_Initialize(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := &notification.Message{}
-			m.Initialize(
+			mockNotifierPlugin := new(mocks.Notifier)
+
+			if tc.setup != nil {
+				tc.setup(mockNotifierPlugin)
+			}
+
+			m, err := notification.InitMessage(
+				context.TODO(),
+				mockNotifierPlugin,
 				tc.n,
 				tc.receiverType,
 				tc.notificationConfigs,
@@ -63,8 +77,15 @@ func TestMessage_Initialize(t *testing.T) {
 				notification.InitWithCreateTime(testTimeNow),
 				notification.InitWithExpiryDuration(testExpiryDuration),
 			)
+			if err != nil {
+				if err.Error() != tc.errString {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.errString)
+				}
+			}
 
-			if diff := cmp.Diff(m, tc.want, cmpopts.IgnoreUnexported(notification.Message{})); diff != "" {
+			if diff := cmp.Diff(m, tc.want,
+				cmpopts.IgnoreUnexported(notification.Message{}),
+				cmpopts.IgnoreFields(notification.Message{}, "MaxTries")); diff != "" {
 				t.Errorf("Notification.ToMessage() diff = %v", diff)
 			}
 		})
@@ -84,7 +105,6 @@ func TestMessage_Mark(t *testing.T) {
 			"labelkey1": "value1",
 			"varkey1":   "value1",
 		},
-		MaxTries:  notification.DefaultMaxTries,
 		CreatedAt: createTime,
 		UpdatedAt: createTime,
 		ExpiredAt: expiredAt,
@@ -104,7 +124,9 @@ func TestMessage_Mark(t *testing.T) {
 
 		m.MarkFailed(testTimeNow, true, err)
 
-		if diff := cmp.Diff(m, expectedMessage, cmpopts.IgnoreUnexported(notification.Message{})); diff != "" {
+		if diff := cmp.Diff(m, expectedMessage,
+			cmpopts.IgnoreUnexported(notification.Message{}),
+			cmpopts.IgnoreFields(notification.Message{}, "MaxTries")); diff != "" {
 			t.Errorf("result not match, diff = %v", diff)
 		}
 	})
@@ -120,7 +142,9 @@ func TestMessage_Mark(t *testing.T) {
 
 		m.MarkPending(testTimeNow)
 
-		if diff := cmp.Diff(m, expectedMessage, cmpopts.IgnoreUnexported(notification.Message{})); diff != "" {
+		if diff := cmp.Diff(m, expectedMessage,
+			cmpopts.IgnoreUnexported(notification.Message{}),
+			cmpopts.IgnoreFields(notification.Message{}, "MaxTries")); diff != "" {
 			t.Errorf("result not match, diff = %v", diff)
 		}
 	})
@@ -136,7 +160,9 @@ func TestMessage_Mark(t *testing.T) {
 
 		m.MarkPublished(testTimeNow)
 
-		if diff := cmp.Diff(m, expectedMessage, cmpopts.IgnoreUnexported(notification.Message{})); diff != "" {
+		if diff := cmp.Diff(m, expectedMessage,
+			cmpopts.IgnoreUnexported(notification.Message{}),
+			cmpopts.IgnoreFields(notification.Message{}, "MaxTries")); diff != "" {
 			t.Errorf("result not match, diff = %v", diff)
 		}
 	})

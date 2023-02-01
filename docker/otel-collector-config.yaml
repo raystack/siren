@@ -5,10 +5,6 @@ processors:
   batch:
 
 exporters:
-  prometheusremotewrite:
-    endpoint: "http://localhost:9000/api/v1/push"
-    tls:
-      insecure: true
   otlp:
     endpoint: https://otlp.nr-data.net:4317
     headers:

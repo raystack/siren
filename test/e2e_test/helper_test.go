@@ -17,7 +17,7 @@ import (
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func uploadTemplate(ctx context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {

@@ -1,0 +1,21 @@
+[
+    {
+        "namespace_id": 1,
+        "notification_id": "receiver",
+        "subscription_id": 2,
+        "receiver_id": 3,
+        "alert_ids": [],
+        "silence_ids": []
+    },
+    {
+        "namespace_id": 1,
+        "type": "subscriber",
+        "data": {
+            "data-key": "data-value"
+        },
+        "labels": {
+            "label-key": "label-value"
+        },
+        "template": ""
+    }
+]

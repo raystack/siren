@@ -34,6 +34,7 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
+		dockertestx.PostgresWithVersionTag("13"),
 	)
 	if err != nil {
 		s.T().Fatal(err)
@@ -55,6 +56,7 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 
 	s.ctx = context.TODO()
 	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
+
 	s.repository = postgres.NewAlertRepository(s.client)
 
 	_, err = bootstrapProvider(s.client)
@@ -64,8 +66,8 @@ func (s *AlertsRepositoryTestSuite) SetupSuite() {
 }
 
 func (s *AlertsRepositoryTestSuite) SetupTest() {
-	var err error
-	if err = bootstrapAlert(s.client); err != nil {
+	_, err := bootstrapAlert(s.client)
+	if err != nil {
 		s.T().Fatal(err)
 	}
 }
@@ -196,6 +198,76 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+		})
+	}
+}
+
+func (s *AlertsRepositoryTestSuite) TestBulkUpdateSilence() {
+	type testCase struct {
+		Description    string
+		SilenceStatus  string
+		ExpectedAlerts []alert.Alert
+		ErrString      string
+	}
+
+	var testCases = []testCase{
+		{
+			Description:   "should update 2 alerts to silence",
+			SilenceStatus: alert.SilenceStatusTotal,
+			ExpectedAlerts: []alert.Alert{
+				{
+					ID:            2,
+					ProviderID:    1,
+					ResourceName:  "odpf-kafka-2",
+					MetricName:    "cpu_usage_user",
+					MetricValue:   "97.95",
+					Severity:      "WARNING",
+					Rule:          "cpu-usage",
+					SilenceStatus: alert.SilenceStatusTotal,
+				},
+				{
+					ID:            3,
+					ProviderID:    1,
+					ResourceName:  "odpf-kafka-1",
+					MetricName:    "cpu_usage_user",
+					MetricValue:   "98.30",
+					Severity:      "CRITICAL",
+					Rule:          "cpu-usage",
+					SilenceStatus: alert.SilenceStatusTotal,
+				},
+			},
+		},
+		{
+			Description: "should return error foreign key if provider id does not exist",
+			ErrString:   "err",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.BulkUpdateSilence(s.ctx, []int64{2, 3}, tc.SilenceStatus)
+			if err != nil {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if len(tc.ExpectedAlerts) != 0 {
+				alerts, err := s.repository.List(s.ctx, alert.Filter{
+					SilenceID: "",
+				})
+				s.Assert().NoError(err)
+
+				var silencedAlerts []alert.Alert
+				for _, al := range alerts {
+					if al.SilenceStatus != "" {
+						silencedAlerts = append(silencedAlerts, al)
+					}
+				}
+
+				if diff := cmp.Diff(silencedAlerts, tc.ExpectedAlerts, cmpopts.IgnoreFields(alert.Alert{}, "TriggeredAt", "CreatedAt", "UpdatedAt")); diff != "" {
+					s.T().Fatalf("got diff %v", diff)
 				}
 			}
 		})
