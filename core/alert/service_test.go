@@ -16,7 +16,7 @@ import (
 func TestService_List(t *testing.T) {
 	ctx := context.TODO()
 
-	t.Run("should call repository Get method with proper arguments and return result in domain's type", func(t *testing.T) {
+	t.Run("should call repository List method with proper arguments and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.AlertRepository{}
 		dummyService := alert.NewService(repositoryMock, nil, nil)
 		timenow := time.Now()
