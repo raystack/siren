@@ -9,7 +9,7 @@
 [[- end]]
 event_type: "[[template "pagerduty.event_type" . ]]"
 [[if .Data.id]]incident_key: "[[.Data.id]]"[[ end ]]
-description: ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.num_alerts_firing ]][[ end ]])
+description: ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.numAlertsFiring ]][[ end ]])
   [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
   [[- else ]] *([[ .Labels.severity | toUpper ]])*
   [[- end]] [[ .Labels.alertname ]]
