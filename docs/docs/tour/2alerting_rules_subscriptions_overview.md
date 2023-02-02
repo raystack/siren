@@ -527,7 +527,7 @@ For details on a alert, try: siren alert view <id>
 We also expect notifications have been published to the receiver id `2`. You can check a new notification is already added in `./out-file-sink2.json` with this value.
 
 ```json
-{"environment":"integration","generator_url":"","groupKey":"{}:{severity=\"WARNING\"}","metricName":"test_alert","metricValue":"1","num_alerts_firing":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","team":"odpf","template":"alert_test"}
+{"environment":"integration","generatorUrl":"","groupKey":"{}:{severity=\"WARNING\"}","metricName":"test_alert","metricValue":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","team":"odpf","template":"alert_test"}
 ```
 
 ## What Next?

@@ -13,7 +13,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/idempotency"
 	"github.com/odpf/siren/internal/store/postgres"
 	"github.com/odpf/siren/pkg/errors"
 	"github.com/odpf/siren/pkg/pgc"
@@ -36,7 +36,6 @@ func (s *IdempotencyRepositoryTestSuite) SetupSuite() {
 		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
-		dockertestx.PostgresWithVersionTag("13"),
 	)
 	if err != nil {
 		s.T().Fatal(err)
@@ -81,7 +80,7 @@ func (s *IdempotencyRepositoryTestSuite) cleanup() error {
 }
 
 func (s *IdempotencyRepositoryTestSuite) TestInsertReturnOnConflict() {
-	data1 := &notification.Idempotency{
+	data1 := &idempotency.Idempotency{
 		Scope: "a-scope",
 		Key:   "key-1",
 	}
@@ -97,14 +96,14 @@ func (s *IdempotencyRepositoryTestSuite) TestInsertReturnOnConflict() {
 		res, err := s.repository.InsertOnConflictReturning(context.Background(), data1.Scope, data1.Key)
 		s.Assert().NoError(err)
 
-		if diff := cmp.Diff(data1, res, cmpopts.IgnoreFields(notification.Idempotency{}, "UpdatedAt")); diff != "" {
+		if diff := cmp.Diff(data1, res, cmpopts.IgnoreFields(idempotency.Idempotency{}, "UpdatedAt")); diff != "" {
 			s.T().Error(diff)
 		}
 	})
 }
 
 func (s *IdempotencyRepositoryTestSuite) TestUpdateSuccess() {
-	data := &notification.Idempotency{
+	data := &idempotency.Idempotency{
 		Scope: "a-scope",
 		Key:   "existing-key-1",
 	}
@@ -154,14 +153,14 @@ func (s *IdempotencyRepositoryTestSuite) TestDelete() {
 	s.Require().Nil(err)
 
 	s.Run("should return not found if no rows outside TTL", func() {
-		err := s.repository.Delete(s.ctx, notification.IdempotencyFilter{
+		err := s.repository.Delete(s.ctx, idempotency.Filter{
 			TTL: time.Hour * time.Duration(10000),
 		})
 		s.Assert().EqualError(err, errors.ErrNotFound.Error())
 	})
 
 	s.Run("should remove all idempotencies that are outside TTL", func() {
-		err := s.repository.Delete(s.ctx, notification.IdempotencyFilter{
+		err := s.repository.Delete(s.ctx, idempotency.Filter{
 			TTL: time.Second * time.Duration(60),
 		})
 		s.Assert().Nil(err)

@@ -1,25 +1,19 @@
 package notification
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
-	"go.opencensus.io/tag"
-	"gopkg.in/yaml.v3"
 )
 
 // MessageStatus determines the state of the message
 type MessageStatus string
 
 const (
-	defaultMaxTries int = 3
+	DefaultMaxTries = 3
 
 	// additional details
-	DetailsKeyNotificationType = "notification_type"
+	DetailsKeyRoutingMethod = "routing_method"
 
 	MessageStatusEnqueued  MessageStatus = "enqueued"
 	MessageStatusFailed    MessageStatus = "failed"
@@ -65,53 +59,42 @@ func InitWithMaxTries(mt int) MessageOption {
 
 // Message is the model to be sent for a specific subscription's receiver
 type Message struct {
-	ID           string
-	Status       MessageStatus
+	ID     string
+	Status MessageStatus
+
 	ReceiverType string
 	Configs      map[string]interface{} // the datasource to build vendor-specific configs
 	Details      map[string]interface{} // the datasource to build vendor-specific message
-	MaxTries     int
-	ExpiredAt    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	LastError    string
 
-	LastError string
+	MaxTries  int
 	TryCount  int
 	Retryable bool
+
+	ExpiredAt time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 
 	expiryDuration time.Duration
 }
 
 // Initialize initializes the message with some default value
 // or the customized value
-func InitMessage(
-	ctx context.Context,
-	notifierPlugin Notifier,
+func (m *Message) Initialize(
 	n Notification,
 	receiverType string,
-	messageConfig map[string]interface{},
+	notificationConfigs map[string]interface{},
 	opts ...MessageOption,
-) (Message, error) {
-	if notifierPlugin == nil {
-		return Message{}, errors.New("notifierPlugin cannot be nil")
-	}
+) {
+	var timeNow = time.Now()
 
-	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, messageConfig)
-	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-			tag.Upsert(telemetry.TagNotificationType, n.Type),
-			tag.Upsert(telemetry.TagReceiverType, receiverType),
-			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
-		)
+	m.ID = uuid.NewString()
+	m.Status = MessageStatusEnqueued
 
-		return Message{}, err
-	}
+	m.ReceiverType = receiverType
+	m.Configs = notificationConfigs
 
-	var (
-		timeNow = time.Now()
-		details = make(map[string]interface{})
-	)
-
+	details := make(map[string]interface{})
 	for k, v := range n.Labels {
 		details[k] = v
 	}
@@ -119,16 +102,12 @@ func InitMessage(
 		details[k] = v
 	}
 
-	m := &Message{
-		ID:           uuid.NewString(),
-		Status:       MessageStatusEnqueued,
-		ReceiverType: receiverType,
-		Configs:      newConfigs,
-		Details:      details,
-		MaxTries:     defaultMaxTries,
-		CreatedAt:    timeNow,
-		UpdatedAt:    timeNow,
-	}
+	m.Details = details
+
+	m.MaxTries = DefaultMaxTries
+
+	m.CreatedAt = timeNow
+	m.UpdatedAt = timeNow
 
 	for _, opt := range opts {
 		opt(m)
@@ -137,38 +116,6 @@ func InitMessage(
 	if m.expiryDuration != 0 {
 		m.ExpiredAt = m.CreatedAt.Add(m.expiryDuration)
 	}
-
-	//TODO fetch template if any, if not exist, check provider type, if exist use the default template, if not pass as-is
-	// if there is template, render and replace detail with the new one
-	if n.Template != "" {
-		var templateBody string
-
-		if template.IsReservedName(n.Template) {
-			templateBody = notifierPlugin.GetSystemDefaultTemplate()
-		}
-
-		if templateBody != "" {
-			renderedDetailString, err := template.RenderBody(templateBody, n)
-			if err != nil {
-				return Message{}, errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", receiverType, err.Error())
-			}
-
-			var messageDetails map[string]interface{}
-			if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
-				return Message{}, errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", receiverType, err.Error(), renderedDetailString)
-			}
-			m.Details = messageDetails
-		}
-	}
-
-	m.Details[DetailsKeyNotificationType] = n.Type
-
-	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-		tag.Upsert(telemetry.TagNotificationType, TypeSubscriber),
-		tag.Upsert(telemetry.TagMessageStatus, m.Status.String()),
-		tag.Upsert(telemetry.TagReceiverType, m.ReceiverType))
-
-	return *m, nil
 }
 
 // MarkFailed update message to the failed state
@@ -191,4 +138,9 @@ func (m *Message) MarkPublished(updatedAt time.Time) {
 	m.TryCount = m.TryCount + 1
 	m.Status = MessageStatusPublished
 	m.UpdatedAt = updatedAt
+}
+
+// AddDetail adds a custom kv string detail
+func (m *Message) AddStringDetail(key, value string) {
+	m.Details[key] = value
 }

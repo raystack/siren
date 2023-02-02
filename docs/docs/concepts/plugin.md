@@ -103,8 +103,8 @@ Data
 - template
 - metricValue
 - metricName
-- generator_url
-- num_alerts_firing
+- generatorUrl
+- numAlertsFiring
 - dashboard
 - playbook
 - summary

@@ -1399,9 +1399,8 @@ definitions:
   UpdateRuleResponse:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      rule:
+        $ref: '#/definitions/Rule'
   UpdateSubscriptionResponse:
     type: object
     properties:

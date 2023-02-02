@@ -3,25 +3,16 @@ package e2e_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/salt/db"
 	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/log"
 	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/silence"
 	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store/model"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -30,7 +21,6 @@ import (
 type CortexAlertingTestSuite struct {
 	suite.Suite
 	client       sirenv1beta1.SirenServiceClient
-	dbClient     *db.Client
 	cancelClient func()
 	appConfig    *config.Config
 	testBench    *CortexTest
@@ -68,8 +58,6 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 	// TODO host.docker.internal only works for docker-desktop to call a service in host (siren)
 	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://test:%d/v1beta1/alerts/cortex", apiPort)
 	s.appConfig.Providers.Cortex.GroupWaitDuration = "1s"
-	s.appConfig.Providers.Cortex.GroupIntervalDuration = "1s"
-	s.appConfig.Providers.Cortex.RepeatIntervalDuration = "1s"
 
 	// enable worker
 	s.appConfig.Notification.MessageHandler.Enabled = true
@@ -88,11 +76,6 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 		Type: "cortex",
 	})
 	s.Require().NoError(err)
-
-	s.dbClient, err = db.New(s.testBench.PGConfig)
-	if err != nil {
-		s.T().Fatal(err)
-	}
 }
 
 func (s *CortexAlertingTestSuite) TearDownTest() {
@@ -105,25 +88,6 @@ func (s *CortexAlertingTestSuite) TearDownTest() {
 
 func (s *CortexAlertingTestSuite) TestAlerting() {
 	ctx := context.Background()
-	triggerAlertBody := `
-	[
-		{
-			"state": "firing",
-			"value": 1,
-			"labels": {
-				"severity": "WARNING",
-				"team": "odpf",
-				"service": "some-service",
-				"environment": "integration"
-			},
-			"annotations": {
-				"resource": "test_alert",
-				"metric_name": "test_alert",
-				"metric_value": "1",
-				"template": "alert_test"
-			}
-		}
-	]`
 
 	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
 		Name:        "new-odpf-1",
@@ -168,6 +132,26 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 		})
 		s.Require().NoError(err)
 
+		triggerAlertBody := `
+		[
+			{
+				"state": "firing",
+				"value": 1,
+				"labels": {
+					"severity": "WARNING",
+					"team": "odpf",
+					"service": "some-service",
+					"environment": "integration"
+				},
+				"annotations": {
+					"resource": "test_alert",
+					"metric_name": "test_alert",
+					"metric_value": "1",
+					"template": "alert_test"
+				}
+			}
+		]`
+
 		for {
 			bodyBytes, err := triggerCortexAlert(s.testBench.NginxHost, "new-odpf-1", triggerAlertBody)
 			s.Assert().NoError(err)
@@ -181,13 +165,70 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 		}
 
 	})
-
 }
 
 func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
-	var (
-		ctx              = context.Background()
-		triggerAlertBody = `
+	ctx := context.Background()
+
+	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
+		Name:        "new-odpf-1",
+		Urn:         "new-odpf-1",
+		Provider:    1,
+		Credentials: nil,
+		Labels: map[string]string{
+			"key1": "value1",
+		},
+	})
+	s.Require().NoError(err)
+
+	s.Run("Incoming alert in alerts hook API with matching subscription labels should trigger notification", func() {
+		waitChan := make(chan struct{}, 1)
+
+		// add receiver odpf-http
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, err := io.ReadAll(r.Body)
+			defer r.Body.Close()
+			s.Assert().NoError(err)
+
+			expectedBody := `{"alertname":"some alert name","environment":"integration","generatorUrl":"","id":"cortex-684c979dcb5ffb96","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","numAlertsFiring":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
+			s.Assert().Equal(expectedBody, string(body))
+			close(waitChan)
+		}))
+		s.Require().Nil(err)
+		defer testServer.Close()
+
+		configs, err := structpb.NewStruct(map[string]interface{}{
+			"url": testServer.URL,
+		})
+		s.Require().NoError(err)
+		_, err = s.client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
+			Name: "odpf-http",
+			Type: "http",
+			Labels: map[string]string{
+				"entity": "odpf",
+				"kind":   "http",
+			},
+			Configurations: configs,
+		})
+		s.Require().NoError(err)
+
+		_, err = s.client.CreateSubscription(ctx, &sirenv1beta1.CreateSubscriptionRequest{
+			Urn:       "subscribe-http",
+			Namespace: 1,
+			Receivers: []*sirenv1beta1.ReceiverMetadata{
+				{
+					Id: 1,
+				},
+			},
+			Match: map[string]string{
+				"team":        "odpf",
+				"service":     "some-service",
+				"environment": "integration",
+			},
+		})
+		s.Require().NoError(err)
+
+		triggerAlertBody := `
 		{
 			"receiver": "http_subscribe-http-receiver-notification_receiverId_2_idx_0",
 			"status": "firing",
@@ -233,97 +274,6 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			"groupKey": "{}/{environment=\"integration\",team=\"odpf\"}:{}",
 			"truncatedAlerts": 0
 		}`
-	)
-
-	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-		Name:        "new-odpf-1",
-		Urn:         "new-odpf-1",
-		Provider:    1,
-		Credentials: nil,
-		Labels: map[string]string{
-			"key1": "value1",
-		},
-	})
-	s.Require().NoError(err)
-
-	s.Run("incoming alert in alerts hook API with matching subscription labels should trigger notification", func() {
-		waitChan := make(chan struct{}, 1)
-
-		// add receiver odpf-http
-		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			body, err := io.ReadAll(r.Body)
-			defer r.Body.Close()
-			s.Assert().NoError(err)
-
-			type sampleStruct struct {
-				ID               string `json:"id"`
-				Alertname        string `json:"alertname"`
-				Environment      string `json:"environment"`
-				GeneratorURL     string `json:"generator_url"`
-				Key1             string `json:"key1"`
-				Key2             string `json:"key2"`
-				MetricName       string `json:"metric_name"`
-				MetricValue      string `json:"metric_value"`
-				NotificationType string `json:"notification_type"`
-				NumAlertsFiring  int    `json:"num_alerts_firing"`
-				Resource         string `json:"resource"`
-				Service          string `json:"service"`
-				Severity         string `json:"severity"`
-				Status           string `json:"status"`
-				Firing           string `json:"firing"`
-				Summary          string `json:"summary"`
-				Team             string `json:"team"`
-				Template         string `json:"template"`
-			}
-
-			expectedBody := `{"alertname":"some alert name","environment":"integration","generator_url":"","id":"0998ab88-3f5d-4d4a-a66f-40960b105f37","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","notification_type":"subscriber","num_alerts_firing":1,"resource":"test_alert","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
-
-			var (
-				expectedStruct sampleStruct
-				resultStruct   sampleStruct
-			)
-
-			s.Require().NoError(json.Unmarshal([]byte(expectedBody), &expectedStruct))
-			s.Require().NoError(json.Unmarshal([]byte(body), &resultStruct))
-
-			if diff := cmp.Diff(expectedStruct, resultStruct, cmpopts.IgnoreFields(sampleStruct{}, "ID")); diff != "" {
-				s.T().Errorf("got diff: %v", diff)
-			}
-			close(waitChan)
-		}))
-		s.Require().Nil(err)
-		defer testServer.Close()
-
-		configs, err := structpb.NewStruct(map[string]interface{}{
-			"url": testServer.URL,
-		})
-		s.Require().NoError(err)
-		_, err = s.client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
-			Name: "odpf-http",
-			Type: "http",
-			Labels: map[string]string{
-				"entity": "odpf",
-				"kind":   "http",
-			},
-			Configurations: configs,
-		})
-		s.Require().NoError(err)
-
-		_, err = s.client.CreateSubscription(ctx, &sirenv1beta1.CreateSubscriptionRequest{
-			Urn:       "subscribe-http",
-			Namespace: 1,
-			Receivers: []*sirenv1beta1.ReceiverMetadata{
-				{
-					Id: 1,
-				},
-			},
-			Match: map[string]string{
-				"team":        "odpf",
-				"service":     "some-service",
-				"environment": "integration",
-			},
-		})
-		s.Require().NoError(err)
 
 		res, err := http.DefaultClient.Post(fmt.Sprintf("http://localhost:%d/v1beta1/alerts/cortex/1/1", s.appConfig.Service.Port), "application/json", bytes.NewBufferString(triggerAlertBody))
 		s.Require().NoError(err)
@@ -336,110 +286,6 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 		defer res.Body.Close()
 
 		<-waitChan
-	})
-
-	s.Run("triggering cortex alert with matching subscription labels and silence by labels should not trigger notification", func() {
-		targetExpression, err := structpb.NewStruct(map[string]interface{}{
-			"team":        "odpf",
-			"service":     "some-service",
-			"environment": "integration",
-		})
-		s.Require().NoError(err)
-
-		_, err = s.client.CreateSilence(ctx, &sirenv1beta1.CreateSilenceRequest{
-			NamespaceId:      1,
-			Type:             silence.TypeMatchers,
-			TargetExpression: targetExpression,
-		})
-		s.Require().NoError(err)
-
-		res, err := http.DefaultClient.Post(fmt.Sprintf("http://localhost:%d/v1beta1/alerts/cortex/1/1", s.appConfig.Service.Port), "application/json", bytes.NewBufferString(triggerAlertBody))
-		s.Require().NoError(err)
-
-		bodyJSon, _ := io.ReadAll(res.Body)
-		fmt.Println(string(bodyJSon))
-
-		_, err = io.Copy(io.Discard, res.Body)
-		s.Require().NoError(err)
-		defer res.Body.Close()
-
-		time.Sleep(5 * time.Second)
-
-		rows, err := s.dbClient.QueryxContext(context.Background(), `select * from notification_log`)
-		s.Require().NoError(err)
-
-		var notificationLogs []log.Notification
-		for rows.Next() {
-			var nlModel model.NotificationLog
-			s.Require().NoError(rows.StructScan(&nlModel))
-			notificationLogs = append(notificationLogs, nlModel.ToDomain())
-		}
-
-		// check alert ids of notification logs
-		if diff := cmp.Diff(notificationLogs,
-			[]log.Notification{
-				{
-					NamespaceID:    1,
-					ReceiverID:     1,
-					AlertIDs:       []int64{1},
-					SubscriptionID: 1,
-				},
-				{
-					NamespaceID:    1,
-					SubscriptionID: 1,
-					AlertIDs:       []int64{2},
-				},
-			},
-			cmpopts.IgnoreFields(log.Notification{}, "ID", "NotificationID", "SilenceIDs", "CreatedAt")); diff != "" {
-			s.T().Fatalf("found diff %v", diff)
-		}
-
-		var silenceExist bool
-		for _, nl := range notificationLogs {
-			if len(nl.SilenceIDs) != 0 {
-				silenceExist = true
-			}
-		}
-		s.Assert().True(silenceExist)
-
-		rows, err = s.dbClient.QueryxContext(context.Background(), `select * from alerts`)
-		s.Require().NoError(err)
-
-		var alerts []alert.Alert
-		for rows.Next() {
-			var alrtModel model.Alert
-			s.Require().NoError(rows.StructScan(&alrtModel))
-			alerts = append(alerts, *alrtModel.ToDomain())
-		}
-
-		if diff := cmp.Diff(alerts,
-			[]alert.Alert{
-				{
-					ID:           1,
-					ProviderID:   1,
-					NamespaceID:  1,
-					ResourceName: "test_alert",
-					MetricName:   "test_alert",
-					MetricValue:  "1",
-					Severity:     "WARNING",
-					Rule:         "alert_test",
-				},
-				{
-					ID:            2,
-					ProviderID:    1,
-					NamespaceID:   1,
-					ResourceName:  "test_alert",
-					MetricName:    "test_alert",
-					MetricValue:   "1",
-					Severity:      "WARNING",
-					Rule:          "alert_test",
-					SilenceStatus: alert.SilenceStatusTotal,
-				},
-			},
-			cmpopts.IgnoreFields(alert.Alert{}, "ID", "TriggeredAt", "CreatedAt", "UpdatedAt")); diff != "" {
-			s.T().Fatalf("found diff %v", diff)
-		}
-
 	})
 }
 
@@ -457,35 +303,15 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 	})
 	s.Require().NoError(err)
 
-	s.Run("triggering alert with matching subscription labels should trigger notification", func() {
+	s.Run("3. Triggering alert with matching subscription labels should trigger notification", func() {
 		waitChan := make(chan struct{}, 1)
 
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, err := io.ReadAll(r.Body)
 			s.Assert().NoError(err)
 
-			type sampleStruct struct {
-				ID               string `json:"id"`
-				Key1             string `json:"key1"`
-				Key2             string `json:"key2"`
-				Key3             string `json:"key3"`
-				NotificationType string `json:"notification_type"`
-				ReceiverID       string `json:"receiver_id"`
-			}
-
-			expectedBody := `{"key1":"value1","key2":"value2","key3":"value3","notification_type":"receiver","receiver_id":"1"}`
-			var (
-				expectedStruct sampleStruct
-				resultStruct   sampleStruct
-			)
-
-			s.Require().NoError(json.Unmarshal([]byte(expectedBody), &expectedStruct))
-			s.Require().NoError(json.Unmarshal([]byte(body), &resultStruct))
-
-			if diff := cmp.Diff(expectedStruct, resultStruct, cmpopts.IgnoreFields(sampleStruct{}, "ID")); diff != "" {
-				s.T().Errorf("got diff: %v", diff)
-			}
-
+			expectedBody := `{"key1":"value1","key2":"value2","key3":"value3","routing_method":"receiver"}`
+			s.Assert().Equal(expectedBody, string(body))
 			close(waitChan)
 		}))
 		s.Require().Nil(err)

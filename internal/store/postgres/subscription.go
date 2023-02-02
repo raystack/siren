@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
@@ -57,18 +56,14 @@ func NewSubscriptionRepository(client *pgc.Client) *SubscriptionRepository {
 func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filter) ([]subscription.Subscription, error) {
 	var queryBuilder = subscriptionListQueryBuilder
 
-	if len(flt.IDs) != 0 {
-		queryBuilder = queryBuilder.Where("id = any(?)", pq.Array(flt.IDs))
-	}
-
 	if flt.NamespaceID != 0 {
 		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
 	}
 
-	if len(flt.NotificationMatch) != 0 {
-		labelsJSON, err := json.Marshal(flt.NotificationMatch)
+	if len(flt.Labels) != 0 {
+		labelsJSON, err := json.Marshal(flt.Labels)
 		if err != nil {
-			return nil, errors.ErrInvalid.WithCausef("problem marshalling notification labels json to string with err: %s", err.Error())
+			return nil, errors.ErrInvalid.WithCausef("problem marshalling json to string with err: %s", err.Error())
 		}
 		queryBuilder = queryBuilder.Where(fmt.Sprintf("match <@ '%s'::jsonb", string(json.RawMessage(labelsJSON))))
 	}
@@ -89,6 +84,14 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		var subscriptionModel model.Subscription
 		if err := rows.StructScan(&subscriptionModel); err != nil {
 			return nil, err
+		}
+
+		// If filter by Labels and namespace ID exist, filter by namespace should be done in app
+		// to make use of search by labels with GIN index
+		if len(flt.Labels) != 0 && flt.NamespaceID != 0 {
+			if subscriptionModel.NamespaceID != flt.NamespaceID {
+				continue
+			}
 		}
 
 		subscriptionsDomain = append(subscriptionsDomain, *subscriptionModel.ToDomain())

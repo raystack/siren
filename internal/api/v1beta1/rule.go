@@ -76,7 +76,29 @@ func (s *GRPCServer) UpdateRule(ctx context.Context, req *sirenv1beta1.UpdateRul
 		return nil, s.generateRPCErr(err)
 	}
 
-	return &sirenv1beta1.UpdateRuleResponse{
-		Id: rl.ID,
-	}, nil
+	responseVariables := make([]*sirenv1beta1.Variables, 0)
+	for _, variable := range rl.Variables {
+		responseVariables = append(responseVariables, &sirenv1beta1.Variables{
+			Name:        variable.Name,
+			Type:        variable.Type,
+			Value:       variable.Value,
+			Description: variable.Description,
+		})
+	}
+
+	res := &sirenv1beta1.UpdateRuleResponse{
+		Rule: &sirenv1beta1.Rule{
+			Id:                rl.ID,
+			Name:              rl.Name,
+			Enabled:           rl.Enabled,
+			GroupName:         rl.GroupName,
+			Namespace:         rl.Namespace,
+			Template:          rl.Template,
+			Variables:         responseVariables,
+			ProviderNamespace: rl.ProviderNamespace,
+			CreatedAt:         timestamppb.New(rl.CreatedAt),
+			UpdatedAt:         timestamppb.New(rl.UpdatedAt),
+		},
+	}
+	return res, nil
 }

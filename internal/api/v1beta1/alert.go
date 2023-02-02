@@ -2,10 +2,12 @@ package v1beta1
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/template"
 	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -16,7 +18,6 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 		ProviderID:   req.GetProviderId(),
 		StartTime:    int64(req.GetStartTime()),
 		EndTime:      int64(req.GetEndTime()),
-		// SilenceID:    req.GetSilenced(),
 	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
@@ -25,15 +26,14 @@ func (s *GRPCServer) ListAlerts(ctx context.Context, req *sirenv1beta1.ListAlert
 	items := []*sirenv1beta1.Alert{}
 	for _, alert := range alerts {
 		item := &sirenv1beta1.Alert{
-			Id:            alert.ID,
-			ProviderId:    alert.ProviderID,
-			ResourceName:  alert.ResourceName,
-			MetricName:    alert.MetricName,
-			MetricValue:   alert.MetricValue,
-			Severity:      alert.Severity,
-			Rule:          alert.Rule,
-			TriggeredAt:   timestamppb.New(alert.TriggeredAt),
-			SilenceStatus: alert.SilenceStatus,
+			Id:           alert.ID,
+			ProviderId:   alert.ProviderID,
+			ResourceName: alert.ResourceName,
+			MetricName:   alert.MetricName,
+			MetricValue:  alert.MetricValue,
+			Severity:     alert.Severity,
+			Rule:         alert.Rule,
+			TriggeredAt:  timestamppb.New(alert.TriggeredAt),
 		}
 		items = append(items, item)
 	}
@@ -87,14 +87,99 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 
 	if len(createdAlerts) > 0 {
 		// Publish to notification service
-		n := notification.BuildFromAlerts(createdAlerts, firingLen, time.Now())
+		n := AlertsToNotification(createdAlerts, firingLen, time.Now())
 
-		if err := s.notificationService.Dispatch(ctx, n); err != nil {
+		if err := s.notificationService.DispatchToSubscribers(ctx, namespaceID, n); err != nil {
 			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 		}
 	} else {
-		s.logger.Warn("failed to send alert as notification, empty created alerts")
+		s.logger.Warn("failed to send alert a as notification, empty created alerts")
 	}
 
 	return items, nil
+}
+
+// Transform alerts and populate Data and Labels to be interpolated to the system-default template
+// .Data
+// - id
+// - status "FIRING"/"RESOLVED"
+// - resource
+// - template
+// - metric_value
+// - metric_name
+// - generatorUrl
+// - numAlertsFiring
+// - dashboard
+// - playbook
+// - summary
+// .Labels
+// - severity "WARNING"/"CRITICAL"
+// - alertname
+// - (others labels defined in rules)
+func AlertsToNotification(
+	as []alert.Alert,
+	firingLen int,
+	createdTime time.Time,
+) notification.Notification {
+	sampleAlert := as[0]
+	id := "cortex-" + sampleAlert.Fingerprint
+
+	data := map[string]interface{}{}
+
+	mergedAnnotations := map[string][]string{}
+	for _, a := range as {
+		for k, v := range a.Annotations {
+			mergedAnnotations[k] = append(mergedAnnotations[k], v)
+		}
+	}
+
+	// make unique
+	for k, v := range mergedAnnotations {
+		mergedAnnotations[k] = removeDuplicateStringValues(v)
+	}
+
+	// render annotations
+	for k, vSlice := range mergedAnnotations {
+		for _, v := range vSlice {
+			if _, ok := data[k]; ok {
+				data[k] = fmt.Sprintf("%s\n%s", data[k], v)
+			} else {
+				data[k] = v
+			}
+		}
+	}
+
+	data["status"] = sampleAlert.Status
+	data["generatorUrl"] = sampleAlert.GeneratorURL
+	data["numAlertsFiring"] = firingLen
+	data["id"] = id
+
+	labels := map[string]string{}
+
+	for _, a := range as {
+		for k, v := range a.Labels {
+			labels[k] = v
+		}
+	}
+
+	return notification.Notification{
+		ID:        id,
+		Data:      data,
+		Labels:    labels,
+		Template:  template.ReservedName_SystemDefault,
+		CreatedAt: createdTime,
+	}
+}
+
+func removeDuplicateStringValues(strSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+
+	for _, v := range strSlice {
+		if _, value := keys[v]; !value {
+			keys[v] = true
+			list = append(list, v)
+		}
+	}
+	return list
 }

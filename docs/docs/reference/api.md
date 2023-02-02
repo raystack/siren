@@ -1089,7 +1089,7 @@ render a template
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| id | string (uint64) |  | No |
+| rule | [Rule](#rule) |  | No |
 
 #### UpdateSubscriptionResponse
 

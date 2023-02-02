@@ -7,15 +7,12 @@ import (
 	"os"
 
 	"github.com/odpf/salt/db"
-	saltlog "github.com/odpf/salt/log"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/log"
 	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/silence"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/store/postgres"
@@ -46,7 +43,7 @@ func purgeDocker(pool *dockertest.Pool, resource *dockertest.Resource) error {
 	return nil
 }
 
-func migrate(ctx context.Context, logger saltlog.Logger, client *pgc.Client, dbConf db.Config) error {
+func migrate(ctx context.Context, logger log.Logger, client *pgc.Client, dbConf db.Config) error {
 	var queries = []string{
 		"DROP SCHEMA public CASCADE",
 		"CREATE SCHEMA public",
@@ -159,30 +156,28 @@ func bootstrapReceiver(client *pgc.Client) ([]receiver.Receiver, error) {
 	return insertedData, nil
 }
 
-func bootstrapAlert(client *pgc.Client) ([]alert.Alert, error) {
+func bootstrapAlert(client *pgc.Client) error {
 	filePath := "./testdata/mock-alert.json"
 	testFixtureJSON, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var data []alert.Alert
 	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
-		return nil, err
+		return err
 	}
 
 	repo := postgres.NewAlertRepository(client)
 
-	var createdAlerts []alert.Alert
 	for _, d := range data {
-		alrt, err := repo.Create(context.Background(), d)
+		_, err := repo.Create(context.Background(), d)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		createdAlerts = append(createdAlerts, alrt)
 	}
 
-	return createdAlerts, nil
+	return nil
 }
 
 func bootstrapTemplate(client *pgc.Client) ([]template.Template, error) {
@@ -264,108 +259,4 @@ func bootstrapSubscription(client *pgc.Client) ([]subscription.Subscription, err
 	}
 
 	return insertedData, nil
-}
-
-func bootstrapNotification(client *pgc.Client) ([]notification.Notification, error) {
-	filePath := "./testdata/mock-notification.json"
-	testFixtureJSON, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-
-	var data []notification.Notification
-	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
-		return nil, err
-	}
-
-	repo := postgres.NewNotificationRepository(client)
-
-	var insertedData []notification.Notification
-	for _, d := range data {
-		newD, err := repo.Create(context.Background(), d)
-		if err != nil {
-			return nil, err
-		}
-
-		insertedData = append(insertedData, newD)
-	}
-
-	return insertedData, nil
-}
-
-func bootstrapSilence(client *pgc.Client) ([]string, error) {
-	filePath := "./testdata/mock-silence.json"
-	testFixtureJSON, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-
-	var data []silence.Silence
-	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
-		return nil, err
-	}
-
-	repo := postgres.NewSilenceRepository(client)
-
-	var silenceIDs []string
-	for _, d := range data {
-		id, err := repo.Create(context.Background(), d)
-		if err != nil {
-			return nil, err
-		}
-
-		silenceIDs = append(silenceIDs, id)
-	}
-
-	return silenceIDs, nil
-}
-
-func bootstrapNotificationLog(
-	client *pgc.Client,
-	namespaces []namespace.EncryptedNamespace,
-	subscriptions []subscription.Subscription,
-	receivers []receiver.Receiver,
-	silenceIDs []string,
-	notifications []notification.Notification,
-	alerts []alert.Alert,
-) error {
-	var data = []log.Notification{
-		{
-			NamespaceID:    namespaces[0].ID,
-			NotificationID: notifications[0].ID,
-			SubscriptionID: subscriptions[0].ID,
-			ReceiverID:     receivers[0].ID,
-			AlertIDs:       []int64{int64(alerts[0].ID)},
-			SilenceIDs:     []string{silenceIDs[0], silenceIDs[1]},
-		},
-		{
-			NamespaceID:    namespaces[1].ID,
-			NotificationID: notifications[1].ID,
-			SubscriptionID: subscriptions[1].ID,
-			ReceiverID:     receivers[1].ID,
-			AlertIDs:       []int64{int64(alerts[1].ID)},
-			SilenceIDs:     []string{silenceIDs[1]},
-		},
-		{
-			NamespaceID:    namespaces[2].ID,
-			NotificationID: notifications[1].ID,
-			SubscriptionID: subscriptions[2].ID,
-			AlertIDs:       []int64{int64(alerts[0].ID), int64(alerts[2].ID)},
-			SilenceIDs:     []string{silenceIDs[0]},
-		},
-		{
-			NamespaceID:    namespaces[2].ID,
-			NotificationID: notifications[1].ID,
-			SubscriptionID: subscriptions[2].ID,
-			AlertIDs:       []int64{int64(alerts[0].ID), int64(alerts[2].ID)},
-		},
-	}
-
-	repo := postgres.NewLogRepository(client)
-
-	if err := repo.BulkCreate(context.Background(), data); err != nil {
-		return err
-	}
-
-	return nil
 }
