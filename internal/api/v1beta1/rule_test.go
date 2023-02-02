@@ -137,7 +137,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 		res, err := dummyGRPCServer.UpdateRule(ctx, dummyReq)
 		assert.Nil(t, err)
 
-		assert.Equal(t, testID, res.GetId())
+		assert.Equal(t, testID, res.GetRule().GetId())
 		mockedRuleService.AssertExpectations(t)
 	})
 

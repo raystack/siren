@@ -2,7 +2,7 @@ NAME="github.com/odpf/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "03dcfd9c4dab173e2c191363d980805ad5029d38"
+PROTON_COMMIT := "9cdffc3c1838ec72b35b2a1b9a170ca9c138db66"
 
 .PHONY: all build test clean dist vet proto install
 

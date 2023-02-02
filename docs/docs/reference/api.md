@@ -2,7 +2,7 @@
 Documentation of our Siren API with gRPC and
 gRPC-Gateway.
 
-## Version: 0.5.0
+## Version: 0.5
 
 ### /v1beta1/alerts/{provider_type}/{provider_id}
 
@@ -21,6 +21,7 @@ list alerts
 | start_time | query |  | No | string (uint64) |
 | end_time | query |  | No | string (uint64) |
 | namespace_id | query |  | No | string (uint64) |
+| silence_id | query |  | No | string |
 
 ##### Responses
 
@@ -409,12 +410,96 @@ add/update a rule
 | 200 | A successful response. | [UpdateRuleResponse](#updateruleresponse) |
 | default | An unexpected error response. | [Status](#status) |
 
+### /v1beta1/silences
+
+#### GET
+##### Summary
+
+get all silences
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| subscription_id | query |  | No | string (uint64) |
+| namespace_id | query |  | No | string (uint64) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | A successful response. | [ListSilencesResponse](#listsilencesresponse) |
+| default | An unexpected error response. | [Status](#status) |
+
+#### POST
+##### Summary
+
+create a silence
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| body | body |  | Yes | [CreateSilenceRequest](#createsilencerequest) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | A successful response. | [CreateSilenceResponse](#createsilenceresponse) |
+| default | An unexpected error response. | [Status](#status) |
+
+### /v1beta1/silences/{id}
+
+#### GET
+##### Summary
+
+get a silence
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| id | path |  | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | A successful response. | [GetSilenceResponse](#getsilenceresponse) |
+| default | An unexpected error response. | [Status](#status) |
+
+#### DELETE
+##### Summary
+
+expire a silence
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| id | path |  | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | A successful response. | [ExpireSilenceResponse](#expiresilenceresponse) |
+| default | An unexpected error response. | [Status](#status) |
+
 ### /v1beta1/subscriptions
 
 #### GET
 ##### Summary
 
 List subscriptions
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| namespace_id | query |  | No | string (uint64) |
+| silence_id | query |  | No | string |
 
 ##### Responses
 
@@ -609,6 +694,7 @@ render a template
 | resource_name | string |  | No |
 | rule | string |  | No |
 | severity | string |  | No |
+| silence_status | string |  | No |
 | triggered_at | dateTime |  | No |
 
 #### Any
@@ -679,6 +765,21 @@ render a template
 | ---- | ---- | ----------- | -------- |
 | id | string (uint64) |  | No |
 
+#### CreateSilenceRequest
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| namespace_id | string (uint64) |  | No |
+| target_expression | object |  | No |
+| target_id | string (uint64) |  | No |
+| type | string |  | No |
+
+#### CreateSilenceResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| id | string |  | No |
+
 #### CreateSubscriptionRequest
 
 | Name | Type | Description | Required |
@@ -724,6 +825,12 @@ render a template
 | ---- | ---- | ----------- | -------- |
 | DeleteTemplateResponse | object |  |  |
 
+#### ExpireSilenceResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| ExpireSilenceResponse | object |  |  |
+
 #### GetNamespaceResponse
 
 | Name | Type | Description | Required |
@@ -741,6 +848,12 @@ render a template
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | receiver | [Receiver](#receiver) |  | No |
+
+#### GetSilenceResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| silence | [Silence](#silence) |  | No |
 
 #### GetSubscriptionResponse
 
@@ -783,6 +896,12 @@ render a template
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | rules | [ [Rule](#rule) ] |  | No |
+
+#### ListSilencesResponse
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| silences | [ [Silence](#silence) ] |  | No |
 
 #### ListSubscriptionsResponse
 
@@ -883,6 +1002,19 @@ render a template
 | updated_at | dateTime |  | No |
 | variables | [ [Variables](#variables) ] |  | No |
 
+#### Silence
+
+| Name | Type | Description | Required |
+| ---- | ---- | ----------- | -------- |
+| created_at | dateTime |  | No |
+| deleted_at | dateTime |  | No |
+| id | string |  | No |
+| namespace_id | string (uint64) |  | No |
+| target_expression | object |  | No |
+| target_id | string (uint64) |  | No |
+| type | string |  | No |
+| updated_at | dateTime |  | No |
+
 #### Status
 
 | Name | Type | Description | Required |
@@ -957,7 +1089,7 @@ render a template
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
-| id | string (uint64) |  | No |
+| rule | [Rule](#rule) |  | No |
 
 #### UpdateSubscriptionResponse
 

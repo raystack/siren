@@ -333,7 +333,7 @@ func UploadRules(client sirenv1beta1.SirenServiceClient, yamlFile []byte) ([]uin
 				payload.Namespace, payload.GroupName, payload.Template), err)
 			return successfullyUpsertedRulesID, err
 		}
-		successfullyUpsertedRulesID = append(successfullyUpsertedRulesID, result.GetId())
+		successfullyUpsertedRulesID = append(successfullyUpsertedRulesID, result.GetRule().GetId())
 		fmt.Printf("successfully uploaded %s/%s/%s",
 			payload.Namespace, payload.GroupName, payload.Template)
 

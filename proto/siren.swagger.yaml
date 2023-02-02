@@ -4,7 +4,7 @@ info:
   description: |-
     Documentation of our Siren API with gRPC and
     gRPC-Gateway.
-  version: 0.5.0
+  version: "0.5"
 tags:
   - name: SirenService
 schemes:
@@ -56,6 +56,10 @@ paths:
           required: false
           type: string
           format: uint64
+        - name: silence_id
+          in: query
+          required: false
+          type: string
       tags:
         - Alert
     post:
@@ -554,6 +558,91 @@ paths:
             $ref: '#/definitions/UpdateRuleRequest'
       tags:
         - Rule
+  /v1beta1/silences:
+    get:
+      summary: get all silences
+      operationId: SirenService_ListSilences
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/ListSilencesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/Status'
+      parameters:
+        - name: subscription_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: namespace_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Silence
+    post:
+      summary: create a silence
+      operationId: SirenService_CreateSilence
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/CreateSilenceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/Status'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateSilenceRequest'
+      tags:
+        - Silence
+  /v1beta1/silences/{id}:
+    get:
+      summary: get a silence
+      operationId: SirenService_GetSilence
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/GetSilenceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/Status'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Silence
+    delete:
+      summary: expire a silence
+      operationId: SirenService_ExpireSilence
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/ExpireSilenceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/Status'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Silence
   /v1beta1/subscriptions:
     get:
       summary: List subscriptions
@@ -567,6 +656,16 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Status'
+      parameters:
+        - name: namespace_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: silence_id
+          in: query
+          required: false
+          type: string
       tags:
         - Subscription
     post:
@@ -801,6 +900,8 @@ definitions:
         type: string
       severity:
         type: string
+      silence_status:
+        type: string
       triggered_at:
         type: string
         format: date-time
@@ -894,6 +995,24 @@ definitions:
       id:
         type: string
         format: uint64
+  CreateSilenceRequest:
+    type: object
+    properties:
+      namespace_id:
+        type: string
+        format: uint64
+      target_expression:
+        type: object
+      target_id:
+        type: string
+        format: uint64
+      type:
+        type: string
+  CreateSilenceResponse:
+    type: object
+    properties:
+      id:
+        type: string
   CreateSubscriptionRequest:
     type: object
     properties:
@@ -926,6 +1045,8 @@ definitions:
     type: object
   DeleteTemplateResponse:
     type: object
+  ExpireSilenceResponse:
+    type: object
   GetNamespaceResponse:
     type: object
     properties:
@@ -941,6 +1062,11 @@ definitions:
     properties:
       receiver:
         $ref: '#/definitions/Receiver'
+  GetSilenceResponse:
+    type: object
+    properties:
+      silence:
+        $ref: '#/definitions/Silence'
   GetSubscriptionResponse:
     type: object
     properties:
@@ -986,6 +1112,13 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Rule'
+  ListSilencesResponse:
+    type: object
+    properties:
+      silences:
+        type: array
+        items:
+          $ref: '#/definitions/Silence'
   ListSubscriptionsResponse:
     type: object
     properties:
@@ -1131,6 +1264,30 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/Variables'
+  Silence:
+    type: object
+    properties:
+      created_at:
+        type: string
+        format: date-time
+      deleted_at:
+        type: string
+        format: date-time
+      id:
+        type: string
+      namespace_id:
+        type: string
+        format: uint64
+      target_expression:
+        type: object
+      target_id:
+        type: string
+        format: uint64
+      type:
+        type: string
+      updated_at:
+        type: string
+        format: date-time
   Status:
     type: object
     properties:
@@ -1242,9 +1399,8 @@ definitions:
   UpdateRuleResponse:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      rule:
+        $ref: '#/definitions/Rule'
   UpdateSubscriptionResponse:
     type: object
     properties:
