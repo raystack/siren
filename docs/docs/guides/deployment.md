@@ -8,7 +8,7 @@ There are several approaches to setup Siren Server
 
 ## General pre-requisites
 
-- PostgreSQL (version 13 or above)
+- PostgreSQL (version 12 or above)
 - Monitoring Providers
     - Ex: CortexMetrics
 

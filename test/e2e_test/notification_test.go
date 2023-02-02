@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mcuadros/go-defaults"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/notification"
@@ -88,6 +85,8 @@ func (s *NotificationTestSuite) TearDownTest() {
 }
 
 func (s *NotificationTestSuite) TestSendNotification() {
+	expectedNotification := `{"icon_emoji":":smile:","routing_method":"receiver","text":"test send notification"}`
+
 	ctx := context.Background()
 
 	controlChan := make(chan struct{}, 1)
@@ -95,27 +94,8 @@ func (s *NotificationTestSuite) TestSendNotification() {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, err := io.ReadAll(r.Body)
 		s.Assert().NoError(err)
+		s.Assert().Equal(expectedNotification, string(bodyBytes))
 
-		type sampleStruct struct {
-			ID               string `json:"id"`
-			IconEmoji        string `json:"icon_emoji"`
-			NotificationType string `json:"notification_type"`
-			ReceiverID       string `json:"receiver_id"`
-			Text             string `json:"text"`
-		}
-
-		expectedNotification := `{"icon_emoji":":smile:","notification_type":"receiver","receiver_id":"2","text":"test send notification"}`
-
-		var (
-			resultStruct   sampleStruct
-			expectedStruct sampleStruct
-		)
-		s.Assert().NoError(json.Unmarshal(bodyBytes, &resultStruct))
-		s.Assert().NoError(json.Unmarshal([]byte(expectedNotification), &expectedStruct))
-
-		if diff := cmp.Diff(expectedStruct, resultStruct, cmpopts.IgnoreFields(sampleStruct{}, "ID")); diff != "" {
-			s.T().Errorf("got diff: %v", diff)
-		}
 		controlChan <- struct{}{}
 
 	}))

@@ -188,7 +188,6 @@ func InitCortexEnvironment(appConfig *config.Config) (*CortexTest, error) {
 		dockertestx.PostgresWithLogger(logger),
 		dockertestx.PostgresWithDockertestNetwork(ct.network),
 		dockertestx.PostgresWithDockerPool(ct.pool),
-		dockertestx.PostgresWithVersionTag("13"),
 	)
 	if err != nil {
 		return nil, err

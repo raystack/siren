@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/internal/store/model"
 	"github.com/odpf/siren/pkg/errors"
@@ -18,9 +17,6 @@ INSERT INTO alerts (provider_id, namespace_id, resource_name, metric_name, metri
 RETURNING *
 `
 
-const alertUpdateBulkSilenceQuery = `
-UPDATE alerts SET silence_status = $1, updated_at = now() WHERE id = any($2)`
-
 var alertListQueryBuilder = sq.Select(
 	"id",
 	"provider_id",
@@ -32,7 +28,6 @@ var alertListQueryBuilder = sq.Select(
 	"triggered_at",
 	"created_at",
 	"updated_at",
-	"silence_status",
 ).From("alerts")
 
 // AlertRepository talks to the store to read or insert data
@@ -73,11 +68,6 @@ func (r AlertRepository) Create(ctx context.Context, alrt alert.Alert) (alert.Al
 
 func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Alert, error) {
 	var queryBuilder = alertListQueryBuilder
-
-	if len(flt.IDs) != 0 {
-		queryBuilder = queryBuilder.Where("id = any(?)", pq.Array(flt.IDs))
-	}
-
 	if flt.NamespaceID != 0 {
 		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
 	}
@@ -115,16 +105,4 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 	}
 
 	return alertsDomain, nil
-}
-
-func (r AlertRepository) BulkUpdateSilence(ctx context.Context, alertIDs []int64, silenceStatus string) error {
-	sqlAlertIDs := pq.Array(alertIDs)
-	if _, err := r.client.ExecContext(ctx, pgc.OpUpdate, r.tableName, alertUpdateBulkSilenceQuery,
-		silenceStatus,
-		sqlAlertIDs,
-	); err != nil {
-		return err
-	}
-
-	return nil
 }

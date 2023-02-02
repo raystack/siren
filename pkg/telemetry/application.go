@@ -14,10 +14,10 @@ const (
 )
 
 var (
-	TagReceiverType     = tag.MustNewKey("receiver_type")
-	TagNotificationType = tag.MustNewKey("notification_type")
-	TagMessageStatus    = tag.MustNewKey("status")
-	TagHookCondition    = tag.MustNewKey("hook_condition")
+	TagReceiverType  = tag.MustNewKey("receiver_type")
+	TagRoutingMethod = tag.MustNewKey("routing_method")
+	TagMessageStatus = tag.MustNewKey("status")
+	TagHookCondition = tag.MustNewKey("hook_condition")
 
 	MetricNotificationMessageQueueTime = stats.Int64("notification.message.queue.time", "time of message from enqueued to be picked up", stats.UnitMilliseconds)
 
@@ -40,7 +40,7 @@ func setupApplicationViews() error {
 		&view.View{
 			Name:        MetricNotificationMessageCounter.Name(),
 			Description: MetricNotificationMessageCounter.Description(),
-			TagKeys:     []tag.Key{TagReceiverType, TagNotificationType, TagMessageStatus},
+			TagKeys:     []tag.Key{TagReceiverType, TagRoutingMethod, TagMessageStatus},
 			Measure:     MetricNotificationMessageCounter,
 			Aggregation: view.Count(),
 		},
@@ -48,7 +48,7 @@ func setupApplicationViews() error {
 			Name:        MetricNotificationSubscriberNotFound.Name(),
 			Description: MetricNotificationSubscriberNotFound.Description(),
 			Measure:     MetricNotificationSubscriberNotFound,
-			Aggregation: view.Count(),
+			Aggregation: view.Sum(),
 		},
 		&view.View{
 			Name:        MetricReceiverHookFailed.Name(),

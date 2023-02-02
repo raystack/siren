@@ -23,45 +23,6 @@ func (_m *AlertRepository) EXPECT() *AlertRepository_Expecter {
 	return &AlertRepository_Expecter{mock: &_m.Mock}
 }
 
-// BulkUpdateSilence provides a mock function with given fields: _a0, _a1, _a2
-func (_m *AlertRepository) BulkUpdateSilence(_a0 context.Context, _a1 []int64, _a2 string) error {
-	ret := _m.Called(_a0, _a1, _a2)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []int64, string) error); ok {
-		r0 = rf(_a0, _a1, _a2)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// AlertRepository_BulkUpdateSilence_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BulkUpdateSilence'
-type AlertRepository_BulkUpdateSilence_Call struct {
-	*mock.Call
-}
-
-// BulkUpdateSilence is a helper method to define mock.On call
-//   - _a0 context.Context
-//   - _a1 []int64
-//   - _a2 string
-func (_e *AlertRepository_Expecter) BulkUpdateSilence(_a0 interface{}, _a1 interface{}, _a2 interface{}) *AlertRepository_BulkUpdateSilence_Call {
-	return &AlertRepository_BulkUpdateSilence_Call{Call: _e.mock.On("BulkUpdateSilence", _a0, _a1, _a2)}
-}
-
-func (_c *AlertRepository_BulkUpdateSilence_Call) Run(run func(_a0 context.Context, _a1 []int64, _a2 string)) *AlertRepository_BulkUpdateSilence_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([]int64), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *AlertRepository_BulkUpdateSilence_Call) Return(_a0 error) *AlertRepository_BulkUpdateSilence_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
 // Create provides a mock function with given fields: _a0, _a1
 func (_m *AlertRepository) Create(_a0 context.Context, _a1 alert.Alert) (alert.Alert, error) {
 	ret := _m.Called(_a0, _a1)

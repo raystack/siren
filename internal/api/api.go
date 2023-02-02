@@ -10,7 +10,6 @@ import (
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/silence"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 )
@@ -74,18 +73,11 @@ type TemplateService interface {
 
 //go:generate mockery --name=NotificationService -r --case underscore --with-expecter --structname NotificationService --filename notification_service.go --output=./mocks
 type NotificationService interface {
-	Dispatch(ctx context.Context, n notification.Notification) error
+	DispatchToReceiver(ctx context.Context, n notification.Notification, receiverID uint64) error
+	DispatchToSubscribers(ctx context.Context, namespaceID uint64, n notification.Notification) error
 	CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error)
 	MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error
 	RemoveIdempotencies(ctx context.Context, TTL time.Duration) error
-}
-
-//go:generate mockery --name=SilenceService -r --case underscore --with-expecter --structname SilenceService --filename silence_service.go --output=./mocks
-type SilenceService interface {
-	Create(ctx context.Context, sil silence.Silence) (string, error)
-	List(ctx context.Context, filter silence.Filter) ([]silence.Silence, error)
-	Get(ctx context.Context, id string) (silence.Silence, error)
-	Delete(ctx context.Context, id string) error
 }
 
 type Deps struct {
@@ -97,5 +89,4 @@ type Deps struct {
 	ReceiverService     ReceiverService
 	SubscriptionService SubscriptionService
 	NotificationService NotificationService
-	SilenceService      SilenceService
 }

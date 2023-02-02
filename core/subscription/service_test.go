@@ -41,9 +41,8 @@ func TestService_List(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.SubscriptionRepository)
-				logServiceMock = new(mocks.LogService)
 			)
-			svc := subscription.NewService(repositoryMock, logServiceMock, nil, nil)
+			svc := subscription.NewService(repositoryMock, nil, nil)
 
 			tc.Setup(repositoryMock)
 
@@ -95,9 +94,8 @@ func TestService_Get(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock = new(mocks.SubscriptionRepository)
-				logServiceMock = new(mocks.LogService)
 			)
-			svc := subscription.NewService(repositoryMock, logServiceMock, nil, nil)
+			svc := subscription.NewService(repositoryMock, nil, nil)
 
 			tc.Setup(repositoryMock)
 
@@ -158,13 +156,11 @@ func TestService_Create(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock       = new(mocks.SubscriptionRepository)
-				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
 			)
 			svc := subscription.NewService(
 				repositoryMock,
-				logServiceMock,
 				namespaceServiceMock,
 				receiverServiceMock,
 			)
@@ -235,13 +231,11 @@ func TestService_Update(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock       = new(mocks.SubscriptionRepository)
-				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
 			)
 			svc := subscription.NewService(
 				repositoryMock,
-				logServiceMock,
 				namespaceServiceMock,
 				receiverServiceMock,
 			)
@@ -298,13 +292,11 @@ func TestService_Delete(t *testing.T) {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
 				repositoryMock       = new(mocks.SubscriptionRepository)
-				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
 			)
 			svc := subscription.NewService(
 				repositoryMock,
-				logServiceMock,
 				namespaceServiceMock,
 				receiverServiceMock,
 			)

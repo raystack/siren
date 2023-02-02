@@ -9,13 +9,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *GRPCServer) ListSubscriptions(ctx context.Context, req *sirenv1beta1.ListSubscriptionsRequest) (*sirenv1beta1.ListSubscriptionsResponse, error) {
-	subscriptions, err := s.subscriptionService.List(ctx, subscription.Filter{
-		NamespaceID:       req.GetNamespaceId(),
-		SilenceID:         req.GetSilenceId(),
-		Match:             req.GetMatch(),
-		NotificationMatch: req.GetNotificationMatch(),
-	})
+func (s *GRPCServer) ListSubscriptions(ctx context.Context, _ *sirenv1beta1.ListSubscriptionsRequest) (*sirenv1beta1.ListSubscriptionsResponse, error) {
+	subscriptions, err := s.subscriptionService.List(ctx, subscription.Filter{})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

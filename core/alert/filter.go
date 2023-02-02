@@ -6,6 +6,4 @@ type Filter struct {
 	NamespaceID  uint64
 	StartTime    int64
 	EndTime      int64
-	SilenceID    string
-	IDs          []int64
 }

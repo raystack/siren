@@ -8,11 +8,6 @@ import (
 	"github.com/odpf/siren/pkg/errors"
 )
 
-//go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks
-type LogService interface {
-	ListSubscriptionIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error)
-}
-
 //go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
@@ -30,16 +25,14 @@ type ReceiverService interface {
 // Service handles business logic
 type Service struct {
 	repository       Repository
-	logService       LogService
 	namespaceService NamespaceService
 	receiverService  ReceiverService
 }
 
 // NewService returns service struct
-func NewService(repository Repository, logService LogService, namespaceService NamespaceService, receiverService ReceiverService) *Service {
+func NewService(repository Repository, namespaceService NamespaceService, receiverService ReceiverService) *Service {
 	svc := &Service{
 		repository:       repository,
-		logService:       logService,
 		namespaceService: namespaceService,
 		receiverService:  receiverService,
 	}
@@ -48,15 +41,6 @@ func NewService(repository Repository, logService LogService, namespaceService N
 }
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Subscription, error) {
-
-	if flt.SilenceID != "" {
-		subscriptionIDs, err := s.logService.ListSubscriptionIDsBySilenceID(ctx, flt.SilenceID)
-		if err != nil {
-			return nil, err
-		}
-		flt.IDs = subscriptionIDs
-	}
-
 	subscriptions, err := s.repository.List(ctx, flt)
 	if err != nil {
 		return nil, err
@@ -116,11 +100,11 @@ func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (s *Service) MatchByLabels(ctx context.Context, namespaceID uint64, notificationLabels map[string]string) ([]Subscription, error) {
+func (s *Service) MatchByLabels(ctx context.Context, namespaceID uint64, labels map[string]string) ([]Subscription, error) {
 	// fetch all subscriptions by matching labels.
 	subscriptionsByLabels, err := s.repository.List(ctx, Filter{
-		NamespaceID:       namespaceID,
-		NotificationMatch: notificationLabels,
+		NamespaceID: namespaceID,
+		Labels:      labels,
 	})
 	if err != nil {
 		return nil, err

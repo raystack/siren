@@ -6,16 +6,14 @@ import (
 
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/odpf/salt/db"
-	saltlog "github.com/odpf/salt/log"
+	"github.com/odpf/salt/log"
 	"github.com/odpf/siren/config"
 	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/log"
 	"github.com/odpf/siren/core/namespace"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/provider"
 	"github.com/odpf/siren/core/receiver"
 	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/silence"
 	"github.com/odpf/siren/core/subscription"
 	"github.com/odpf/siren/core/template"
 	"github.com/odpf/siren/internal/api"
@@ -32,19 +30,18 @@ import (
 
 func InitDeps(
 	ctx context.Context,
-	logger saltlog.Logger,
+	logger log.Logger,
 	cfg config.Config,
 	queue notification.Queuer,
 ) (*api.Deps, *newrelic.Application, *pgc.Client, map[string]notification.Notifier, error) {
 
 	telemetry.Init(ctx, cfg.Telemetry, logger)
-
 	nrApp, err := newrelic.NewApplication(
-		newrelic.ConfigAppName(cfg.Telemetry.NewRelicAppName),
+		newrelic.ConfigAppName(cfg.Telemetry.ServiceName),
 		newrelic.ConfigLicense(cfg.Telemetry.NewRelicAPIKey),
 	)
 	if err != nil {
-		logger.Warn("failed to init newrelic", "err", err)
+		return nil, nil, nil, nil, err
 	}
 
 	dbClient, err := db.New(cfg.DB)
@@ -62,26 +59,22 @@ func InitDeps(
 		return nil, nil, nil, nil, fmt.Errorf("cannot initialize encryptor: %w", err)
 	}
 
+	idempotencyRepository := postgres.NewIdempotencyRepository(pgClient)
 	templateRepository := postgres.NewTemplateRepository(pgClient)
 	templateService := template.NewService(templateRepository)
+
+	alertRepository := postgres.NewAlertRepository(pgClient)
 
 	providerRepository := postgres.NewProviderRepository(pgClient)
 	providerService := provider.NewService(providerRepository)
 
-	logRepository := postgres.NewLogRepository(pgClient)
-	logService := log.NewService(logRepository)
+	namespaceRepository := postgres.NewNamespaceRepository(pgClient)
 
 	cortexPluginService := cortex.NewPluginService(logger, cfg.Providers.Cortex)
-	alertRepository := postgres.NewAlertRepository(pgClient)
-	alertService := alert.NewService(
-		alertRepository,
-		logService,
-		map[string]alert.AlertTransformer{
-			provider.TypeCortex: cortexPluginService,
-		},
-	)
 
-	namespaceRepository := postgres.NewNamespaceRepository(pgClient)
+	alertHistoryService := alert.NewService(alertRepository, map[string]alert.AlertTransformer{
+		provider.TypeCortex: cortexPluginService,
+	})
 	namespaceService := namespace.NewService(encryptor, namespaceRepository, providerService, map[string]namespace.ConfigSyncer{
 		provider.TypeCortex: cortexPluginService,
 	})
@@ -95,9 +88,6 @@ func InitDeps(
 			provider.TypeCortex: cortexPluginService,
 		},
 	)
-
-	silenceRepository := postgres.NewSilenceRepository(pgClient)
-	silenceService := silence.NewService(silenceRepository)
 
 	// plugin receiver services
 	slackPluginService := slack.NewPluginService(cfg.Receivers.Slack, encryptor)
@@ -119,7 +109,6 @@ func InitDeps(
 	subscriptionRepository := postgres.NewSubscriptionRepository(pgClient)
 	subscriptionService := subscription.NewService(
 		subscriptionRepository,
-		logService,
 		namespaceService,
 		receiverService,
 	)
@@ -132,33 +121,17 @@ func InitDeps(
 		receiver.TypeFile:      filePluginService,
 	}
 
-	idempotencyRepository := postgres.NewIdempotencyRepository(pgClient)
-	notificationRepository := postgres.NewNotificationRepository(pgClient)
-	notificationService := notification.NewService(
-		logger,
-		notificationRepository,
-		queue,
-		notifierRegistry,
-		notification.Deps{
-			LogService:            logService,
-			IdempotencyRepository: idempotencyRepository,
-			ReceiverService:       receiverService,
-			SubscriptionService:   subscriptionService,
-			SilenceService:        silenceService,
-			AlertService:          alertService,
-		},
-	)
+	notificationService := notification.NewService(logger, queue, idempotencyRepository, receiverService, subscriptionService, notifierRegistry)
 
 	return &api.Deps{
 			TemplateService:     templateService,
 			RuleService:         ruleService,
-			AlertService:        alertService,
+			AlertService:        alertHistoryService,
 			ProviderService:     providerService,
 			NamespaceService:    namespaceService,
 			ReceiverService:     receiverService,
 			SubscriptionService: subscriptionService,
 			NotificationService: notificationService,
-			SilenceService:      silenceService,
 		}, nrApp, pgClient, notifierRegistry,
 		nil
 }

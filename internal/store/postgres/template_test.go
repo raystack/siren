@@ -33,7 +33,6 @@ func (s *TemplateRepositoryTestSuite) SetupSuite() {
 		dockertestx.PostgresWithDetail(
 			pgUser, pgPass, pgDBName,
 		),
-		dockertestx.PostgresWithVersionTag("13"),
 	)
 	if err != nil {
 		s.T().Fatal(err)

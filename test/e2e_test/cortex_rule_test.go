@@ -75,7 +75,7 @@ func (s *CortexRuleTestSuite) TearDownTest() {
 func (s *CortexRuleTestSuite) TestRules() {
 	ctx := context.Background()
 
-	s.Run("initial state has no rule groups, upload rules and templates should return `testdata/cortex/expected-cortexrule-scenario-1.yaml`", func() {
+	s.Run("1. initial state has no rule groups, upload rules and templates should return `testdata/cortex/expected-cortexrule-scenario-1.yaml`", func() {
 		err := uploadTemplate(ctx, s.client, "testdata/cortex/template-rule-sample-1.yaml")
 		s.Require().NoError(err)
 		err = uploadTemplate(ctx, s.client, "testdata/cortex/template-rule-sample-2.yaml")

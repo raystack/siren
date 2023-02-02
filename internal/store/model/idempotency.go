@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/core/notification"
+	"github.com/odpf/siren/core/idempotency"
 )
 
 type Idempotency struct {
@@ -15,8 +15,8 @@ type Idempotency struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func (i *Idempotency) ToDomain() *notification.Idempotency {
-	return &notification.Idempotency{
+func (i *Idempotency) ToDomain() *idempotency.Idempotency {
+	return &idempotency.Idempotency{
 		ID:        i.ID,
 		Scope:     i.Scope,
 		Key:       i.Key,
