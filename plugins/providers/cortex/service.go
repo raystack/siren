@@ -76,6 +76,12 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 
 	for _, item := range groupAlert.Alerts {
 
+		if err := item.Validate(); err != nil {
+			s.logger.Error(fmt.Sprintf("invalid alerts: %s", err.Error()), "group key", groupAlert.GroupKey, "alert detail", item)
+			badAlertCount++
+			continue
+		}
+
 		if item.Status == "firing" {
 			firingLen++
 		}
@@ -108,11 +114,7 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 			GeneratorURL: item.GeneratorURL,
 			Fingerprint:  item.Fingerprint,
 		}
-		if !isValidCortexAlert(alrt) {
-			s.logger.Error("invalid alerts", "group key", groupAlert.GroupKey, "alert detail", alrt)
-			badAlertCount++
-			continue
-		}
+
 		alerts = append(alerts, alrt)
 	}
 

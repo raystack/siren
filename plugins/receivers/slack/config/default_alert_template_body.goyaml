@@ -10,7 +10,7 @@
   [[- end]]
 [[- end]]
 [[- define "slack.pretext" -]]
-  [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.numAlertsFiring ]][[ end ]])
+  [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.num_alerts_firing ]][[ end ]])
   [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
   [[- else ]] *([[ .Labels.severity | toUpper ]])*
   [[- end]] [[ .Labels.alertname ]]
@@ -39,12 +39,11 @@
 [[- end -]]
 username: "Siren"
 icon_emoji: ":eagle:"
-link_names: false
 attachments:
   - title: ""
     pretext: "[[template "slack.pretext" . ]]"
     text: |
-[[.Data.summary | indent 5]]
+[[.Data.summary | indent 6]]
     color: "[[template "slack.color" . ]]"
     actions:
     - type: button

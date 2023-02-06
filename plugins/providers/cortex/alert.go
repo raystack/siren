@@ -1,8 +1,6 @@
 package cortex
 
-import (
-	"github.com/odpf/siren/core/alert"
-)
+import "errors"
 
 // GroupAlert contract is cortex/prometheus webhook_config contract
 // https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
@@ -23,8 +21,26 @@ type Alert struct {
 	EndsAt       string            `mapstructure:"endsAt"`
 }
 
-func isValidCortexAlert(alrt alert.Alert) bool {
-	return !(alrt.ResourceName == "" || alrt.Rule == "" ||
-		alrt.MetricValue == "" || alrt.MetricName == "" ||
-		alrt.Severity == "")
+func (a Alert) Validate() error {
+	if _, ok := a.Labels["severity"]; !ok {
+		return errors.New("'severity' label is missing")
+	}
+
+	if _, ok := a.Annotations["resource"]; !ok {
+		return errors.New("'resource' annotation is missing")
+	}
+
+	if _, ok := a.Annotations["template"]; !ok {
+		return errors.New("'template' annotation is missing")
+	}
+
+	if _, ok := a.Annotations["metric_value"]; !ok {
+		return errors.New("'metric_value' annotation is missing")
+	}
+
+	if _, ok := a.Annotations["metric_name"]; !ok {
+		return errors.New("'metric_name' annotation is missing")
+	}
+
+	return nil
 }
