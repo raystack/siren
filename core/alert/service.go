@@ -2,10 +2,8 @@ package alert
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/mitchellh/hashstructure/v2"
 	"github.com/odpf/siren/pkg/errors"
 )
 
@@ -77,46 +75,4 @@ func (s *Service) getProviderPluginService(providerType string) (AlertTransforme
 		return nil, errors.ErrInvalid.WithMsgf("unsupported provider type: %q", providerType)
 	}
 	return pluginService, nil
-}
-
-func processAlerts(alerts []Alert) ([]Alert, error) {
-	alertsMap, err := groupByLabels(alerts)
-	if err != nil {
-		return nil, err
-	}
-
-	return reduceAlertsMap(alertsMap), nil
-}
-
-func groupByLabels(alerts []Alert) (map[uint64][]Alert, error) {
-	var alertsMap = map[uint64][]Alert{}
-
-	for _, a := range alerts {
-		hash, err := hashstructure.Hash(a, hashstructure.FormatV2, nil)
-		if err != nil {
-			return nil, fmt.Errorf("cannot get hash from alert %v", a)
-		}
-		alertsMap[hash] = append(alertsMap[hash], a)
-	}
-
-	return alertsMap, nil
-}
-
-func reduceAlertsMap(alertMaps map[uint64][]Alert) []Alert {
-	var reducedAlerts []Alert
-	for _, alerts := range alertMaps {
-		var selectedAlert Alert
-		if len(alerts) > 0 {
-			selectedAlert = alerts[0]
-			for _, a := range alerts {
-				if a.UpdatedAt.After(selectedAlert.UpdatedAt) {
-					selectedAlert = a
-				}
-			}
-		} else {
-			continue
-		}
-		reducedAlerts = append(reducedAlerts, selectedAlert)
-	}
-	return reducedAlerts
 }

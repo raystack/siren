@@ -32,6 +32,7 @@ type Notification struct {
 	Labels        map[string]string      `json:"labels"`
 	ValidDuration time.Duration          `json:"valid_duration"`
 	Template      string                 `json:"template"`
+	UniqueKey     string                 `json:"unique_key"`
 	CreatedAt     time.Time              `json:"created_at"`
 
 	// won't be stored in notification table, only to propaget this to notification_subscriber

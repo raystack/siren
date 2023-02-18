@@ -15,6 +15,7 @@ type Notification struct {
 	Data          pgc.StringInterfaceMap `db:"data"`
 	Labels        pgc.StringStringMap    `db:"labels"`
 	ValidDuration pgc.TimeDuration       `db:"valid_duration"`
+	UniqueKey     sql.NullString         `db:"unique_key"`
 	Template      sql.NullString         `db:"template"`
 	CreatedAt     time.Time              `db:"created_at"`
 }
@@ -38,6 +39,12 @@ func (n *Notification) FromDomain(d notification.Notification) {
 		n.Template = sql.NullString{String: d.Template, Valid: true}
 	}
 
+	if d.UniqueKey == "" {
+		n.UniqueKey = sql.NullString{Valid: false}
+	} else {
+		n.UniqueKey = sql.NullString{String: d.UniqueKey, Valid: true}
+	}
+
 	n.CreatedAt = d.CreatedAt
 }
 
@@ -50,6 +57,7 @@ func (n *Notification) ToDomain() notification.Notification {
 		Labels:        n.Labels,
 		ValidDuration: time.Duration(n.ValidDuration),
 		Template:      n.Template.String,
+		UniqueKey:     n.UniqueKey.String,
 		CreatedAt:     n.CreatedAt,
 	}
 }

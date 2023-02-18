@@ -68,7 +68,7 @@ func TestClient_NotifyV1_HTTPCall(t *testing.T) {
 		c := pagerduty.NewClient(pagerduty.AppConfig{APIHost: testServer.URL})
 		err := c.NotifyV1(context.Background(), pagerduty.MessageV1{})
 
-		assert.EqualError(t, err, "Bad Request")
+		assert.EqualError(t, err, "error with status code Bad Request and body ")
 
 		testServer.Close()
 	})
