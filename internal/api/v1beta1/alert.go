@@ -87,10 +87,15 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 
 	if len(createdAlerts) > 0 {
 		// Publish to notification service
-		n := notification.BuildFromAlerts(createdAlerts, firingLen, time.Now())
+		ns, err := notification.BuildFromAlerts(createdAlerts, firingLen, time.Now())
+		if err != nil {
+			s.logger.Warn("failed to build notifications from alert", "err", err, "alerts", createdAlerts)
+		}
 
-		if err := s.notificationService.Dispatch(ctx, n); err != nil {
-			s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
+		for _, n := range ns {
+			if err := s.notificationService.Dispatch(ctx, n); err != nil {
+				s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
+			}
 		}
 	} else {
 		s.logger.Warn("failed to send alert as notification, empty created alerts")

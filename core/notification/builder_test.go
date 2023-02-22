@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/odpf/siren/core/alert"
 	"github.com/odpf/siren/core/notification"
 	"github.com/odpf/siren/core/template"
@@ -86,17 +87,18 @@ func TestBuildFromAlerts(t *testing.T) {
 		name      string
 		alerts    []alert.Alert
 		firingLen int
-		want      notification.Notification
+		want      []notification.Notification
+		errString string
 	}{
 
 		{
-			name: "should return empty notification if alerts slice is empty",
-			want: notification.Notification{},
+			name:      "should return empty notification if alerts slice is empty",
+			errString: "empty alerts",
 		},
 		{
 			name: `should properly return notification
 				- same annotations are joined by newline
-				- labels are merged
+				- different labels are splitted into two notifications
 			`,
 			alerts: []alert.Alert{
 				{
@@ -121,38 +123,72 @@ func TestBuildFromAlerts(t *testing.T) {
 					MetricValue:  "16",
 					Severity:     "WARNING",
 					Rule:         "test-alert-template",
-					Labels:       map[string]string{"lk1": "lv11", "lk2": "lv2"},
+					Labels:       map[string]string{"lk1": "lv1", "lk2": "lv2"},
+					Annotations:  map[string]string{"ak1": "akv1"},
+					Status:       "FIRING",
+				},
+				{
+					ID:           16,
+					ProviderID:   1,
+					NamespaceID:  1,
+					ResourceName: "test-alert-host-2",
+					MetricName:   "test-alert",
+					MetricValue:  "16",
+					Severity:     "WARNING",
+					Rule:         "test-alert-template",
+					Labels:       map[string]string{"lk1": "lv1", "lk2": "lv2"},
 					Annotations:  map[string]string{"ak1": "akv11", "ak2": "akv2"},
 					Status:       "FIRING",
 				},
 			},
 			firingLen: 2,
-			want: notification.Notification{
-				NamespaceID: 1,
-				Type:        notification.TypeSubscriber,
+			want: []notification.Notification{
+				{
+					NamespaceID: 1,
+					Type:        notification.TypeSubscriber,
+					Data: map[string]interface{}{
+						"generator_url":     "",
+						"num_alerts_firing": 2,
+						"status":            "FIRING",
+						"ak1":               "akv1",
+					},
+					Labels: map[string]string{
+						"lk1": "lv1",
+					},
+					UniqueKey: "ignored",
+					Template:  template.ReservedName_SystemDefault,
+					AlertIDs:  []int64{14},
+				},
+				{
+					NamespaceID: 1,
+					Type:        notification.TypeSubscriber,
 
-				Data: map[string]interface{}{
-					"generator_url":     "",
-					"num_alerts_firing": 2,
-					"status":            "FIRING",
-					"ak1":               "akv1\nakv11",
-					"ak2":               "akv2",
+					Data: map[string]interface{}{
+						"generator_url":     "",
+						"num_alerts_firing": 2,
+						"status":            "FIRING",
+						"ak1":               "akv1\nakv11",
+						"ak2":               "akv2",
+					},
+					Labels: map[string]string{
+						"lk1": "lv1",
+						"lk2": "lv2",
+					},
+					UniqueKey: "ignored",
+					Template:  template.ReservedName_SystemDefault,
+					AlertIDs:  []int64{15, 16},
 				},
-				Labels: map[string]string{
-					"lk1": "lv11",
-					"lk2": "lv2",
-				},
-				Template: template.ReservedName_SystemDefault,
-				AlertIDs: []int64{14, 15},
 			},
 		},
-		{},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := notification.BuildFromAlerts(tt.alerts, tt.firingLen, time.Time{})
-
-			if diff := cmp.Diff(got, tt.want); diff != "" {
+			got, err := notification.BuildFromAlerts(tt.alerts, tt.firingLen, time.Time{})
+			if (err != nil) && (err.Error() != tt.errString) {
+				t.Errorf("BuildTypeReceiver() error = %v, wantErr %s", err, tt.errString)
+				return
+			}
+			if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreFields(notification.Notification{}, "ID", "UniqueKey")); diff != "" {
 				t.Errorf("BuildFromAlerts() got diff = %v", diff)
 			}
 		})

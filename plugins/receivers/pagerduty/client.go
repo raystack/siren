@@ -99,7 +99,11 @@ func (c *Client) notifyV1(ctx context.Context, message MessageV1) error {
 	}
 
 	if resp.StatusCode >= 300 {
-		return errors.New(http.StatusText(resp.StatusCode))
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("error with status code %s without response body", http.StatusText(resp.StatusCode))
+		}
+		return fmt.Errorf("error with status code %s and body %s", http.StatusText(resp.StatusCode), string(bodyBytes))
 	} else {
 		// Status code 2xx only
 		bodyBytes, err := io.ReadAll(resp.Body)

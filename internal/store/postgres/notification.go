@@ -9,8 +9,8 @@ import (
 )
 
 const notificationInsertQuery = `
-INSERT INTO notifications (namespace_id, type, data, labels, valid_duration, template, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, now())
+INSERT INTO notifications (namespace_id, type, data, labels, valid_duration, template, unique_key, created_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, now())
 RETURNING *
 `
 
@@ -40,6 +40,7 @@ func (r *NotificationRepository) Create(ctx context.Context, n notification.Noti
 		nModel.Labels,
 		nModel.ValidDuration,
 		nModel.Template,
+		nModel.UniqueKey,
 	).StructScan(&newNModel); err != nil {
 		return notification.Notification{}, err
 	}

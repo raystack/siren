@@ -1,5 +1,6 @@
 [
     {
+        "id": "123",
         "namespace_id": 1,
         "type": "receiver",
         "data": {
@@ -9,6 +10,7 @@
         "template": ""
     },
     {
+        "id": "456",
         "namespace_id": 1,
         "type": "subscriber",
         "data": {
