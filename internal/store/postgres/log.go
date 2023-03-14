@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/internal/store/model"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/internal/store/model"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 const notificationLogTableName = "notification_log"

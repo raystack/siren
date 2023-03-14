@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/worker"
-	"github.com/odpf/siren/plugins/queues"
-	"github.com/odpf/siren/plugins/queues/postgresq"
+	"github.com/goto/siren/config"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/pkg/worker"
+	"github.com/goto/siren/plugins/queues"
+	"github.com/goto/siren/plugins/queues/postgresq"
 	"github.com/spf13/cobra"
 )
 

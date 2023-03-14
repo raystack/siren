@@ -7,11 +7,11 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/internal/store/model"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/pgc"
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/internal/store/model"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
 )
 
 const subscriptionInsertQuery = `

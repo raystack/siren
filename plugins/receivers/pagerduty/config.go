@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/odpf/siren/pkg/httpclient"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/pkg/secret"
+	"github.com/goto/siren/pkg/httpclient"
+	"github.com/goto/siren/pkg/retry"
+	"github.com/goto/siren/pkg/secret"
 )
 
 // AppConfig is a config loaded when siren is started

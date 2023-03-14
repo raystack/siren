@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/goto/siren/core/alert"
 	"github.com/mitchellh/hashstructure/v2"
-	"github.com/odpf/siren/core/alert"
 	"github.com/stretchr/testify/require"
 )
 

@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"io"
 
+	"github.com/goto/siren/pkg/errors"
 	"github.com/gtank/cryptopasta"
-	"github.com/odpf/siren/pkg/errors"
 )
 
 type Crypto struct {

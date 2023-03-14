@@ -24,14 +24,14 @@ Siren provider represents a monitoring server. We define alerts and alerts routi
 }
 ```
 
-Monitoring providers usually have tenants, a sharded way of storing and querying telemetry data. Siren calls them **namespaces**. You should create a namespaces with the same name as the tenant of your monitoring providers. Example: the below namespace represent the tenant "odpf".
+Monitoring providers usually have tenants, a sharded way of storing and querying telemetry data. Siren calls them **namespaces**. You should create a namespaces with the same name as the tenant of your monitoring providers. Example: the below namespace represent the tenant "gotocompany".
 
 ```json
 # namespace
 {
   "id": "10",
-  "urn": "odpf",
-  "name": "odpf",
+  "urn": "gotocompany",
+  "name": "gotocompany",
   "provider": {
     "id": 3
   },

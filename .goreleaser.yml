@@ -16,7 +16,7 @@ builds:
     flags:
       - -a
     ldflags:
-      - -s -w -X github.com/odpf/siren/config.Version={{.Tag}} -X github.com/odpf/siren/config.BuildCommit={{.FullCommit}} -X github.com/odpf/siren/config.BuildDate={{.Date}}
+      - -s -w -X github.com/goto/siren/config.Version={{.Tag}} -X github.com/goto/siren/config.BuildCommit={{.FullCommit}} -X github.com/goto/siren/config.BuildDate={{.Date}}
     env:
       - CGO_ENABLED=0
     goos: [darwin, linux, windows]
@@ -56,16 +56,16 @@ dockers:
       - siren
     dockerfile: Dockerfile
     image_templates:
-      - "docker.io/odpf/{{.ProjectName}}:latest"
-      - "docker.io/odpf/{{.ProjectName}}:{{ .Version }}"
-      - "docker.io/odpf/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "docker.io/gotocompany/{{.ProjectName}}:latest"
+      - "docker.io/gotocompany/{{.ProjectName}}:{{ .Version }}"
+      - "docker.io/gotocompany/{{.ProjectName}}:{{ .Tag }}-amd64"
 
 brews:
   - name: siren
-    homepage: "https://github.com/odpf/siren"
+    homepage: "https://github.com/goto/siren"
     description: "Universal data observability tool."
     tap:
-      owner: odpf
+      owner: goto
       name: homebrew-taps
     license: "Apache 2.0"
     folder: Formula
@@ -74,5 +74,5 @@ brews:
     install: |-
       bin.install "siren"
     commit_author:
-      name: Ravi Suhag
-      email: suhag.ravi@gmail.com
+      name: github-actions[bot]
+      email: 41898282+github-actions[bot]@users.noreply.github.com

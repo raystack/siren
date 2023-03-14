@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/goto/siren/core/template"
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/template"
 )
 
 type Template struct {

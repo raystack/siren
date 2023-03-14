@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 )
 
 // Service handles business logic

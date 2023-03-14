@@ -42,7 +42,7 @@ $ siren template upsert --file template.yaml
         {
             "name": "team",
             "type": "string",
-            "default": "odpf",
+            "default": "gotocompany",
             "description": "Name of the team that owns the deployment"
         },
         {
@@ -92,7 +92,7 @@ The response body will look like this:
     {
       "name": "team",
       "type": "string",
-      "default": "odpf",
+      "default": "gotocompany",
       "description": "Name of the team that owns the deployment"
     },
     {

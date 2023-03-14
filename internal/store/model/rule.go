@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/pkg/errors"
 )
 
 type Rule struct {

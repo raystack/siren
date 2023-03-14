@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	saltlog "github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/notification/mocks"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/plugins/queues"
+	saltlog "github.com/goto/salt/log"
+	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/core/notification/mocks"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/plugins/queues"
 	"github.com/stretchr/testify/mock"
 )
 

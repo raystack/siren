@@ -9,8 +9,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/odpf/siren/pkg/httpclient"
-	"github.com/odpf/siren/pkg/retry"
+	"github.com/goto/siren/pkg/httpclient"
+	"github.com/goto/siren/pkg/retry"
 )
 
 const (

@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/pkg/errors"
 
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/internal/api"
-	"github.com/odpf/siren/internal/api/mocks"
-	"github.com/odpf/siren/internal/api/v1beta1"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/internal/api"
+	"github.com/goto/siren/internal/api/mocks"
+	"github.com/goto/siren/internal/api/v1beta1"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/stretchr/testify/assert"
 )
 

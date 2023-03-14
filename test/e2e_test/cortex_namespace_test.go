@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/goto/siren/config"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/internal/server"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -80,8 +80,8 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 
 	s.Run("initial state alert config not set, add a namespace will set config for the provider tenant", func() {
 		_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-			Name:        "new-odpf-1",
-			Urn:         "new-odpf-1",
+			Name:        "new-gotocompany-1",
+			Urn:         "new-gotocompany-1",
 			Provider:    1,
 			Credentials: nil,
 			Labels: map[string]string{
@@ -90,7 +90,7 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 		})
 		s.Require().NoError(err)
 
-		bodyBytes, err := fetchCortexAlertmanagerConfig(s.testBench.NginxHost, "new-odpf-1")
+		bodyBytes, err := fetchCortexAlertmanagerConfig(s.testBench.NginxHost, "new-gotocompany-1")
 		s.Require().NoError(err)
 
 		expectedScenarioCortexAM, err := os.ReadFile("testdata/cortex/expected-cortexamconfig-scenario.yaml")

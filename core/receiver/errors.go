@@ -3,7 +3,7 @@ package receiver
 import (
 	"fmt"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 )
 
 var (

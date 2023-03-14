@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 type Silence struct {

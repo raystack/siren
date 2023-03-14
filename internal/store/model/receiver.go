@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 type Receiver struct {

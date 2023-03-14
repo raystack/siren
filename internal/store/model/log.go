@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/goto/siren/core/log"
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/log"
 )
 
 type NotificationLog struct {

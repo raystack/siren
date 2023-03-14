@@ -1,7 +1,7 @@
 [
     {
         "provider_id": 1,
-        "resource_name": "odpf-kafka-1",
+        "resource_name": "gotocompany-kafka-1",
         "metric_name": "cpu_usage_user",
         "metric_value": "97.30",
         "severity": "CRITICAL",
@@ -10,7 +10,7 @@
     },
     {
         "provider_id": 1,
-        "resource_name": "odpf-kafka-2",
+        "resource_name": "gotocompany-kafka-2",
         "metric_name": "cpu_usage_user",
         "metric_value": "97.95",
         "severity": "WARNING",
@@ -19,7 +19,7 @@
     },
     {
         "provider_id": 1,
-        "resource_name": "odpf-kafka-1",
+        "resource_name": "gotocompany-kafka-1",
         "metric_name": "cpu_usage_user",
         "metric_value": "98.30",
         "severity": "CRITICAL",

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/odpf/siren/core/provider"
+	"github.com/goto/siren/core/provider"
 )
 
 //go:generate mockery --name=Repository -r --case underscore --with-expecter --structname NamespaceRepository --filename namespace_repository.go --output=./mocks

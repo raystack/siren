@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/odpf/siren/cli"
+	"github.com/goto/siren/cli"
 )
 
 func main() {

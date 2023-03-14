@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	alert "github.com/odpf/siren/core/alert"
+	alert "github.com/goto/siren/core/alert"
 
 	mock "github.com/stretchr/testify/mock"
 )

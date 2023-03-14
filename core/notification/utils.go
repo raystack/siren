@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/goto/siren/core/alert"
 	"github.com/mitchellh/hashstructure/v2"
-	"github.com/odpf/siren/core/alert"
 )
 
 func removeDuplicateStringValues(strSlice []string) []string {

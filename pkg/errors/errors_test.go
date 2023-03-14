@@ -4,7 +4,7 @@ import (
 	goerrors "errors"
 	"testing"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 

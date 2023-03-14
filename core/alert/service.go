@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 )
 
 //go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks

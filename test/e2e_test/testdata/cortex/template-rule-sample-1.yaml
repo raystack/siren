@@ -11,7 +11,7 @@ body:
       environment: "{{ $labels.environment }}"
       team: "[[.team]]"
     annotations:
-      dashboard: https://dashboard.odpf.io/xxx
+      dashboard: https://dashboard.gotocompany.com/xxx
       summary: CPU usage has been {{ printf "%0.2f" $value }} for last [[.for]] on host {{ $labels.host }}
       resource: "{{ $labels.host }}"
       template: cpu-usage
@@ -26,7 +26,7 @@ body:
       environment: "{{ $labels.environment }}"
       team: "[[.team]]"
     annotations:
-      dashboard: https://dashboard.odpf.io/xxx
+      dashboard: https://dashboard.gotocompany.com/xxx
       summary: CPU usage has been {{ printf "%0.2f" $value }} for last [[.for]] on host {{ $labels.host }}
       resource: "{{ $labels.host }}"
       template: cpu-usage
@@ -46,6 +46,6 @@ variables:
   - name: team
     type: string
     description: For eg team name which the alert should go to
-    default: odpf-infra
+    default: gotocompany-infra
 tags:
   - systems

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 )
 
 var (

@@ -3,7 +3,7 @@ package notification
 import (
 	"context"
 
-	"github.com/odpf/siren/plugins/queues"
+	"github.com/goto/siren/plugins/queues"
 )
 
 //go:generate mockery --name=Notifier -r --case underscore --with-expecter --structname Notifier --filename notifier.go --output=./mocks

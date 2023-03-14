@@ -7,10 +7,10 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/internal/store/model"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/namespace"
+	"github.com/goto/siren/internal/store/model"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 const namespaceInsertQuery = `

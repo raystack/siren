@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/goto/siren/core/template"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
 	"gopkg.in/yaml.v3"
 )

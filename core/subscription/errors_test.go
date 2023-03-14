@@ -3,7 +3,7 @@ package subscription_test
 import (
 	"testing"
 
-	"github.com/odpf/siren/core/subscription"
+	"github.com/goto/siren/core/subscription"
 )
 
 func TestError(t *testing.T) {

@@ -50,7 +50,7 @@ $ docker run -d \
     -p 8080:8080 \
     --env-file .env \
     --name siren-server \
-    odpf/siren:<version> \
+    gotocompany/siren:<version> \
     server start
 ```
 
@@ -73,25 +73,25 @@ $ docker run -d \
     -p 8080:8080 \
     -v $(pwd)/config.yaml:/config.yaml \
     --name siren-server \
-    odpf/siren:<version> \
+    gotocompany/siren:<version> \
     server start -c /config.yaml
 ```
 
 ## Use the Helm chart
 
 ### Pre-requisites for Helm chart
-Siren can be installed in Kubernetes using the Helm chart from https://github.com/odpf/charts.
+Siren can be installed in Kubernetes using the Helm chart from https://github.com/goto/charts.
 
 Ensure that the following requirements are met:
 - Kubernetes 1.14+
 - Helm version 3.x is [installed](https://helm.sh/docs/intro/install/)
 
-### Add ODPF Helm repository
+### Add gotocompany Helm repository
 
-Add ODPF chart repository to Helm:
+Add gotocompany chart repository to Helm:
 
 ```
-helm repo add odpf https://odpf.github.io/charts/
+helm repo add gotocompany https://goto.github.io/charts/
 ```
 
 You can update the chart repository by running:
@@ -104,7 +104,7 @@ helm repo update
 
 The following table lists the configurable parameters of the Siren chart and their default values.
 
-See full helm values guide [here](https://github.com/odpf/charts/tree/main/stable/siren#values).
+See full helm values guide [here](https://github.com/goto/charts/tree/main/stable/siren#values).
 
 ```yaml title="values.yaml"
 app:
@@ -115,7 +115,7 @@ app:
   fullnameOverride: ""
 
   image:
-    repository: odpf/siren
+    repository: gotocompany/siren
     pullPolicy: Always
     tag: latest
   container:
@@ -169,5 +169,5 @@ app:
 And install it with the helm command line along with the values file:
 
 ```sh
-$ helm install my-release -f values.yaml odpf/siren
+$ helm install my-release -f values.yaml gotocompany/siren
 ```

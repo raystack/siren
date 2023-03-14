@@ -1,31 +1,31 @@
 [
     {
-        "name": "odpf-slack",
+        "name": "gotocompany-slack",
         "type": "slack",
         "labels": {
-            "entity": "odpf,org-a,org-b"
+            "entity": "gotocompany,org-a,org-b"
         },
         "configurations": {
             "token": "xxxxxxxxxx",
-            "workspace": "Odpf"
+            "workspace": "gotocompany"
         }
     },
     {
         "name": "alert-history",
         "type": "http",
         "labels": {
-            "entity": "odpf,org-a,org-b,org-c"
+            "entity": "gotocompany,org-a,org-b,org-c"
         },
         "configurations": {
-            "url": "http://siren.odpf.io/v1beta1/alerts/cortex/1"
+            "url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1"
         }
     },
     {
-        "name": "odpf_pagerduty",
+        "name": "gotocompany_pagerduty",
         "type": "pagerduty",
         "labels": {
-            "entity": "odpf",
-            "team": "siren-odpf"
+            "entity": "gotocompany",
+            "team": "siren-gotocompany"
         },
         "configurations": {
             "service_key": "1212121212121212121212121"

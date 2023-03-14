@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 type Provider struct {

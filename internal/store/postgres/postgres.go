@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"github.com/odpf/salt/db"
-	"github.com/odpf/siren/internal/store/postgres/migrations"
+	"github.com/goto/salt/db"
+	"github.com/goto/siren/internal/store/postgres/migrations"
 )
 
 func Migrate(cfg db.Config) error {

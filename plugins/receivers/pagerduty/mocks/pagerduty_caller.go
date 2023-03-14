@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	pagerduty "github.com/odpf/siren/plugins/receivers/pagerduty"
+	pagerduty "github.com/goto/siren/plugins/receivers/pagerduty"
 	mock "github.com/stretchr/testify/mock"
 )
 

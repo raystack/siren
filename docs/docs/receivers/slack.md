@@ -102,7 +102,7 @@ Slack has additional `SubscriptionConfig` where user could routes the notificati
 }
 ```
 
-The `channel_type` has two possible enum values `channel` and `user`. The default value of this is `channel`. If `channel_type` is channel, `channel_name` should be a slack channel handle in the workspace e.g. `#odpf-critical`. If one wants to send notification to an individual, `channel_type` needs to be `user` and `channel_name` needs to be populated with slack user's e-mail e.g. `user1@odpf.io`.
+The `channel_type` has two possible enum values `channel` and `user`. The default value of this is `channel`. If `channel_type` is channel, `channel_name` should be a slack channel handle in the workspace e.g. `#gotocompany-critical`. If one wants to send notification to an individual, `channel_type` needs to be `user` and `channel_name` needs to be populated with slack user's e-mail e.g. `user1@gotocompany.com`.
 
 
 ## Message Payload

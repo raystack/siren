@@ -64,18 +64,18 @@ The `id` we got from the provider creation is important to create a namespace la
 
 ### Register Namespaces
 
-For multi-tenant scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `odpf` and `non-odpf`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
+For multi-tenant scenario, which [CortexMetrics](https://cortexmetrics.io/) supports, we need to define namespaces in Siren. Assuming there are 2 tenants in Cortex, `gotocompany` and `non-gotocompany`, we need to create 2 namespaces. This could be done in similar way with how we created provider.
 
 ```bash  title=ns1.yaml
-urn: odpf-ns
-name: odpf-ns
+urn: gotocompany-ns
+name: gotocompany-ns
 provider:
     id: 1
 ```
 
 ```bash  title=ns2.yaml
-urn: non-odpf-ns
-name: non-odpf-ns
+urn: non-gotocompany-ns
+name: non-gotocompany-ns
 provider:
     id: 1
 ```
@@ -94,8 +94,8 @@ $ siren namespace create --file ns1.yaml
   --url `}{defaultHost}{`/`}{apiVersion}{`/namespaces
   --header 'content-type: application/json'
   --data-raw '{
-    "urn": "odpf-ns",
-    "name": "odpf-ns",
+    "urn": "gotocompany-ns",
+    "name": "gotocompany-ns",
     "provider": {
         "id": 1
     }
@@ -118,8 +118,8 @@ $ siren namespace create --file ns2.yaml
   --url `}{defaultHost}{`/`}{apiVersion}{`/namespaces
   --header 'content-type: application/json'
   --data-raw '{
-    "urn": "non-odpf-ns",
-    "name": "non-odpf-ns",
+    "urn": "non-gotocompany-ns",
+    "name": "non-gotocompany-ns",
     "provider": {
         "id": 2
     }
@@ -172,8 +172,8 @@ $ siren namespace list
 Showing 2 of 2 namespaces
 
 ID      URN             NAME
-1       odpf-ns         odpf-ns
-2       non-odpf-ns     non-odpf-ns
+1       gotocompany-ns         gotocompany-ns
+2       non-gotocompany-ns     non-gotocompany-ns
 
 For details on a namespace, try: siren namespace view <id>
 ```
@@ -326,9 +326,9 @@ Now we already have a `CPU` template, we can create a rule based on that templat
 ```yaml  title=cpu_test.yaml
 apiVersion: v2
 type: rule
-namespace: odpf
+namespace: gotocompany
 provider: localhost-dev-cortex
-providerNamespace: odpf-ns
+providerNamespace: gotocompany-ns
 rules:
     cpuGroup:
         template: CPU
@@ -341,7 +341,7 @@ rules:
             - name: critical
               value: 195
 ```
-We defined a rule based on `CPU` template for namespace urn `odpf-ns` and provider urn `localhost-dev-cortex`. The rule group name is `cpuGroup` and there are also some variables to be assign to the template when the template is rendered. Let's upload the rule with Siren CLI.
+We defined a rule based on `CPU` template for namespace urn `gotocompany-ns` and provider urn `localhost-dev-cortex`. The rule group name is `cpuGroup` and there are also some variables to be assign to the template when the template is rendered. Let's upload the rule with Siren CLI.
 
 <Tabs groupId="api">
   <TabItem value="cli" label="CLI" default>
@@ -363,7 +363,7 @@ You could verify the created rules by getting all registered rules in CortexMetr
 
   ```bash
   curl --location --request GET 'http://localhost:9009/api/v1/rules' \
-  --header 'X-Scope-OrgId: odpf-ns'
+  --header 'X-Scope-OrgId: gotocompany-ns'
   ```
 
   </TabItem>
@@ -371,7 +371,7 @@ You could verify the created rules by getting all registered rules in CortexMetr
 
 The response body should be in `yaml` format and like this.
 ```yaml
-odpf:
+gotocompany:
     - name: cpuGroup
       rules:
         - alert: CPUWarning
@@ -403,23 +403,23 @@ The first thing that we should do is knowing what would be the labels sent by Co
 
 ```yaml
 severity: WARNING
-team: odpf
+team: gotocompany
 service: some-service
 environment: integration
 resource_name: some-resource
 ```
 
-We want to subscribe all notifications owned by `odpf` team and has severity `WARNING` regardless the service name and route the notification to `file` with receiver id `2` (the one that we created in the [previous](#22-register-a-receiver) part).
+We want to subscribe all notifications owned by `gotocompany` team and has severity `WARNING` regardless the service name and route the notification to `file` with receiver id `2` (the one that we created in the [previous](#22-register-a-receiver) part).
 
 Prepare a subscription detail and create a new subscription with Siren CLI.
 ```bash  title=cpu_subs.yaml
-urn: subscribe-cpu-odpf-warning
+urn: subscribe-cpu-gotocompany-warning
 namespace: 1
 receivers:
   - id: 1
   - id: 2
 match
-  team: odpf
+  team: gotocompany
   severity: WARNING
 ```
 
@@ -438,7 +438,7 @@ match
 --header 'Content-Type: application/json'
 --header 'Accept: application/json'
 --data-raw '{
-  "urn": "subscribe-cpu-odpf-warning",
+  "urn": "subscribe-cpu-gotocompany-warning",
   "namespace": 1,
   "receivers": [
     {
@@ -449,7 +449,7 @@ match
     }
   ],
   "match": {
-    "team": "odpf",
+    "team": "gotocompany",
     "severity": "WARNING"
   }
 }'`}
@@ -464,7 +464,7 @@ Once a subscription is created, let's manually trigger alert in CortexMetrics wi
 
   ```bash
   curl --location --request POST 'http://localhost:9009/api/prom/alertmanager/api/v1/alerts'
-  --header 'X-Scope-OrgId: odpf-ns'
+  --header 'X-Scope-OrgId: gotocompany-ns'
   --header 'Content-Type: application/json' \
   --data-raw '[
       {
@@ -472,7 +472,7 @@ Once a subscription is created, let's manually trigger alert in CortexMetrics wi
           "value": 1,
           "labels": {
               "severity": "WARNING",
-              "team": "odpf",
+              "team": "gotocompany",
               "service": "some-service",
               "environment": "integration"
           },
@@ -527,7 +527,7 @@ For details on a alert, try: siren alert view <id>
 We also expect notifications have been published to the receiver id `2`. You can check a new notification is already added in `./out-file-sink2.json` with this value.
 
 ```json
-{"environment":"integration","generator_url":"","groupKey":"{}:{severity=\"WARNING\"}","metricName":"test_alert","metricValue":"1","num_alerts_firing":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","team":"odpf","template":"alert_test"}
+{"environment":"integration","generator_url":"","groupKey":"{}:{severity=\"WARNING\"}","metricName":"test_alert","metricValue":"1","num_alerts_firing":1,"resource":"test_alert","routing_method":"subscribers","service":"some-service","severity":"WARNING","status":"firing","team":"gotocompany","template":"alert_test"}
 ```
 
 ## What Next?

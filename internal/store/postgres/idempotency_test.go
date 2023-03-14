@@ -7,16 +7,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
+	"github.com/goto/salt/db"
+	"github.com/goto/salt/dockertestx"
+	"github.com/goto/salt/log"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/internal/store/postgres"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 type IdempotencyRepositoryTestSuite struct {

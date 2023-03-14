@@ -10,7 +10,7 @@ Dependencies
  - PostgreSQL
  - [CortexMetrics](https://cortexmetrics.io/docs/getting-started/)
 
-You need to prepare and run above dependencies first before running Siren. Siren also has a [`docker-compose.yaml`](https://github.com/odpf/siren/blob/main/docker-compose.yaml) file in its repo that has all required dependencies. If you are interested to use it, you just need to `git clone` the [repo](https://github.com/odpf/siren) and run `docker-compose up` in the root project.
+You need to prepare and run above dependencies first before running Siren. Siren also has a [`docker-compose.yaml`](https://github.com/goto/siren/blob/main/docker-compose.yaml) file in its repo that has all required dependencies. If you are interested to use it, you just need to `git clone` the [repo](https://github.com/goto/siren) and run `docker-compose up` in the root project.
 
 ### Initialization
 
@@ -111,7 +111,7 @@ Siren CLI supports CLI client to communicate with a Siren server. To initialize 
 $ siren config init
 ```
 
-A yaml file will be created in the `~/.config/odpf/siren.yaml` directory. Open this file to configure the host for Siren server as in the example below:
+A yaml file will be created in the `~/.config/gotocompany/siren.yaml` directory. Open this file to configure the host for Siren server as in the example below:
 
 ```yaml
 host: "localhost:8080"

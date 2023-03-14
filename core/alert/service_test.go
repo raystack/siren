@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/alert/mocks"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/alert/mocks"
+	"github.com/goto/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

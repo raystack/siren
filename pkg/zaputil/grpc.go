@@ -1,7 +1,7 @@
 package zaputil
 
 import (
-	"github.com/odpf/salt/log"
+	"github.com/goto/salt/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"

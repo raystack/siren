@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/cmdx"
+	"github.com/goto/salt/cmdx"
 
 	"github.com/spf13/cobra"
 )
@@ -21,10 +21,10 @@ func New() *cobra.Command {
 			"group": "core",
 			"help:learn": heredoc.Doc(`
 				Use 'siren <command> <subcommand> --help' for more information about a command.
-				Read the manual at https://odpf.github.io/siren/
+				Read the manual at https://goto.github.io/siren/
 			`),
 			"help:feedback": heredoc.Doc(`
-				Open an issue here https://github.com/odpf/siren/issues
+				Open an issue here https://github.com/goto/siren/issues
 			`),
 			"help:environment": heredoc.Doc(`
 				See 'siren help environment' for the list of supported environment variables.

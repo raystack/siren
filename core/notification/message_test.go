@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/notification/mocks"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/core/notification/mocks"
 	"github.com/stretchr/testify/mock"
 )
 

@@ -5,12 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/pkg/secret"
-	"github.com/odpf/siren/plugins/receivers/slack"
-	"github.com/odpf/siren/plugins/receivers/slack/mocks"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/retry"
+	"github.com/goto/siren/pkg/secret"
+	"github.com/goto/siren/plugins/receivers/slack"
+	"github.com/goto/siren/plugins/receivers/slack/mocks"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -37,7 +37,7 @@ func TestService_BuildData(t *testing.T) {
 				},
 				Confs: map[string]interface{}{
 					"token":     secret.MaskableString("key"),
-					"workspace": "odpf",
+					"workspace": "gotocompany",
 				},
 				Err: errors.New("could not get channels: some error"),
 			},
@@ -53,7 +53,7 @@ func TestService_BuildData(t *testing.T) {
 				},
 				Confs: map[string]interface{}{
 					"token":     secret.MaskableString("key"),
-					"workspace": "odpf",
+					"workspace": "gotocompany",
 				},
 			},
 		}

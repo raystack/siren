@@ -5,12 +5,12 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 module.exports = {
   title: 'Siren',
   tagline: 'Universal data observability toolkit',
-  url: 'https://odpf.github.io',
+  url: 'https://goto.github.io',
   baseUrl: '/siren/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-  organizationName: 'odpf',
+  organizationName: 'goto',
   projectName: 'siren',
   customFields: {
     apiVersion: 'v1beta1',
@@ -23,7 +23,7 @@ module.exports = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/odpf/siren/edit/master/docs/',
+          editUrl: 'https://github.com/goto/siren/edit/master/docs/',
           sidebarCollapsed: true,
           breadcrumbs: false,
         },
@@ -65,7 +65,7 @@ module.exports = {
             className: 'header-slack-link',
           },
           {
-            href: 'https://github.com/odpf/siren',
+            href: 'https://github.com/goto/siren',
             className: 'navbar-item-github',
             position: 'right',
           },
@@ -81,7 +81,7 @@ module.exports = {
       },
       announcementBar: {
         id: 'star-repo',
-        content: '⭐️ If you like Siren, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/odpf/siren">GitHub</a>! ⭐',
+        content: '⭐️ If you like Siren, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/goto/siren">GitHub</a>! ⭐',
         backgroundColor: '#222',
         textColor: '#eee',
         isCloseable: true,

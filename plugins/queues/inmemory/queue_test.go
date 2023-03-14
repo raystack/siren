@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/plugins/queues/inmemory"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/plugins/queues/inmemory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

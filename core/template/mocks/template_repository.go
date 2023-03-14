@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	template "github.com/odpf/siren/core/template"
+	template "github.com/goto/siren/core/template"
 	mock "github.com/stretchr/testify/mock"
 )
 

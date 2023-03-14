@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	saltlog "github.com/odpf/salt/log"
+	saltlog "github.com/goto/salt/log"
 	"go.opencensus.io/trace"
 
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/telemetry"
 )
 
 //go:generate mockery --name=Dispatcher -r --case underscore --with-expecter --structname Dispatcher --filename dispatcher.go --output=./mocks

@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/template"
+	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/namespace"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/core/template"
 )
 
 //go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks

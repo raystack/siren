@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/template"
+	"github.com/goto/siren/pkg/errors"
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
 )
 
 // Transform alerts and populate Data and Labels to be interpolated to the system-default template

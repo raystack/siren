@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	subscription "github.com/odpf/siren/core/subscription"
+	subscription "github.com/goto/siren/core/subscription"
 	mock "github.com/stretchr/testify/mock"
 )
 

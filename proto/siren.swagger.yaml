@@ -226,17 +226,17 @@ paths:
           schema:
             type: object
             properties:
+              name:
+                type: string
+              provider:
+                type: string
+                format: uint64
               credentials:
                 type: object
               labels:
                 type: object
                 additionalProperties:
                   type: string
-              name:
-                type: string
-              provider:
-                type: string
-                format: uint64
       tags:
         - Namespace
   /v1beta1/providers:
@@ -348,18 +348,18 @@ paths:
           schema:
             type: object
             properties:
-              credentials:
-                type: object
               host:
                 type: string
-              labels:
-                type: object
-                additionalProperties:
-                  type: string
               name:
                 type: string
               type:
                 type: string
+              credentials:
+                type: object
+              labels:
+                type: object
+                additionalProperties:
+                  type: string
       tags:
         - Provider
   /v1beta1/receivers:
@@ -462,14 +462,14 @@ paths:
           schema:
             type: object
             properties:
-              configurations:
-                type: object
+              name:
+                type: string
               labels:
                 type: object
                 additionalProperties:
                   type: string
-              name:
-                type: string
+              configurations:
+                type: object
       tags:
         - Receiver
   /v1beta1/receivers/{id}/send:
@@ -753,19 +753,20 @@ paths:
           schema:
             type: object
             properties:
-              match:
-                type: object
-                additionalProperties:
-                  type: string
+              urn:
+                type: string
               namespace:
                 type: string
                 format: uint64
               receivers:
                 type: array
                 items:
+                  type: object
                   $ref: '#/definitions/ReceiverMetadata'
-              urn:
-                type: string
+              match:
+                type: object
+                additionalProperties:
+                  type: string
       tags:
         - Subscription
   /v1beta1/templates:
@@ -884,27 +885,27 @@ definitions:
       id:
         type: string
         format: uint64
-      metric_name:
-        type: string
-      metric_value:
-        type: string
-      namespace_id:
-        type: string
-        format: uint64
       provider_id:
         type: string
         format: uint64
       resource_name:
         type: string
-      rule:
+      metric_name:
+        type: string
+      metric_value:
         type: string
       severity:
         type: string
-      silence_status:
+      rule:
         type: string
       triggered_at:
         type: string
         format: date-time
+      namespace_id:
+        type: string
+        format: uint64
+      silence_status:
+        type: string
   Any:
     type: object
     properties:
@@ -917,6 +918,7 @@ definitions:
       alerts:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Alert'
   CreateAlertsWithNamespaceResponse:
     type: object
@@ -924,29 +926,30 @@ definitions:
       alerts:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Alert'
   CreateNamespaceRequest:
     type: object
     properties:
-      created_at:
+      name:
         type: string
-        format: date-time
+      urn:
+        type: string
+      provider:
+        type: string
+        format: uint64
       credentials:
         type: object
       labels:
         type: object
         additionalProperties:
           type: string
-      name:
+      created_at:
         type: string
-      provider:
-        type: string
-        format: uint64
+        format: date-time
       updated_at:
         type: string
         format: date-time
-      urn:
-        type: string
   CreateNamespaceResponse:
     type: object
     properties:
@@ -956,20 +959,20 @@ definitions:
   CreateProviderRequest:
     type: object
     properties:
-      credentials:
-        type: object
       host:
         type: string
-      labels:
-        type: object
-        additionalProperties:
-          type: string
+      urn:
+        type: string
       name:
         type: string
       type:
         type: string
-      urn:
-        type: string
+      credentials:
+        type: object
+      labels:
+        type: object
+        additionalProperties:
+          type: string
   CreateProviderResponse:
     type: object
     properties:
@@ -979,16 +982,16 @@ definitions:
   CreateReceiverRequest:
     type: object
     properties:
-      configurations:
-        type: object
-      labels:
-        type: object
-        additionalProperties:
-          type: string
       name:
         type: string
       type:
         type: string
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+      configurations:
+        type: object
   CreateReceiverResponse:
     type: object
     properties:
@@ -1001,13 +1004,13 @@ definitions:
       namespace_id:
         type: string
         format: uint64
-      target_expression:
-        type: object
+      type:
+        type: string
       target_id:
         type: string
         format: uint64
-      type:
-        type: string
+      target_expression:
+        type: object
   CreateSilenceResponse:
     type: object
     properties:
@@ -1016,19 +1019,20 @@ definitions:
   CreateSubscriptionRequest:
     type: object
     properties:
-      match:
-        type: object
-        additionalProperties:
-          type: string
+      urn:
+        type: string
       namespace:
         type: string
         format: uint64
       receivers:
         type: array
         items:
+          type: object
           $ref: '#/definitions/ReceiverMetadata'
-      urn:
-        type: string
+      match:
+        type: object
+        additionalProperties:
+          type: string
   CreateSubscriptionResponse:
     type: object
     properties:
@@ -1083,6 +1087,7 @@ definitions:
       alerts:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Alert'
   ListNamespacesResponse:
     type: object
@@ -1090,6 +1095,7 @@ definitions:
       namespaces:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Namespace'
   ListProvidersResponse:
     type: object
@@ -1097,6 +1103,7 @@ definitions:
       providers:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Provider'
   ListReceiversResponse:
     type: object
@@ -1104,6 +1111,7 @@ definitions:
       receivers:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Receiver'
   ListRulesResponse:
     type: object
@@ -1111,6 +1119,7 @@ definitions:
       rules:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Rule'
   ListSilencesResponse:
     type: object
@@ -1118,6 +1127,7 @@ definitions:
       silences:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Silence'
   ListSubscriptionsResponse:
     type: object
@@ -1125,6 +1135,7 @@ definitions:
       subscriptions:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Subscription'
   ListTemplatesResponse:
     type: object
@@ -1132,32 +1143,33 @@ definitions:
       templates:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Template'
   Namespace:
     type: object
     properties:
-      created_at:
-        type: string
-        format: date-time
-      credentials:
-        type: object
       id:
         type: string
         format: uint64
-      labels:
-        type: object
-        additionalProperties:
-          type: string
+      urn:
+        type: string
       name:
         type: string
       provider:
         type: string
         format: uint64
+      credentials:
+        type: object
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+      created_at:
+        type: string
+        format: date-time
       updated_at:
         type: string
         format: date-time
-      urn:
-        type: string
   NotifyReceiverResponse:
     type: object
   NullValue:
@@ -1175,61 +1187,61 @@ definitions:
   Provider:
     type: object
     properties:
-      created_at:
-        type: string
-        format: date-time
-      credentials:
-        type: object
-      host:
-        type: string
       id:
         type: string
         format: uint64
-      labels:
-        type: object
-        additionalProperties:
-          type: string
+      host:
+        type: string
+      urn:
+        type: string
       name:
         type: string
       type:
         type: string
+      credentials:
+        type: object
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+      created_at:
+        type: string
+        format: date-time
       updated_at:
         type: string
         format: date-time
-      urn:
-        type: string
   Receiver:
     type: object
     properties:
-      configurations:
-        type: object
-      created_at:
-        type: string
-        format: date-time
-      data:
-        type: object
       id:
         type: string
         format: uint64
-      labels:
-        type: object
-        additionalProperties:
-          type: string
       name:
         type: string
       type:
         type: string
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+      configurations:
+        type: object
+      data:
+        type: object
+      created_at:
+        type: string
+        format: date-time
       updated_at:
         type: string
         format: date-time
   ReceiverMetadata:
     type: object
     properties:
-      configuration:
-        type: object
       id:
         type: string
         format: uint64
+      configuration:
+        type: object
   RenderTemplateResponse:
     type: object
     properties:
@@ -1238,54 +1250,55 @@ definitions:
   Rule:
     type: object
     properties:
-      created_at:
-        type: string
-        format: date-time
-      enabled:
-        type: boolean
-      group_name:
-        type: string
       id:
         type: string
         format: uint64
       name:
         type: string
+      enabled:
+        type: boolean
+      group_name:
+        type: string
       namespace:
         type: string
-      provider_namespace:
-        type: string
-        format: uint64
       template:
         type: string
-      updated_at:
-        type: string
-        format: date-time
       variables:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Variables'
-  Silence:
-    type: object
-    properties:
       created_at:
         type: string
         format: date-time
-      deleted_at:
+      updated_at:
         type: string
         format: date-time
+      provider_namespace:
+        type: string
+        format: uint64
+  Silence:
+    type: object
+    properties:
       id:
         type: string
       namespace_id:
         type: string
         format: uint64
-      target_expression:
-        type: object
+      type:
+        type: string
       target_id:
         type: string
         format: uint64
-      type:
+      target_expression:
+        type: object
+      created_at:
         type: string
+        format: date-time
       updated_at:
+        type: string
+        format: date-time
+      deleted_at:
         type: string
         format: date-time
   Status:
@@ -1294,71 +1307,74 @@ definitions:
       code:
         type: integer
         format: int32
+      message:
+        type: string
       details:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Any'
-      message:
-        type: string
   Subscription:
     type: object
     properties:
-      created_at:
-        type: string
-        format: date-time
       id:
         type: string
         format: uint64
-      match:
-        type: object
-        additionalProperties:
-          type: string
+      urn:
+        type: string
       namespace:
         type: string
         format: uint64
       receivers:
         type: array
         items:
+          type: object
           $ref: '#/definitions/ReceiverMetadata'
-      updated_at:
-        type: string
-        format: date-time
-      urn:
-        type: string
-  Template:
-    type: object
-    properties:
-      body:
-        type: string
+      match:
+        type: object
+        additionalProperties:
+          type: string
       created_at:
         type: string
         format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  Template:
+    type: object
+    properties:
       id:
         type: string
         format: uint64
       name:
         type: string
+      body:
+        type: string
       tags:
         type: array
         items:
           type: string
+      created_at:
+        type: string
+        format: date-time
       updated_at:
         type: string
         format: date-time
       variables:
         type: array
         items:
+          type: object
           $ref: '#/definitions/TemplateVariables'
   TemplateVariables:
     type: object
     properties:
-      default:
-        type: string
-      description:
-        type: string
       name:
         type: string
       type:
+        type: string
+      default:
+        type: string
+      description:
         type: string
   UpdateNamespaceResponse:
     type: object
@@ -1387,15 +1403,16 @@ definitions:
         type: string
       namespace:
         type: string
-      provider_namespace:
-        type: string
-        format: uint64
       template:
         type: string
       variables:
         type: array
         items:
+          type: object
           $ref: '#/definitions/Variables'
+      provider_namespace:
+        type: string
+        format: uint64
   UpdateRuleResponse:
     type: object
     properties:
@@ -1410,12 +1427,12 @@ definitions:
   UpsertTemplateRequest:
     type: object
     properties:
-      body:
-        type: string
       id:
         type: string
         format: uint64
       name:
+        type: string
+      body:
         type: string
       tags:
         type: array
@@ -1424,6 +1441,7 @@ definitions:
       variables:
         type: array
         items:
+          type: object
           $ref: '#/definitions/TemplateVariables'
   UpsertTemplateResponse:
     type: object
@@ -1434,11 +1452,11 @@ definitions:
   Variables:
     type: object
     properties:
-      description:
-        type: string
       name:
+        type: string
+      value:
         type: string
       type:
         type: string
-      value:
+      description:
         type: string

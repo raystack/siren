@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/secret"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/secret"
 )
 
 //go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks

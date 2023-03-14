@@ -14,10 +14,10 @@ exporters:
     tls:
       insecure: true
     headers:
-      X-Scope-OrgID: odpf
+      X-Scope-OrgID: gotocompany
     external_labels:
       service: siren
-      team: odpf-infra
+      team: gotocompany-infra
       environment: development
       host: local
   logging:

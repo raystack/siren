@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/odpf/siren/plugins/providers/cortex"
+	"github.com/goto/siren/plugins/providers/cortex"
 )
 
 type Config struct {

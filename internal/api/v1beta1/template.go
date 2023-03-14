@@ -3,8 +3,8 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/core/template"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/goto/siren/core/template"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

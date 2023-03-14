@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/pkg/secret"
+	"github.com/goto/siren/pkg/secret"
 )
 
 func TestSlackCredentialConfig(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"html/template"
 
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/plugins"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/plugins"
 )
 
 // UnimplementedService is a base receiver provider service layer

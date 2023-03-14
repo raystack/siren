@@ -3,9 +3,9 @@ package postgres
 import (
 	"context"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/store/model"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/internal/store/model"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 const notificationInsertQuery = `

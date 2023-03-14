@@ -13,16 +13,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/goto/salt/db"
+	"github.com/goto/siren/config"
+	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/internal/server"
+	"github.com/goto/siren/internal/store/model"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/internal/store/model"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -112,7 +112,7 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 			"value": 1,
 			"labels": {
 				"severity": "WARNING",
-				"team": "odpf",
+				"team": "gotocompany",
 				"service": "some-service",
 				"environment": "integration"
 			},
@@ -126,8 +126,8 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 	]`
 
 	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-		Name:        "new-odpf-1",
-		Urn:         "new-odpf-1",
+		Name:        "new-gotocompany-1",
+		Urn:         "new-gotocompany-1",
 		Provider:    1,
 		Credentials: nil,
 		Labels: map[string]string{
@@ -142,10 +142,10 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 		})
 		s.Require().NoError(err)
 		_, err = s.client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
-			Name: "odpf-http",
+			Name: "gotocompany-http",
 			Type: "http",
 			Labels: map[string]string{
-				"entity": "odpf",
+				"entity": "gotocompany",
 				"kind":   "http",
 			},
 			Configurations: configs,
@@ -161,7 +161,7 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 				},
 			},
 			Match: map[string]string{
-				"team":        "odpf",
+				"team":        "gotocompany",
 				"service":     "some-service",
 				"environment": "integration",
 			},
@@ -169,7 +169,7 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 		s.Require().NoError(err)
 
 		for {
-			bodyBytes, err := triggerCortexAlert(s.testBench.NginxHost, "new-odpf-1", triggerAlertBody)
+			bodyBytes, err := triggerCortexAlert(s.testBench.NginxHost, "new-gotocompany-1", triggerAlertBody)
 			s.Assert().NoError(err)
 			if err != nil {
 				break
@@ -202,7 +202,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 						"summary": "this is test alert",
 						"service": "some-service",
 						"environment": "integration",
-						"team": "odpf"
+						"team": "gotocompany"
 					},
 					"annotations": {
 						"metric_name": "test_alert",
@@ -220,7 +220,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			"groupLabels": {},
 			"commonLabels": {
 				"environment": "integration",
-				"team": "odpf"
+				"team": "gotocompany"
 			},
 			"commonAnnotations": {
 				"metric_name": "test_alert",
@@ -230,14 +230,14 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 			},
 			"externalURL": "/api/prom/alertmanager",
 			"version": "4",
-			"groupKey": "{}/{environment=\"integration\",team=\"odpf\"}:{}",
+			"groupKey": "{}/{environment=\"integration\",team=\"gotocompany\"}:{}",
 			"truncatedAlerts": 0
 		}`
 	)
 
 	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-		Name:        "new-odpf-1",
-		Urn:         "new-odpf-1",
+		Name:        "new-gotocompany-1",
+		Urn:         "new-gotocompany-1",
 		Provider:    1,
 		Credentials: nil,
 		Labels: map[string]string{
@@ -249,7 +249,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 	s.Run("incoming alert in alerts hook API with matching subscription labels should trigger notification", func() {
 		waitChan := make(chan struct{}, 1)
 
-		// add receiver odpf-http
+		// add receiver gotocompany-http
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			body, err := io.ReadAll(r.Body)
 			defer r.Body.Close()
@@ -276,7 +276,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 				Template         string `json:"template"`
 			}
 
-			expectedBody := `{"alertname":"some alert name","environment":"integration","generator_url":"","id":"0998ab88-3f5d-4d4a-a66f-40960b105f37","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","notification_type":"subscriber","num_alerts_firing":1,"resource":"test_alert","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"odpf","template":"alert_test"}`
+			expectedBody := `{"alertname":"some alert name","environment":"integration","generator_url":"","id":"0998ab88-3f5d-4d4a-a66f-40960b105f37","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","notification_type":"subscriber","num_alerts_firing":1,"resource":"test_alert","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"gotocompany","template":"alert_test"}`
 
 			var (
 				expectedStruct sampleStruct
@@ -299,10 +299,10 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 		})
 		s.Require().NoError(err)
 		_, err = s.client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
-			Name: "odpf-http",
+			Name: "gotocompany-http",
 			Type: "http",
 			Labels: map[string]string{
-				"entity": "odpf",
+				"entity": "gotocompany",
 				"kind":   "http",
 			},
 			Configurations: configs,
@@ -318,7 +318,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 				},
 			},
 			Match: map[string]string{
-				"team":        "odpf",
+				"team":        "gotocompany",
 				"service":     "some-service",
 				"environment": "integration",
 			},
@@ -340,7 +340,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 
 	s.Run("triggering cortex alert with matching subscription labels and silence by labels should not trigger notification", func() {
 		targetExpression, err := structpb.NewStruct(map[string]interface{}{
-			"team":        "odpf",
+			"team":        "gotocompany",
 			"service":     "some-service",
 			"environment": "integration",
 		})
@@ -447,8 +447,8 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 	ctx := context.Background()
 
 	_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-		Name:        "new-odpf-1",
-		Urn:         "new-odpf-1",
+		Name:        "new-gotocompany-1",
+		Urn:         "new-gotocompany-1",
 		Provider:    1,
 		Credentials: nil,
 		Labels: map[string]string{
@@ -496,10 +496,10 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 		})
 		s.Require().NoError(err)
 		_, err = s.client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
-			Name: "odpf-http",
+			Name: "gotocompany-http",
 			Type: "http",
 			Labels: map[string]string{
-				"entity": "odpf",
+				"entity": "gotocompany",
 				"kind":   "http",
 			},
 			Configurations: configs,
@@ -515,7 +515,7 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 				},
 			},
 			Match: map[string]string{
-				"team":        "odpf",
+				"team":        "gotocompany",
 				"service":     "some-service",
 				"environment": "integration",
 			},

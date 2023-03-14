@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	saltlog "github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/notification/mocks"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/core/subscription"
+	saltlog "github.com/goto/salt/log"
+	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/core/notification/mocks"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/core/subscription"
 	"github.com/stretchr/testify/mock"
 )
 

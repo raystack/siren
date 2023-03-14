@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/pkg/pgc"
 )
 
 type Notification struct {

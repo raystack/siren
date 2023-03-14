@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	silence "github.com/odpf/siren/core/silence"
+	silence "github.com/goto/siren/core/silence"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -3,8 +3,8 @@ package config
 import (
 	"os"
 
+	"github.com/goto/siren/core/receiver"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/core/receiver"
 	"gopkg.in/yaml.v3"
 )
 

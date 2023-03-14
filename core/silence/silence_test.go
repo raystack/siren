@@ -3,10 +3,10 @@ package silence_test
 import (
 	"testing"
 
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/core/silence"
+	"github.com/goto/siren/core/subscription"
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/core/subscription"
 	"github.com/stretchr/testify/require"
 )
 

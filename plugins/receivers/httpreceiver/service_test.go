@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/plugins/receivers/httpreceiver"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/pkg/retry"
+	"github.com/goto/siren/plugins/receivers/httpreceiver"
 	"github.com/stretchr/testify/assert"
 )
 

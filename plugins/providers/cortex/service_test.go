@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/core/template"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/plugins/providers/cortex"
+	"github.com/goto/siren/plugins/providers/cortex/mocks"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/plugins/providers/cortex"
-	"github.com/odpf/siren/plugins/providers/cortex/mocks"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -69,7 +69,7 @@ func TestService_UpsertRule(t *testing.T) {
 				Name:        "team",
 				Type:        "string",
 				Description: "For eg team name which the alert should go to",
-				Default:     "odpf-infra",
+				Default:     "gotocompany-infra",
 			},
 		},
 		Tags: []string{"system"},
@@ -96,7 +96,7 @@ func TestService_UpsertRule(t *testing.T) {
 			},
 			{
 				Name:  "team",
-				Value: "odpf-infra",
+				Value: "gotocompany-infra",
 			},
 		},
 		ProviderNamespace: 1,
@@ -123,7 +123,7 @@ func TestService_UpsertRule(t *testing.T) {
 					copiedTemplate.Body = "[[x"
 					return &copiedTemplate
 				}(),
-				namespaceURN: "odpf",
+				namespaceURN: "gotocompany",
 			},
 			err: errors.New("template: parser:1: function \"x\" not defined"),
 		},
@@ -137,7 +137,7 @@ func TestService_UpsertRule(t *testing.T) {
 					copiedTemplate.Body = "name: a"
 					return &copiedTemplate
 				}(),
-				namespaceURN: "odpf",
+				namespaceURN: "gotocompany",
 			},
 			err: errors.New("cannot parse upserted rule"),
 		},
@@ -149,7 +149,7 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "odpf",
+				namespaceURN:     "gotocompany",
 			},
 			err: errors.New("cannot get rule group from cortex when upserting rules"),
 		},
@@ -166,7 +166,7 @@ func TestService_UpsertRule(t *testing.T) {
 					return &copiedRule
 				}(),
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "odpf",
+				namespaceURN:     "gotocompany",
 			},
 			err: errors.New("error calling cortex: some error"),
 		},
@@ -179,7 +179,7 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "odpf",
+				namespaceURN:     "gotocompany",
 			},
 			err: errors.New("error calling cortex: some error"),
 		},
@@ -192,7 +192,7 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "odpf",
+				namespaceURN:     "gotocompany",
 			},
 			err: nil,
 		},

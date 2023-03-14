@@ -8,10 +8,10 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/secret"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/secret"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 )
 
 func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {

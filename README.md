@@ -1,9 +1,9 @@
 # Siren
 
-![test workflow](https://github.com/odpf/siren/actions/workflows/test.yaml/badge.svg)
+![test workflow](https://github.com/goto/siren/actions/workflows/test.yaml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
-[![Version](https://img.shields.io/github/v/release/odpf/siren?logo=semantic-release)](Version)
-[![Coverage Status](https://coveralls.io/repos/github/odpf/siren/badge.svg?branch=main)](https://coveralls.io/github/odpf/siren?branch=main)
+[![Version](https://img.shields.io/github/v/release/goto/siren?logo=semantic-release)](Version)
+[![Coverage Status](https://coveralls.io/repos/github/goto/siren/badge.svg?branch=main)](https://coveralls.io/github/goto/siren?branch=main)
 
 Siren provides alerting on metrics of your applications using [Cortex metrics](https://cortexmetrics.io/) in a simple
 DIY configuration. With Siren, you can define templates(using go templates standard), and create/edit/enable/disable
@@ -34,7 +34,7 @@ Explore the following resources to get started with Siren:
 
 ## Run with Kubernetes
 
-- Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
+- Create a siren deployment using the helm chart available [here](https://github.com/goto/charts/tree/main/stable/siren)
 
 ## Running locally
 
@@ -55,7 +55,7 @@ Update the configs(db credentials etc.) as per your dev machine and docker confi
 Run the following commands to compile from source
 
 ```sh
-$ git clone git@github.com:odpf/siren.git
+$ git clone git@github.com:goto/siren.git
 $ cd siren
 $ go build main.go
 ```
@@ -97,10 +97,10 @@ Read our [contributing guide](docs/contribute/contribution.md) to learn about ou
 bugfixes and improvements, and how to build and test your changes to Siren.
 
 To help you get your feet wet and get you familiar with our contribution process, we have a list of
-[good first issues](https://github.com/odpf/siren/labels/good%20first%20issue) that contain bugs which have a relatively
+[good first issues](https://github.com/goto/siren/labels/good%20first%20issue) that contain bugs which have a relatively
 limited scope. This is a great place to get started.
 
-This project exists thanks to all the [contributors](https://github.com/odpf/siren/graphs/contributors).
+This project exists thanks to all the [contributors](https://github.com/goto/siren/graphs/contributors).
 
 ## License
 

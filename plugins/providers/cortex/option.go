@@ -1,6 +1,6 @@
 package cortex
 
-import "github.com/odpf/siren/pkg/httpclient"
+import "github.com/goto/siren/pkg/httpclient"
 
 type ServiceOption func(*PluginService)
 

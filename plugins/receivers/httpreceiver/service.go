@@ -8,13 +8,13 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/httpclient"
+	"github.com/goto/siren/pkg/retry"
+	"github.com/goto/siren/plugins/receivers/base"
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/httpclient"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/plugins/receivers/base"
 )
 
 type PluginService struct {

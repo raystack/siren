@@ -12,11 +12,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/goto/siren/config"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/internal/server"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )

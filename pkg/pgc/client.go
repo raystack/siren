@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/goto/salt/db"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/telemetry"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
 	"go.opencensus.io/trace"
 )
 

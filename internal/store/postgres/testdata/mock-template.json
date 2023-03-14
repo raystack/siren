@@ -25,7 +25,7 @@
             {
                 "name": "team",
                 "type": "string",
-                "default": "odpf",
+                "default": "gotocompany",
                 "description": "For eg team name which the alert should go to"
             }
         ]
@@ -51,7 +51,7 @@
             {
                 "name": "team",
                 "type": "string",
-                "default": "odpf",
+                "default": "gotocompany",
                 "description": "For eg team name which the alert should go to"
             }
         ]

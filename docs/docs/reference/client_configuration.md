@@ -14,6 +14,6 @@ You could easily generate client config by running this command:
 ```bash
 siren config init
 ```
-This will create (if not exists) a config file `${HOME}/.config/odpf/siren.yaml` with default values. You can modify the value as you wish.
+This will create (if not exists) a config file `${HOME}/.config/gotocompany/siren.yaml` with default values. You can modify the value as you wish.
 
 

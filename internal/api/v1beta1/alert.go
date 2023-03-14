@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/notification"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/notification"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

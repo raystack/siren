@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	alert "github.com/odpf/siren/core/alert"
+	alert "github.com/goto/siren/core/alert"
 
 	context "context"
 

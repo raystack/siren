@@ -3,8 +3,8 @@ package base
 import (
 	"context"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/plugins"
+	"github.com/goto/siren/core/notification"
+	"github.com/goto/siren/plugins"
 )
 
 // UnimplementedService is a base receiver plugin service layer

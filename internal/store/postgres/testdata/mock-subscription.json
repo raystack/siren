@@ -1,6 +1,6 @@
 [
     {
-        "urn": "alert-history-odpf",
+        "urn": "alert-history-gotocompany",
         "namespace": 2,
         "receivers": [
             {
@@ -9,36 +9,36 @@
         ]
     },
     {
-        "urn": "odpf-data-warning",
+        "urn": "gotocompany-data-warning",
         "namespace": 1,
         "receivers": [
             {
                 "id": 1,
                 "configuration": {
-                    "channel_name": "odpf-data"
+                    "channel_name": "gotocompany-data"
                 }
             }
         ],
         "match": {
             "environment": "integration",
-            "team": "odpf-data"
+            "team": "gotocompany-data"
         }
     },
     {
-        "urn": "odpf-pd",
+        "urn": "gotocompany-pd",
         "namespace": 2,
         "receivers": [
             {
                 "id": 1,
                 "configuration": {
-                    "channel_name": "odpf-data"
+                    "channel_name": "gotocompany-data"
                 }
             }
         ],
         "match": {
             "environment": "production",
             "severity": "CRITICAL",
-            "team": "odpf-app"
+            "team": "gotocompany-app"
         }
     }
 ]

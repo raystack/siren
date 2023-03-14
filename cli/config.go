@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/cmdx"
-	"github.com/odpf/salt/printer"
+	"github.com/goto/salt/cmdx"
+	"github.com/goto/salt/printer"
 	"github.com/spf13/cobra"
 )
 

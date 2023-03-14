@@ -1,8 +1,8 @@
-NAME="github.com/odpf/siren"
+NAME="github.com/goto/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "9cdffc3c1838ec72b35b2a1b9a170ca9c138db66"
+PROTON_COMMIT := "096f7ae75594dc5220420ce953d5a98032280d67"
 
 .PHONY: all build test clean dist vet proto install
 
@@ -30,9 +30,9 @@ lint: ## lint checker
 	golangci-lint run
 
 proto: ## Generate the protobuf files
-	@echo " > generating protobuf from odpf/proton"
+	@echo " > generating protobuf from gotocompany/proton"
 	@echo " > [info] make sure correct version of dependencies are installed using 'make install'"
-	@buf generate https://github.com/odpf/proton/archive/${PROTON_COMMIT}.zip#strip_components=1 --template buf.gen.yaml --path odpf/siren
+	@buf generate https://github.com/goto/proton/archive/${PROTON_COMMIT}.zip#strip_components=1 --template buf.gen.yaml --path gotocompany/siren
 	@echo " > protobuf compilation finished"
 
 clean: ## Clean the build artifacts

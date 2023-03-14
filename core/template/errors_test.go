@@ -3,7 +3,7 @@ package template_test
 import (
 	"testing"
 
-	"github.com/odpf/siren/core/template"
+	"github.com/goto/siren/core/template"
 )
 
 func TestError(t *testing.T) {

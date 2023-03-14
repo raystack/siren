@@ -3,7 +3,7 @@ package notification_test
 import (
 	"testing"
 
-	"github.com/odpf/siren/core/notification"
+	"github.com/goto/siren/core/notification"
 )
 
 func TestNotification_Validate(t *testing.T) {

@@ -6,14 +6,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/cmdx"
-	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/core/template"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/goto/salt/cmdx"
+	"github.com/goto/salt/printer"
+	"github.com/goto/siren/core/template"
+	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/spf13/cobra"
 )
 

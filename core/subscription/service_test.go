@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/core/subscription/mocks"
+	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/core/subscription/mocks"
 	"github.com/stretchr/testify/mock"
 )
 

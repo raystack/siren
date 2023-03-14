@@ -6,12 +6,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/salt/db"
+	"github.com/goto/salt/dockertestx"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/internal/store/postgres"
+	"github.com/goto/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
@@ -116,7 +116,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 			ExpectedSubscriptions: []subscription.Subscription{
 				{
 					ID:        1,
-					URN:       "alert-history-odpf",
+					URN:       "alert-history-gotocompany",
 					Namespace: 2,
 					Receivers: []subscription.Receiver{
 						{
@@ -127,37 +127,37 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 				},
 				{
 					ID:        2,
-					URN:       "odpf-data-warning",
+					URN:       "gotocompany-data-warning",
 					Namespace: 1,
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
 							Configuration: map[string]interface{}{
-								"channel_name": "odpf-data",
+								"channel_name": "gotocompany-data",
 							},
 						},
 					},
 					Match: map[string]string{
 						"environment": "integration",
-						"team":        "odpf-data",
+						"team":        "gotocompany-data",
 					},
 				},
 				{
 					ID:        3,
-					URN:       "odpf-pd",
+					URN:       "gotocompany-pd",
 					Namespace: 2,
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
 							Configuration: map[string]interface{}{
-								"channel_name": "odpf-data",
+								"channel_name": "gotocompany-data",
 							},
 						},
 					},
 					Match: map[string]string{
 						"environment": "production",
 						"severity":    "CRITICAL",
-						"team":        "odpf-app",
+						"team":        "gotocompany-app",
 					},
 				},
 			},
@@ -170,19 +170,19 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 			ExpectedSubscriptions: []subscription.Subscription{
 				{
 					ID:        2,
-					URN:       "odpf-data-warning",
+					URN:       "gotocompany-data-warning",
 					Namespace: 1,
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
 							Configuration: map[string]interface{}{
-								"channel_name": "odpf-data",
+								"channel_name": "gotocompany-data",
 							},
 						},
 					},
 					Match: map[string]string{
 						"environment": "integration",
-						"team":        "odpf-data",
+						"team":        "gotocompany-data",
 					},
 				},
 			},
@@ -193,26 +193,26 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 				NotificationMatch: map[string]string{
 					"environment": "production",
 					"severity":    "CRITICAL",
-					"team":        "odpf-app",
+					"team":        "gotocompany-app",
 				},
 			},
 			ExpectedSubscriptions: []subscription.Subscription{
 				{
 					ID:        3,
-					URN:       "odpf-pd",
+					URN:       "gotocompany-pd",
 					Namespace: 2,
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
 							Configuration: map[string]interface{}{
-								"channel_name": "odpf-data",
+								"channel_name": "gotocompany-data",
 							},
 						},
 					},
 					Match: map[string]string{
 						"environment": "production",
 						"severity":    "CRITICAL",
-						"team":        "odpf-app",
+						"team":        "gotocompany-app",
 					},
 				},
 			},
@@ -341,20 +341,20 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 			PassedID:    uint64(3),
 			ExpectedSubscription: &subscription.Subscription{
 				ID:        3,
-				URN:       "odpf-pd",
+				URN:       "gotocompany-pd",
 				Namespace: 2,
 				Receivers: []subscription.Receiver{
 					{
 						ID: 1,
 						Configuration: map[string]interface{}{
-							"channel_name": "odpf-data",
+							"channel_name": "gotocompany-data",
 						},
 					},
 				},
 				Match: map[string]string{
 					"environment": "production",
 					"severity":    "CRITICAL",
-					"team":        "odpf-app",
+					"team":        "gotocompany-app",
 				},
 			},
 		},
@@ -391,7 +391,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 			Description: "should update a subscription",
 			SubscriptionToUpsert: &subscription.Subscription{
 				ID:        3,
-				URN:       "odpf-pd",
+				URN:       "gotocompany-pd",
 				Namespace: 2,
 				Receivers: []subscription.Receiver{
 					{
@@ -408,7 +408,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 			Description: "should return duplicate error if urn already exist",
 			SubscriptionToUpsert: &subscription.Subscription{
 				ID:        1,
-				URN:       "odpf-pd",
+				URN:       "gotocompany-pd",
 				Namespace: 2,
 				Receivers: []subscription.Receiver{
 					{
@@ -425,7 +425,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 			Description: "should return relation error if namespace id does not exist",
 			SubscriptionToUpsert: &subscription.Subscription{
 				ID:        3,
-				URN:       "odpf-pd",
+				URN:       "gotocompany-pd",
 				Namespace: 1000,
 				Receivers: []subscription.Receiver{
 					{
@@ -442,7 +442,7 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 			Description: "should return not found error if id not found",
 			SubscriptionToUpsert: &subscription.Subscription{
 				ID:        3000,
-				URN:       "odpf-pd",
+				URN:       "gotocompany-pd",
 				Namespace: 1,
 				Receivers: []subscription.Receiver{
 					{

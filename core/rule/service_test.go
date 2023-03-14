@@ -4,12 +4,12 @@ import (
 	context "context"
 	"testing"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/core/rule/mocks"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/goto/siren/core/namespace"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/core/rule"
+	"github.com/goto/siren/core/rule/mocks"
+	"github.com/goto/siren/core/template"
+	"github.com/goto/siren/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -312,7 +312,7 @@ func TestService_List(t *testing.T) {
 
 		repositoryMock.EXPECT().List(ctx, rule.Filter{
 			Name:         "foo",
-			Namespace:    "odpf",
+			Namespace:    "gotocompany",
 			GroupName:    "test-group",
 			TemplateName: "test-tmpl",
 			NamespaceID:  1,
@@ -320,7 +320,7 @@ func TestService_List(t *testing.T) {
 
 		result, err := dummyService.List(ctx, rule.Filter{
 			Name:         "foo",
-			Namespace:    "odpf",
+			Namespace:    "gotocompany",
 			GroupName:    "test-group",
 			TemplateName: "test-tmpl",
 			NamespaceID:  1,

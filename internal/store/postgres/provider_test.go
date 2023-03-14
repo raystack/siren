@@ -6,12 +6,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/goto/salt/db"
+	"github.com/goto/salt/dockertestx"
+	"github.com/goto/salt/log"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/internal/store/postgres"
+	"github.com/goto/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
 )
@@ -100,18 +100,18 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			ExpectedProviders: []provider.Provider{
 				{
 					ID:          1,
-					Host:        "http://cortex-ingress.odpf.io",
-					URN:         "odpf-cortex",
-					Name:        "odpf-cortex",
+					Host:        "http://cortex-ingress.gotocompany.com",
+					URN:         "gotocompany-cortex",
+					Name:        "gotocompany-cortex",
 					Type:        "cortex",
 					Credentials: map[string]interface{}{},
 					Labels:      map[string]string{},
 				},
 				{
 					ID:          2,
-					Host:        "http://prometheus-ingress.odpf.io",
-					URN:         "odpf-prometheus",
-					Name:        "odpf-prometheus",
+					Host:        "http://prometheus-ingress.gotocompany.com",
+					URN:         "gotocompany-prometheus",
+					Name:        "gotocompany-prometheus",
 					Type:        "prometheus",
 					Credentials: map[string]interface{}{},
 					Labels:      map[string]string{},
@@ -121,14 +121,14 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 		{
 			Description: "should filter by urn",
 			Filter: provider.Filter{
-				URN: "odpf-prometheus",
+				URN: "gotocompany-prometheus",
 			},
 			ExpectedProviders: []provider.Provider{
 				{
 					ID:          2,
-					Host:        "http://prometheus-ingress.odpf.io",
-					URN:         "odpf-prometheus",
-					Name:        "odpf-prometheus",
+					Host:        "http://prometheus-ingress.gotocompany.com",
+					URN:         "gotocompany-prometheus",
+					Name:        "gotocompany-prometheus",
 					Type:        "prometheus",
 					Credentials: map[string]interface{}{},
 					Labels:      map[string]string{},
@@ -143,9 +143,9 @@ func (s *ProviderRepositoryTestSuite) TestList() {
 			ExpectedProviders: []provider.Provider{
 				{
 					ID:          1,
-					Host:        "http://cortex-ingress.odpf.io",
-					URN:         "odpf-cortex",
-					Name:        "odpf-cortex",
+					Host:        "http://cortex-ingress.gotocompany.com",
+					URN:         "gotocompany-cortex",
+					Name:        "gotocompany-cortex",
 					Type:        "cortex",
 					Credentials: map[string]interface{}{},
 					Labels:      map[string]string{},
@@ -183,9 +183,9 @@ func (s *ProviderRepositoryTestSuite) TestGet() {
 			PassedID:    uint64(2),
 			ExpectedProvider: &provider.Provider{
 				ID:          2,
-				Host:        "http://prometheus-ingress.odpf.io",
-				URN:         "odpf-prometheus",
-				Name:        "odpf-prometheus",
+				Host:        "http://prometheus-ingress.gotocompany.com",
+				URN:         "gotocompany-prometheus",
+				Name:        "gotocompany-prometheus",
 				Type:        "prometheus",
 				Credentials: map[string]interface{}{},
 				Labels:      map[string]string{},
@@ -225,9 +225,9 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 		{
 			Description: "should create a provider",
 			ProviderToCreate: &provider.Provider{
-				Host: "http://new-provider-ingress.odpf.io",
-				URN:  "odpf-new-provider",
-				Name: "odpf-new-provider",
+				Host: "http://new-provider-ingress.gotocompany.com",
+				URN:  "gotocompany-new-provider",
+				Name: "gotocompany-new-provider",
 				Type: "new-provider",
 			},
 			ExpectedID: uint64(3), // autoincrement in db side
@@ -236,8 +236,8 @@ func (s *ProviderRepositoryTestSuite) TestCreate() {
 			Description: "should return error duplicate if URN already exist",
 			ProviderToCreate: &provider.Provider{
 				Host: "http://newhostcortex",
-				URN:  "odpf-cortex",
-				Name: "odpf-cortex-new",
+				URN:  "gotocompany-cortex",
+				Name: "gotocompany-cortex-new",
 				Type: "cortex",
 			},
 			ErrString: "urn already exist",
@@ -273,9 +273,9 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			Description: "should update existing provider",
 			ProviderToUpdate: &provider.Provider{
 				ID:   1,
-				Host: "http://new-provider-ingress.odpf.io",
-				URN:  "odpf-new-provider",
-				Name: "odpf-new-provider",
+				Host: "http://new-provider-ingress.gotocompany.com",
+				URN:  "gotocompany-new-provider",
+				Name: "gotocompany-new-provider",
 				Type: "new-provider",
 			},
 			ExpectedID: uint64(1),
@@ -285,8 +285,8 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			ProviderToUpdate: &provider.Provider{
 				ID:   2,
 				Host: "http://prometheus",
-				URN:  "odpf-new-provider",
-				Name: "odpf-prometheus",
+				URN:  "gotocompany-new-provider",
+				Name: "gotocompany-prometheus",
 				Type: "prometheus",
 			},
 			ErrString: "urn already exist",
@@ -296,8 +296,8 @@ func (s *ProviderRepositoryTestSuite) TestUpdate() {
 			ProviderToUpdate: &provider.Provider{
 				ID:   1000,
 				Host: "http://prometheus",
-				URN:  "odpf-new-provider",
-				Name: "odpf-prometheus",
+				URN:  "gotocompany-new-provider",
+				Name: "gotocompany-prometheus",
 				Type: "prometheus",
 			},
 			ErrString: "provider with id 1000 not found",

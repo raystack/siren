@@ -3,8 +3,8 @@ package rule
 import (
 	"context"
 
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/template"
+	"github.com/goto/siren/core/provider"
+	"github.com/goto/siren/core/template"
 )
 
 // RuleUploader is an interface for the provider to upload rule(s).
