@@ -21,11 +21,15 @@ func removeDuplicateStringValues(strSlice []string) []string {
 	return list
 }
 
-func groupByLabels(alerts []alert.Alert) (map[uint64][]alert.Alert, error) {
+func groupByLabels(alerts []alert.Alert, groupBy []string) (map[uint64][]alert.Alert, error) {
 	var alertsMap = map[uint64][]alert.Alert{}
 
 	for _, a := range alerts {
-		hash, err := hashstructure.Hash(a.Labels, hashstructure.FormatV2, nil)
+		var groupLabels = buildGroupLabels(a.Labels, groupBy)
+		if len(groupLabels) == 0 {
+			groupLabels = a.Labels
+		}
+		hash, err := hashstructure.Hash(groupLabels, hashstructure.FormatV2, nil)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get hash from alert %v", a)
 		}
@@ -33,6 +37,18 @@ func groupByLabels(alerts []alert.Alert) (map[uint64][]alert.Alert, error) {
 	}
 
 	return alertsMap, nil
+}
+
+func buildGroupLabels(alertLabels map[string]string, groupBy []string) map[string]string {
+	var groupLabels = map[string]string{}
+
+	for _, g := range groupBy {
+		if v, ok := alertLabels[g]; ok {
+			groupLabels[g] = v
+		}
+	}
+
+	return groupLabels
 }
 
 // hashGroupKey hash groupKey from alert and hashKey from labels

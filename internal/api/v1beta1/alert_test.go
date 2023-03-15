@@ -7,6 +7,7 @@ import (
 
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/internal/api"
 	"github.com/goto/siren/internal/api/mocks"
@@ -172,6 +173,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), payload).
 			Return(dummyAlerts, 1, nil).Once()
+		mockNotificationService.EXPECT().BuildFromAlerts(mock.AnythingOfType("[]alert.Alert"), mock.AnythingOfType("int"), mock.AnythingOfType("time.Time")).Return([]notification.Notification{}, nil)
 		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
@@ -280,6 +282,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		}}
 		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), payload).
 			Return(dummyAlerts, 1, nil).Once()
+		mockNotificationService.EXPECT().BuildFromAlerts(mock.AnythingOfType("[]alert.Alert"), mock.AnythingOfType("int"), mock.AnythingOfType("time.Time")).Return([]notification.Notification{}, nil)
 		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
@@ -461,6 +464,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), payload).
 			Return(dummyAlerts, 2, nil).Once()
+		mockNotificationService.EXPECT().BuildFromAlerts(mock.AnythingOfType("[]alert.Alert"), mock.AnythingOfType("int"), mock.AnythingOfType("time.Time")).Return([]notification.Notification{}, nil)
 		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
 		res, err := dummyGRPCServer.CreateAlerts(context.Background(), dummyReq)

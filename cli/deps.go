@@ -136,6 +136,7 @@ func InitDeps(
 	notificationRepository := postgres.NewNotificationRepository(pgClient)
 	notificationService := notification.NewService(
 		logger,
+		cfg.Notification,
 		notificationRepository,
 		queue,
 		notifierRegistry,

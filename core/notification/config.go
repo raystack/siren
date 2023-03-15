@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	GroupBy        []string      `mapstructure:"group_by" yaml:"group_by"`
 	Queue          queues.Config `mapstructure:"queue" yaml:"queue"`
 	MessageHandler HandlerConfig `mapstructure:"message_handler" yaml:"message_handler"`
 	DLQHandler     HandlerConfig `mapstructure:"dlq_handler" yaml:"dlq_handler"`

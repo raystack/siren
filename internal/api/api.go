@@ -78,6 +78,7 @@ type NotificationService interface {
 	CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error)
 	MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error
 	RemoveIdempotencies(ctx context.Context, TTL time.Duration) error
+	BuildFromAlerts(alerts []alert.Alert, firingLen int, createdTime time.Time) ([]notification.Notification, error)
 }
 
 //go:generate mockery --name=SilenceService -r --case underscore --with-expecter --structname SilenceService --filename silence_service.go --output=./mocks

@@ -42,6 +42,9 @@ func Test_removeDuplicateStringValues(t *testing.T) {
 }
 
 func Test_groupByLabels(t *testing.T) {
+	var groupBy = []string{
+		"key1", "key2",
+	}
 	hashKey1, err := hashstructure.Hash(map[string]string{
 		"key1": "val1",
 		"key2": "val2",
@@ -50,13 +53,11 @@ func Test_groupByLabels(t *testing.T) {
 
 	hashKey2, err := hashstructure.Hash(map[string]string{
 		"key2": "val2",
-		"key3": "val3",
 	}, hashstructure.FormatV2, nil)
 	require.NoError(t, err)
 
 	hashKey3, err := hashstructure.Hash(map[string]string{
 		"key1": "val1",
-		"key3": "val3",
 	}, hashstructure.FormatV2, nil)
 	require.NoError(t, err)
 
@@ -152,7 +153,7 @@ func Test_groupByLabels(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := groupByLabels(tt.alerts)
+			got, err := groupByLabels(tt.alerts, groupBy)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("groupByLabels() error = %v, wantErr %v", err, tt.wantErr)
 				return

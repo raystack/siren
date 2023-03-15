@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/goto/siren/core/alert"
-	"github.com/goto/siren/core/notification"
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -87,7 +86,7 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 
 	if len(createdAlerts) > 0 {
 		// Publish to notification service
-		ns, err := notification.BuildFromAlerts(createdAlerts, firingLen, time.Now())
+		ns, err := s.notificationService.BuildFromAlerts(createdAlerts, firingLen, time.Now())
 		if err != nil {
 			s.logger.Warn("failed to build notifications from alert", "err", err, "alerts", createdAlerts)
 		}

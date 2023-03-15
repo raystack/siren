@@ -6,7 +6,7 @@ Provider plugin is being used to update rule configurations to the provider, set
 
 1. **Add a new package**
 
-    A new plugin could be added as a new package under `plugins/providers/{new_plugin}`. Ideally you might want to name the package with lower-case and without any `-` or `_` signs.
+    A new plugin could be added as a new package under `plugins/providers/{new_plugin}`. Package name should comply with golang standard naming. Ideally you might want to name the package with lower-case and without any `-` or `_` signs.
 
 2. **Defining Configurations** (Optional)
 

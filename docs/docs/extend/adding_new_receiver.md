@@ -5,7 +5,7 @@ Receiver plugin is being used to send notifications to the receiver. More detail
 ## Steps to Add a New Plugin
 1. **Add a new package**
 
-    A new plugin could be added as a new package under `plugins/providers/{new_plugin}`. Ideally you might want to name the package with lower-case and without any `-` or `_` signs.
+    A new plugin could be added as a new package under `plugins/providers/{new_plugin}`. Package name should comply with golang standard naming. Ideally you might want to name the package with lower-case and without any `-` or `_` signs.
 
 2. **Defining Configurations**
 

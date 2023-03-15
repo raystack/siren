@@ -48,7 +48,7 @@ func jobRunCommand(cmdxConfig *cmdx.Config) *cobra.Command {
 		Long: heredoc.Doc(`
 			Trigger a job
 		`),
-		Args: cobra.ExactValidArgs(1),
+		Args: cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		ValidArgs: []string{
 			"cleanup_queue",
 			"cleanup_idempotency",
