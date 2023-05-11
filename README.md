@@ -27,10 +27,10 @@ To know more, follow the detailed [documentation](docs)
 
 Explore the following resources to get started with Siren:
 
-- [Guides](docs/guides/overview.md) provides guidance on usage.
-- [Concepts](docs/concepts/overview.md) describes all important Siren concepts including system architecture.
-- [Reference](docs/reference) contains the details about configurations and other aspects of Siren.
-- [Contribute](docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
+- [Guides](docs/docs/guides/overview.md) provides guidance on usage.
+- [Concepts](docs/docs/concepts/overview.md) describes all important Siren concepts including system architecture.
+- [Reference](docs/docs/reference) contains the details about configurations and other aspects of Siren.
+- [Contribute](docs/docs/contribute/contribution.md) contains resources for anyone who wants to contribute to Siren.
 
 ## Run with Kubernetes
 
