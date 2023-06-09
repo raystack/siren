@@ -134,7 +134,7 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 }
 
 func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
-	rcv, err := s.repository.Get(ctx, rcv.ID)
+	oldReceiver, err := s.repository.Get(ctx, rcv.ID)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return errors.ErrNotFound.WithMsgf(err.Error())
@@ -142,7 +142,7 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
-	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
+	receiverPlugin, err := s.getReceiverPlugin(oldReceiver.Type)
 	if err != nil {
 		return err
 	}
@@ -152,8 +152,7 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
-	err = s.repository.Update(ctx, rcv)
-	if err != nil {
+	if err = s.repository.Update(ctx, rcv); err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return errors.ErrNotFound.WithMsgf(err.Error())
 		}

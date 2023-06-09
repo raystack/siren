@@ -476,7 +476,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 						ID:   123,
 						Type: receiver.TypeSlack,
 						Configurations: map[string]interface{}{
-							"token": "key",
+							"token": "old-key",
 						},
 					}, nil)
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{

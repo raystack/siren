@@ -103,8 +103,7 @@ func (s *GRPCServer) UpdateReceiver(ctx context.Context, req *sirenv1beta1.Updat
 		Configurations: req.GetConfigurations().AsMap(),
 	}
 
-	err := s.receiverService.Update(ctx, rcv)
-	if err != nil {
+	if err := s.receiverService.Update(ctx, rcv); err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
