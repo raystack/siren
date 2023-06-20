@@ -50,7 +50,7 @@ func NewPluginService(cfg AppConfig, cryptoClient Encryptor, opts ...ServiceOpti
 	return s
 }
 
-func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error) {
 	slackCredentialConfig := &SlackCredentialConfig{}
 	if err := mapstructure.Decode(configurations, slackCredentialConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to pre transform config: %w", err)
@@ -79,7 +79,7 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configura
 }
 
 // PostHookTransformConfigs do transformation in post-hook service lifecycle
-func (s *PluginService) PostHookDBTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PostHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -100,7 +100,7 @@ func (s *PluginService) PostHookDBTransformConfigs(ctx context.Context, configur
 }
 
 // BuildData populates receiver data field based on config
-func (s *PluginService) BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) BuildData(ctx context.Context, configurations map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -131,7 +131,7 @@ func (s *PluginService) BuildData(ctx context.Context, configurations map[string
 	return receiverData.AsMap(), nil
 }
 
-func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
@@ -151,7 +151,7 @@ func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notifi
 	return notificationConfig.AsMap(), nil
 }
 
-func (s *PluginService) PostHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PostHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to notification config: %w", err)

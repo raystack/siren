@@ -84,14 +84,14 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 					ID:   11,
 					Type: testPluginType,
 				}, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]interface{}{}, nil)
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 			},
 			want: []notification.Message{
 				{
 					Status:       notification.MessageStatusEnqueued,
 					ReceiverType: testPluginType,
-					Configs:      map[string]interface{}{},
-					Details:      map[string]interface{}{"notification_type": string(""), "receiver_id": string("11")},
+					Configs:      map[string]any{},
+					Details:      map[string]any{"notification_type": string(""), "receiver_id": string("11")},
 					MaxTries:     3,
 				},
 			},

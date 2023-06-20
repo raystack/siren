@@ -15,7 +15,7 @@ import (
 
 func TestList(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(pgc.StringInterfaceMap)
+	credentials := make(pgc.StringAnyMap)
 	credentials["foo"] = "bar"
 	labels := make(pgc.StringStringMap)
 	labels["foo"] = "bar"
@@ -56,7 +56,7 @@ func TestList(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(pgc.StringInterfaceMap)
+	credentials := make(pgc.StringAnyMap)
 	credentials["foo"] = "bar"
 	labels := make(pgc.StringStringMap)
 	labels["foo"] = "bar"
@@ -104,7 +104,7 @@ func TestCreate(t *testing.T) {
 func TestGetProvider(t *testing.T) {
 	ctx := context.TODO()
 	dummyProviderID := uint64(10)
-	credentials := make(pgc.StringInterfaceMap)
+	credentials := make(pgc.StringAnyMap)
 	credentials["foo"] = "bar"
 	labels := make(pgc.StringStringMap)
 	labels["foo"] = "bar"
@@ -155,7 +155,7 @@ func TestUpdateProvider(t *testing.T) {
 	ctx := context.TODO()
 	dummyProviderID := uint64(10)
 	timenow := time.Now()
-	credentials := make(pgc.StringInterfaceMap)
+	credentials := make(pgc.StringAnyMap)
 	credentials["foo"] = "bar"
 	labels := make(pgc.StringStringMap)
 	labels["foo"] = "bar"

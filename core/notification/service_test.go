@@ -300,7 +300,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 				{
 					NamespaceID: 1,
 					Type:        notification.TypeSubscriber,
-					Data: map[string]interface{}{
+					Data: map[string]any{
 						"generator_url":     "",
 						"num_alerts_firing": 2,
 						"status":            "FIRING",
@@ -317,7 +317,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 					NamespaceID: 1,
 					Type:        notification.TypeSubscriber,
 
-					Data: map[string]interface{}{
+					Data: map[string]any{
 						"generator_url":     "",
 						"num_alerts_firing": 2,
 						"status":            "FIRING",

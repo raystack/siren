@@ -14,15 +14,15 @@ func TestBuildTypeReceiver(t *testing.T) {
 	tests := []struct {
 		name       string
 		receiverID uint64
-		payloadMap map[string]interface{}
+		payloadMap map[string]any
 		want       notification.Notification
 		wantErr    bool
 	}{
 		{
 			name:       "should build a correct notification",
 			receiverID: sampleReceiverID,
-			payloadMap: map[string]interface{}{
-				"data": map[string]interface{}{
+			payloadMap: map[string]any{
+				"data": map[string]any{
 					"key1": "key2",
 				},
 				"valid_duration": "10m",
@@ -30,7 +30,7 @@ func TestBuildTypeReceiver(t *testing.T) {
 			},
 			want: notification.Notification{
 				Type: notification.TypeReceiver,
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"key1": "key2",
 				},
 				Labels: map[string]string{
@@ -43,7 +43,7 @@ func TestBuildTypeReceiver(t *testing.T) {
 		{
 			name:       "should return error if payload is not decodable",
 			receiverID: sampleReceiverID,
-			payloadMap: map[string]interface{}{
+			payloadMap: map[string]any{
 				"template": 1,
 			},
 			wantErr: true,
@@ -51,7 +51,7 @@ func TestBuildTypeReceiver(t *testing.T) {
 		{
 			name:       "should return error if 'valid_duration' is not string",
 			receiverID: sampleReceiverID,
-			payloadMap: map[string]interface{}{
+			payloadMap: map[string]any{
 				"valid_duration": 1,
 			},
 			wantErr: true,
@@ -59,7 +59,7 @@ func TestBuildTypeReceiver(t *testing.T) {
 		{
 			name:       "should return error if 'valid_duration' is not parsable",
 			receiverID: sampleReceiverID,
-			payloadMap: map[string]interface{}{
+			payloadMap: map[string]any{
 				"valid_duration": "xzx",
 			},
 			wantErr: true,

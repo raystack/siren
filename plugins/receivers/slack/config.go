@@ -43,8 +43,8 @@ func (c *ReceiverConfig) Validate() error {
 	return fmt.Errorf("invalid slack receiver config, workspace: %s, token: %s", c.Workspace, c.Token)
 }
 
-func (c *ReceiverConfig) AsMap() map[string]interface{} {
-	return map[string]interface{}{
+func (c *ReceiverConfig) AsMap() map[string]any {
+	return map[string]any{
 		"workspace": c.Workspace,
 		"token":     c.Token,
 	}
@@ -55,8 +55,8 @@ type ReceiverData struct {
 	Channels string `json:"channels" mapstructure:"channels"`
 }
 
-func (c *ReceiverData) AsMap() map[string]interface{} {
-	return map[string]interface{}{
+func (c *ReceiverData) AsMap() map[string]any {
+	return map[string]any{
 		"channels": c.Channels,
 	}
 }
@@ -67,8 +67,8 @@ type SubscriptionConfig struct {
 	ChannelType string `json:"channel_type" mapstructure:"channel_type"`
 }
 
-func (c *SubscriptionConfig) AsMap() map[string]interface{} {
-	return map[string]interface{}{
+func (c *SubscriptionConfig) AsMap() map[string]any {
+	return map[string]any{
 		"channel_name": c.ChannelName,
 		"channel_type": c.ChannelType,
 	}
@@ -90,8 +90,8 @@ func (c *NotificationConfig) Validate() error {
 	return fmt.Errorf("invalid slack notification config, workspace: %s, token: %s, channel_name: %s", c.Workspace, c.Token, c.ChannelName)
 }
 
-func (c *NotificationConfig) AsMap() map[string]interface{} {
-	notificationMap := make(map[string]interface{})
+func (c *NotificationConfig) AsMap() map[string]any {
+	notificationMap := make(map[string]any)
 
 	for k, v := range c.ReceiverConfig.AsMap() {
 		notificationMap[k] = v

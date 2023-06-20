@@ -19,7 +19,7 @@ import (
 )
 
 func TestGRPCServer_ListNamespaces(t *testing.T) {
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -86,7 +86,7 @@ func TestGRPCServer_ListNamespaces(t *testing.T) {
 }
 
 func TestGRPCServer_CreateNamespaces(t *testing.T) {
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -152,7 +152,7 @@ func TestGRPCServer_CreateNamespaces(t *testing.T) {
 }
 
 func TestGRPCServer_GetNamespace(t *testing.T) {
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -227,7 +227,7 @@ func TestGRPCServer_GetNamespace(t *testing.T) {
 }
 
 func TestGRPCServer_UpdateNamespace(t *testing.T) {
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"

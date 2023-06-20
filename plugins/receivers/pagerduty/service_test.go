@@ -23,7 +23,7 @@ func TestService_Send_V1(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification config",
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"service_key": true,
 				},
 			},
@@ -32,7 +32,7 @@ func TestService_Send_V1(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification detail",
 			notificationMessage: notification.Message{
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"description": make(chan bool),
 				},
 			},
@@ -44,10 +44,10 @@ func TestService_Send_V1(t *testing.T) {
 				pd.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(errors.New("some error"))
 			},
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"service_key": "123123",
 				},
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"description": "hello",
 				},
 			},
@@ -60,10 +60,10 @@ func TestService_Send_V1(t *testing.T) {
 				sc.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(retry.RetryableError{Err: errors.New("some error")})
 			},
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"service_key": "123123",
 				},
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"description": "hello",
 				},
 			},

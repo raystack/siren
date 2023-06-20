@@ -8,15 +8,15 @@ import (
 )
 
 type Provider struct {
-	ID          uint64                 `db:"id"`
-	Host        string                 `db:"host"`
-	URN         string                 `db:"urn"`
-	Name        string                 `db:"name"`
-	Type        string                 `db:"type"`
-	Credentials pgc.StringInterfaceMap `db:"credentials"`
-	Labels      pgc.StringStringMap    `db:"labels"`
-	CreatedAt   time.Time              `db:"created_at"`
-	UpdatedAt   time.Time              `db:"updated_at"`
+	ID          uint64              `db:"id"`
+	Host        string              `db:"host"`
+	URN         string              `db:"urn"`
+	Name        string              `db:"name"`
+	Type        string              `db:"type"`
+	Credentials pgc.StringAnyMap    `db:"credentials"`
+	Labels      pgc.StringStringMap `db:"labels"`
+	CreatedAt   time.Time           `db:"created_at"`
+	UpdatedAt   time.Time           `db:"updated_at"`
 }
 
 func (p *Provider) FromDomain(t provider.Provider) {

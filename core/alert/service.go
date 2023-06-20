@@ -24,7 +24,7 @@ func NewService(repository Repository, logService LogService, registry map[strin
 	return &Service{repository, logService, registry}
 }
 
-func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]Alert, int, error) {
+func (s *Service) CreateAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]any) ([]Alert, int, error) {
 	pluginService, err := s.getProviderPluginService(providerType)
 	if err != nil {
 		return nil, 0, err

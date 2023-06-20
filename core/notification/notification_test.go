@@ -11,7 +11,7 @@ func TestNotification_Validate(t *testing.T) {
 		name                string
 		n                   notification.Notification
 		receiverType        string
-		notificationConfigs map[string]interface{}
+		notificationConfigs map[string]any
 		wantErr             bool
 	}{
 		{
@@ -28,7 +28,7 @@ func TestNotification_Validate(t *testing.T) {
 				Labels: map[string]string{
 					"labelkey1": "value1",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},
@@ -41,7 +41,7 @@ func TestNotification_Validate(t *testing.T) {
 				Labels: map[string]string{
 					"receiver_id": "",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},
@@ -54,7 +54,7 @@ func TestNotification_Validate(t *testing.T) {
 				Labels: map[string]string{
 					"receiver_id": "xxx",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},
@@ -67,7 +67,7 @@ func TestNotification_Validate(t *testing.T) {
 				Labels: map[string]string{
 					"receiver_id": "2",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},
@@ -76,7 +76,7 @@ func TestNotification_Validate(t *testing.T) {
 			name: "should return error if type subscriber but has no kv labels",
 			n: notification.Notification{
 				Type: notification.TypeSubscriber,
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},
@@ -89,7 +89,7 @@ func TestNotification_Validate(t *testing.T) {
 				Labels: map[string]string{
 					"receiver_id": "xxx",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 				},
 			},

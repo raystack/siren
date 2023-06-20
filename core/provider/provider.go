@@ -15,13 +15,13 @@ type Repository interface {
 }
 
 type Provider struct {
-	ID          uint64                 `json:"id"`
-	URN         string                 `json:"urn"`
-	Host        string                 `json:"host"`
-	Name        string                 `json:"name"`
-	Type        string                 `json:"type"`
-	Credentials map[string]interface{} `json:"credentials"`
-	Labels      map[string]string      `json:"labels"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	ID          uint64            `json:"id"`
+	URN         string            `json:"urn"`
+	Host        string            `json:"host"`
+	Name        string            `json:"name"`
+	Type        string            `json:"type"`
+	Credentials map[string]any    `json:"credentials"`
+	Labels      map[string]string `json:"labels"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }

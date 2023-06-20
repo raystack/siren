@@ -31,10 +31,10 @@ func TestMessage_BuildGoSlackMessageOptions(t *testing.T) {
 				Attachments: []MessageAttachment{
 					{
 						"color": "#f2c744",
-						"blocks": []map[string]interface{}{
+						"blocks": []map[string]any{
 							{
 								"type": "section",
-								"text": map[string]interface{}{
+								"text": map[string]any{
 									"type": "mrkdwn",
 									"text": "this is markdown task",
 								},

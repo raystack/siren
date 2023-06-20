@@ -30,12 +30,12 @@ type EncryptedNamespace struct {
 }
 
 type Namespace struct {
-	ID          uint64                 `json:"id"`
-	URN         string                 `json:"urn"`
-	Name        string                 `json:"name"`
-	Provider    provider.Provider      `json:"provider"`
-	Credentials map[string]interface{} `json:"credentials"`
-	Labels      map[string]string      `json:"labels"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	ID          uint64            `json:"id"`
+	URN         string            `json:"urn"`
+	Name        string            `json:"name"`
+	Provider    provider.Provider `json:"provider"`
+	Credentials map[string]any    `json:"credentials"`
+	Labels      map[string]string `json:"labels"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
 }

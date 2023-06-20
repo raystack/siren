@@ -19,7 +19,7 @@ import (
 
 func TestGRPCServer_ListProvider(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -88,7 +88,7 @@ func TestGRPCServer_ListProvider(t *testing.T) {
 
 func TestGRPCServer_CreateProvider(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -157,7 +157,7 @@ func TestGRPCServer_CreateProvider(t *testing.T) {
 
 func TestGRPCServer_GetProvider(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -251,7 +251,7 @@ func TestGRPCServer_GetProvider(t *testing.T) {
 
 func TestGRPCServer_UpdateProvider(t *testing.T) {
 	ctx := context.TODO()
-	credentials := make(map[string]interface{})
+	credentials := make(map[string]any)
 	credentials["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"

@@ -52,7 +52,7 @@ func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1
 	s.Require().NoError(err)
 
 	// add receiver gotocompany-http
-	configs, err := structpb.NewStruct(map[string]interface{}{
+	configs, err := structpb.NewStruct(map[string]any{
 		"url": "http://fake-webhook-endpoint.gotocompany.com",
 	})
 	s.Require().NoError(err)
@@ -298,35 +298,3 @@ func (ct *CortexTest) CleanUp() error {
 	}
 	return nil
 }
-
-// func RunDockerizedSiren(apiPort int, pool *dockertest.Pool, netwrk *dockertest.Network) (*dockertest.Resource, error) {
-// 	// Build and run the given Dockerfile
-// 	resource, err := pool.BuildAndRunWithOptions("../../Dockerfile.dev", &dockertest.RunOptions{
-// 		Name:         "siren-e2e",
-// 		Networks:     []*dockertest.Network{netwrk},
-// 		ExposedPorts: []string{"8080"},
-// 		PortBindings: map[docker.Port][]docker.PortBinding{
-// 			"8080": []docker.PortBinding{{HostPort: fmt.Sprintf("%d", apiPort)}},
-// 		},
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if err = pool.Retry(func() error {
-// 		var err error
-// 		resp, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%d", apiPort))
-// 		if err != nil {
-// 			return err
-// 		}
-// 		_, err = io.ReadAll(resp.Body)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		return nil
-// 	}); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return resource, nil
-// }

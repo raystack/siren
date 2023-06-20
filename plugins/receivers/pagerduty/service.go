@@ -34,7 +34,7 @@ func NewPluginService(cfg AppConfig, opts ...ServiceOption) *PluginService {
 }
 
 // TODO validation could be done by default and using validator library but we need to use generic for it
-func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(configurations, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -47,7 +47,7 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configura
 	return configurations, nil
 }
 
-func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)

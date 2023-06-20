@@ -15,13 +15,13 @@ import (
 )
 
 const subscriptionInsertQuery = `
-INSERT INTO subscriptions (namespace_id, urn, receiver, match, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, now(), now())
+INSERT INTO subscriptions (namespace_id, urn, receiver, match, metadata, created_by, updated_by, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, now(), now())
 RETURNING *
 `
 
 const subscriptionUpdateQuery = `
-UPDATE subscriptions SET namespace_id=$2, urn=$3, receiver=$4, match=$5, updated_at=now()
+UPDATE subscriptions SET namespace_id=$2, urn=$3, receiver=$4, match=$5, metadata=$6, updated_by=$7, updated_at=now()
 WHERE id = $1
 RETURNING *
 `
@@ -36,6 +36,9 @@ var subscriptionListQueryBuilder = sq.Select(
 	"urn",
 	"receiver",
 	"match",
+	"metadata",
+	"created_by",
+	"updated_by",
 	"created_at",
 	"updated_at",
 ).From("subscriptions")
@@ -65,6 +68,25 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		queryBuilder = queryBuilder.Where("namespace_id = ?", flt.NamespaceID)
 	}
 
+	// given map of metadata from input [mf], look for rows that [mf] exist in metadata column in DB
+	if len(flt.Metadata) != 0 {
+		metadataJSON, err := json.Marshal(flt.Metadata)
+		if err != nil {
+			return nil, errors.ErrInvalid.WithCausef("problem marshalling subscription metadata json to string with err: %s", err.Error())
+		}
+		queryBuilder = queryBuilder.Where(fmt.Sprintf("metadata @> '%s'::jsonb", string(json.RawMessage(metadataJSON))))
+	}
+
+	// given map of string from input [mf], look for rows that [mf] exist in match column in DB
+	if len(flt.Match) != 0 {
+		labelsJSON, err := json.Marshal(flt.Match)
+		if err != nil {
+			return nil, errors.ErrInvalid.WithCausef("problem marshalling match json to string with err: %s", err.Error())
+		}
+		queryBuilder = queryBuilder.Where(fmt.Sprintf("match @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
+	}
+
+	// given map of string from input [mf], look for rows that has match column in DB that are subset of [mf]
 	if len(flt.NotificationMatch) != 0 {
 		labelsJSON, err := json.Marshal(flt.NotificationMatch)
 		if err != nil {
@@ -111,6 +133,9 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
+		subscriptionModel.Metadata,
+		subscriptionModel.CreatedBy,
+		subscriptionModel.UpdatedBy,
 	).StructScan(&newSubscriptionModel); err != nil {
 		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrDuplicateKey) {
@@ -159,6 +184,8 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
 		subscriptionModel.Match,
+		subscriptionModel.Metadata,
+		subscriptionModel.UpdatedBy,
 	).StructScan(&newSubscriptionModel); err != nil {
 		err = pgc.CheckError(err)
 		if errors.Is(err, sql.ErrNoRows) {

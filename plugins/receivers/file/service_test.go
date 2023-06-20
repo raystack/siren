@@ -18,7 +18,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification config",
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"url": true,
 				},
 			},
@@ -27,7 +27,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification detail",
 			notificationMessage: notification.Message{
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"description": make(chan bool),
 				},
 			},
@@ -36,10 +36,10 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error and not retryable if notify return error",
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"url": "123123",
 				},
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"description": "hello",
 				},
 			},

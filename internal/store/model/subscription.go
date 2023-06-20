@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"time"
@@ -10,8 +11,8 @@ import (
 )
 
 type SubscriptionReceiver struct {
-	ID            uint64                 `json:"id"`
-	Configuration map[string]interface{} `json:"configuration"`
+	ID            uint64         `json:"id"`
+	Configuration map[string]any `json:"configuration"`
 }
 
 type SubscriptionReceivers []SubscriptionReceiver
@@ -31,6 +32,9 @@ type Subscription struct {
 	URN         string                `db:"urn"`
 	Receiver    SubscriptionReceivers `db:"receiver"`
 	Match       pgc.StringStringMap   `db:"match"`
+	Metadata    pgc.StringAnyMap      `db:"metadata"`
+	CreatedBy   sql.NullString        `db:"created_by"`
+	UpdatedBy   sql.NullString        `db:"updated_by"`
 	CreatedAt   time.Time             `db:"created_at"`
 	UpdatedAt   time.Time             `db:"updated_at"`
 }
@@ -47,6 +51,18 @@ func (s *Subscription) FromDomain(sub subscription.Subscription) {
 			Configuration: item.Configuration,
 		}
 		s.Receiver = append(s.Receiver, receiver)
+	}
+
+	s.Metadata = pgc.StringAnyMap(sub.Metadata)
+	if sub.CreatedBy == "" {
+		s.CreatedBy = sql.NullString{Valid: false}
+	} else {
+		s.CreatedBy = sql.NullString{String: sub.CreatedBy, Valid: true}
+	}
+	if sub.UpdatedBy == "" {
+		s.UpdatedBy = sql.NullString{Valid: false}
+	} else {
+		s.UpdatedBy = sql.NullString{String: sub.UpdatedBy, Valid: true}
 	}
 	s.CreatedAt = sub.CreatedAt
 	s.UpdatedAt = sub.UpdatedAt
@@ -68,6 +84,9 @@ func (s *Subscription) ToDomain() *subscription.Subscription {
 		Match:     s.Match,
 		Namespace: s.NamespaceID,
 		Receivers: receivers,
+		Metadata:  s.Metadata,
+		CreatedBy: s.CreatedBy.String,
+		UpdatedBy: s.UpdatedBy.String,
 		CreatedAt: s.CreatedAt,
 		UpdatedAt: s.UpdatedAt,
 	}

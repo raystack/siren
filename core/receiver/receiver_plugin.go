@@ -8,7 +8,7 @@ import "context"
 //
 //go:generate mockery --name=ConfigResolver -r --case underscore --with-expecter --structname ConfigResolver --filename config_resolver.go --output=./mocks
 type ConfigResolver interface {
-	BuildData(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
-	PreHookDBTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
-	PostHookDBTransformConfigs(ctx context.Context, configs map[string]interface{}) (map[string]interface{}, error)
+	BuildData(ctx context.Context, configs map[string]any) (map[string]any, error)
+	PreHookDBTransformConfigs(ctx context.Context, configs map[string]any) (map[string]any, error)
+	PostHookDBTransformConfigs(ctx context.Context, configs map[string]any) (map[string]any, error)
 }

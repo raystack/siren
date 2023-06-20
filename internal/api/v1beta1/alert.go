@@ -63,7 +63,7 @@ func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1
 	}, nil
 }
 
-func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]*sirenv1beta1.Alert, error) {
+func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, providerID uint64, namespaceID uint64, body map[string]any) ([]*sirenv1beta1.Alert, error) {
 	createdAlerts, firingLen, err := s.alertService.CreateAlerts(ctx, providerType, providerID, namespaceID, body)
 	if err != nil {
 		return nil, err

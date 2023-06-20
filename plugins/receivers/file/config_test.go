@@ -72,7 +72,7 @@ func TestNotificationConfig(t *testing.T) {
 			},
 		}
 
-		if diff := cmp.Diff(map[string]interface{}{
+		if diff := cmp.Diff(map[string]any{
 			"url": "url",
 		}, nc.AsMap()); diff != "" {
 			t.Errorf("result not match\n%v", diff)

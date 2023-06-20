@@ -9,15 +9,15 @@ import (
 )
 
 type Silence struct {
-	ID               string                 `db:"id"`
-	NamespaceID      uint64                 `db:"namespace_id"`
-	Type             string                 `db:"type"`
-	TargetID         sql.NullInt64          `db:"target_id"`
-	TargetExpression pgc.StringInterfaceMap `db:"target_expression"`
-	Creator          sql.NullString         `db:"creator"`
-	Comment          sql.NullString         `db:"comment"`
-	CreatedAt        time.Time              `db:"created_at"`
-	DeletedAt        sql.NullTime           `db:"deleted_at"`
+	ID               string           `db:"id"`
+	NamespaceID      uint64           `db:"namespace_id"`
+	Type             string           `db:"type"`
+	TargetID         sql.NullInt64    `db:"target_id"`
+	TargetExpression pgc.StringAnyMap `db:"target_expression"`
+	Creator          sql.NullString   `db:"creator"`
+	Comment          sql.NullString   `db:"comment"`
+	CreatedAt        time.Time        `db:"created_at"`
+	DeletedAt        sql.NullTime     `db:"deleted_at"`
 }
 
 func (s *Silence) FromDomain(sil silence.Silence) {
@@ -31,7 +31,7 @@ func (s *Silence) FromDomain(sil silence.Silence) {
 		s.TargetID = sql.NullInt64{Int64: int64(sil.TargetID), Valid: true}
 	}
 
-	s.TargetExpression = pgc.StringInterfaceMap(sil.TargetExpression)
+	s.TargetExpression = pgc.StringAnyMap(sil.TargetExpression)
 
 	if sil.Creator == "" {
 		s.Creator = sql.NullString{Valid: false}

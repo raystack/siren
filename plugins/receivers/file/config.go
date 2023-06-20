@@ -15,8 +15,8 @@ func (c *ReceiverConfig) Validate() error {
 	return nil
 }
 
-func (c *ReceiverConfig) AsMap() map[string]interface{} {
-	return map[string]interface{}{
+func (c *ReceiverConfig) AsMap() map[string]any {
+	return map[string]any{
 		"url": c.URL,
 	}
 }
@@ -25,6 +25,6 @@ type NotificationConfig struct {
 	ReceiverConfig `mapstructure:",squash"`
 }
 
-func (c *NotificationConfig) AsMap() map[string]interface{} {
+func (c *NotificationConfig) AsMap() map[string]any {
 	return c.ReceiverConfig.AsMap()
 }

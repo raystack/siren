@@ -10,9 +10,20 @@ import (
 )
 
 func (s *GRPCServer) ListSubscriptions(ctx context.Context, req *sirenv1beta1.ListSubscriptionsRequest) (*sirenv1beta1.ListSubscriptionsResponse, error) {
+	// NOTE: only string value that is queryable with this approach
+	var metadataQuery = map[string]any{}
+	if len(req.GetMetadata()) == 0 {
+		metadataQuery = nil
+	} else {
+		for k, v := range req.GetMetadata() {
+			metadataQuery[k] = v
+		}
+	}
+
 	subscriptions, err := s.subscriptionService.List(ctx, subscription.Filter{
 		NamespaceID:       req.GetNamespaceId(),
 		SilenceID:         req.GetSilenceId(),
+		Metadata:          metadataQuery,
 		Match:             req.GetMatch(),
 		NotificationMatch: req.GetNotificationMatch(),
 	})
@@ -37,12 +48,20 @@ func (s *GRPCServer) ListSubscriptions(ctx context.Context, req *sirenv1beta1.Li
 			})
 		}
 
+		metadata, err := structpb.NewStruct(sub.Metadata)
+		if err != nil {
+			return nil, s.generateRPCErr(err)
+		}
+
 		item := &sirenv1beta1.Subscription{
 			Id:        sub.ID,
 			Urn:       sub.URN,
 			Namespace: sub.Namespace,
 			Match:     sub.Match,
 			Receivers: receiverMetadatasPB,
+			Metadata:  metadata,
+			CreatedBy: sub.CreatedBy,
+			UpdatedBy: sub.UpdatedBy,
 			CreatedAt: timestamppb.New(sub.CreatedAt),
 			UpdatedAt: timestamppb.New(sub.UpdatedAt),
 		}
@@ -59,6 +78,9 @@ func (s *GRPCServer) CreateSubscription(ctx context.Context, req *sirenv1beta1.C
 		URN:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
+		Metadata:  req.GetMetadata().AsMap(),
+		CreatedBy: req.CreatedBy,
+		UpdatedBy: req.CreatedBy,
 	}
 
 	err := s.subscriptionService.Create(ctx, sub)
@@ -90,6 +112,11 @@ func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetS
 		})
 	}
 
+	metadata, err := structpb.NewStruct(sub.Metadata)
+	if err != nil {
+		return nil, s.generateRPCErr(err)
+	}
+
 	return &sirenv1beta1.GetSubscriptionResponse{
 		Subscription: &sirenv1beta1.Subscription{
 			Id:        sub.ID,
@@ -97,6 +124,9 @@ func (s *GRPCServer) GetSubscription(ctx context.Context, req *sirenv1beta1.GetS
 			Namespace: sub.Namespace,
 			Match:     sub.Match,
 			Receivers: receivers,
+			Metadata:  metadata,
+			CreatedBy: sub.CreatedBy,
+			UpdatedBy: sub.UpdatedBy,
 			CreatedAt: timestamppb.New(sub.CreatedAt),
 			UpdatedAt: timestamppb.New(sub.UpdatedAt),
 		},
@@ -110,6 +140,8 @@ func (s *GRPCServer) UpdateSubscription(ctx context.Context, req *sirenv1beta1.U
 		URN:       req.GetUrn(),
 		Receivers: getReceiverMetadataListInDomainObject(req.GetReceivers()),
 		Match:     req.GetMatch(),
+		Metadata:  req.Metadata.AsMap(),
+		UpdatedBy: req.UpdatedBy,
 	}
 
 	err := s.subscriptionService.Update(ctx, sub)

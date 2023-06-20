@@ -124,6 +124,13 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 						},
 					},
 					Match: map[string]string{},
+					Metadata: map[string]any{
+						"team": "alert-history",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "alert-history",
+						},
+					},
 				},
 				{
 					ID:        2,
@@ -132,7 +139,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"channel_name": "gotocompany-data",
 							},
 						},
@@ -141,6 +148,15 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 						"environment": "integration",
 						"team":        "gotocompany-data",
 					},
+					Metadata: map[string]any{
+						"team": "gotocompany-data",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "gotocompany-data",
+						},
+					},
+					CreatedBy: "user@gotocompany.com",
+					UpdatedBy: "admin@gotocompany.com",
 				},
 				{
 					ID:        3,
@@ -149,7 +165,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"channel_name": "gotocompany-data",
 							},
 						},
@@ -159,6 +175,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 						"severity":    "CRITICAL",
 						"team":        "gotocompany-app",
 					},
+					Metadata: map[string]any{},
 				},
 			},
 		},
@@ -175,7 +192,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"channel_name": "gotocompany-data",
 							},
 						},
@@ -184,6 +201,15 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 						"environment": "integration",
 						"team":        "gotocompany-data",
 					},
+					Metadata: map[string]any{
+						"team": "gotocompany-data",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "gotocompany-data",
+						},
+					},
+					CreatedBy: "user@gotocompany.com",
+					UpdatedBy: "admin@gotocompany.com",
 				},
 			},
 		},
@@ -204,7 +230,7 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 					Receivers: []subscription.Receiver{
 						{
 							ID: 1,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"channel_name": "gotocompany-data",
 							},
 						},
@@ -214,6 +240,99 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 						"severity":    "CRITICAL",
 						"team":        "gotocompany-app",
 					},
+					Metadata: map[string]any{},
+				},
+			},
+		},
+		{
+			Description: "should get filtered subscriptions by metadata",
+			Filter: subscription.Filter{
+				Metadata: map[string]any{
+					"team": "gotocompany-data",
+				},
+			},
+			ExpectedSubscriptions: []subscription.Subscription{
+				{
+					ID:        2,
+					URN:       "gotocompany-data-warning",
+					Namespace: 1,
+					Receivers: []subscription.Receiver{
+						{
+							ID: 1,
+							Configuration: map[string]any{
+								"channel_name": "gotocompany-data",
+							},
+						},
+					},
+					Match: map[string]string{
+						"environment": "integration",
+						"team":        "gotocompany-data",
+					},
+					Metadata: map[string]any{
+						"team": "gotocompany-data",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "gotocompany-data",
+						},
+					},
+					CreatedBy: "user@gotocompany.com",
+					UpdatedBy: "admin@gotocompany.com",
+				},
+			},
+		},
+		{
+			Description: "should get correct filtered subscriptions by nested metadata",
+			Filter: subscription.Filter{
+				Metadata: map[string]any{
+					"sample_json": map[string]any{
+						"sample_json_int": float64(1),
+					},
+				},
+			},
+			ExpectedSubscriptions: []subscription.Subscription{
+				{
+					ID:        1,
+					URN:       "alert-history-gotocompany",
+					Namespace: 2,
+					Receivers: []subscription.Receiver{
+						{
+							ID: 1,
+						},
+					},
+					Match: map[string]string{},
+					Metadata: map[string]any{
+						"team": "alert-history",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "alert-history",
+						},
+					},
+				},
+				{
+					ID:        2,
+					URN:       "gotocompany-data-warning",
+					Namespace: 1,
+					Receivers: []subscription.Receiver{
+						{
+							ID: 1,
+							Configuration: map[string]any{
+								"channel_name": "gotocompany-data",
+							},
+						},
+					},
+					Match: map[string]string{
+						"environment": "integration",
+						"team":        "gotocompany-data",
+					},
+					Metadata: map[string]any{
+						"team": "gotocompany-data",
+						"sample_json": map[string]any{
+							"sample_json_int":    float64(1),
+							"sample_json_string": "gotocompany-data",
+						},
+					},
+					CreatedBy: "user@gotocompany.com",
+					UpdatedBy: "admin@gotocompany.com",
 				},
 			},
 		},
@@ -225,8 +344,8 @@ func (s *SubscriptionRepositoryTestSuite) TestList() {
 			if err != nil && err.Error() != tc.ErrString {
 				s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 			}
-			if !cmp.Equal(got, tc.ExpectedSubscriptions, cmpopts.IgnoreFields(subscription.Subscription{}, "CreatedAt", "UpdatedAt")) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedSubscriptions)
+			if diff := cmp.Diff(got, tc.ExpectedSubscriptions, cmpopts.IgnoreFields(subscription.Subscription{}, "CreatedAt", "UpdatedAt")); diff != "" {
+				s.T().Fatalf("got diff %+v", diff)
 			}
 		})
 	}
@@ -252,11 +371,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]interface{}{},
+						Configuration: map[string]any{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]interface{}{
+						Configuration: map[string]any{
 							"channel_name": "test",
 						},
 					},
@@ -275,11 +394,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]interface{}{},
+						Configuration: map[string]any{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]interface{}{
+						Configuration: map[string]any{
 							"channel_name": "test",
 						},
 					},
@@ -297,11 +416,11 @@ func (s *SubscriptionRepositoryTestSuite) TestCreate() {
 				Receivers: []subscription.Receiver{
 					{
 						ID:            2,
-						Configuration: map[string]interface{}{},
+						Configuration: map[string]any{},
 					},
 					{
 						ID: 1,
-						Configuration: map[string]interface{}{
+						Configuration: map[string]any{
 							"channel_name": "test",
 						},
 					},
@@ -346,7 +465,7 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 				Receivers: []subscription.Receiver{
 					{
 						ID: 1,
-						Configuration: map[string]interface{}{
+						Configuration: map[string]any{
 							"channel_name": "gotocompany-data",
 						},
 					},
@@ -356,6 +475,7 @@ func (s *SubscriptionRepositoryTestSuite) TestGet() {
 					"severity":    "CRITICAL",
 					"team":        "gotocompany-app",
 				},
+				Metadata: map[string]any{},
 			},
 		},
 		{
@@ -400,6 +520,9 @@ func (s *SubscriptionRepositoryTestSuite) TestUpdate() {
 				},
 				Match: map[string]string{
 					"key": "label",
+				},
+				Metadata: map[string]any{
+					"key": "metadata",
 				},
 			},
 			ExpectedID: uint64(3),

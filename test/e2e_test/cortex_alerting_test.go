@@ -137,7 +137,7 @@ func (s *CortexAlertingTestSuite) TestAlerting() {
 	s.Require().NoError(err)
 
 	s.Run("Triggering cortex alert with matching subscription labels should trigger notification", func() {
-		configs, err := structpb.NewStruct(map[string]interface{}{
+		configs, err := structpb.NewStruct(map[string]any{
 			"url": "http://some-url",
 		})
 		s.Require().NoError(err)
@@ -294,7 +294,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 		s.Require().Nil(err)
 		defer testServer.Close()
 
-		configs, err := structpb.NewStruct(map[string]interface{}{
+		configs, err := structpb.NewStruct(map[string]any{
 			"url": testServer.URL,
 		})
 		s.Require().NoError(err)
@@ -339,7 +339,7 @@ func (s *CortexAlertingTestSuite) TestIncomingHookAPI() {
 	})
 
 	s.Run("triggering cortex alert with matching subscription labels and silence by labels should not trigger notification", func() {
-		targetExpression, err := structpb.NewStruct(map[string]interface{}{
+		targetExpression, err := structpb.NewStruct(map[string]any{
 			"team":        "gotocompany",
 			"service":     "some-service",
 			"environment": "integration",
@@ -491,7 +491,7 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 		s.Require().Nil(err)
 		defer testServer.Close()
 
-		configs, err := structpb.NewStruct(map[string]interface{}{
+		configs, err := structpb.NewStruct(map[string]any{
 			"url": testServer.URL,
 		})
 		s.Require().NoError(err)
@@ -522,8 +522,8 @@ func (s *CortexAlertingTestSuite) TestSendNotification() {
 		})
 		s.Require().NoError(err)
 
-		payload, err := structpb.NewStruct(map[string]interface{}{
-			"data": map[string]interface{}{
+		payload, err := structpb.NewStruct(map[string]any{
+			"data": map[string]any{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",

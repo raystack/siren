@@ -73,7 +73,7 @@ func TestNotificationConfig(t *testing.T) {
 			},
 		}
 
-		if diff := cmp.Diff(map[string]interface{}{
+		if diff := cmp.Diff(map[string]any{
 			"service_key": secret.MaskableString("service_key"),
 		}, nc.AsMap()); diff != "" {
 			t.Errorf("result not match\n%v", diff)

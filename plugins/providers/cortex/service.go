@@ -62,7 +62,7 @@ func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOpt
 }
 
 // TransformToAlerts is a function to transform alert body in hook API to []*alert.Alert
-func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]interface{}) ([]alert.Alert, int, error) {
+func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]any) ([]alert.Alert, int, error) {
 	var groupAlert = &GroupAlert{}
 	if err := mapstructure.Decode(body, groupAlert); err != nil {
 		return nil, 0, err

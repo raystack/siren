@@ -205,8 +205,8 @@ func AssignReceivers(receiversMap map[uint64]*receiver.Receiver, subscriptions [
 	return subscriptions, nil
 }
 
-func MergeConfigsMap(subscriptionConfigMap map[string]interface{}, receiverConfigsMap map[string]interface{}) map[string]interface{} {
-	var newConfigMap = make(map[string]interface{})
+func MergeConfigsMap(subscriptionConfigMap map[string]any, receiverConfigsMap map[string]any) map[string]any {
+	var newConfigMap = make(map[string]any)
 	for k, v := range subscriptionConfigMap {
 		newConfigMap[k] = v
 	}

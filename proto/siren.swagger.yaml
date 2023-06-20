@@ -4,7 +4,7 @@ info:
   description: |-
     Documentation of our Siren API with gRPC and
     gRPC-Gateway.
-  version: "0.5"
+  version: "0.6"
 tags:
   - name: SirenService
 schemes:
@@ -767,6 +767,10 @@ paths:
                 type: object
                 additionalProperties:
                   type: string
+              metadata:
+                type: object
+              updated_by:
+                type: string
       tags:
         - Subscription
   /v1beta1/templates:
@@ -1033,6 +1037,10 @@ definitions:
         type: object
         additionalProperties:
           type: string
+      metadata:
+        type: object
+      created_by:
+        type: string
   CreateSubscriptionResponse:
     type: object
     properties:
@@ -1340,6 +1348,12 @@ definitions:
       updated_at:
         type: string
         format: date-time
+      metadata:
+        type: object
+      created_by:
+        type: string
+      updated_by:
+        type: string
   Template:
     type: object
     properties:

@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-type StringInterfaceMap map[string]interface{}
+type StringAnyMap map[string]any
 
-func (m *StringInterfaceMap) Scan(value interface{}) error {
+func (m *StringAnyMap) Scan(value any) error {
 	if value == nil {
-		m = new(StringInterfaceMap)
+		m = new(StringAnyMap)
 		return nil
 	}
 	b, ok := value.([]byte)
@@ -22,7 +22,7 @@ func (m *StringInterfaceMap) Scan(value interface{}) error {
 	return json.Unmarshal(b, &m)
 }
 
-func (a StringInterfaceMap) Value() (driver.Value, error) {
+func (a StringAnyMap) Value() (driver.Value, error) {
 	if len(a) == 0 {
 		return nil, nil
 	}

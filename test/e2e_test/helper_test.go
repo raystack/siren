@@ -199,8 +199,8 @@ func CreateClient(ctx context.Context, host string) (sirenv1beta1.SirenServiceCl
 }
 
 func diffYaml(yaml1 []byte, yaml2 []byte) string {
-	data1 := make(map[string]interface{})
-	data2 := make(map[string]interface{})
+	data1 := make(map[string]any)
+	data2 := make(map[string]any)
 
 	err := yaml.Unmarshal(yaml1, &data1)
 	if err != nil {

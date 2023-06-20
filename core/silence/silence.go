@@ -19,15 +19,15 @@ type Repository interface {
 }
 
 type Silence struct {
-	ID               string                 `json:"id"`
-	NamespaceID      uint64                 `json:"namespace_id"`
-	Type             string                 `json:"type"`
-	TargetID         uint64                 `json:"target_id"`
-	TargetExpression map[string]interface{} `json:"target_expression"`
-	Creator          string                 `json:"creator"`
-	Comment          string                 `json:"comment"`
-	CreatedAt        time.Time              `json:"created_at"`
-	DeletedAt        time.Time              `json:"deleted_at"`
+	ID               string         `json:"id"`
+	NamespaceID      uint64         `json:"namespace_id"`
+	Type             string         `json:"type"`
+	TargetID         uint64         `json:"target_id"`
+	TargetExpression map[string]any `json:"target_expression"`
+	Creator          string         `json:"creator"`
+	Comment          string         `json:"comment"`
+	CreatedAt        time.Time      `json:"created_at"`
+	DeletedAt        time.Time      `json:"deleted_at"`
 }
 
 func (s Silence) Validate() error {

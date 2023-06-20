@@ -202,7 +202,7 @@ func (s *Service) decrypt(ens *EncryptedNamespace) (*Namespace, error) {
 		return nil, err
 	}
 
-	var decryptedCredentials map[string]interface{}
+	var decryptedCredentials map[string]any
 	if err := json.Unmarshal([]byte(decryptedCredentialsStr), &decryptedCredentials); err != nil {
 		return nil, err
 

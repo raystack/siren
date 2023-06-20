@@ -122,8 +122,8 @@ func (s *GRPCServer) DeleteReceiver(ctx context.Context, req *sirenv1beta1.Delet
 }
 
 // sanitizeConfigMap does all sanitization to present receiver configurations to the user
-func sanitizeConfigMap(receiverConfigMap map[string]interface{}) map[string]interface{} {
-	var newConfigMap = make(map[string]interface{})
+func sanitizeConfigMap(receiverConfigMap map[string]any) map[string]any {
+	var newConfigMap = make(map[string]any)
 	for k, v := range receiverConfigMap {
 		// sanitize maskable string. convert `secret.MaskableString` to string to be compatible with structpb
 		if reflect.TypeOf(v) == reflect.TypeOf(secret.MaskableString("")) {

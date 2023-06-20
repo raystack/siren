@@ -53,7 +53,7 @@ func (m Message) BuildGoSlackMessageOptions() ([]goslack.MsgOption, error) {
 	return msgOptions, nil
 }
 
-type MessageAttachment map[string]interface{}
+type MessageAttachment map[string]any
 
 func (ma MessageAttachment) ToGoSlack() (*goslack.Attachment, error) {
 	// TODO might want to use more performant JSON marshaller

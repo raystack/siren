@@ -80,16 +80,16 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 	timenow := time.Now()
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"alerts": []interface{}{
-			map[string]interface{}{
-				"annotations": map[string]interface{}{
+			map[string]any{
+				"annotations": map[string]any{
 					"metricName":  "bar",
 					"metricValue": "30",
 					"resource":    "foo",
 					"template":    "random",
 				},
-				"labels": map[string]interface{}{
+				"labels": map[string]any{
 					"severity": "foo",
 				},
 				"startsAt": timenow.String(),
@@ -252,16 +252,16 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			},
 		}
 
-		payload := map[string]interface{}{
+		payload := map[string]any{
 			"alerts": []interface{}{
-				map[string]interface{}{
-					"annotations": map[string]interface{}{
+				map[string]any{
+					"annotations": map[string]any{
 						"metricName":  "bar",
 						"metricValue": "30",
 						"resource":    "foo",
 						"template":    "random",
 					},
-					"labels": map[string]interface{}{
+					"labels": map[string]any{
 						"severity": "foo",
 					},
 					"startsAt": timenow.String(),
@@ -316,28 +316,28 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
 		mockNotificationService := new(mocks.NotificationService)
 
-		payload := map[string]interface{}{
+		payload := map[string]any{
 			"alerts": []interface{}{
-				map[string]interface{}{
-					"annotations": map[string]interface{}{
+				map[string]any{
+					"annotations": map[string]any{
 						"metricName":  "bar",
 						"metricValue": "30",
 						"resource":    "foo",
 						"template":    "random",
 					},
-					"labels": map[string]interface{}{
+					"labels": map[string]any{
 						"severity": "foo",
 					},
 					"startsAt": timenow.String(),
 					"status":   "foo",
-				}, map[string]interface{}{
-					"annotations": map[string]interface{}{
+				}, map[string]any{
+					"annotations": map[string]any{
 						"metricName":  "bar",
 						"metricValue": "30",
 						"resource":    "foo",
 						"template":    "random",
 					},
-					"labels": map[string]interface{}{
+					"labels": map[string]any{
 						"severity": "foo",
 					},
 					"startsAt": timenow.String(),

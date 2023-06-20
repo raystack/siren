@@ -18,12 +18,25 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func TestGRPCServer_ListSubscriptions(t *testing.T) {
-	configuration := make(map[string]interface{})
-	configuration["foo"] = "bar"
-	match := make(map[string]string)
-	match["foo"] = "bar"
+var (
+	configuration = map[string]any{
+		"foo": "bar",
+	}
 
+	match = map[string]string{
+		"foo": "bar",
+	}
+
+	subMetadata = map[string]any{
+		"foo1_metadata": "bar1_metadata",
+		"foo2_metadata": float64(1),
+		"foo3_metadata": true,
+	}
+
+	creator = "user@gotocompany.com"
+)
+
+func TestGRPCServer_ListSubscriptions(t *testing.T) {
 	t.Run("should return list of all subscriptions", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 
@@ -36,6 +49,9 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 				Namespace: 1,
 				Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 				Match:     match,
+				Metadata:  subMetadata,
+				CreatedBy: creator,
+				UpdatedBy: creator,
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			},
@@ -47,6 +63,8 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 		assert.Equal(t, 1, len(res.GetSubscriptions()))
 		assert.Equal(t, uint64(1), res.GetSubscriptions()[0].GetId())
 		assert.Equal(t, "bar", res.GetSubscriptions()[0].GetMatch()["foo"])
+		assert.Equal(t, true, res.GetSubscriptions()[0].GetMetadata().AsMap()["foo3_metadata"])
+		assert.Equal(t, creator, res.GetSubscriptions()[0].GetUpdatedBy())
 	})
 
 	t.Run("should return error Internal if getting subscriptions fails", func(t *testing.T) {
@@ -62,11 +80,6 @@ func TestGRPCServer_ListSubscriptions(t *testing.T) {
 }
 
 func TestGRPCServer_GetSubscription(t *testing.T) {
-	configuration := make(map[string]interface{})
-	configuration["foo"] = "bar"
-	match := make(map[string]string)
-	match["foo"] = "bar"
-
 	t.Run("should return a subscription", func(t *testing.T) {
 		mockedSubscriptionService := &mocks.SubscriptionService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{SubscriptionService: mockedSubscriptionService})
@@ -76,6 +89,9 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 			Namespace: 1,
 			Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 			Match:     match,
+			Metadata:  subMetadata,
+			CreatedBy: creator,
+			UpdatedBy: creator,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -85,6 +101,8 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetSubscription().GetId())
 		assert.Equal(t, "bar", res.GetSubscription().GetMatch()["foo"])
+		assert.Equal(t, true, res.GetSubscription().GetMetadata().AsMap()["foo3_metadata"])
+		assert.Equal(t, creator, res.GetSubscription().GetUpdatedBy())
 	})
 
 	t.Run("should return error Not Found if subscriptions not found", func(t *testing.T) {
@@ -108,12 +126,7 @@ func TestGRPCServer_GetSubscription(t *testing.T) {
 }
 
 func TestGRPCServer_CreateSubscription(t *testing.T) {
-	configuration := make(map[string]interface{})
-	configuration["foo"] = "bar"
-	match := make(map[string]string)
-	match["foo"] = "baz"
-
-	configMapString := make(map[string]interface{})
+	configMapString := make(map[string]any)
 	for k, v := range configuration {
 		configMapString[k] = fmt.Sprintf("%v", v)
 	}
@@ -126,6 +139,7 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 		URN:       "foo",
 		Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 		Match:     match,
+		Metadata:  map[string]any{},
 	}
 
 	dummyResult := &subscription.Subscription{
@@ -212,24 +226,25 @@ func TestGRPCServer_CreateSubscription(t *testing.T) {
 }
 
 func TestGRPCServer_UpdateSubscription(t *testing.T) {
-	configuration := make(map[string]interface{})
-	configuration["foo"] = "bar"
-	match := make(map[string]string)
-	match["foo"] = "baz"
 	payload := &subscription.Subscription{
 		ID:        1,
 		Namespace: 10,
 		URN:       "foo",
 		Receivers: []subscription.Receiver{{ID: 1, Configuration: configuration}},
 		Match:     match,
+		Metadata:  subMetadata,
+		UpdatedBy: creator,
 	}
 
-	configMapString := make(map[string]interface{})
+	configMapString := make(map[string]any)
 	for k, v := range configuration {
 		configMapString[k] = fmt.Sprintf("%v", v)
 	}
 
 	configMapPB, err := structpb.NewStruct(configMapString)
+	require.NoError(t, err)
+
+	subMetadataPB, err := structpb.NewStruct(subMetadata)
 	require.NoError(t, err)
 
 	t.Run("should update a subscription", func(t *testing.T) {
@@ -246,6 +261,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Urn:       "foo",
 			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
+			Metadata:  subMetadataPB,
+			UpdatedBy: creator,
 		})
 		assert.Nil(t, err)
 		assert.Equal(t, uint64(1), res.GetId())
@@ -262,6 +279,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Urn:       "foo",
 			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
+			Metadata:  subMetadataPB,
+			UpdatedBy: creator,
 		})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = InvalidArgument desc = request is not valid")
@@ -278,6 +297,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Urn:       "foo",
 			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
+			Metadata:  subMetadataPB,
+			UpdatedBy: creator,
 		})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = AlreadyExists desc = an entity with conflicting identifier exists")
@@ -294,6 +315,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Urn:       "foo",
 			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
+			Metadata:  subMetadataPB,
+			UpdatedBy: creator,
 		})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, "rpc error: code = Internal desc = some unexpected error occurred")
@@ -310,6 +333,8 @@ func TestGRPCServer_UpdateSubscription(t *testing.T) {
 			Urn:       "foo",
 			Receivers: []*sirenv1beta1.ReceiverMetadata{{Id: 1, Configuration: configMapPB}},
 			Match:     match,
+			Metadata:  subMetadataPB,
+			UpdatedBy: creator,
 		})
 		assert.Nil(t, res)
 		assert.EqualError(t, err, `rpc error: code = InvalidArgument desc = request is not valid`)

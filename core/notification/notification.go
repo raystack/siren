@@ -25,15 +25,15 @@ type Repository interface {
 // if type is `receiver`, it is expected for the labels to have
 // receiver_id = int
 type Notification struct {
-	ID            string                 `json:"id"`
-	NamespaceID   uint64                 `json:"namespace_id"`
-	Type          string                 `json:"type"`
-	Data          map[string]interface{} `json:"data"`
-	Labels        map[string]string      `json:"labels"`
-	ValidDuration time.Duration          `json:"valid_duration"`
-	Template      string                 `json:"template"`
-	UniqueKey     string                 `json:"unique_key"`
-	CreatedAt     time.Time              `json:"created_at"`
+	ID            string            `json:"id"`
+	NamespaceID   uint64            `json:"namespace_id"`
+	Type          string            `json:"type"`
+	Data          map[string]any    `json:"data"`
+	Labels        map[string]string `json:"labels"`
+	ValidDuration time.Duration     `json:"valid_duration"`
+	Template      string            `json:"template"`
+	UniqueKey     string            `json:"unique_key"`
+	CreatedAt     time.Time         `json:"created_at"`
 
 	// won't be stored in notification table, only to propaget this to notification_subscriber
 	AlertIDs []int64
@@ -46,7 +46,7 @@ func (n *Notification) EnrichID(id string) {
 	n.ID = id
 
 	if len(n.Data) == 0 {
-		n.Data = map[string]interface{}{}
+		n.Data = map[string]any{}
 	}
 
 	n.Data["id"] = id

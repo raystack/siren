@@ -18,7 +18,7 @@ import (
 )
 
 func TestGRPCServer_ListReceiver(t *testing.T) {
-	configurations := make(map[string]interface{})
+	configurations := make(map[string]any)
 	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -86,7 +86,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 }
 
 func TestGRPCServer_CreateReceiver(t *testing.T) {
-	configurations := make(map[string]interface{})
+	configurations := make(map[string]any)
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"
@@ -146,7 +146,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 }
 
 func TestGRPCServer_GetReceiver(t *testing.T) {
-	configurations := make(map[string]interface{})
+	configurations := make(map[string]any)
 	configurations["foo"] = "bar"
 	labels := make(map[string]string)
 	labels["foo"] = "bar"
@@ -220,7 +220,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 	t.Run("should return error Internal if data NewStruct conversion of data failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		data["channels"] = string([]byte{0xff})
 		payload := &receiver.Receiver{
 			Name:           "foo",
@@ -239,7 +239,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 }
 
 func TestGRPCServer_UpdateReceiver(t *testing.T) {
-	configurations := make(map[string]interface{})
+	configurations := make(map[string]any)
 	configurations["client_id"] = "foo"
 	configurations["client_secret"] = "bar"
 	configurations["auth_code"] = "foo"

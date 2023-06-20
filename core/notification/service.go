@@ -240,7 +240,7 @@ func (s *Service) BuildFromAlerts(
 	for hashKey, groupedAlerts := range alertsMap {
 		sampleAlert := groupedAlerts[0]
 
-		data := map[string]interface{}{}
+		data := map[string]any{}
 
 		mergedAnnotations := map[string][]string{}
 		for _, a := range groupedAlerts {

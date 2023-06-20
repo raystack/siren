@@ -68,8 +68,8 @@ type Message struct {
 	ID           string
 	Status       MessageStatus
 	ReceiverType string
-	Configs      map[string]interface{} // the datasource to build vendor-specific configs
-	Details      map[string]interface{} // the datasource to build vendor-specific message
+	Configs      map[string]any // the datasource to build vendor-specific configs
+	Details      map[string]any // the datasource to build vendor-specific message
 	MaxTries     int
 	ExpiredAt    time.Time
 	CreatedAt    time.Time
@@ -89,7 +89,7 @@ func InitMessage(
 	notifierPlugin Notifier,
 	n Notification,
 	receiverType string,
-	messageConfig map[string]interface{},
+	messageConfig map[string]any,
 	opts ...MessageOption,
 ) (Message, error) {
 	if notifierPlugin == nil {
@@ -109,7 +109,7 @@ func InitMessage(
 
 	var (
 		timeNow = time.Now()
-		details = make(map[string]interface{})
+		details = make(map[string]any)
 	)
 
 	for k, v := range n.Labels {
@@ -153,7 +153,7 @@ func InitMessage(
 				return Message{}, errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", receiverType, err.Error())
 			}
 
-			var messageDetails map[string]interface{}
+			var messageDetails map[string]any
 			if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
 				return Message{}, errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", receiverType, err.Error(), renderedDetailString)
 			}

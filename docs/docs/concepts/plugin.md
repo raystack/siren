@@ -19,7 +19,7 @@ See [Extend](../extend/adding_new_provider.md) section for more information abou
 ```go
 type ProviderPlugin interface {
 	// AlertTransformer
-	TransformToAlerts(ctx context.Context, providerID uint64, body map[string]interface{}) ([]*alert.Alert, int, error) 
+	TransformToAlerts(ctx context.Context, providerID uint64, body map[string]any) ([]*alert.Alert, int, error) 
 
 	// ConfigSyncer
 	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error
@@ -53,13 +53,13 @@ See [Extend](../extend/adding_new_receiver.md) section for more information abou
 ```go
 type ReceiverPlugin interface {
 	// Config Resolver
-	PreHookDBTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error)
-	PostHookDBTransformConfigs(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error)
-	BuildData(ctx context.Context, configurations map[string]interface{}) (map[string]interface{}, error)
+	PreHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error)
+	PostHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error)
+	BuildData(ctx context.Context, configurations map[string]any) (map[string]any, error)
 	
 	// Notifier
-	PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error)
-	PostHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error)
+	PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error)
+	PostHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error)
 	GetSystemDefaultTemplate() string
 	Send(ctx context.Context, notificationMessage notification.Message) (bool, error)
 }
@@ -89,7 +89,7 @@ Siren receiver plugin could have several configs:
 4. `AppConfig`
 	- A config of receiver plugin that is being loaded when the Siren app is started. `AppConfig` can be set up via environment variable or config file. Usually this is a generic config of a specific receiver regardless where the notification is being sent to (e.g. http config, receiver host, etc...). If your plugin requires `AppConfig`, you can set the config inside `plugins/receivers/config.go`.
 
-> In Siren receiver plugins, all configs will be transform back and forth from `map[string]interface{}` to struct using [mitchellh/mapstructure](https://github.com/mitchellh/mapstructure). You might also need to add more functions to validate and transform configs to `map[string]interface{}`.
+> In Siren receiver plugins, all configs will be transform back and forth from `map[string]any` to struct using [mitchellh/mapstructure](https://github.com/mitchellh/mapstructure). You might also need to add more functions to validate and transform configs to `map[string]any`.
 
 ### Alert Notification Default Template
 

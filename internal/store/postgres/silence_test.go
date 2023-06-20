@@ -115,7 +115,7 @@ func (s *SilenceRepositoryTestSuite) TestCreate() {
 				NamespaceID: 1,
 				Type:        silence.TypeSubscription,
 				TargetID:    1,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "true",
 				},
 			},
@@ -125,7 +125,7 @@ func (s *SilenceRepositoryTestSuite) TestCreate() {
 			SilenceToCreate: silence.Silence{
 				NamespaceID: 1,
 				Type:        silence.TypeMatchers,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"key1": "val1",
 				},
 			},
@@ -135,7 +135,7 @@ func (s *SilenceRepositoryTestSuite) TestCreate() {
 			SilenceToCreate: silence.Silence{
 				NamespaceID: 111,
 				Type:        silence.TypeMatchers,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"key1": "val1",
 				},
 			},
@@ -171,21 +171,21 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 					NamespaceID: 1,
 					Type:        "subscription",
 					TargetID:    2,
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"rule": "",
 					},
 				},
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 					},
 				},
 				{
 					NamespaceID: 3,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 					},
@@ -193,7 +193,7 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 						"key3": "value3",
@@ -210,14 +210,14 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 					},
 				},
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 						"key3": "value3",
@@ -235,7 +235,7 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 					NamespaceID: 1,
 					Type:        "subscription",
 					TargetID:    2,
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"rule": "",
 					},
 				},
@@ -252,14 +252,14 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 					},
 				},
 				{
 					NamespaceID: 3,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 					},
@@ -267,7 +267,7 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 						"key3": "value3",
@@ -287,14 +287,14 @@ func (s *SilenceRepositoryTestSuite) TestList() {
 				{
 					NamespaceID: 2,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 					},
 				},
 				{
 					NamespaceID: 3,
 					Type:        "labels",
-					TargetExpression: map[string]interface{}{
+					TargetExpression: map[string]any{
 						"key1": "value1",
 						"key2": "value2",
 					},
@@ -337,7 +337,7 @@ func (s *SilenceRepositoryTestSuite) TestGet() {
 				NamespaceID: 1,
 				Type:        "subscription",
 				TargetID:    2,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "",
 				},
 			},
@@ -351,7 +351,7 @@ func (s *SilenceRepositoryTestSuite) TestGet() {
 				NamespaceID: 1,
 				Type:        "subscription",
 				TargetID:    2,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "",
 				},
 			},
@@ -379,7 +379,7 @@ func (s *SilenceRepositoryTestSuite) TestSoftDelete() {
 		id, err := s.repository.Create(s.ctx, silence.Silence{
 			NamespaceID: 1,
 			Type:        silence.TypeMatchers,
-			TargetExpression: map[string]interface{}{
+			TargetExpression: map[string]any{
 				"key1": "value1",
 			},
 		})

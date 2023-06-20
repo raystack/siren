@@ -6,7 +6,14 @@
             {
                 "id": 1
             }
-        ]
+        ],
+        "metadata": {
+            "team": "alert-history",
+            "sample_json": {
+                "sample_json_int": 1,
+                "sample_json_string": "alert-history"
+            }
+        }
     },
     {
         "urn": "gotocompany-data-warning",
@@ -22,7 +29,16 @@
         "match": {
             "environment": "integration",
             "team": "gotocompany-data"
-        }
+        },
+        "metadata": {
+            "team": "gotocompany-data",
+            "sample_json": {
+                "sample_json_int": 1,
+                "sample_json_string": "gotocompany-data"
+            }
+        },
+        "created_by": "user@gotocompany.com",
+        "updated_by": "admin@gotocompany.com"
     },
     {
         "urn": "gotocompany-pd",

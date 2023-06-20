@@ -9,7 +9,7 @@ import (
 )
 
 // BuildTypeReceiver builds a notification struct with receiver type flow
-func BuildTypeReceiver(receiverID uint64, payloadMap map[string]interface{}) (Notification, error) {
+func BuildTypeReceiver(receiverID uint64, payloadMap map[string]any) (Notification, error) {
 	n := Notification{}
 	if err := mapstructure.Decode(payloadMap, &n); err != nil {
 		return Notification{}, errors.ErrInvalid.WithMsgf("failed to parse payload to notification: %s", err.Error())

@@ -24,7 +24,7 @@ func TestMessage_InitMessage(t *testing.T) {
 		setup               func(*mocks.Notifier)
 		n                   notification.Notification
 		receiverType        string
-		notificationConfigs map[string]interface{}
+		notificationConfigs map[string]any
 		want                notification.Message
 		errString           string
 	}{
@@ -39,7 +39,7 @@ func TestMessage_InitMessage(t *testing.T) {
 					"labelkey1": "value1",
 					"samekey":   "label_value",
 				},
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"varkey1": "value1",
 					"samekey": "var_value",
 				},
@@ -47,7 +47,7 @@ func TestMessage_InitMessage(t *testing.T) {
 			want: notification.Message{
 				ID:     testID,
 				Status: notification.MessageStatusEnqueued,
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"labelkey1":                             "value1",
 					"varkey1":                               "value1",
 					"samekey":                               "var_value",
@@ -101,7 +101,7 @@ func TestMessage_Mark(t *testing.T) {
 	m := &notification.Message{
 		ID:     "some-id",
 		Status: notification.MessageStatusEnqueued,
-		Details: map[string]interface{}{
+		Details: map[string]any{
 			"labelkey1": "value1",
 			"varkey1":   "value1",
 		},

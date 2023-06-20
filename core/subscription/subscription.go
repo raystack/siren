@@ -18,8 +18,8 @@ type Repository interface {
 }
 
 type Receiver struct {
-	ID            uint64                 `json:"id"`
-	Configuration map[string]interface{} `json:"configuration"`
+	ID            uint64         `json:"id"`
+	Configuration map[string]any `json:"configuration"`
 
 	// Type won't be exposed to the end-user, this is used to add more details for notification purposes
 	Type string
@@ -31,8 +31,11 @@ type Subscription struct {
 	Namespace uint64            `json:"namespace"`
 	Receivers []Receiver        `json:"receivers"`
 	Match     map[string]string `json:"match"`
+	Metadata  map[string]any    `json:"metadata"`
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt time.Time         `json:"updated_at"`
+	CreatedBy string            `json:"created_by"`
+	UpdatedBy string            `json:"updated_by"`
 }
 
 func (s Subscription) ReceiversAsMap() map[uint64]Receiver {

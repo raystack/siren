@@ -147,7 +147,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						Name:   "foo",
 						Labels: map[string]string{"foo": "bar"},
-						Credentials: map[string]interface{}{
+						Credentials: map[string]any{
 							"name": "a",
 						},
 						CreatedAt: timeNow,
@@ -160,7 +160,7 @@ func TestService_ListNamespaces(t *testing.T) {
 						},
 						Name:   "foo",
 						Labels: map[string]string{"foo": "bar"},
-						Credentials: map[string]interface{}{
+						Credentials: map[string]any{
 							"name": "a",
 						},
 						CreatedAt: timeNow,
@@ -217,7 +217,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{},
+					Credentials: map[string]any{},
 				},
 				Err: errors.New("some error"),
 			},
@@ -227,7 +227,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					ps.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&provider.Provider{Type: testProviderType}, nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"invalid": make(chan int),
 					},
 				},
@@ -240,7 +240,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -259,7 +259,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -278,7 +278,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -297,7 +297,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -317,7 +317,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -337,7 +337,7 @@ func TestService_CreateNamespace(t *testing.T) {
 					rr.EXPECT().Commit(mock.AnythingOfType("*context.emptyCtx")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -433,7 +433,7 @@ func TestService_GetNamespace(t *testing.T) {
 					e.EXPECT().Decrypt(secret.MaskableString("some-ciphertext")).Return("{ \"key\": \"value\" }", nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"key": "value",
 					},
 				},
@@ -487,7 +487,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{},
+					Credentials: map[string]any{},
 				},
 				Err: errors.New("some error"),
 			},
@@ -498,7 +498,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{},
+					Credentials: map[string]any{},
 				},
 				Err: errors.New("some error"),
 			},
@@ -509,7 +509,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return("{ \"key\": \"value\" }", nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"invalid": make(chan int),
 					},
 				},
@@ -523,7 +523,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return("", errors.New("some error"))
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -543,7 +543,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -563,7 +563,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("namespace.NotFoundError")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -583,7 +583,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -603,7 +603,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -624,7 +624,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Rollback(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},
@@ -645,7 +645,7 @@ func TestService_UpdateNamespace(t *testing.T) {
 					rr.EXPECT().Commit(mock.AnythingOfType("*context.emptyCtx")).Return(nil)
 				},
 				NSpace: &namespace.Namespace{
-					Credentials: map[string]interface{}{
+					Credentials: map[string]any{
 						"credential": "value",
 					},
 				},

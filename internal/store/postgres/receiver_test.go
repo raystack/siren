@@ -104,7 +104,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "gotocompany,org-a,org-b",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token":     "xxxxxxxxxx",
 						"workspace": "gotocompany",
 					},
@@ -116,7 +116,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "gotocompany,org-a,org-b,org-c",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -128,7 +128,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "gotocompany",
 						"team":   "siren-gotocompany",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -147,7 +147,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Labels: map[string]string{
 						"entity": "gotocompany,org-a,org-b,org-c",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
 					},
 				},
@@ -159,7 +159,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"entity": "gotocompany",
 						"team":   "siren-gotocompany",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"service_key": "1212121212121212121212121",
 					},
 				},
@@ -202,7 +202,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 					"entity": "gotocompany",
 					"team":   "siren-gotocompany",
 				},
-				Configurations: map[string]interface{}{
+				Configurations: map[string]any{
 					"service_key": "1212121212121212121212121",
 				},
 			},
@@ -247,7 +247,7 @@ func (s *ReceiverRepositoryTestSuite) TestCreate() {
 					"entity": "neworg",
 					"team":   "siren-neworg",
 				},
-				Configurations: map[string]interface{}{
+				Configurations: map[string]any{
 					"service_key": "000999",
 				},
 			},
@@ -289,7 +289,7 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 				Labels: map[string]string{
 					"entity": "gotocompany",
 				},
-				Configurations: map[string]interface{}{
+				Configurations: map[string]any{
 					"url": "http://siren.gotocompany.com/v2/alerts/cortex",
 				},
 			},

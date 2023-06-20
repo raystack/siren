@@ -18,7 +18,7 @@ func TestService_BuildData(t *testing.T) {
 	type testCase struct {
 		Description string
 		Setup       func(sc *mocks.SlackCaller, e *mocks.Encryptor)
-		Confs       map[string]interface{}
+		Confs       map[string]any
 		Err         error
 	}
 	var (
@@ -27,7 +27,7 @@ func TestService_BuildData(t *testing.T) {
 			{
 				Description: "should return error if configuration is invalid",
 				Setup:       func(sc *mocks.SlackCaller, e *mocks.Encryptor) {},
-				Confs:       make(map[string]interface{}),
+				Confs:       make(map[string]any),
 				Err:         errors.New("invalid slack receiver config, workspace: , token: "),
 			},
 			{
@@ -35,7 +35,7 @@ func TestService_BuildData(t *testing.T) {
 				Setup: func(sc *mocks.SlackCaller, e *mocks.Encryptor) {
 					sc.EXPECT().GetWorkspaceChannels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("secret.MaskableString")).Return(nil, errors.New("some error"))
 				},
-				Confs: map[string]interface{}{
+				Confs: map[string]any{
 					"token":     secret.MaskableString("key"),
 					"workspace": "gotocompany",
 				},
@@ -51,7 +51,7 @@ func TestService_BuildData(t *testing.T) {
 						},
 					}, nil)
 				},
-				Confs: map[string]interface{}{
+				Confs: map[string]any{
 					"token":     secret.MaskableString("key"),
 					"workspace": "gotocompany",
 				},
@@ -94,7 +94,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification config",
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"token": true,
 				},
 			},
@@ -103,7 +103,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error if failed to decode notification detail",
 			notificationMessage: notification.Message{
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"text": make(chan bool),
 				},
 			},
@@ -115,10 +115,10 @@ func TestService_Send(t *testing.T) {
 				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(errors.New("some error"))
 			},
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"token": true,
 				},
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"message": "hello",
 				},
 			},
@@ -131,10 +131,10 @@ func TestService_Send(t *testing.T) {
 				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(retry.RetryableError{Err: errors.New("some error")})
 			},
 			notificationMessage: notification.Message{
-				Configs: map[string]interface{}{
+				Configs: map[string]any{
 					"token": "123123",
 				},
-				Details: map[string]interface{}{
+				Details: map[string]any{
 					"message": "hello",
 				},
 			},
@@ -168,8 +168,8 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 	tests := []struct {
 		name                  string
 		setup                 func(*mocks.Encryptor)
-		notificationConfigMap map[string]interface{}
-		want                  map[string]interface{}
+		notificationConfigMap map[string]any
+		want                  map[string]any
 		wantErr               bool
 	}{
 		{
@@ -179,14 +179,14 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 		},
 		{
 			name: "should return error if validate notification config failed",
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"token": 123,
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if slack token encryption failed",
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"token": secret.MaskableString("a token"),
 			},
 			setup: func(e *mocks.Encryptor) {
@@ -197,7 +197,7 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 		{
 			name: "should return encrypted slack token if succeed",
 
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("a token"),
 				"channel_name": "channel",
@@ -206,7 +206,7 @@ func TestService_PreHookQueueTransformConfigs(t *testing.T) {
 			setup: func(e *mocks.Encryptor) {
 				e.EXPECT().Encrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("maskable-token"),
 				"channel_name": "channel",
@@ -241,8 +241,8 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 	tests := []struct {
 		name                  string
 		setup                 func(*mocks.Encryptor)
-		notificationConfigMap map[string]interface{}
-		want                  map[string]interface{}
+		notificationConfigMap map[string]any
+		want                  map[string]any
 		wantErr               bool
 	}{
 		{
@@ -252,14 +252,14 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 		},
 		{
 			name: "should return error if validate notification config failed",
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"token": 123,
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if slack token decryption failed",
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"token": secret.MaskableString("a token"),
 			},
 			setup: func(e *mocks.Encryptor) {
@@ -270,7 +270,7 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 		{
 			name: "should return decrypted slack token if succeed",
 
-			notificationConfigMap: map[string]interface{}{
+			notificationConfigMap: map[string]any{
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("a token"),
 				"channel_name": "channel",
@@ -279,7 +279,7 @@ func TestService_PostHookQueueTransformConfigs(t *testing.T) {
 			setup: func(e *mocks.Encryptor) {
 				e.EXPECT().Decrypt(mock.AnythingOfType("secret.MaskableString")).Return(secret.MaskableString("maskable-token"), nil)
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"workspace":    "a workspace",
 				"token":        secret.MaskableString("maskable-token"),
 				"channel_name": "channel",

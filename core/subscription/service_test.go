@@ -434,13 +434,13 @@ func TestAssignReceivers(t *testing.T) {
 			Receivers: []subscription.Receiver{
 				{
 					ID: 1,
-					Configuration: map[string]interface{}{
+					Configuration: map[string]any{
 						"token": "abcabc",
 					},
 				},
 				{
 					ID: 2,
-					Configuration: map[string]interface{}{
+					Configuration: map[string]any{
 						"token": "abcabc",
 					},
 				},
@@ -450,13 +450,13 @@ func TestAssignReceivers(t *testing.T) {
 			Receivers: []subscription.Receiver{
 				{
 					ID: 3,
-					Configuration: map[string]interface{}{
+					Configuration: map[string]any{
 						"token": "abcabc",
 					},
 				},
 				{
 					ID: 4,
-					Configuration: map[string]interface{}{
+					Configuration: map[string]any{
 						"token": "abcabc",
 					},
 				},
@@ -480,10 +480,10 @@ func TestAssignReceivers(t *testing.T) {
 			Description:   "should assign receivers to subscription if assigning receivers return no error",
 			Subscriptions: inputSubscriptions,
 			ReceiversMap: map[uint64]*receiver.Receiver{
-				1: {ID: 1, Type: receiver.TypeHTTP, Configurations: map[string]interface{}{"newkey": "newvalue"}},
-				2: {ID: 2, Type: receiver.TypePagerDuty, Configurations: map[string]interface{}{"newkey": "newvalue"}},
-				3: {ID: 3, Type: receiver.TypeSlack, Configurations: map[string]interface{}{"newkey": "newvalue"}},
-				4: {ID: 4, Type: receiver.TypeSlack, Configurations: map[string]interface{}{"newkey": "newvalue"}},
+				1: {ID: 1, Type: receiver.TypeHTTP, Configurations: map[string]any{"newkey": "newvalue"}},
+				2: {ID: 2, Type: receiver.TypePagerDuty, Configurations: map[string]any{"newkey": "newvalue"}},
+				3: {ID: 3, Type: receiver.TypeSlack, Configurations: map[string]any{"newkey": "newvalue"}},
+				4: {ID: 4, Type: receiver.TypeSlack, Configurations: map[string]any{"newkey": "newvalue"}},
 			},
 			ExpectedSubscriptions: []subscription.Subscription{
 				{
@@ -491,7 +491,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   1,
 							Type: receiver.TypeHTTP,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -499,7 +499,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   2,
 							Type: receiver.TypePagerDuty,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -511,7 +511,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   3,
 							Type: receiver.TypeSlack,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},
@@ -519,7 +519,7 @@ func TestAssignReceivers(t *testing.T) {
 						{
 							ID:   4,
 							Type: receiver.TypeSlack,
-							Configuration: map[string]interface{}{
+							Configuration: map[string]any{
 								"newkey": "newvalue",
 								"token":  "abcabc",
 							},

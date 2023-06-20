@@ -14,11 +14,11 @@ services:
   cortex-am:
     image: quay.io/cortexproject/cortex:master-63703f5
     container_name: "siren_cortex_am"
-    command: -target=alertmanager -config.file=/etc/single-process-config.yaml --log.level=debug
+    command: -target=alertmanager -config.file=/etc/cortex/single_process_cortex.yaml --log.level=debug
     environment:
       minio_host: siren_nginx_1
     volumes:
-      - ./docker/single_process_cortex.yaml:/etc/single-process-config.yaml
+      - ./docker:/etc/cortex
       - ./tmp/cortex/alertmanager/fake:/tmp/cortex/alertmanager/fake
     extra_hosts:
       - "cortex.siren_nginx_1:127.0.0.1"
@@ -29,11 +29,11 @@ services:
   cortex-all:
     image: quay.io/cortexproject/cortex:master-63703f5
     container_name: "siren_cortex_all"
-    command: -target=all -config.file=/etc/single-process-config.yaml --log.level=debug
+    command: -target=all -config.file=/etc/cortex/single_process_cortex.yaml --log.level=debug
     environment:
       minio_host: siren_nginx_1
     volumes:
-      - ./docker/single_process_cortex.yaml:/etc/single-process-config.yaml
+      - ./docker:/etc/cortex
       - ./tmp/cortex/rules/fake:/tmp/cortex/rules/fake
     extra_hosts:
       - "cortex.siren_nginx_1:127.0.0.1"
@@ -42,7 +42,6 @@ services:
     depends_on:
       - minio1
       - cortex-am
-
   minio1:
     image: quay.io/minio/minio:RELEASE.2022-09-07T22-25-02Z
     volumes:
@@ -83,7 +82,7 @@ services:
     ports:
       - 9009:9009
     volumes:
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker:/etc/nginx
     networks:
       - siren
     depends_on:
@@ -92,9 +91,9 @@ services:
   # Collector
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.66.0
-    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    command: [ "--config=/etc/otel/otel-collector-config.yaml" ]
     volumes:
-      - ./docker/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./docker:/etc/otel
     ports:
       - "55678:55678" # Opencensus port
 volumes:

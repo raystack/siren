@@ -40,7 +40,7 @@ func NewPluginService(logger log.Logger, cfg AppConfig, opts ...ServiceOption) *
 	return s
 }
 
-func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(receiverConfigMap, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -53,7 +53,7 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverC
 	return receiverConfig.AsMap(), nil
 }
 
-func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)

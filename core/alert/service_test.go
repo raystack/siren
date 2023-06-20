@@ -86,16 +86,16 @@ func TestService_CreateAlerts(t *testing.T) {
 		ctx               = context.TODO()
 		timenow           = time.Now()
 		testType          = "test"
-		alertsToBeCreated = map[string]interface{}{
-			"alerts": []map[string]interface{}{
+		alertsToBeCreated = map[string]any{
+			"alerts": []map[string]any{
 				{
-					"annotations": map[string]interface{}{
+					"annotations": map[string]any{
 						"metricName":  "bar",
 						"metricValue": "30",
 						"resource":    "foo",
 						"template":    "random",
 					},
-					"labels": map[string]interface{}{
+					"labels": map[string]any{
 						"severity": "foo",
 					},
 					"startsAt": timenow.String(),
@@ -108,7 +108,7 @@ func TestService_CreateAlerts(t *testing.T) {
 	var testCases = []struct {
 		name              string
 		setup             func(*mocks.AlertRepository, *mocks.AlertTransformer)
-		alertsToBeCreated map[string]interface{}
+		alertsToBeCreated map[string]any
 		expectedAlerts    []alert.Alert
 		expectedFiringLen int
 		wantErr           bool

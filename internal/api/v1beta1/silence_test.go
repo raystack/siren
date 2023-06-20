@@ -24,7 +24,7 @@ func TestGRPCServer_CreateSilence(t *testing.T) {
 	mockSilenceData := silence.Silence{
 		NamespaceID: 1,
 		Type:        silence.TypeMatchers,
-		TargetExpression: map[string]interface{}{
+		TargetExpression: map[string]any{
 			"key1": "value1",
 		},
 	}
@@ -97,7 +97,7 @@ func TestGRPCServer_ListSilences(t *testing.T) {
 	mockSilenceData := silence.Silence{
 		NamespaceID: 1,
 		Type:        silence.TypeMatchers,
-		TargetExpression: map[string]interface{}{
+		TargetExpression: map[string]any{
 			"key1": "value1",
 		},
 	}
@@ -164,7 +164,7 @@ func TestGRPCServer_GetSilence(t *testing.T) {
 		ID:          "silence-id",
 		NamespaceID: 1,
 		Type:        silence.TypeMatchers,
-		TargetExpression: map[string]interface{}{
+		TargetExpression: map[string]any{
 			"key1": "value1",
 		},
 	}
@@ -233,7 +233,7 @@ func TestGRPCServer_ExpireSilence(t *testing.T) {
 		ID:          "silence-id",
 		NamespaceID: 1,
 		Type:        silence.TypeMatchers,
-		TargetExpression: map[string]interface{}{
+		TargetExpression: map[string]any{
 			"key1": "value1",
 		},
 	}

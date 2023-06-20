@@ -32,7 +32,7 @@ func TestSilence_Evaluate(t *testing.T) {
 				ID:       "silence-id",
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "1 + 1",
 				},
 			},
@@ -48,7 +48,7 @@ func TestSilence_Evaluate(t *testing.T) {
 				ID:       "silence-id",
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "test",
 				},
 			},
@@ -72,7 +72,7 @@ func TestSilence_Evaluate(t *testing.T) {
 			silence: silence.Silence{
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "",
 				},
 			},
@@ -88,7 +88,7 @@ func TestSilence_Evaluate(t *testing.T) {
 				ID:               "silence-id",
 				Type:             silence.TypeSubscription,
 				TargetID:         12,
-				TargetExpression: map[string]interface{}{},
+				TargetExpression: map[string]any{},
 			},
 			rcv: subscription.Receiver{
 				ID:   12,
@@ -101,7 +101,7 @@ func TestSilence_Evaluate(t *testing.T) {
 			silence: silence.Silence{
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "true",
 				},
 			},
@@ -116,7 +116,7 @@ func TestSilence_Evaluate(t *testing.T) {
 			silence: silence.Silence{
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "(ID == 12) and (Type == 'pagerduty')",
 				},
 			},
@@ -131,7 +131,7 @@ func TestSilence_Evaluate(t *testing.T) {
 			silence: silence.Silence{
 				Type:     silence.TypeSubscription,
 				TargetID: 12,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"rule": "(ID == 12) or (ID == 16)",
 				},
 			},
@@ -147,7 +147,7 @@ func TestSilence_Evaluate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mapSubscriptionReceiver := map[string]interface{}{}
+			mapSubscriptionReceiver := map[string]any{}
 
 			err := mapstructure.Decode(tt.rcv, &mapSubscriptionReceiver)
 			require.NoError(t, err)
@@ -196,7 +196,7 @@ func TestSilence_Validate(t *testing.T) {
 			name: "should return error if type labels and target expression is not empty",
 			sil: silence.Silence{
 				Type: silence.TypeMatchers,
-				TargetExpression: map[string]interface{}{
+				TargetExpression: map[string]any{
 					"k1": "v1",
 				},
 			},

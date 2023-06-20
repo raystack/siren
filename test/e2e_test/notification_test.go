@@ -122,7 +122,7 @@ func (s *NotificationTestSuite) TestSendNotification() {
 	defer testServer.Close()
 
 	// add test server http receiver
-	configs, err := structpb.NewStruct(map[string]interface{}{
+	configs, err := structpb.NewStruct(map[string]any{
 		"url": testServer.URL,
 	})
 	s.Require().NoError(err)

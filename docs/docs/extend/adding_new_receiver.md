@@ -20,7 +20,7 @@ Receiver plugin is being used to send notifications to the receiver. More detail
 		It is also possible for a receiver to have different config in the receiver and subscription. For example, slack has a dedicated config called `channel_name` in subscription to send notification only to a specific channel. In this case you need to define separate configurations: `ReceiverConfig` and `SubscriptionConfig`.
 	- **Define `NotificationConfig`**
 		
-		You need to implement `NotificationConfig` which is a placeholder to combine `ReceiverConfig` and `SubscriptionConfig` (if any). Therefore `NotificationConfig` should just embed `ReceiverConfig` and `SubscriptionConfig` (if needed). You might also want to add more function to validate and transform the config to `map[string]interface{}`.
+		You need to implement `NotificationConfig` which is a placeholder to combine `ReceiverConfig` and `SubscriptionConfig` (if any). Therefore `NotificationConfig` should just embed `ReceiverConfig` and `SubscriptionConfig` (if needed). You might also want to add more function to validate and transform the config to `map[string]any`.
 		
 3. **Implement Interfaces**
 	- **Implement PreHook methods** (Optional)
@@ -89,7 +89,7 @@ func NewPluginService() *PluginService {
 	return &PluginService{}
 }
 
-func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(receiverConfigMap, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -102,7 +102,7 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverC
 	return receiverConfig.AsMap(), nil
 }
 
-func (s *PluginService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)
@@ -128,7 +128,7 @@ func NewPluginService() *PluginService {
 	return &PluginService{}
 }
 
-func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverConfigMap map[string]any) (map[string]any, error) {
 	receiverConfig := &ReceiverConfig{}
 	if err := mapstructure.Decode(receiverConfigMap, receiverConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to receiver config: %w", err)
@@ -141,7 +141,7 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, receiverC
 	return receiverConfig.AsMap(), nil
 }
 
-func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]interface{}) (map[string]interface{}, error) {
+func (s *PluginService) PreHookQueueTransformConfigs(ctx context.Context, notificationConfigMap map[string]any) (map[string]any, error) {
 	notificationConfig := &NotificationConfig{}
 	if err := mapstructure.Decode(notificationConfigMap, notificationConfig); err != nil {
 		return nil, fmt.Errorf("failed to transform configurations to slack notification config: %w", err)

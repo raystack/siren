@@ -364,7 +364,7 @@ func deleteReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 
 	type notifyReceiverRequest struct {
-		Payload map[string]interface{} `mapstructure:"payload" yaml:"payload"`
+		Payload map[string]any `mapstructure:"payload" yaml:"payload"`
 	}
 
 	var id uint64

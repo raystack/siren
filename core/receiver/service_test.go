@@ -43,14 +43,14 @@ func TestService_ListReceivers(t *testing.T) {
 							Labels: map[string]string{
 								"foo": "bar",
 							},
-							Configurations: map[string]interface{}{
+							Configurations: map[string]any{
 								"token": "key",
 							},
 							CreatedAt: timeNow,
 							UpdatedAt: timeNow,
 						},
 					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
 						"token": "key",
 					}).Return(nil, errors.New("decrypt error"))
 				},
@@ -78,16 +78,16 @@ func TestService_ListReceivers(t *testing.T) {
 							Labels: map[string]string{
 								"foo": "bar",
 							},
-							Configurations: map[string]interface{}{
+							Configurations: map[string]any{
 								"token": "key",
 							},
 							CreatedAt: timeNow,
 							UpdatedAt: timeNow,
 						},
 					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
 						"token": "key",
-					}).Return(map[string]interface{}{
+					}).Return(map[string]any{
 						"token": "decrypted_key",
 					}, nil)
 				},
@@ -99,7 +99,7 @@ func TestService_ListReceivers(t *testing.T) {
 						Labels: map[string]string{
 							"foo": "bar",
 						},
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "decrypted_key",
 						},
 						CreatedAt: timeNow,
@@ -162,13 +162,13 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if PreHookDBTransformConfigs return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(nil, errors.New("some error"))
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(nil, errors.New("some error"))
 
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -177,13 +177,13 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if Create repository return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(map[string]any{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
 					}).Return(errors.New("some error"))
@@ -191,7 +191,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -200,13 +200,13 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if no error returned",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(map[string]any{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
 					}).Return(nil)
@@ -214,7 +214,7 @@ func TestService_CreateReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -296,13 +296,13 @@ func TestService_GetReceiver(t *testing.T) {
 						Labels: map[string]string{
 							"foo": "bar",
 						},
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "key",
 						},
 						CreatedAt: timeNow,
 						UpdatedAt: timeNow,
 					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
 						"token": "key",
 					}).Return(nil, errors.New("decrypt error"))
 				},
@@ -318,20 +318,20 @@ func TestService_GetReceiver(t *testing.T) {
 						Labels: map[string]string{
 							"foo": "bar",
 						},
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "key",
 						},
 						CreatedAt: timeNow,
 						UpdatedAt: timeNow,
 					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
 						"token": "key",
-					}).Return(map[string]interface{}{
+					}).Return(map[string]any{
 						"token": "decrypted_key",
 					}, nil)
-					ss.EXPECT().BuildData(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{
+					ss.EXPECT().BuildData(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
 						"token": "decrypted_key",
-					}).Return(map[string]interface{}{
+					}).Return(map[string]any{
 						"newdata": "populated",
 					}, nil)
 				},
@@ -342,10 +342,10 @@ func TestService_GetReceiver(t *testing.T) {
 					Labels: map[string]string{
 						"foo": "bar",
 					},
-					Data: map[string]interface{}{
+					Data: map[string]any{
 						"newdata": "populated",
 					},
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "decrypted_key",
 					},
 					CreatedAt: timeNow,
@@ -424,16 +424,16 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "key",
 						},
 					}, nil)
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(nil, errors.New("some error"))
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -445,17 +445,17 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "key",
 						},
 					}, nil)
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(map[string]any{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
 					}).Return(errors.New("some error"))
@@ -463,7 +463,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -475,17 +475,17 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "old-key",
 						},
 					}, nil)
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(map[string]any{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
 					}).Return(nil)
@@ -493,7 +493,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},
@@ -504,17 +504,17 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "key",
 						},
 					}, nil)
-					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]interface{}{"token": "key"}).Return(map[string]interface{}{
+					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(map[string]any{
 						"token": "encrypted_key",
 					}, nil)
 					rr.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
-						Configurations: map[string]interface{}{
+						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
 					}).Return(receiver.NotFoundError{})
@@ -522,7 +522,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 				Rcv: &receiver.Receiver{
 					ID:   123,
 					Type: receiver.TypeSlack,
-					Configurations: map[string]interface{}{
+					Configurations: map[string]any{
 						"token": "key",
 					},
 				},

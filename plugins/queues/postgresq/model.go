@@ -12,11 +12,11 @@ type NotificationMessage struct {
 	ID     string `db:"id"`
 	Status string `db:"status"`
 
-	ReceiverType string                 `db:"receiver_type"`
-	Configs      pgc.StringInterfaceMap `db:"configs"`
-	Details      pgc.StringInterfaceMap `db:"details"`
-	Metadata     pgc.StringInterfaceMap `db:"metadata"`
-	LastError    sql.NullString         `db:"last_error"`
+	ReceiverType string           `db:"receiver_type"`
+	Configs      pgc.StringAnyMap `db:"configs"`
+	Details      pgc.StringAnyMap `db:"details"`
+	Metadata     pgc.StringAnyMap `db:"metadata"`
+	LastError    sql.NullString   `db:"last_error"`
 
 	MaxTries  int  `db:"max_tries"`
 	TryCount  int  `db:"try_count"`

@@ -90,7 +90,7 @@ func (s *NotificationRepositoryTestSuite) TestCreate() {
 			NotificationToCreate: notification.Notification{
 				NamespaceID: 1,
 				Type:        notification.TypeReceiver,
-				Data:        map[string]interface{}{},
+				Data:        map[string]any{},
 				Labels:      map[string]string{},
 				CreatedAt:   time.Now(),
 			},
@@ -100,7 +100,7 @@ func (s *NotificationRepositoryTestSuite) TestCreate() {
 			NotificationToCreate: notification.Notification{
 				NamespaceID: 1,
 				Type:        notification.TypeReceiver,
-				Data: map[string]interface{}{
+				Data: map[string]any{
 					"k1": func(x chan struct{}) {
 						<-x
 					},
