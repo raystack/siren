@@ -1,59 +1,59 @@
 [
-    {
-        "name": "prefix_provider-urn-1_namespace-urn-1_namespace-1_group-name-1_template-name-1",
-        "group_name": "group-name-1",
-        "namespace": "namespace-urn-1",
-        "template": "template-name-1",
-        "variables": [
-            {
-                "name": "WARN_THRESHOLD",
-                "value": "200",
-                "type": "int"
-            },
-            {
-                "name": "CRIT_THRESHOLD",
-                "value": "300",
-                "type": "int"
-            },
-            {
-                "name": "team",
-                "value": "odpf-app"
-            },
-            {
-                "name": "name",
-                "value": "namespace-urn-1"
-            },
-            {
-                "name": "entity",
-                "value": "odpf"
-            }
-        ],
-        "provider_namespace": 1
-    },
-    {
-        "name": "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",
-        "enabled": true,
-        "group_name": "group-name-1",
-        "namespace": "namespace-urn-2",
-        "template": "template-name-1",
-        "variables": [
-            {
-                "name": "WARN_THRESHOLD",
-                "value": "5000"
-            },
-            {
-                "name": "CRIT_THRESHOLD",
-                "value": "15000"
-            },
-            {
-                "name": "team",
-                "value": "odpf-web"
-            },
-            {
-                "name": "name",
-                "value": "namespace-urn-2"
-            }
-        ],
-        "provider_namespace": 2
-    }
+  {
+    "name": "prefix_provider-urn-1_namespace-urn-1_namespace-1_group-name-1_template-name-1",
+    "group_name": "group-name-1",
+    "namespace": "namespace-urn-1",
+    "template": "template-name-1",
+    "variables": [
+      {
+        "name": "WARN_THRESHOLD",
+        "value": "200",
+        "type": "int"
+      },
+      {
+        "name": "CRIT_THRESHOLD",
+        "value": "300",
+        "type": "int"
+      },
+      {
+        "name": "team",
+        "value": "raystack-app"
+      },
+      {
+        "name": "name",
+        "value": "namespace-urn-1"
+      },
+      {
+        "name": "entity",
+        "value": "raystack"
+      }
+    ],
+    "provider_namespace": 1
+  },
+  {
+    "name": "prefix_provider-urn-1_namespace-urn-2_namespace-2_group-name-1_template-name-1",
+    "enabled": true,
+    "group_name": "group-name-1",
+    "namespace": "namespace-urn-2",
+    "template": "template-name-1",
+    "variables": [
+      {
+        "name": "WARN_THRESHOLD",
+        "value": "5000"
+      },
+      {
+        "name": "CRIT_THRESHOLD",
+        "value": "15000"
+      },
+      {
+        "name": "team",
+        "value": "raystack-web"
+      },
+      {
+        "name": "name",
+        "value": "namespace-urn-2"
+      }
+    ],
+    "provider_namespace": 2
+  }
 ]

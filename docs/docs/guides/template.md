@@ -42,7 +42,7 @@ $ siren template upsert --file template.yaml
         {
             "name": "team",
             "type": "string",
-            "default": "odpf",
+            "default": "raystack",
             "description": "Name of the team that owns the deployment"
         },
         {
@@ -92,7 +92,7 @@ The response body will look like this:
     {
       "name": "team",
       "type": "string",
-      "default": "odpf",
+      "default": "raystack",
       "description": "Name of the team that owns the deployment"
     },
     {
@@ -182,7 +182,6 @@ $ siren template delete cpu
   </TabItem>
 </Tabs>
 
-
 **Note:**
 
 1. Updating a template via API will not upload the associated rules.
@@ -251,4 +250,3 @@ siren template upload cpu_template.yaml
 
 1. It's suggested to always provide default value for the templated variables.
 2. Updating a template used by rules via CLI will update all associated rules.
-

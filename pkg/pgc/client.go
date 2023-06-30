@@ -7,10 +7,10 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/telemetry"
 	"go.opencensus.io/trace"
 )
 

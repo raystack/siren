@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	log "github.com/odpf/siren/core/log"
+	log "github.com/raystack/siren/core/log"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	texttemplate "text/template"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 const (

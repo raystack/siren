@@ -3,7 +3,7 @@ package notification
 import (
 	"time"
 
-	"github.com/odpf/siren/plugins/queues"
+	"github.com/raystack/siren/plugins/queues"
 )
 
 type Config struct {

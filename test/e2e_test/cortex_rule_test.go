@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/config"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/server"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 )
 

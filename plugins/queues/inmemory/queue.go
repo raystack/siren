@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/plugins"
-	"github.com/odpf/siren/plugins/queues"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/plugins"
+	"github.com/raystack/siren/plugins/queues"
 )
 
 // Queue simulates queue inmemory, this is for testing only

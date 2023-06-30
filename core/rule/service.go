@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/core/namespace"
+	"github.com/raystack/siren/core/template"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 const (

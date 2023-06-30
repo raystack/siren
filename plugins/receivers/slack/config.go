@@ -3,9 +3,9 @@ package slack
 import (
 	"fmt"
 
-	"github.com/odpf/siren/pkg/httpclient"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/pkg/secret"
+	"github.com/raystack/siren/pkg/httpclient"
+	"github.com/raystack/siren/pkg/retry"
+	"github.com/raystack/siren/pkg/secret"
 )
 
 // AppConfig is a config loaded when siren is started

@@ -1,59 +1,55 @@
 [
-    {
-        "name": "zookeeper-pending-syncs",
-        "body": "- alert: zookeeper pending syncs warning\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.warning]]\"\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper pending sync on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n- alert: zookeeper pending sync critical\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.critical]]\"\n    environment: '{{ $labels.environment }}'\n    severity: CRITICAL\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper oustanding requests on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n",
-        "tags": [
-            "zookeeper"
-        ],
-        "variables": [
-            {
-                "name": "for",
-                "type": "string",
-                "default": "5m",
-                "description": "For eg 5m, 2h; Golang duration format"
-            },
-            {
-                "name": "warning",
-                "type": "int",
-                "default": "10"
-            },
-            {
-                "name": "critical",
-                "type": "int",
-                "default": "100"
-            },
-            {
-                "name": "team",
-                "type": "string",
-                "default": "odpf",
-                "description": "For eg team name which the alert should go to"
-            }
-        ]
-    },
-    {
-        "name": "kafka-under-replicated-partitions",
-        "body": "- alert: kafka under replicated partitions warning\n  expr: sum by (host, environment) (v2_jolokia_kafka_server_ReplicaManager_UnderReplicatedPartitionsValue) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: number of under replicated partitions on host {{ $labels.host }} is {{ $value }}\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: kafka_under_replicated_partitions\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: under replicated partitions on host {{ $labels.host }} is {{ $value }} is greather than [[.warning]]\n    template: kafka-under-replicated-partitions\n",
-        "tags": [
-            "kafka"
-        ],
-        "variables": [
-            {
-                "name": "for",
-                "type": "string",
-                "default": "10m",
-                "description": "For eg 5m, 2h; Golang duration format"
-            },
-            {
-                "name": "warning",
-                "type": "int",
-                "default": "0"
-            },
-            {
-                "name": "team",
-                "type": "string",
-                "default": "odpf",
-                "description": "For eg team name which the alert should go to"
-            }
-        ]
-    }
+  {
+    "name": "zookeeper-pending-syncs",
+    "body": "- alert: zookeeper pending syncs warning\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.warning]]\"\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper pending sync on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n- alert: zookeeper pending sync critical\n  expr: avg by (host, environment) (zookeeper_pending_syncs) > [[.critical]]\n  for: '[[.for]]'\n  labels:\n    alertname: zookeeper pending syncs on host {{ $labels.host }} is greater than \"[[.critical]]\"\n    environment: '{{ $labels.environment }}'\n    severity: CRITICAL\n    team: '[[.team]]'\n  annotations:\n    metric_name: zookeeper_pending_syncs\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: zookeeper oustanding requests on host {{ $labels.host }} is {{ $value }}\n    template: zookeeper-pending-syncs\n",
+    "tags": ["zookeeper"],
+    "variables": [
+      {
+        "name": "for",
+        "type": "string",
+        "default": "5m",
+        "description": "For eg 5m, 2h; Golang duration format"
+      },
+      {
+        "name": "warning",
+        "type": "int",
+        "default": "10"
+      },
+      {
+        "name": "critical",
+        "type": "int",
+        "default": "100"
+      },
+      {
+        "name": "team",
+        "type": "string",
+        "default": "raystack",
+        "description": "For eg team name which the alert should go to"
+      }
+    ]
+  },
+  {
+    "name": "kafka-under-replicated-partitions",
+    "body": "- alert: kafka under replicated partitions warning\n  expr: sum by (host, environment) (v2_jolokia_kafka_server_ReplicaManager_UnderReplicatedPartitionsValue) > [[.warning]]\n  for: '[[.for]]'\n  labels:\n    alertname: number of under replicated partitions on host {{ $labels.host }} is {{ $value }}\n    environment: '{{ $labels.environment }}'\n    severity: WARNING\n    team: '[[.team]]'\n  annotations:\n    metric_name: kafka_under_replicated_partitions\n    metric_value: '{{ $value }}'\n    resource: '{{ $labels.host }}'\n    summary: under replicated partitions on host {{ $labels.host }} is {{ $value }} is greather than [[.warning]]\n    template: kafka-under-replicated-partitions\n",
+    "tags": ["kafka"],
+    "variables": [
+      {
+        "name": "for",
+        "type": "string",
+        "default": "10m",
+        "description": "For eg 5m, 2h; Golang duration format"
+      },
+      {
+        "name": "warning",
+        "type": "int",
+        "default": "0"
+      },
+      {
+        "name": "team",
+        "type": "string",
+        "default": "raystack",
+        "description": "For eg team name which the alert should go to"
+      }
+    ]
+  }
 ]

@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/core/log"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 type DispatchReceiverService struct {

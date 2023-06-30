@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mitchellh/hashstructure/v2"
-	"github.com/odpf/siren/core/alert"
+	"github.com/raystack/siren/core/alert"
 	"github.com/stretchr/testify/require"
 )
 

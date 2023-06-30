@@ -3,7 +3,7 @@ package receiver_test
 import (
 	"testing"
 
-	"github.com/odpf/siren/core/receiver"
+	"github.com/raystack/siren/core/receiver"
 )
 
 func TestError(t *testing.T) {

@@ -6,13 +6,13 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/template"
+	"github.com/raystack/siren/internal/store/postgres"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -125,7 +125,7 @@ func (s *TemplateRepositoryTestSuite) TestList() {
 						{
 							Name:        "team",
 							Type:        "string",
-							Default:     "odpf",
+							Default:     "raystack",
 							Description: "For eg team name which the alert should go to",
 						},
 					},
@@ -152,7 +152,7 @@ func (s *TemplateRepositoryTestSuite) TestList() {
 						{
 							Name:        "team",
 							Type:        "string",
-							Default:     "odpf",
+							Default:     "raystack",
 							Description: "For eg team name which the alert should go to",
 						},
 					},
@@ -192,7 +192,7 @@ func (s *TemplateRepositoryTestSuite) TestList() {
 						{
 							Name:        "team",
 							Type:        "string",
-							Default:     "odpf",
+							Default:     "raystack",
 							Description: "For eg team name which the alert should go to",
 						},
 					},
@@ -255,7 +255,7 @@ func (s *TemplateRepositoryTestSuite) TestGetByName() {
 					{
 						Name:        "team",
 						Type:        "string",
-						Default:     "odpf",
+						Default:     "raystack",
 						Description: "For eg team name which the alert should go to",
 					},
 				},

@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/plugins/receivers/pagerduty"
+	"github.com/raystack/siren/pkg/retry"
+	"github.com/raystack/siren/plugins/receivers/pagerduty"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,34 +1,34 @@
 [
-    {
-        "name": "odpf-slack",
-        "type": "slack",
-        "labels": {
-            "entity": "odpf,org-a,org-b"
-        },
-        "configurations": {
-            "token": "xxxxxxxxxx",
-            "workspace": "Odpf"
-        }
+  {
+    "name": "raystack-slack",
+    "type": "slack",
+    "labels": {
+      "entity": "raystack,org-a,org-b"
     },
-    {
-        "name": "alert-history",
-        "type": "http",
-        "labels": {
-            "entity": "odpf,org-a,org-b,org-c"
-        },
-        "configurations": {
-            "url": "http://siren.odpf.io/v1beta1/alerts/cortex/1"
-        }
-    },
-    {
-        "name": "odpf_pagerduty",
-        "type": "pagerduty",
-        "labels": {
-            "entity": "odpf",
-            "team": "siren-odpf"
-        },
-        "configurations": {
-            "service_key": "1212121212121212121212121"
-        }
+    "configurations": {
+      "token": "xxxxxxxxxx",
+      "workspace": "Odpf"
     }
+  },
+  {
+    "name": "alert-history",
+    "type": "http",
+    "labels": {
+      "entity": "raystack,org-a,org-b,org-c"
+    },
+    "configurations": {
+      "url": "http://siren.raystack.io/v1beta1/alerts/cortex/1"
+    }
+  },
+  {
+    "name": "raystack_pagerduty",
+    "type": "pagerduty",
+    "labels": {
+      "entity": "raystack",
+      "team": "siren-raystack"
+    },
+    "configurations": {
+      "service_key": "1212121212121212121212121"
+    }
+  }
 ]

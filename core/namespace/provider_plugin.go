@@ -3,7 +3,7 @@ package namespace
 import (
 	"context"
 
-	"github.com/odpf/siren/core/provider"
+	"github.com/raystack/siren/core/provider"
 )
 
 //go:generate mockery --name=ConfigSyncer -r --case underscore --with-expecter --structname ConfigSyncer --filename config_syncer.go --output=./mocks

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/odpf/salt/log"
+	"github.com/raystack/salt/log"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/telemetry"
 )
 
 const (

@@ -6,13 +6,13 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/rule"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/rule"
+	"github.com/raystack/siren/internal/store/postgres"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -127,7 +127,7 @@ func (s *RuleRepositoryTestSuite) TestList() {
 						},
 						{
 							Name:  "team",
-							Value: "odpf-app",
+							Value: "raystack-app",
 						},
 						{
 							Name:  "name",
@@ -135,7 +135,7 @@ func (s *RuleRepositoryTestSuite) TestList() {
 						},
 						{
 							Name:  "entity",
-							Value: "odpf",
+							Value: "raystack",
 						},
 					},
 					ProviderNamespace: 1,
@@ -158,7 +158,7 @@ func (s *RuleRepositoryTestSuite) TestList() {
 						},
 						{
 							Name:  "team",
-							Value: "odpf-web",
+							Value: "raystack-web",
 						},
 						{
 							Name:  "name",
@@ -195,7 +195,7 @@ func (s *RuleRepositoryTestSuite) TestList() {
 						},
 						{
 							Name:  "team",
-							Value: "odpf-web",
+							Value: "raystack-web",
 						},
 						{
 							Name:  "name",

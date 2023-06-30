@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/raystack/siren/core/subscription"
+	"github.com/raystack/siren/pkg/pgc"
 )
 
 type SubscriptionReceiver struct {

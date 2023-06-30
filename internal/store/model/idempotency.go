@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/core/notification"
+	"github.com/raystack/siren/core/notification"
 )
 
 type Idempotency struct {

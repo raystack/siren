@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	rule "github.com/odpf/siren/core/rule"
+	rule "github.com/raystack/siren/core/rule"
 	mock "github.com/stretchr/testify/mock"
 )
 

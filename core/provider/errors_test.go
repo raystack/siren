@@ -3,7 +3,7 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/odpf/siren/core/provider"
+	"github.com/raystack/siren/core/provider"
 )
 
 func TestError(t *testing.T) {

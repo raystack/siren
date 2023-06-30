@@ -37,7 +37,7 @@ $ siren rule create --file rule.yaml
   --url `}{defaultHost}{`/`}{apiVersion}{`/rules
   --header 'content-type: application/json'
   --data-raw '{
-  "namespace": "odpf",
+  "namespace": "raystack",
   "group_name": "CPUHigh",
   "template": "CPU",
   "providerNamespace": "3"
@@ -49,7 +49,7 @@ $ siren rule create --file rule.yaml
     },
      {
       "name": "team",
-      "value": "odpf",
+      "value": "raystack",
       "type": "string"
     }
   ],
@@ -163,7 +163,7 @@ The yaml file can be edited and re-uploaded to edit the rule thresholds.
 | API Version       | Which API to use to parse the YAML file                                  | v2                |
 | Type              | Describes the type of object represented by YAML file                    | rule              |
 | Namespace         | Corresponds to Cortex namespace in which rule will be created            | kafka             |
-| Entity            | Corresponds to tenant name in cortex                                     | odpf              |
+| Entity            | Corresponds to tenant name in cortex                                     | raystack          |
 | Rules             | Map of GroupNames describing what template is used in a particular group | See example file  |
 | Variables         | Value of variables defined inside the template                           | See example above |
 | provider          | URN of monitoring provider to be used                                    | localhost-cortex  |
@@ -270,7 +270,7 @@ The benefits that one gets via this is:
    type: rule
    namespace: demo
    provider: production-cortex
-   providerNamespace: odpf
+   providerNamespace: raystack
    rules:
      TestGroup:
        template: CPU

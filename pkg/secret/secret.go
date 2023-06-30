@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/gtank/cryptopasta"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 type Crypto struct {

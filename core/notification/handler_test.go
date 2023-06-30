@@ -5,11 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/odpf/salt/log"
+	"github.com/raystack/salt/log"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/notification/mocks"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/core/notification/mocks"
 )
 
 const testReceiverType = "test"

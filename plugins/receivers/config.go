@@ -1,9 +1,9 @@
 package receivers
 
 import (
-	"github.com/odpf/siren/plugins/receivers/httpreceiver"
-	"github.com/odpf/siren/plugins/receivers/pagerduty"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/raystack/siren/plugins/receivers/httpreceiver"
+	"github.com/raystack/siren/plugins/receivers/pagerduty"
+	"github.com/raystack/siren/plugins/receivers/slack"
 )
 
 type Config struct {

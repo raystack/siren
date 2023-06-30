@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/template"
+	"github.com/raystack/siren/core/alert"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/core/template"
 )
 
 func TestBuildTypeReceiver(t *testing.T) {

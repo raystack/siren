@@ -3,9 +3,9 @@ package subscription
 import (
 	"context"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/core/namespace"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 //go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks

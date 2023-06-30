@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/hashstructure/v2"
-	"github.com/odpf/siren/core/alert"
+	"github.com/raystack/siren/core/alert"
 )
 
 func removeDuplicateStringValues(strSlice []string) []string {

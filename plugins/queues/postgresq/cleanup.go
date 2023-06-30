@@ -7,8 +7,8 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/odpf/siren/pkg/pgc"
-	"github.com/odpf/siren/plugins/queues"
+	"github.com/raystack/siren/pkg/pgc"
+	"github.com/raystack/siren/plugins/queues"
 )
 
 const defaultPublishedTimeThreshold = time.Duration(7) * time.Hour

@@ -14,10 +14,10 @@ exporters:
     tls:
       insecure: true
     headers:
-      X-Scope-OrgID: odpf
+      X-Scope-OrgID: raystack
     external_labels:
       service: siren
-      team: odpf-infra
+      team: raystack-infra
       environment: development
       host: local
   logging:
@@ -41,4 +41,4 @@ service:
     metrics:
       receivers: [opencensus]
       processors: [batch]
-      exporters: [prometheusremotewrite,otlp, logging]
+      exporters: [prometheusremotewrite, otlp, logging]

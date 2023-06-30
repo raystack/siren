@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/odpf/salt/log"
+	"github.com/raystack/salt/log"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 )

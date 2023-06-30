@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/log"
+	"github.com/raystack/siren/core/log"
 )
 
 type NotificationLog struct {

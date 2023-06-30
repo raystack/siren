@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/core/alert"
+	"github.com/raystack/siren/core/template"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 // Transform alerts and populate Data and Labels to be interpolated to the system-default template

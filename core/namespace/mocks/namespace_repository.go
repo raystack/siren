@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	namespace "github.com/odpf/siren/core/namespace"
+	namespace "github.com/raystack/siren/core/namespace"
 	mock "github.com/stretchr/testify/mock"
 )
 

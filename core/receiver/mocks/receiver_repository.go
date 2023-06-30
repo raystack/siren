@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	receiver "github.com/odpf/siren/core/receiver"
+	receiver "github.com/raystack/siren/core/receiver"
 	mock "github.com/stretchr/testify/mock"
 )
 

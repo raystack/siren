@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/plugins/queues/postgresq"
-	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/plugins/queues/postgresq"
+	"github.com/raystack/siren/plugins/queues/postgresq/migrations"
 	"github.com/stretchr/testify/suite"
 )
 

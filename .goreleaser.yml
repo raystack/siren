@@ -16,7 +16,7 @@ builds:
     flags:
       - -a
     ldflags:
-      - -s -w -X github.com/odpf/siren/config.Version={{.Tag}} -X github.com/odpf/siren/config.BuildCommit={{.FullCommit}} -X github.com/odpf/siren/config.BuildDate={{.Date}}
+      - -s -w -X github.com/raystack/siren/config.Version={{.Tag}} -X github.com/raystack/siren/config.BuildCommit={{.FullCommit}} -X github.com/raystack/siren/config.BuildDate={{.Date}}
     env:
       - CGO_ENABLED=0
     goos: [darwin, linux, windows]
@@ -56,16 +56,16 @@ dockers:
       - siren
     dockerfile: Dockerfile
     image_templates:
-      - "docker.io/odpf/{{.ProjectName}}:latest"
-      - "docker.io/odpf/{{.ProjectName}}:{{ .Version }}"
-      - "docker.io/odpf/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "docker.io/raystack/{{.ProjectName}}:latest"
+      - "docker.io/raystack/{{.ProjectName}}:{{ .Version }}"
+      - "docker.io/raystack/{{.ProjectName}}:{{ .Tag }}-amd64"
 
 brews:
   - name: siren
-    homepage: "https://github.com/odpf/siren"
+    homepage: "https://github.com/raystack/siren"
     description: "Universal data observability tool."
     tap:
-      owner: odpf
+      owner: raystack
       name: homebrew-taps
     license: "Apache 2.0"
     folder: Formula

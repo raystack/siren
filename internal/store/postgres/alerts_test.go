@@ -7,13 +7,13 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/alert"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/alert"
+	"github.com/raystack/siren/internal/store/postgres"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -104,7 +104,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 		{
 			Description: "should get all filtered alerts with correct filter",
 			Filter: alert.Filter{
-				ResourceName: "odpf-kafka-1",
+				ResourceName: "raystack-kafka-1",
 				ProviderID:   1,
 				StartTime:    int64(time.Date(2021, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 				EndTime:      int64(time.Date(2022, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
@@ -113,7 +113,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 				{
 					ID:           1,
 					ProviderID:   1,
-					ResourceName: "odpf-kafka-1",
+					ResourceName: "raystack-kafka-1",
 					MetricName:   "cpu_usage_user",
 					MetricValue:  "97.30",
 					Severity:     "CRITICAL",
@@ -122,7 +122,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 				{
 					ID:           3,
 					ProviderID:   1,
-					ResourceName: "odpf-kafka-1",
+					ResourceName: "raystack-kafka-1",
 					MetricName:   "cpu_usage_user",
 					MetricValue:  "98.30",
 					Severity:     "CRITICAL",
@@ -133,7 +133,7 @@ func (s *AlertsRepositoryTestSuite) TestList() {
 		{
 			Description: "should get empty alerts if out of range",
 			Filter: alert.Filter{
-				ResourceName: "odpf-kafka-1",
+				ResourceName: "raystack-kafka-1",
 				ProviderID:   1,
 				StartTime:    int64(time.Date(1980, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
 				EndTime:      int64(time.Date(1999, time.January, 0, 0, 0, 0, 0, time.UTC).Unix()),
@@ -170,7 +170,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			Description: "should create an alert",
 			AlertToCreate: alert.Alert{
 				ProviderID:   1,
-				ResourceName: "odpf-kafka-stream",
+				ResourceName: "raystack-kafka-stream",
 				MetricName:   "cpu_usage_user",
 				MetricValue:  "88.88",
 				Severity:     "CRITICAL",
@@ -182,7 +182,7 @@ func (s *AlertsRepositoryTestSuite) TestCreate() {
 			Description: "should return error foreign key if provider id does not exist",
 			AlertToCreate: alert.Alert{
 				ProviderID:   1000,
-				ResourceName: "odpf-kafka-stream",
+				ResourceName: "raystack-kafka-stream",
 				MetricName:   "cpu_usage_user",
 				MetricValue:  "88.88",
 				Severity:     "CRITICAL",
@@ -220,7 +220,7 @@ func (s *AlertsRepositoryTestSuite) TestBulkUpdateSilence() {
 				{
 					ID:            2,
 					ProviderID:    1,
-					ResourceName:  "odpf-kafka-2",
+					ResourceName:  "raystack-kafka-2",
 					MetricName:    "cpu_usage_user",
 					MetricValue:   "97.95",
 					Severity:      "WARNING",
@@ -230,7 +230,7 @@ func (s *AlertsRepositoryTestSuite) TestBulkUpdateSilence() {
 				{
 					ID:            3,
 					ProviderID:    1,
-					ResourceName:  "odpf-kafka-1",
+					ResourceName:  "raystack-kafka-1",
 					MetricName:    "cpu_usage_user",
 					MetricValue:   "98.30",
 					Severity:      "CRITICAL",
