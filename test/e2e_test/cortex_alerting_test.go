@@ -46,7 +46,10 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
-		Port:          apiPort,
+		Port: apiPort,
+		GRPC: server.GRPCConfig{
+			Port: 8081,
+		},
 		EncryptionKey: testEncryptionKey,
 	}
 	s.appConfig.Notification = notification.Config{
