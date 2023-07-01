@@ -4,8 +4,8 @@ The following is a set of guidelines for contributing to Siren. These are mostly
 judgment, and feel free to propose changes to this document in a pull request. Here are some important resources:
 
 - [Concepts](../concepts/overview) section will explain you about Siren architecture,
-- Our [roadmap](https://github.com/odpf/siren#readme) is the 10k foot view of where we're going, and
-- Github [issues](https://github.com/odpf/siren/issues) track the ongoing and reported issues.
+- Our [roadmap](https://github.com/raystack/siren#readme) is the 10k foot view of where we're going, and
+- Github [issues](https://github.com/raystack/siren/issues) track the ongoing and reported issues.
 
 ## How can I contribute?
 
@@ -44,5 +44,5 @@ Please follow these practices for you change to get merged fast and smoothly:
 - Make sure your local build is running with all the tests and checkstyle passing.
 - If your change is related to user-facing protocols / configurations, you need to make the corresponding change in the
   documentation as well.
-- Docs live in the code repo under [`docs`](https://github.com/odpf/siren/tree/main/docs) so that changes to that can be
+- Docs live in the code repo under [`docs`](https://github.com/raystack/siren/tree/main/docs) so that changes to that can be
   done in the same PR as changes to the code.

@@ -3,8 +3,8 @@ package receiver
 import (
 	"context"
 
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/telemetry"
 	"go.opencensus.io/tag"
 )
 

@@ -4,14 +4,14 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/odpf/salt/config"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/odpf/siren/plugins/providers"
-	"github.com/odpf/siren/plugins/receivers"
+	"github.com/raystack/salt/config"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/server"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/telemetry"
+	"github.com/raystack/siren/plugins/providers"
+	"github.com/raystack/siren/plugins/receivers"
 )
 
 // Load returns application configuration

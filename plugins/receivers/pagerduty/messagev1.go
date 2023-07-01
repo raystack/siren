@@ -1,6 +1,6 @@
 package pagerduty
 
-import "github.com/odpf/siren/pkg/secret"
+import "github.com/raystack/siren/pkg/secret"
 
 // https://developer.pagerduty.com/docs/ZG9jOjExMDI5NTc4-send-a-v1-event
 type MessageV1 struct {

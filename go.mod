@@ -1,4 +1,4 @@
-module github.com/odpf/siren
+module github.com/raystack/siren
 
 go 1.18
 
@@ -24,10 +24,10 @@ require (
 	github.com/newrelic/go-agent/v3 v3.20.2
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.2
 	github.com/newrelic/newrelic-opencensus-exporter-go v0.4.0
-	github.com/odpf/salt v0.2.5-0.20221122033807-b6caa1b617bf
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a
 	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
+	github.com/raystack/salt v0.3.2
 	github.com/slack-go/slack v0.11.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.1
@@ -41,7 +41,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/antonmedv/expr v1.9.0
+require (
+	github.com/antonmedv/expr v1.9.0
+	github.com/mitchellh/hashstructure/v2 v2.0.2
+)
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -127,13 +130,12 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.17 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
-	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.9.0 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/newrelic/go-agent/v3/integrations/nrpq v1.1.1 // indirect
 	github.com/newrelic/newrelic-telemetry-sdk-go v0.8.1 // indirect
+	github.com/oklog/run v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect

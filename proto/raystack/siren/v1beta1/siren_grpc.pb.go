@@ -65,7 +65,7 @@ func NewSirenServiceClient(cc grpc.ClientConnInterface) SirenServiceClient {
 
 func (c *sirenServiceClient) ListProviders(ctx context.Context, in *ListProvidersRequest, opts ...grpc.CallOption) (*ListProvidersResponse, error) {
 	out := new(ListProvidersResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListProviders", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListProviders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (c *sirenServiceClient) ListProviders(ctx context.Context, in *ListProvider
 
 func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProviderRequest, opts ...grpc.CallOption) (*CreateProviderResponse, error) {
 	out := new(CreateProviderResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateProvider", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (c *sirenServiceClient) CreateProvider(ctx context.Context, in *CreateProvi
 
 func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*GetProviderResponse, error) {
 	out := new(GetProviderResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetProvider", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c *sirenServiceClient) GetProvider(ctx context.Context, in *GetProviderReq
 
 func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*UpdateProviderResponse, error) {
 	out := new(UpdateProviderResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateProvider", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpdateProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (c *sirenServiceClient) UpdateProvider(ctx context.Context, in *UpdateProvi
 
 func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*DeleteProviderResponse, error) {
 	out := new(DeleteProviderResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteProvider", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/DeleteProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProvi
 
 func (c *sirenServiceClient) NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error) {
 	out := new(NotifyReceiverResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/NotifyReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/NotifyReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (c *sirenServiceClient) NotifyReceiver(ctx context.Context, in *NotifyRecei
 
 func (c *sirenServiceClient) ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error) {
 	out := new(ListNamespacesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListNamespaces", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListNamespaces", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (c *sirenServiceClient) ListNamespaces(ctx context.Context, in *ListNamespa
 
 func (c *sirenServiceClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
 	out := new(CreateNamespaceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateNamespace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (c *sirenServiceClient) CreateNamespace(ctx context.Context, in *CreateName
 
 func (c *sirenServiceClient) GetNamespace(ctx context.Context, in *GetNamespaceRequest, opts ...grpc.CallOption) (*GetNamespaceResponse, error) {
 	out := new(GetNamespaceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetNamespace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (c *sirenServiceClient) GetNamespace(ctx context.Context, in *GetNamespaceR
 
 func (c *sirenServiceClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceRequest, opts ...grpc.CallOption) (*UpdateNamespaceResponse, error) {
 	out := new(UpdateNamespaceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateNamespace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpdateNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (c *sirenServiceClient) UpdateNamespace(ctx context.Context, in *UpdateName
 
 func (c *sirenServiceClient) DeleteNamespace(ctx context.Context, in *DeleteNamespaceRequest, opts ...grpc.CallOption) (*DeleteNamespaceResponse, error) {
 	out := new(DeleteNamespaceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteNamespace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/DeleteNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (c *sirenServiceClient) DeleteNamespace(ctx context.Context, in *DeleteName
 
 func (c *sirenServiceClient) ListSubscriptions(ctx context.Context, in *ListSubscriptionsRequest, opts ...grpc.CallOption) (*ListSubscriptionsResponse, error) {
 	out := new(ListSubscriptionsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListSubscriptions", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListSubscriptions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (c *sirenServiceClient) ListSubscriptions(ctx context.Context, in *ListSubs
 
 func (c *sirenServiceClient) CreateSubscription(ctx context.Context, in *CreateSubscriptionRequest, opts ...grpc.CallOption) (*CreateSubscriptionResponse, error) {
 	out := new(CreateSubscriptionResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateSubscription", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (c *sirenServiceClient) CreateSubscription(ctx context.Context, in *CreateS
 
 func (c *sirenServiceClient) GetSubscription(ctx context.Context, in *GetSubscriptionRequest, opts ...grpc.CallOption) (*GetSubscriptionResponse, error) {
 	out := new(GetSubscriptionResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetSubscription", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (c *sirenServiceClient) GetSubscription(ctx context.Context, in *GetSubscri
 
 func (c *sirenServiceClient) UpdateSubscription(ctx context.Context, in *UpdateSubscriptionRequest, opts ...grpc.CallOption) (*UpdateSubscriptionResponse, error) {
 	out := new(UpdateSubscriptionResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateSubscription", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpdateSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +200,7 @@ func (c *sirenServiceClient) UpdateSubscription(ctx context.Context, in *UpdateS
 
 func (c *sirenServiceClient) DeleteSubscription(ctx context.Context, in *DeleteSubscriptionRequest, opts ...grpc.CallOption) (*DeleteSubscriptionResponse, error) {
 	out := new(DeleteSubscriptionResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteSubscription", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/DeleteSubscription", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +209,7 @@ func (c *sirenServiceClient) DeleteSubscription(ctx context.Context, in *DeleteS
 
 func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *ListReceiversRequest, opts ...grpc.CallOption) (*ListReceiversResponse, error) {
 	out := new(ListReceiversResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListReceivers", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListReceivers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (c *sirenServiceClient) ListReceivers(ctx context.Context, in *ListReceiver
 
 func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateReceiverRequest, opts ...grpc.CallOption) (*CreateReceiverResponse, error) {
 	out := new(CreateReceiverResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (c *sirenServiceClient) CreateReceiver(ctx context.Context, in *CreateRecei
 
 func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverRequest, opts ...grpc.CallOption) (*GetReceiverResponse, error) {
 	out := new(GetReceiverResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (c *sirenServiceClient) GetReceiver(ctx context.Context, in *GetReceiverReq
 
 func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateReceiverRequest, opts ...grpc.CallOption) (*UpdateReceiverResponse, error) {
 	out := new(UpdateReceiverResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpdateReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (c *sirenServiceClient) UpdateReceiver(ctx context.Context, in *UpdateRecei
 
 func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteReceiverRequest, opts ...grpc.CallOption) (*DeleteReceiverResponse, error) {
 	out := new(DeleteReceiverResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/DeleteReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (c *sirenServiceClient) DeleteReceiver(ctx context.Context, in *DeleteRecei
 
 func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsRequest, opts ...grpc.CallOption) (*ListAlertsResponse, error) {
 	out := new(ListAlertsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListAlerts", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func (c *sirenServiceClient) ListAlerts(ctx context.Context, in *ListAlertsReque
 
 func (c *sirenServiceClient) CreateAlerts(ctx context.Context, in *CreateAlertsRequest, opts ...grpc.CallOption) (*CreateAlertsResponse, error) {
 	out := new(CreateAlertsResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateAlerts", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateAlerts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func (c *sirenServiceClient) CreateAlerts(ctx context.Context, in *CreateAlertsR
 
 func (c *sirenServiceClient) CreateAlertsWithNamespace(ctx context.Context, in *CreateAlertsWithNamespaceRequest, opts ...grpc.CallOption) (*CreateAlertsWithNamespaceResponse, error) {
 	out := new(CreateAlertsWithNamespaceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateAlertsWithNamespace", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateAlertsWithNamespace", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func (c *sirenServiceClient) CreateAlertsWithNamespace(ctx context.Context, in *
 
 func (c *sirenServiceClient) ListRules(ctx context.Context, in *ListRulesRequest, opts ...grpc.CallOption) (*ListRulesResponse, error) {
 	out := new(ListRulesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListRules", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListRules", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func (c *sirenServiceClient) ListRules(ctx context.Context, in *ListRulesRequest
 
 func (c *sirenServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*UpdateRuleResponse, error) {
 	out := new(UpdateRuleResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpdateRule", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpdateRule", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func (c *sirenServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleReque
 
 func (c *sirenServiceClient) ListTemplates(ctx context.Context, in *ListTemplatesRequest, opts ...grpc.CallOption) (*ListTemplatesResponse, error) {
 	out := new(ListTemplatesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListTemplates", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListTemplates", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (c *sirenServiceClient) ListTemplates(ctx context.Context, in *ListTemplate
 
 func (c *sirenServiceClient) GetTemplate(ctx context.Context, in *GetTemplateRequest, opts ...grpc.CallOption) (*GetTemplateResponse, error) {
 	out := new(GetTemplateResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetTemplate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +317,7 @@ func (c *sirenServiceClient) GetTemplate(ctx context.Context, in *GetTemplateReq
 
 func (c *sirenServiceClient) UpsertTemplate(ctx context.Context, in *UpsertTemplateRequest, opts ...grpc.CallOption) (*UpsertTemplateResponse, error) {
 	out := new(UpsertTemplateResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/UpsertTemplate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/UpsertTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func (c *sirenServiceClient) UpsertTemplate(ctx context.Context, in *UpsertTempl
 
 func (c *sirenServiceClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateRequest, opts ...grpc.CallOption) (*DeleteTemplateResponse, error) {
 	out := new(DeleteTemplateResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/DeleteTemplate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/DeleteTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (c *sirenServiceClient) DeleteTemplate(ctx context.Context, in *DeleteTempl
 
 func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTemplateRequest, opts ...grpc.CallOption) (*RenderTemplateResponse, error) {
 	out := new(RenderTemplateResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/RenderTemplate", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/RenderTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +344,7 @@ func (c *sirenServiceClient) RenderTemplate(ctx context.Context, in *RenderTempl
 
 func (c *sirenServiceClient) CreateSilence(ctx context.Context, in *CreateSilenceRequest, opts ...grpc.CallOption) (*CreateSilenceResponse, error) {
 	out := new(CreateSilenceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/CreateSilence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/CreateSilence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +353,7 @@ func (c *sirenServiceClient) CreateSilence(ctx context.Context, in *CreateSilenc
 
 func (c *sirenServiceClient) ListSilences(ctx context.Context, in *ListSilencesRequest, opts ...grpc.CallOption) (*ListSilencesResponse, error) {
 	out := new(ListSilencesResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ListSilences", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ListSilences", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +362,7 @@ func (c *sirenServiceClient) ListSilences(ctx context.Context, in *ListSilencesR
 
 func (c *sirenServiceClient) GetSilence(ctx context.Context, in *GetSilenceRequest, opts ...grpc.CallOption) (*GetSilenceResponse, error) {
 	out := new(GetSilenceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/GetSilence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/GetSilence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +371,7 @@ func (c *sirenServiceClient) GetSilence(ctx context.Context, in *GetSilenceReque
 
 func (c *sirenServiceClient) ExpireSilence(ctx context.Context, in *ExpireSilenceRequest, opts ...grpc.CallOption) (*ExpireSilenceResponse, error) {
 	out := new(ExpireSilenceResponse)
-	err := c.cc.Invoke(ctx, "/odpf.siren.v1beta1.SirenService/ExpireSilence", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/raystack.siren.v1beta1.SirenService/ExpireSilence", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -552,7 +552,7 @@ func _SirenService_ListProviders_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListProviders",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListProviders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListProviders(ctx, req.(*ListProvidersRequest))
@@ -570,7 +570,7 @@ func _SirenService_CreateProvider_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateProvider",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateProvider(ctx, req.(*CreateProviderRequest))
@@ -588,7 +588,7 @@ func _SirenService_GetProvider_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetProvider",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetProvider(ctx, req.(*GetProviderRequest))
@@ -606,7 +606,7 @@ func _SirenService_UpdateProvider_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateProvider",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpdateProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpdateProvider(ctx, req.(*UpdateProviderRequest))
@@ -624,7 +624,7 @@ func _SirenService_DeleteProvider_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/DeleteProvider",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/DeleteProvider",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteProvider(ctx, req.(*DeleteProviderRequest))
@@ -642,7 +642,7 @@ func _SirenService_NotifyReceiver_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/NotifyReceiver",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/NotifyReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).NotifyReceiver(ctx, req.(*NotifyReceiverRequest))
@@ -660,7 +660,7 @@ func _SirenService_ListNamespaces_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListNamespaces",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListNamespaces",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListNamespaces(ctx, req.(*ListNamespacesRequest))
@@ -678,7 +678,7 @@ func _SirenService_CreateNamespace_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateNamespace",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateNamespace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateNamespace(ctx, req.(*CreateNamespaceRequest))
@@ -696,7 +696,7 @@ func _SirenService_GetNamespace_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetNamespace",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetNamespace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetNamespace(ctx, req.(*GetNamespaceRequest))
@@ -714,7 +714,7 @@ func _SirenService_UpdateNamespace_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateNamespace",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpdateNamespace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpdateNamespace(ctx, req.(*UpdateNamespaceRequest))
@@ -732,7 +732,7 @@ func _SirenService_DeleteNamespace_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/DeleteNamespace",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/DeleteNamespace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteNamespace(ctx, req.(*DeleteNamespaceRequest))
@@ -750,7 +750,7 @@ func _SirenService_ListSubscriptions_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListSubscriptions",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListSubscriptions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListSubscriptions(ctx, req.(*ListSubscriptionsRequest))
@@ -768,7 +768,7 @@ func _SirenService_CreateSubscription_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateSubscription",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateSubscription",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateSubscription(ctx, req.(*CreateSubscriptionRequest))
@@ -786,7 +786,7 @@ func _SirenService_GetSubscription_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetSubscription",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetSubscription",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetSubscription(ctx, req.(*GetSubscriptionRequest))
@@ -804,7 +804,7 @@ func _SirenService_UpdateSubscription_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateSubscription",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpdateSubscription",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpdateSubscription(ctx, req.(*UpdateSubscriptionRequest))
@@ -822,7 +822,7 @@ func _SirenService_DeleteSubscription_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/DeleteSubscription",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/DeleteSubscription",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteSubscription(ctx, req.(*DeleteSubscriptionRequest))
@@ -840,7 +840,7 @@ func _SirenService_ListReceivers_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListReceivers",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListReceivers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListReceivers(ctx, req.(*ListReceiversRequest))
@@ -858,7 +858,7 @@ func _SirenService_CreateReceiver_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateReceiver",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateReceiver(ctx, req.(*CreateReceiverRequest))
@@ -876,7 +876,7 @@ func _SirenService_GetReceiver_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetReceiver",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetReceiver(ctx, req.(*GetReceiverRequest))
@@ -894,7 +894,7 @@ func _SirenService_UpdateReceiver_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateReceiver",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpdateReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpdateReceiver(ctx, req.(*UpdateReceiverRequest))
@@ -912,7 +912,7 @@ func _SirenService_DeleteReceiver_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/DeleteReceiver",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/DeleteReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteReceiver(ctx, req.(*DeleteReceiverRequest))
@@ -930,7 +930,7 @@ func _SirenService_ListAlerts_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListAlerts",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListAlerts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListAlerts(ctx, req.(*ListAlertsRequest))
@@ -948,7 +948,7 @@ func _SirenService_CreateAlerts_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateAlerts",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateAlerts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateAlerts(ctx, req.(*CreateAlertsRequest))
@@ -966,7 +966,7 @@ func _SirenService_CreateAlertsWithNamespace_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateAlertsWithNamespace",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateAlertsWithNamespace",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateAlertsWithNamespace(ctx, req.(*CreateAlertsWithNamespaceRequest))
@@ -984,7 +984,7 @@ func _SirenService_ListRules_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListRules",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListRules",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListRules(ctx, req.(*ListRulesRequest))
@@ -1002,7 +1002,7 @@ func _SirenService_UpdateRule_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpdateRule",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpdateRule",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpdateRule(ctx, req.(*UpdateRuleRequest))
@@ -1020,7 +1020,7 @@ func _SirenService_ListTemplates_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListTemplates",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListTemplates",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListTemplates(ctx, req.(*ListTemplatesRequest))
@@ -1038,7 +1038,7 @@ func _SirenService_GetTemplate_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetTemplate",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetTemplate(ctx, req.(*GetTemplateRequest))
@@ -1056,7 +1056,7 @@ func _SirenService_UpsertTemplate_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/UpsertTemplate",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/UpsertTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).UpsertTemplate(ctx, req.(*UpsertTemplateRequest))
@@ -1074,7 +1074,7 @@ func _SirenService_DeleteTemplate_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/DeleteTemplate",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/DeleteTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).DeleteTemplate(ctx, req.(*DeleteTemplateRequest))
@@ -1092,7 +1092,7 @@ func _SirenService_RenderTemplate_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/RenderTemplate",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/RenderTemplate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).RenderTemplate(ctx, req.(*RenderTemplateRequest))
@@ -1110,7 +1110,7 @@ func _SirenService_CreateSilence_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/CreateSilence",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/CreateSilence",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).CreateSilence(ctx, req.(*CreateSilenceRequest))
@@ -1128,7 +1128,7 @@ func _SirenService_ListSilences_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ListSilences",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ListSilences",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ListSilences(ctx, req.(*ListSilencesRequest))
@@ -1146,7 +1146,7 @@ func _SirenService_GetSilence_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/GetSilence",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/GetSilence",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).GetSilence(ctx, req.(*GetSilenceRequest))
@@ -1164,7 +1164,7 @@ func _SirenService_ExpireSilence_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/odpf.siren.v1beta1.SirenService/ExpireSilence",
+		FullMethod: "/raystack.siren.v1beta1.SirenService/ExpireSilence",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SirenServiceServer).ExpireSilence(ctx, req.(*ExpireSilenceRequest))
@@ -1176,7 +1176,7 @@ func _SirenService_ExpireSilence_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SirenService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "odpf.siren.v1beta1.SirenService",
+	ServiceName: "raystack.siren.v1beta1.SirenService",
 	HandlerType: (*SirenServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -1321,5 +1321,5 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "odpf/siren/v1beta1/siren.proto",
+	Metadata: "raystack/siren/v1beta1/siren.proto",
 }

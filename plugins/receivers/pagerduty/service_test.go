@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/plugins/receivers/pagerduty"
-	"github.com/odpf/siren/plugins/receivers/pagerduty/mocks"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/pkg/retry"
+	"github.com/raystack/siren/plugins/receivers/pagerduty"
+	"github.com/raystack/siren/plugins/receivers/pagerduty/mocks"
 	"github.com/stretchr/testify/mock"
 )
 

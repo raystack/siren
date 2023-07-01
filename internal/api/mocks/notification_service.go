@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	notification "github.com/odpf/siren/core/notification"
+	notification "github.com/raystack/siren/core/notification"
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"

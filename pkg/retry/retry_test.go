@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/odpf/siren/pkg/retry"
+	"github.com/raystack/siren/pkg/retry"
 	"github.com/stretchr/testify/assert"
 )
 

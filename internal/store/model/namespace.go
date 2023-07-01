@@ -3,9 +3,9 @@ package model
 import (
 	"time"
 
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/raystack/siren/core/namespace"
+	"github.com/raystack/siren/core/provider"
+	"github.com/raystack/siren/pkg/pgc"
 )
 
 type Namespace struct {

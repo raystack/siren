@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/plugins/receivers/base"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/plugins/receivers/base"
 )
 
 type PluginService struct {

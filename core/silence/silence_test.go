@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/core/subscription"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/core/silence"
+	"github.com/raystack/siren/core/subscription"
 	"github.com/stretchr/testify/require"
 )
 

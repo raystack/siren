@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/odpf/siren/pkg/telemetry"
+	"github.com/raystack/siren/pkg/telemetry"
 )
 
 type ClientOpt func(*Client)

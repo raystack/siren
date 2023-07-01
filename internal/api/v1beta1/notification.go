@@ -3,10 +3,10 @@ package v1beta1
 import (
 	"context"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/api"
-	"github.com/odpf/siren/pkg/errors"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/api"
+	"github.com/raystack/siren/pkg/errors"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 )
 
 const notificationAPIScope = "notification_api"

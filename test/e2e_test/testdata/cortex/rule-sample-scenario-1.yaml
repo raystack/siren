@@ -9,10 +9,10 @@ rules:
     enabled: true
     variables:
       - name: team
-        value: odpf-infra-2
+        value: raystack-infra-2
   cpu-usage-very-critical:
     template: cpu-usage-very-critical
     enabled: true
     variables:
       - name: team
-        value: odpf-infra-2
+        value: raystack-infra-2

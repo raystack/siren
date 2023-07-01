@@ -3,7 +3,7 @@ package receiver
 import (
 	"fmt"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 var (

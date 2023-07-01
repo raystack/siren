@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/core/provider/mocks"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/raystack/siren/core/provider"
+	"github.com/raystack/siren/core/provider/mocks"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

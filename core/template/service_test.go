@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/template"
-	"github.com/odpf/siren/core/template/mocks"
+	"github.com/raystack/siren/core/template"
+	"github.com/raystack/siren/core/template/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

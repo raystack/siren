@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/core/notification/mocks"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/core/log"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/core/notification/mocks"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/pkg/errors"
 	"github.com/stretchr/testify/mock"
 )
 

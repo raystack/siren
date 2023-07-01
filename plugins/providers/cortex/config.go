@@ -3,7 +3,7 @@ package cortex
 import (
 	_ "embed"
 
-	"github.com/odpf/siren/pkg/httpclient"
+	"github.com/raystack/siren/pkg/httpclient"
 )
 
 var (

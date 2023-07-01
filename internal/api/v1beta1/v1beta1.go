@@ -2,13 +2,13 @@ package v1beta1
 
 import (
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/odpf/salt/log"
+	"github.com/raystack/salt/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/odpf/siren/internal/api"
-	"github.com/odpf/siren/pkg/errors"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/internal/api"
+	"github.com/raystack/siren/pkg/errors"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 )
 
 type GRPCServer struct {

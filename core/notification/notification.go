@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 )
 
 const (

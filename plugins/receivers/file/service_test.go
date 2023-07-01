@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/plugins/receivers/file"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/plugins/receivers/file"
 )
 
 func TestService_Send(t *testing.T) {

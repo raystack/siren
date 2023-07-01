@@ -1,9 +1,9 @@
 # Siren
 
-![test workflow](https://github.com/odpf/siren/actions/workflows/test.yaml/badge.svg)
+![test workflow](https://github.com/raystack/siren/actions/workflows/test.yaml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?logo=apache)](LICENSE)
-[![Version](https://img.shields.io/github/v/release/odpf/siren?logo=semantic-release)](Version)
-[![Coverage Status](https://coveralls.io/repos/github/odpf/siren/badge.svg?branch=main)](https://coveralls.io/github/odpf/siren?branch=main)
+[![Version](https://img.shields.io/github/v/release/raystack/siren?logo=semantic-release)](Version)
+[![Coverage Status](https://coveralls.io/repos/github/raystack/siren/badge.svg?branch=main)](https://coveralls.io/github/raystack/siren?branch=main)
 
 Siren provides alerting on metrics of your applications using [Cortex metrics](https://cortexmetrics.io/) in a simple
 DIY configuration. With Siren, you can define templates(using go templates standard), and create/edit/enable/disable
@@ -21,7 +21,7 @@ with any client such as CI/CD pipelines, Self-Serve UI, microservices etc.
 - **Managing bulk rules:** Siren enables users to manage bulk alerting rules using YAML files in specified format with simple CLI.
 - **Receivers:** Siren can be used to send out notifications to several channels (slack, pagerduty, email etc).
 - **Alert History:** Siren can store alerts triggered by monitoring & alerting provider e.g. Cortex Alertmanager, which can be used for audit purposes.
-To know more, follow the detailed [documentation](docs)
+  To know more, follow the detailed [documentation](docs)
 
 ## Usage
 
@@ -34,7 +34,7 @@ Explore the following resources to get started with Siren:
 
 ## Run with Kubernetes
 
-- Create a siren deployment using the helm chart available [here](https://github.com/odpf/charts/tree/main/stable/siren)
+- Create a siren deployment using the helm chart available [here](https://github.com/raystack/charts/tree/main/stable/siren)
 
 ## Running locally
 
@@ -55,7 +55,7 @@ Update the configs(db credentials etc.) as per your dev machine and docker confi
 Run the following commands to compile from source
 
 ```sh
-$ git clone git@github.com:odpf/siren.git
+$ git clone git@github.com:raystack/siren.git
 $ cd siren
 $ go build main.go
 ```
@@ -69,6 +69,7 @@ $ make test
 # To run tests locally with coverage
 $ make test-coverage
 ```
+
 ## Generate Server Configuration
 
 ```sh
@@ -97,10 +98,10 @@ Read our [contributing guide](docs/contribute/contribution.md) to learn about ou
 bugfixes and improvements, and how to build and test your changes to Siren.
 
 To help you get your feet wet and get you familiar with our contribution process, we have a list of
-[good first issues](https://github.com/odpf/siren/labels/good%20first%20issue) that contain bugs which have a relatively
+[good first issues](https://github.com/raystack/siren/labels/good%20first%20issue) that contain bugs which have a relatively
 limited scope. This is a great place to get started.
 
-This project exists thanks to all the [contributors](https://github.com/odpf/siren/graphs/contributors).
+This project exists thanks to all the [contributors](https://github.com/raystack/siren/graphs/contributors).
 
 ## License
 

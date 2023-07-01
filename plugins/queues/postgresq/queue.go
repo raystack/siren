@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/pkg/pgc"
-	"github.com/odpf/siren/pkg/telemetry"
-	"github.com/odpf/siren/plugins/queues/postgresq/migrations"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/pkg/pgc"
+	"github.com/raystack/siren/pkg/telemetry"
+	"github.com/raystack/siren/plugins/queues/postgresq/migrations"
 )
 
 const (

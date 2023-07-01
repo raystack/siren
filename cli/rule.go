@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/cmdx"
-	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/core/rule"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/salt/cmdx"
+	"github.com/raystack/salt/printer"
+	"github.com/raystack/siren/core/rule"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/spf13/cobra"
 )
 

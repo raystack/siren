@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/config"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/server"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -29,6 +29,9 @@ func (s *CortexRuleTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
+	grpcPort, err := getFreePort()
+	s.Require().Nil(err)
+
 	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
@@ -36,6 +39,7 @@ func (s *CortexRuleTestSuite) SetupTest() {
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
 		Port:          apiPort,
+		GRPC:          server.GRPCConfig{Port: grpcPort},
 		EncryptionKey: testEncryptionKey,
 	}
 	s.appConfig.Notification = notification.Config{
@@ -59,7 +63,7 @@ func (s *CortexRuleTestSuite) SetupTest() {
 	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.testBench.NginxHost)

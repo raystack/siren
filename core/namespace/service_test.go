@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/namespace/mocks"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/secret"
+	"github.com/raystack/siren/core/namespace"
+	"github.com/raystack/siren/core/namespace/mocks"
+	"github.com/raystack/siren/core/provider"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/secret"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 )

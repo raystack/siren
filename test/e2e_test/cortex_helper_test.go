@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/internal/store/postgres/migrations"
-	"github.com/odpf/siren/plugins/providers/cortex"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/config"
+	"github.com/raystack/siren/internal/store/postgres/migrations"
+	"github.com/raystack/siren/plugins/providers/cortex"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -43,7 +43,7 @@ func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1
 	})
 	s.Require().NoError(err)
 
-	// add namespace odpf-test
+	// add namespace raystack-test
 	_, err = client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
 		Name:     "fake",
 		Urn:      "fake",
@@ -51,16 +51,16 @@ func bootstrapCortexTestData(s *suite.Suite, ctx context.Context, client sirenv1
 	})
 	s.Require().NoError(err)
 
-	// add receiver odpf-http
+	// add receiver raystack-http
 	configs, err := structpb.NewStruct(map[string]interface{}{
-		"url": "http://fake-webhook-endpoint.odpf.io",
+		"url": "http://fake-webhook-endpoint.raystack.io",
 	})
 	s.Require().NoError(err)
 	_, err = client.CreateReceiver(ctx, &sirenv1beta1.CreateReceiverRequest{
-		Name: "odpf-http",
+		Name: "raystack-http",
 		Type: "http",
 		Labels: map[string]string{
-			"entity": "odpf",
+			"entity": "raystack",
 			"kind":   "http",
 		},
 		Configurations: configs,

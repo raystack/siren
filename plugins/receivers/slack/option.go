@@ -1,8 +1,8 @@
 package slack
 
 import (
-	"github.com/odpf/siren/pkg/httpclient"
-	"github.com/odpf/siren/pkg/retry"
+	"github.com/raystack/siren/pkg/httpclient"
+	"github.com/raystack/siren/pkg/retry"
 )
 
 type ServiceOption func(*PluginService)

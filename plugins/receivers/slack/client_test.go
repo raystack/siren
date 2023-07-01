@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/odpf/siren/pkg/retry"
-	"github.com/odpf/siren/pkg/secret"
-	"github.com/odpf/siren/plugins/receivers/slack"
+	"github.com/raystack/siren/pkg/retry"
+	"github.com/raystack/siren/pkg/secret"
+	"github.com/raystack/siren/plugins/receivers/slack"
 	goslack "github.com/slack-go/slack"
 	"github.com/stretchr/testify/assert"
 )

@@ -13,10 +13,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/config"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/server"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -36,12 +36,18 @@ func (s *NotificationTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
+	grpcPort, err := getFreePort()
+	s.Require().Nil(err)
+
 	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
 
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
+		GRPC: server.GRPCConfig{
+			Port: grpcPort,
+		},
 		Port:          apiPort,
 		EncryptionKey: testEncryptionKey,
 	}
@@ -72,7 +78,7 @@ func (s *NotificationTestSuite) SetupTest() {
 	StartSirenMessageWorker(*s.appConfig, s.closeWorkerChannel)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.testBench.NginxHost)

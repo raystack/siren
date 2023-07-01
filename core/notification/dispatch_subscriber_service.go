@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	saltlog "github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/log"
-	"github.com/odpf/siren/core/silence"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/telemetry"
+	saltlog "github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/log"
+	"github.com/raystack/siren/core/silence"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/telemetry"
 )
 
 type DispatchSubscriberService struct {

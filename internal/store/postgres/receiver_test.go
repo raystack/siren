@@ -6,13 +6,13 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/internal/store/postgres"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -99,10 +99,10 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 			ExpectedReceivers: []receiver.Receiver{
 				{
 					ID:   1,
-					Name: "odpf-slack",
+					Name: "raystack-slack",
 					Type: "slack",
 					Labels: map[string]string{
-						"entity": "odpf,org-a,org-b",
+						"entity": "raystack,org-a,org-b",
 					},
 					Configurations: map[string]interface{}{
 						"token":     "xxxxxxxxxx",
@@ -114,19 +114,19 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Name: "alert-history",
 					Type: "http",
 					Labels: map[string]string{
-						"entity": "odpf,org-a,org-b,org-c",
+						"entity": "raystack,org-a,org-b,org-c",
 					},
 					Configurations: map[string]interface{}{
-						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
+						"url": "http://siren.raystack.io/v1beta1/alerts/cortex/1",
 					},
 				},
 				{
 					ID:   3,
-					Name: "odpf_pagerduty",
+					Name: "raystack_pagerduty",
 					Type: "pagerduty",
 					Labels: map[string]string{
-						"entity": "odpf",
-						"team":   "siren-odpf",
+						"entity": "raystack",
+						"team":   "siren-raystack",
 					},
 					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
@@ -145,19 +145,19 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Name: "alert-history",
 					Type: "http",
 					Labels: map[string]string{
-						"entity": "odpf,org-a,org-b,org-c",
+						"entity": "raystack,org-a,org-b,org-c",
 					},
 					Configurations: map[string]interface{}{
-						"url": "http://siren.odpf.io/v1beta1/alerts/cortex/1",
+						"url": "http://siren.raystack.io/v1beta1/alerts/cortex/1",
 					},
 				},
 				{
 					ID:   3,
-					Name: "odpf_pagerduty",
+					Name: "raystack_pagerduty",
 					Type: "pagerduty",
 					Labels: map[string]string{
-						"entity": "odpf",
-						"team":   "siren-odpf",
+						"entity": "raystack",
+						"team":   "siren-raystack",
 					},
 					Configurations: map[string]interface{}{
 						"service_key": "1212121212121212121212121",
@@ -196,11 +196,11 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 			PassedID:    3,
 			ExpectedReceiver: &receiver.Receiver{
 				ID:   3,
-				Name: "odpf_pagerduty",
+				Name: "raystack_pagerduty",
 				Type: "pagerduty",
 				Labels: map[string]string{
-					"entity": "odpf",
-					"team":   "siren-odpf",
+					"entity": "raystack",
+					"team":   "siren-raystack",
 				},
 				Configurations: map[string]interface{}{
 					"service_key": "1212121212121212121212121",
@@ -287,10 +287,10 @@ func (s *ReceiverRepositoryTestSuite) TestUpdate() {
 				Name: "alert-history-updated",
 				Type: "http",
 				Labels: map[string]string{
-					"entity": "odpf",
+					"entity": "raystack",
 				},
 				Configurations: map[string]interface{}{
-					"url": "http://siren.odpf.io/v2/alerts/cortex",
+					"url": "http://siren.raystack.io/v2/alerts/cortex",
 				},
 			},
 			ExpectedID: uint64(2),

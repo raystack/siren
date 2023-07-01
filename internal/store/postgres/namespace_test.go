@@ -6,14 +6,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/odpf/salt/db"
-	"github.com/odpf/salt/dockertestx"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/siren/core/namespace"
-	"github.com/odpf/siren/core/provider"
-	"github.com/odpf/siren/internal/store/postgres"
-	"github.com/odpf/siren/pkg/pgc"
 	"github.com/ory/dockertest/v3"
+	"github.com/raystack/salt/db"
+	"github.com/raystack/salt/dockertestx"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/siren/core/namespace"
+	"github.com/raystack/siren/core/provider"
+	"github.com/raystack/siren/internal/store/postgres"
+	"github.com/raystack/siren/pkg/pgc"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -105,38 +105,38 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 				{
 					Namespace: &namespace.Namespace{
 						ID:   1,
-						Name: "odpf",
-						URN:  "odpf",
+						Name: "raystack",
+						URN:  "raystack",
 						Provider: provider.Provider{
 							ID:          1,
-							Host:        "http://cortex-ingress.odpf.io",
-							URN:         "odpf-cortex",
-							Name:        "odpf-cortex",
+							Host:        "http://cortex-ingress.raystack.io",
+							URN:         "raystack-cortex",
+							Name:        "raystack-cortex",
 							Type:        "cortex",
 							Credentials: map[string]interface{}{},
 							Labels:      map[string]string{},
 						},
 						Labels: map[string]string{},
 					},
-					CredentialString: "map[secret_key:odpf-secret-key-1]",
+					CredentialString: "map[secret_key:raystack-secret-key-1]",
 				},
 				{
 					Namespace: &namespace.Namespace{
 						ID:   2,
-						Name: "odpf",
-						URN:  "odpf",
+						Name: "raystack",
+						URN:  "raystack",
 						Provider: provider.Provider{
 							ID:          2,
-							Host:        "http://prometheus-ingress.odpf.io",
-							URN:         "odpf-prometheus",
-							Name:        "odpf-prometheus",
+							Host:        "http://prometheus-ingress.raystack.io",
+							URN:         "raystack-prometheus",
+							Name:        "raystack-prometheus",
 							Type:        "prometheus",
 							Credentials: map[string]interface{}{},
 							Labels:      map[string]string{},
 						},
 						Labels: map[string]string{},
 					},
-					CredentialString: "map[secret_key:odpf-secret-key-2]",
+					CredentialString: "map[secret_key:raystack-secret-key-2]",
 				},
 				{
 					Namespace: &namespace.Namespace{
@@ -145,9 +145,9 @@ func (s *NamespaceRepositoryTestSuite) TestList() {
 						URN:  "instance-1",
 						Provider: provider.Provider{
 							ID:          2,
-							Host:        "http://prometheus-ingress.odpf.io",
-							URN:         "odpf-prometheus",
-							Name:        "odpf-prometheus",
+							Host:        "http://prometheus-ingress.raystack.io",
+							URN:         "raystack-prometheus",
+							Name:        "raystack-prometheus",
 							Type:        "prometheus",
 							Credentials: map[string]interface{}{},
 							Labels:      map[string]string{},
@@ -196,9 +196,9 @@ func (s *NamespaceRepositoryTestSuite) TestGet() {
 					URN:  "instance-1",
 					Provider: provider.Provider{
 						ID:          2,
-						Host:        "http://prometheus-ingress.odpf.io",
-						URN:         "odpf-prometheus",
-						Name:        "odpf-prometheus",
+						Host:        "http://prometheus-ingress.raystack.io",
+						URN:         "raystack-prometheus",
+						Name:        "raystack-prometheus",
 						Type:        "prometheus",
 						Credentials: map[string]interface{}{},
 						Labels:      map[string]string{},
@@ -257,8 +257,8 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Description: "should return error foreign key if provider id does not exist",
 			NamespaceToCreate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					Name: "odpf-new",
-					URN:  "odpf",
+					Name: "raystack-new",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 1000,
 					},
@@ -271,8 +271,8 @@ func (s *NamespaceRepositoryTestSuite) TestCreate() {
 			Description: "should return error duplicate if URN and provider already exist",
 			NamespaceToCreate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
-					Name: "odpf-new",
-					URN:  "odpf",
+					Name: "raystack-new",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 2,
 					},
@@ -328,8 +328,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
 					ID:   3,
-					Name: "new-odpf",
-					URN:  "odpf",
+					Name: "new-raystack",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 2,
 					},
@@ -343,8 +343,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
 					ID:   1000,
-					Name: "new-odpf",
-					URN:  "odpf",
+					Name: "new-raystack",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 2,
 					},
@@ -358,8 +358,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
 					ID:   1,
-					Name: "odpf-new",
-					URN:  "odpf",
+					Name: "raystack-new",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 1000,
 					},
@@ -373,8 +373,8 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 			NamespaceToUpdate: &namespace.EncryptedNamespace{
 				Namespace: &namespace.Namespace{
 					ID:   1,
-					Name: "odpf-new",
-					URN:  "odpf",
+					Name: "raystack-new",
+					URN:  "raystack",
 					Provider: provider.Provider{
 						ID: 2,
 					},

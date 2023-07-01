@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -15,13 +16,13 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/odpf/salt/log"
-	"github.com/odpf/salt/mux"
-	"github.com/odpf/siren/internal/api"
-	"github.com/odpf/siren/internal/api/v1beta1"
-	"github.com/odpf/siren/pkg/zaputil"
-	swagger "github.com/odpf/siren/proto"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/salt/log"
+	"github.com/raystack/salt/mux"
+	"github.com/raystack/siren/internal/api"
+	"github.com/raystack/siren/internal/api/v1beta1"
+	"github.com/raystack/siren/pkg/zaputil"
+	swagger "github.com/raystack/siren/proto"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -32,9 +33,16 @@ import (
 
 const defaultGracePeriod = 5 * time.Second
 
+type GRPCConfig struct {
+	Port           int `mapstructure:"port" default:"8081"`
+	MaxRecvMsgSize int `mapstructure:"max_recv_msg_size" default:"33554432"`
+	MaxSendMsgSize int `mapstructure:"max_send_msg_size" default:"33554432"`
+}
+
 type Config struct {
 	Host          string            `mapstructure:"host" yaml:"host" default:"localhost"`
 	Port          int               `mapstructure:"port" yaml:"port" default:"8080"`
+	GRPC          GRPCConfig        `mapstructure:"grpc"`
 	EncryptionKey string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
 	APIHeaders    api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
 }
@@ -143,9 +151,19 @@ func RunServer(
 
 	logger.Info("server is running", "host", c.Host, "port", c.Port)
 
-	return mux.Serve(runtimeCtx, c.addr(),
-		mux.WithHTTP(baseMux),
-		mux.WithGRPC(grpcServer),
+	if err := mux.Serve(runtimeCtx,
+		mux.WithHTTPTarget(fmt.Sprintf(":%d", c.Port), &http.Server{
+			Handler:        baseMux,
+			ReadTimeout:    120 * time.Second,
+			WriteTimeout:   120 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}),
+		mux.WithGRPCTarget(fmt.Sprintf(":%d", c.GRPC.Port), grpcServer),
 		mux.WithGracePeriod(defaultGracePeriod),
-	)
+	); !errors.Is(err, context.Canceled) {
+		logger.Error("mux serve error", "err", err)
+	}
+
+	logger.Info("server stopped")
+	return nil
 }

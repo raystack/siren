@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/template"
+	"github.com/raystack/siren/core/template"
 )
 
 type Template struct {

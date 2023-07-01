@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/odpf/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/errors"
 	"gopkg.in/yaml.v3"
 )
 

@@ -4,38 +4,39 @@ import CodeBlock from '@theme/CodeBlock';
 import siteConfig from '/docusaurus.config.js';
 
 # Slack
+
 export const apiVersion = siteConfig.customFields.apiVersion
 export const defaultHost = siteConfig.customFields.defaultHost
 
-|||
-|---|---|
-|**type**|`slack`|
-
+|          |         |
+| -------- | ------- |
+| **type** | `slack` |
 
 A Slack receiver in Siren tied to a Slack workspace. The implementation uses [slack-go](https://github.com/slack-go/slack) library to send notification to a [Slack app](#initializing-a-slack-app). This Slack app must be installed in the required workspaces and added to the required channels. Siren helps with the installation flow by automating the exchanging code for access token [flow](https://api.slack.com/legacy/oauth#authenticating-users-with-oauth__the-oauth-flow).
 
-
 ## Initializing a Slack App
-Here is the list of actions one need to take to attach a Slack app to Siren. 
+
+Here is the list of actions one need to take to attach a Slack app to Siren.
 
 1. Create a Slack app and configure these permissions. Visit [this](https://api.slack.com/apps). If you already have an app, make sure permissions mentioned below are there.
-  ```text
-  channels:read
-  chat:write
-  groups:read
-  im:read
-  team:read
-  users:read
-  users:read.email
-  ```
+
+```text
+channels:read
+chat:write
+groups:read
+im:read
+team:read
+users:read
+users:read.email
+```
+
 3. Enable Distribution
 4. Setup a redirection server. You can use `localhost` as well. This must be a `https` server. Slack will call this server once we install the app in any workspace.
 5. Install your app to a workspace. Visit `Manage Distribution` section on the App Dashboard. Click the `Add to Slack` Button.
 6. This will prompt you to the OAuth Consent screen. Make sure you have selected the correct Slack Workspace by verifying the dropdown in the top-right corner. Click `Allow`.
 7. Copy the `code` that you received from Slack redirection URL query params and use this as `auth_code` inside `create receiver` payload.
 
-In order to send Slack notifications via Siren API, you need to create its receiver.   To add a new slack receiver you need all credentials mentioned in this [configuration](#configurations-in-api).
-
+In order to send Slack notifications via Siren API, you need to create its receiver. To add a new slack receiver you need all credentials mentioned in this [configuration](#configurations-in-api).
 
 ## Configurations in API
 
@@ -90,7 +91,6 @@ $ siren receiver create --file slack_receiver.yaml
 
 On success, this will store the encrypted app token for that particular slack workspace and use it for sending out notifications.
 
-
 ## Subscription
 
 Slack has additional `SubscriptionConfig` where user could routes the notification to a specific channel or individual in a workspace. Here is the subscription config.
@@ -102,8 +102,7 @@ Slack has additional `SubscriptionConfig` where user could routes the notificati
 }
 ```
 
-The `channel_type` has two possible enum values `channel` and `user`. The default value of this is `channel`. If `channel_type` is channel, `channel_name` should be a slack channel handle in the workspace e.g. `#odpf-critical`. If one wants to send notification to an individual, `channel_type` needs to be `user` and `channel_name` needs to be populated with slack user's e-mail e.g. `user1@odpf.io`.
-
+The `channel_type` has two possible enum values `channel` and `user`. The default value of this is `channel`. If `channel_type` is channel, `channel_name` should be a slack channel handle in the workspace e.g. `#raystack-critical`. If one wants to send notification to an individual, `channel_type` needs to be `user` and `channel_name` needs to be populated with slack user's e-mail e.g. `user1@raystack.io`.
 
 ## Message Payload
 

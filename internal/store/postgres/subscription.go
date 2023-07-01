@@ -8,10 +8,10 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
-	"github.com/odpf/siren/core/subscription"
-	"github.com/odpf/siren/internal/store/model"
-	"github.com/odpf/siren/pkg/errors"
-	"github.com/odpf/siren/pkg/pgc"
+	"github.com/raystack/siren/core/subscription"
+	"github.com/raystack/siren/internal/store/model"
+	"github.com/raystack/siren/pkg/errors"
+	"github.com/raystack/siren/pkg/pgc"
 )
 
 const subscriptionInsertQuery = `

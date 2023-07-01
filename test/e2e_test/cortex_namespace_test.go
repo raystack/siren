@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/config"
-	"github.com/odpf/siren/core/notification"
-	"github.com/odpf/siren/internal/server"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/siren/config"
+	"github.com/raystack/siren/core/notification"
+	"github.com/raystack/siren/internal/server"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -27,13 +27,19 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
+	grpcPort, err := getFreePort()
+	s.Require().Nil(err)
+
 	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
 
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
-		Port:          apiPort,
+		Port: apiPort,
+		GRPC: server.GRPCConfig{
+			Port: grpcPort,
+		},
 		EncryptionKey: testEncryptionKey,
 	}
 	s.appConfig.Notification = notification.Config{
@@ -56,7 +62,7 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	_, err = s.client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
@@ -80,8 +86,8 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 
 	s.Run("initial state alert config not set, add a namespace will set config for the provider tenant", func() {
 		_, err := s.client.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
-			Name:        "new-odpf-1",
-			Urn:         "new-odpf-1",
+			Name:        "new-raystack-1",
+			Urn:         "new-raystack-1",
 			Provider:    1,
 			Credentials: nil,
 			Labels: map[string]string{
@@ -90,7 +96,7 @@ func (s *CortexNamespaceTestSuite) TestNamespace() {
 		})
 		s.Require().NoError(err)
 
-		bodyBytes, err := fetchCortexAlertmanagerConfig(s.testBench.NginxHost, "new-odpf-1")
+		bodyBytes, err := fetchCortexAlertmanagerConfig(s.testBench.NginxHost, "new-raystack-1")
 		s.Require().NoError(err)
 
 		expectedScenarioCortexAM, err := os.ReadFile("testdata/cortex/expected-cortexamconfig-scenario.yaml")

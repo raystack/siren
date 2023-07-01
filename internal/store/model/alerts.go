@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/odpf/siren/core/alert"
+	"github.com/raystack/siren/core/alert"
 )
 
 type Alert struct {

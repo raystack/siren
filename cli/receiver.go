@@ -6,11 +6,11 @@ import (
 	"strconv"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/odpf/salt/cmdx"
-	"github.com/odpf/salt/printer"
-	"github.com/odpf/siren/core/receiver"
-	"github.com/odpf/siren/pkg/errors"
-	sirenv1beta1 "github.com/odpf/siren/proto/odpf/siren/v1beta1"
+	"github.com/raystack/salt/cmdx"
+	"github.com/raystack/salt/printer"
+	"github.com/raystack/siren/core/receiver"
+	"github.com/raystack/siren/pkg/errors"
+	sirenv1beta1 "github.com/raystack/siren/proto/raystack/siren/v1beta1"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/structpb"
 )

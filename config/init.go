@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/mcuadros/go-defaults"
-	"github.com/odpf/siren/core/receiver"
+	"github.com/raystack/siren/core/receiver"
 	"gopkg.in/yaml.v3"
 )
 

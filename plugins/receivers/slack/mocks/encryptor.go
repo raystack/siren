@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	secret "github.com/odpf/siren/pkg/secret"
+	secret "github.com/raystack/siren/pkg/secret"
 	mock "github.com/stretchr/testify/mock"
 )
 

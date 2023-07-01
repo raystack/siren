@@ -8,9 +8,9 @@ system:
           alertname: CPU usage has been above 90 for last 5m {{ $labels.host }}
           environment: "{{ $labels.environment }}"
           severity: CRITICAL
-          team: odpf-infra-2
+          team: raystack-infra-2
         annotations:
-          dashboard: https://dashboard.odpf.io/xxx
+          dashboard: https://dashboard.raystack.io/xxx
           metric_name: cpu_usage_user
           metric_value: '{{ printf "%0.2f" $value }}'
           resource: "{{ $labels.host }}"
