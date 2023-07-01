@@ -37,7 +37,7 @@ type CortexAlertingTestSuite struct {
 }
 
 func (s *CortexAlertingTestSuite) SetupTest() {
-	httpPort, err := getFreePort()
+	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
 	grpcPort, err := getFreePort()
@@ -49,7 +49,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
-		Port: httpPort,
+		Port: apiPort,
 		GRPC: server.GRPCConfig{
 			Port: grpcPort,
 		},
@@ -72,7 +72,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 
 	// setup custom cortex config
 	// TODO host.docker.internal only works for docker-desktop to call a service in host (siren)
-	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://test:%d/v1beta1/alerts/cortex", httpPort)
+	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://test:%d/v1beta1/alerts/cortex", apiPort)
 	s.appConfig.Providers.Cortex.GroupWaitDuration = "1s"
 	s.appConfig.Providers.Cortex.GroupIntervalDuration = "1s"
 	s.appConfig.Providers.Cortex.RepeatIntervalDuration = "1s"

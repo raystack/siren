@@ -46,9 +46,9 @@ func (s *NotificationTestSuite) SetupTest() {
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
 		GRPC: server.GRPCConfig{
-			Port: apiPort,
+			Port: grpcPort,
 		},
-		Port:          grpcPort,
+		Port:          apiPort,
 		EncryptionKey: testEncryptionKey,
 	}
 	s.appConfig.Notification = notification.Config{

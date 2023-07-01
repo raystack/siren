@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -150,7 +151,7 @@ func RunServer(
 
 	logger.Info("server is running", "host", c.Host, "port", c.Port)
 
-	return mux.Serve(runtimeCtx,
+	if err := mux.Serve(runtimeCtx,
 		mux.WithHTTPTarget(fmt.Sprintf(":%d", c.Port), &http.Server{
 			Handler:        baseMux,
 			ReadTimeout:    120 * time.Second,
@@ -159,5 +160,10 @@ func RunServer(
 		}),
 		mux.WithGRPCTarget(fmt.Sprintf(":%d", c.GRPC.Port), grpcServer),
 		mux.WithGracePeriod(defaultGracePeriod),
-	)
+	); !errors.Is(err, context.Canceled) {
+		logger.Error("mux serve error", "err", err)
+	}
+
+	logger.Info("server stopped")
+	return nil
 }
