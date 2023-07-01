@@ -38,8 +38,6 @@ type GRPCConfig struct {
 	MaxSendMsgSize int `mapstructure:"max_send_msg_size" default:"33554432"`
 }
 
-func (cfg Config) grpcAddr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.GRPC.Port) }
-
 type Config struct {
 	Host          string            `mapstructure:"host" yaml:"host" default:"localhost"`
 	Port          int               `mapstructure:"port" yaml:"port" default:"8080"`
