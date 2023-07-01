@@ -27,7 +27,7 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a
 	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
-	github.com/raystack/salt v0.3.1
+	github.com/raystack/salt v0.3.2
 	github.com/slack-go/slack v0.11.0
 	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.8.1
