@@ -35,6 +35,7 @@ func (s *NotificationTestSuite) SetupTest() {
 
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
+
 	grpcPort, err := getFreePort()
 	s.Require().Nil(err)
 
@@ -77,7 +78,7 @@ func (s *NotificationTestSuite) SetupTest() {
 	StartSirenMessageWorker(*s.appConfig, s.closeWorkerChannel)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.testBench.NginxHost)

@@ -37,7 +37,10 @@ type CortexAlertingTestSuite struct {
 }
 
 func (s *CortexAlertingTestSuite) SetupTest() {
-	apiPort, err := getFreePort()
+	httpPort, err := getFreePort()
+	s.Require().Nil(err)
+
+	grpcPort, err := getFreePort()
 	s.Require().Nil(err)
 
 	s.appConfig = &config.Config{}
@@ -46,9 +49,9 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 
 	s.appConfig.Log.Level = "error"
 	s.appConfig.Service = server.Config{
-		Port: apiPort,
+		Port: httpPort,
 		GRPC: server.GRPCConfig{
-			Port: 8081,
+			Port: grpcPort,
 		},
 		EncryptionKey: testEncryptionKey,
 	}
@@ -69,7 +72,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 
 	// setup custom cortex config
 	// TODO host.docker.internal only works for docker-desktop to call a service in host (siren)
-	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://test:%d/v1beta1/alerts/cortex", apiPort)
+	s.appConfig.Providers.Cortex.WebhookBaseAPI = fmt.Sprintf("http://test:%d/v1beta1/alerts/cortex", httpPort)
 	s.appConfig.Providers.Cortex.GroupWaitDuration = "1s"
 	s.appConfig.Providers.Cortex.GroupIntervalDuration = "1s"
 	s.appConfig.Providers.Cortex.RepeatIntervalDuration = "1s"
@@ -81,7 +84,7 @@ func (s *CortexAlertingTestSuite) SetupTest() {
 	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	_, err = s.client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{

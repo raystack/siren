@@ -27,6 +27,9 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
 
+	grpcPort, err := getFreePort()
+	s.Require().Nil(err)
+
 	s.appConfig = &config.Config{}
 
 	defaults.SetDefaults(s.appConfig)
@@ -35,7 +38,7 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	s.appConfig.Service = server.Config{
 		Port: apiPort,
 		GRPC: server.GRPCConfig{
-			Port: 8081,
+			Port: grpcPort,
 		},
 		EncryptionKey: testEncryptionKey,
 	}
@@ -59,7 +62,7 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 	StartSirenServer(*s.appConfig)
 
 	ctx := context.Background()
-	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", apiPort))
+	s.client, s.cancelClient, err = CreateClient(ctx, fmt.Sprintf("localhost:%d", grpcPort))
 	s.Require().NoError(err)
 
 	_, err = s.client.CreateProvider(ctx, &sirenv1beta1.CreateProviderRequest{
