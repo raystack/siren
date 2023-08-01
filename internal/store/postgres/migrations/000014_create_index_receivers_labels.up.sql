@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS receivers_idx_labels ON receivers USING GIN(labels jsonb_path_ops);

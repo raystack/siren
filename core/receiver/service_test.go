@@ -28,14 +28,16 @@ func TestService_ListReceivers(t *testing.T) {
 			{
 				Description: "should return error if List repository error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return(nil, errors.New("some error"))
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{Expanded: true}).Return(nil, errors.New("some error"))
 				},
 				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if List repository success and decrypt error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{
+						Expanded: true,
+					}).Return([]receiver.Receiver{
 						{
 							ID:   10,
 							Name: "foo",
@@ -59,7 +61,7 @@ func TestService_ListReceivers(t *testing.T) {
 			{
 				Description: "should return error if type unknown",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{Expanded: true}).Return([]receiver.Receiver{
 						{
 							Type: "random",
 						},
@@ -70,7 +72,7 @@ func TestService_ListReceivers(t *testing.T) {
 			{
 				Description: "should success if list repository and decrypt success",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{}).Return([]receiver.Receiver{
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{Expanded: true}).Return([]receiver.Receiver{
 						{
 							ID:   10,
 							Name: "foo",
@@ -126,7 +128,7 @@ func TestService_ListReceivers(t *testing.T) {
 
 			tc.Setup(repositoryMock, resolverMock)
 
-			got, err := svc.List(ctx, receiver.Filter{})
+			got, err := svc.List(ctx, receiver.Filter{Expanded: true})
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
@@ -371,14 +373,14 @@ func TestService_GetReceiver(t *testing.T) {
 
 			tc.Setup(repositoryMock, resolverMock)
 
-			got, err := svc.Get(ctx, testID, receiver.GetWithData(true))
+			got, err := svc.Get(ctx, testID, receiver.GetWithData(), receiver.GetWithExpand())
 			if tc.Err != err {
 				if tc.Err.Error() != err.Error() {
 					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
 				}
 			}
-			if !cmp.Equal(got, tc.ExpectedReceiver) {
-				t.Fatalf("got result %+v, expected was %+v", got, tc.ExpectedReceiver)
+			if diff := cmp.Diff(got, tc.ExpectedReceiver); diff != "" {
+				t.Fatalf("got diff %+v", diff)
 			}
 			repositoryMock.AssertExpectations(t)
 			resolverMock.AssertExpectations(t)
@@ -579,4 +581,179 @@ func TestDeleteReceiver(t *testing.T) {
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
 	})
+}
+
+func TestService_ExpandParents(t *testing.T) {
+	type testCase struct {
+		Description       string
+		Receivers         []receiver.Receiver
+		ExpandedReceivers []receiver.Receiver
+		Setup             func(*mocks.ReceiverRepository, *mocks.ConfigResolver, *mocks.ConfigResolver)
+		Err               error
+	}
+
+	var (
+		ctx             = context.TODO()
+		sampleReceivers = []receiver.Receiver{
+			{
+				ID: 3,
+				Configurations: map[string]any{
+					"channel_name": "my-channel",
+				},
+				ParentID: 1,
+			},
+			{
+				ID: 4,
+				Configurations: map[string]any{
+					"channel_name": "any-channel",
+				},
+				ParentID: 2,
+			},
+			{
+				ID: 5,
+				Configurations: map[string]any{
+					"channel_name": "my-channel",
+				},
+				ParentID: 2,
+			},
+		}
+		timeNow   = time.Now()
+		testCases = []testCase{
+			{
+				Description: "should return empty expanded receivers if no receivers passed",
+				Setup:       func(rr *mocks.ReceiverRepository, _ *mocks.ConfigResolver, _ *mocks.ConfigResolver) {},
+				Err:         nil,
+			},
+			{
+				Description: "should return as-is receivers if no child receivers found",
+				Setup:       func(rr *mocks.ReceiverRepository, _ *mocks.ConfigResolver, _ *mocks.ConfigResolver) {},
+				Receivers: []receiver.Receiver{
+					{
+						ID: 1,
+					},
+				},
+				ExpandedReceivers: []receiver.Receiver{
+					{
+						ID: 1,
+					},
+				},
+				Err: nil,
+			},
+			{
+				Description: "should return expanded receivers if there is any child receivers found",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver, sc *mocks.ConfigResolver) {
+					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{
+						ReceiverIDs: []uint64{1, 2},
+						Expanded:    true,
+					}).Return([]receiver.Receiver{
+						{
+							ID:   1,
+							Name: "foo",
+							Type: receiver.TypeSlack,
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							Configurations: map[string]any{
+								"token":     "key1",
+								"workspace": "company1",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
+						},
+						{
+							ID:   2,
+							Name: "bar",
+							Type: receiver.TypeSlack,
+							Labels: map[string]string{
+								"foo": "bar",
+							},
+							Configurations: map[string]any{
+								"token":     "key2",
+								"workspace": "company2",
+							},
+							CreatedAt: timeNow,
+							UpdatedAt: timeNow,
+						},
+					}, nil)
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
+						"token":     "key1",
+						"workspace": "company1",
+					}).Return(map[string]any{
+						"token":     "decrypted_key1",
+						"workspace": "company1",
+					}, nil)
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
+						"token":     "key2",
+						"workspace": "company2",
+					}).Return(map[string]any{
+						"token":     "decrypted_key2",
+						"workspace": "company2",
+					}, nil)
+				},
+				Receivers: sampleReceivers,
+				ExpandedReceivers: []receiver.Receiver{
+					{
+						ID: 3,
+						Configurations: map[string]any{
+							"channel_name": "my-channel",
+							"token":        "decrypted_key1",
+							"workspace":    "company1",
+						},
+						ParentID: 1,
+					},
+					{
+						ID: 4,
+						Configurations: map[string]any{
+							"channel_name": "any-channel",
+							"token":        "decrypted_key2",
+							"workspace":    "company2",
+						},
+						ParentID: 2,
+					},
+					{
+						ID: 5,
+						Configurations: map[string]any{
+							"channel_name": "my-channel",
+							"token":        "decrypted_key2",
+							"workspace":    "company2",
+						},
+						ParentID: 2,
+					},
+				},
+				Err: nil,
+			},
+		}
+	)
+
+	for _, tc := range testCases {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				repositoryMock           = new(mocks.ReceiverRepository)
+				resolverSlackMock        = new(mocks.ConfigResolver)
+				resolverSlackChannelMock = new(mocks.ConfigResolver)
+			)
+
+			registry := map[string]receiver.ConfigResolver{
+				receiver.TypeSlackChannel: resolverSlackChannelMock,
+				receiver.TypeSlack:        resolverSlackMock,
+			}
+
+			svc := receiver.NewService(repositoryMock, registry)
+
+			tc.Setup(repositoryMock, resolverSlackMock, resolverSlackChannelMock)
+
+			got, err := svc.ExpandParents(ctx, tc.Receivers)
+			if tc.Err != err {
+				if tc.Err.Error() != err.Error() {
+					t.Fatalf("got error %s, expected was %s", err.Error(), tc.Err.Error())
+				}
+			}
+			if diff := cmp.Diff(got, tc.ExpandedReceivers); diff != "" {
+				t.Fatalf("got diff %+v", diff)
+			}
+			repositoryMock.AssertExpectations(t)
+			resolverSlackMock.AssertExpectations(t)
+			resolverSlackChannelMock.AssertExpectations(t)
+		})
+	}
 }

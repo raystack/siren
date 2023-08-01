@@ -62,7 +62,7 @@ func TestService_List(t *testing.T) {
 		})
 		assert.Nil(t, err)
 		assert.NotEmpty(t, actualAlerts)
-		repositoryMock.AssertNotCalled(t, "Get", "foo", uint64(1), uint64(0), uint64(0))
+		repositoryMock.AssertNotCalled(t, "Get", "foo", uint64(1), uint64(0))
 	})
 
 	t.Run("should call repository List method and handle errors", func(t *testing.T) {

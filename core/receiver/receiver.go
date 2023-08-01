@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -23,6 +24,18 @@ type Receiver struct {
 	CreatedAt      time.Time         `json:"created_at"`
 	UpdatedAt      time.Time         `json:"updated_at"`
 
+	// The pointer to receiver parent of a child receiver. This field is required if a receiver is a child receiver
+	// If ParentID != 0, the receiver is a child receiver.
+	ParentID uint64 `json:"parent_id"`
+
 	// Type should be immutable
 	Type string `json:"type"`
+}
+
+func (r *Receiver) Validate() error {
+	if r.Type == TypeSlackChannel && r.ParentID == 0 {
+		return fmt.Errorf("type slack_channel needs receiver parent ID")
+	}
+
+	return nil
 }

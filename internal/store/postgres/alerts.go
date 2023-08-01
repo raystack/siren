@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -119,8 +120,14 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 
 func (r AlertRepository) BulkUpdateSilence(ctx context.Context, alertIDs []int64, silenceStatus string) error {
 	sqlAlertIDs := pq.Array(alertIDs)
+	var silenceStatusPG sql.NullString
+	if silenceStatus == "" {
+		silenceStatusPG = sql.NullString{Valid: false, String: ""}
+	} else {
+		silenceStatusPG = sql.NullString{Valid: true, String: silenceStatus}
+	}
 	if _, err := r.client.ExecContext(ctx, pgc.OpUpdate, r.tableName, alertUpdateBulkSilenceQuery,
-		silenceStatus,
+		silenceStatusPG,
 		sqlAlertIDs,
 	); err != nil {
 		return err

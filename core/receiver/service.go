@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/telemetry"
@@ -35,6 +36,15 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 		return nil, err
 	}
 
+	if !flt.Expanded {
+		return receivers, nil
+	}
+
+	receivers, err = s.ExpandParents(ctx, receivers)
+	if err != nil {
+		return nil, err
+	}
+
 	domainReceivers := make([]Receiver, 0, len(receivers))
 	for i := 0; i < len(receivers); i++ {
 		rcv := receivers[i]
@@ -51,10 +61,15 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 
 		domainReceivers = append(domainReceivers, rcv)
 	}
+
 	return domainReceivers, nil
 }
 
 func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
+	if err := rcv.Validate(); err != nil {
+		return errors.ErrInvalid.WithMsgf("%s", err.Error())
+	}
+
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err
@@ -67,7 +82,7 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookDB),
 		)
 
-		return err
+		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
 
 	err = s.repository.Create(ctx, rcv)
@@ -79,14 +94,21 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 }
 
 type getOpts struct {
-	withData bool
+	withData   bool
+	withExpand bool
 }
 
 type GetOption func(*getOpts)
 
-func GetWithData(withData bool) GetOption {
+func GetWithData() GetOption {
 	return func(g *getOpts) {
-		g.withData = withData
+		g.withData = true
+	}
+}
+
+func GetWithExpand() GetOption {
+	return func(g *getOpts) {
+		g.withExpand = true
 	}
 }
 
@@ -105,10 +127,20 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 		return nil, err
 	}
 
+	if !opt.withExpand {
+		return rcv, nil
+	}
+
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return nil, err
 	}
+
+	receivers, err := s.ExpandParents(ctx, []Receiver{*rcv})
+	if err != nil {
+		return nil, err
+	}
+	rcv = &receivers[0]
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
@@ -149,7 +181,7 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
-		return err
+		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
 
 	if err = s.repository.Update(ctx, rcv); err != nil {
@@ -164,4 +196,44 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
+}
+
+func (s *Service) ExpandParents(ctx context.Context, rcvs []Receiver) ([]Receiver, error) {
+	var uniqueParentIDsMap = map[uint64]bool{}
+	for _, rcv := range rcvs {
+		if rcv.ParentID != 0 {
+			uniqueParentIDsMap[rcv.ParentID] = true
+		}
+	}
+	if len(uniqueParentIDsMap) == 0 {
+		return rcvs, nil
+	}
+
+	var uniqueParentIDs []uint64
+	for k := range uniqueParentIDsMap {
+		uniqueParentIDs = append(uniqueParentIDs, k)
+	}
+
+	parentReceivers, err := s.List(ctx, Filter{ReceiverIDs: uniqueParentIDs, Expanded: true})
+	if err != nil {
+		return nil, fmt.Errorf("failure when expanding receiver parents: %w", err)
+	}
+
+	var parentReceiversMap = map[uint64]Receiver{}
+	for _, parentRcv := range parentReceivers {
+		parentReceiversMap[parentRcv.ID] = parentRcv
+	}
+
+	// enrich existing receivers
+	for _, rcv := range rcvs {
+		if rcv.ParentID != 0 {
+			if len(parentReceiversMap[rcv.ParentID].Configurations) != 0 {
+				for k, v := range parentReceiversMap[rcv.ParentID].Configurations {
+					rcv.Configurations[k] = v
+				}
+			}
+		}
+	}
+
+	return rcvs, nil
 }

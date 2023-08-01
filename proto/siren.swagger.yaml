@@ -470,6 +470,9 @@ paths:
                   type: string
               configurations:
                 type: object
+              parent_id:
+                type: string
+                format: uint64
       tags:
         - Receiver
   /v1beta1/receivers/{id}/send:
@@ -996,6 +999,9 @@ definitions:
           type: string
       configurations:
         type: object
+      parent_id:
+        type: string
+        format: uint64
   CreateReceiverResponse:
     type: object
     properties:

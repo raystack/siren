@@ -27,6 +27,7 @@ import (
 	"github.com/goto/siren/plugins/receivers/httpreceiver"
 	"github.com/goto/siren/plugins/receivers/pagerduty"
 	"github.com/goto/siren/plugins/receivers/slack"
+	"github.com/goto/siren/plugins/receivers/slackchannel"
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
@@ -101,6 +102,7 @@ func InitDeps(
 
 	// plugin receiver services
 	slackPluginService := slack.NewPluginService(cfg.Receivers.Slack, encryptor)
+	slackChannelPluginService := slackchannel.NewPluginService(cfg.Receivers.Slack, encryptor)
 	pagerDutyPluginService := pagerduty.NewPluginService(cfg.Receivers.Pagerduty)
 	httpreceiverPluginService := httpreceiver.NewPluginService(logger, cfg.Receivers.HTTPReceiver)
 	filePluginService := file.NewPluginService()
@@ -109,10 +111,11 @@ func InitDeps(
 	receiverService := receiver.NewService(
 		receiverRepository,
 		map[string]receiver.ConfigResolver{
-			receiver.TypeSlack:     slackPluginService,
-			receiver.TypeHTTP:      httpreceiverPluginService,
-			receiver.TypePagerDuty: pagerDutyPluginService,
-			receiver.TypeFile:      filePluginService,
+			receiver.TypeSlack:        slackPluginService,
+			receiver.TypeSlackChannel: slackChannelPluginService,
+			receiver.TypeHTTP:         httpreceiverPluginService,
+			receiver.TypePagerDuty:    pagerDutyPluginService,
+			receiver.TypeFile:         filePluginService,
 		},
 	)
 
@@ -126,10 +129,11 @@ func InitDeps(
 
 	// notification
 	notifierRegistry := map[string]notification.Notifier{
-		receiver.TypeSlack:     slackPluginService,
-		receiver.TypePagerDuty: pagerDutyPluginService,
-		receiver.TypeHTTP:      httpreceiverPluginService,
-		receiver.TypeFile:      filePluginService,
+		receiver.TypeSlack:        slackPluginService,
+		receiver.TypeSlackChannel: slackChannelPluginService,
+		receiver.TypePagerDuty:    pagerDutyPluginService,
+		receiver.TypeHTTP:         httpreceiverPluginService,
+		receiver.TypeFile:         filePluginService,
 	}
 
 	idempotencyRepository := postgres.NewIdempotencyRepository(pgClient)

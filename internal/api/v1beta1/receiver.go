@@ -14,8 +14,10 @@ import (
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 )
 
-func (s *GRPCServer) ListReceivers(ctx context.Context, _ *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
-	receivers, err := s.receiverService.List(ctx, receiver.Filter{})
+func (s *GRPCServer) ListReceivers(ctx context.Context, req *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
+	receivers, err := s.receiverService.List(ctx, receiver.Filter{
+		Labels: req.GetLabels(),
+	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -53,6 +55,7 @@ func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.Creat
 		Type:           req.GetType(),
 		Labels:         req.GetLabels(),
 		Configurations: req.GetConfigurations().AsMap(),
+		ParentID:       req.GetParentId(),
 	}
 
 	err := s.receiverService.Create(ctx, rcv)
@@ -66,7 +69,7 @@ func (s *GRPCServer) CreateReceiver(ctx context.Context, req *sirenv1beta1.Creat
 }
 
 func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetReceiverRequest) (*sirenv1beta1.GetReceiverResponse, error) {
-	rcv, err := s.receiverService.Get(ctx, req.GetId(), receiver.GetWithData(true))
+	rcv, err := s.receiverService.Get(ctx, req.GetId(), receiver.GetWithData())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
@@ -101,6 +104,7 @@ func (s *GRPCServer) UpdateReceiver(ctx context.Context, req *sirenv1beta1.Updat
 		Name:           req.GetName(),
 		Labels:         req.GetLabels(),
 		Configurations: req.GetConfigurations().AsMap(),
+		ParentID:       req.GetParentId(),
 	}
 
 	if err := s.receiverService.Update(ctx, rcv); err != nil {

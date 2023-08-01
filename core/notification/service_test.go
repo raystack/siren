@@ -250,10 +250,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 			errString: "empty alerts",
 		},
 		{
-			name: `should properly return notification
-				- same annotations are joined by newline
-				- different labels are splitted into two notifications
-			`,
+			name: "should properly return notification (same annotations are joined by newline and different labels are splitted into two notifications)",
 			alerts: []alert.Alert{
 				{
 					ID:           14,

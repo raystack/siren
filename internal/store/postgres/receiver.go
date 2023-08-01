@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/goto/siren/core/provider"
@@ -13,8 +15,8 @@ import (
 )
 
 const receiverInsertQuery = `
-INSERT INTO receivers (name, type, labels, configurations, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, now(), now())
+INSERT INTO receivers (name, type, labels, configurations, parent_id, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, now(), now())
 RETURNING *
 `
 
@@ -34,6 +36,7 @@ var receiverListQueryBuilder = sq.Select(
 	"type",
 	"labels",
 	"configurations",
+	"parent_id",
 	"created_at",
 	"updated_at",
 ).From("receivers")
@@ -53,6 +56,15 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 	var queryBuilder = receiverListQueryBuilder
 	if len(flt.ReceiverIDs) > 0 {
 		queryBuilder = queryBuilder.Where(sq.Eq{"id": flt.ReceiverIDs})
+	}
+
+	// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
+	if len(flt.Labels) != 0 {
+		labelsJSON, err := json.Marshal(flt.Labels)
+		if err != nil {
+			return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
+		}
+		queryBuilder = queryBuilder.Where(fmt.Sprintf("labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
 	}
 
 	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
@@ -92,6 +104,7 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 		receiverModel.Type,
 		receiverModel.Labels,
 		receiverModel.Configurations,
+		receiverModel.ParentID,
 	).StructScan(&createdReceiver); err != nil {
 		err = pgc.CheckError(err)
 		if errors.Is(err, pgc.ErrDuplicateKey) {

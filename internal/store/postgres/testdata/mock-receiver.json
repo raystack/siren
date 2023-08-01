@@ -3,7 +3,9 @@
         "name": "gotocompany-slack",
         "type": "slack",
         "labels": {
-            "entity": "gotocompany,org-a,org-b"
+            "entity": "gotocompany,org-a,org-b",
+            "team": "infra",
+            "severity": "warning"
         },
         "configurations": {
             "token": "xxxxxxxxxx",
@@ -14,7 +16,8 @@
         "name": "alert-history",
         "type": "http",
         "labels": {
-            "entity": "gotocompany,org-a,org-b,org-c"
+            "entity": "gotocompany,org-a,org-b,org-c",
+            "team": "infra"
         },
         "configurations": {
             "url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1"

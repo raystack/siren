@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS receivers_idx_labels;

@@ -1,14 +1,16 @@
 package receiver
 
 const (
-	TypeSlack     string = "slack"
-	TypeHTTP      string = "http"
-	TypePagerDuty string = "pagerduty"
-	TypeFile      string = "file"
+	TypeSlack        string = "slack"
+	TypeSlackChannel string = "slack_channel"
+	TypeHTTP         string = "http"
+	TypePagerDuty    string = "pagerduty"
+	TypeFile         string = "file"
 )
 
 var SupportedTypes = []string{
 	TypeSlack,
+	TypeSlackChannel,
 	TypeHTTP,
 	TypePagerDuty,
 	TypeFile,

@@ -165,6 +165,7 @@ func CreateReceiversMap(ctx context.Context, receiverService ReceiverService, su
 
 	filteredReceivers, err := receiverService.List(ctx, receiver.Filter{
 		ReceiverIDs: listOfReceiverIDs,
+		Expanded:    true,
 	})
 	if err != nil {
 		return nil, err

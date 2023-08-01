@@ -151,7 +151,7 @@ func bootstrapReceiver(client *pgc.Client) ([]receiver.Receiver, error) {
 		}
 	}
 
-	insertedData, err := repo.List(context.Background(), receiver.Filter{})
+	insertedData, err := repo.List(context.Background(), receiver.Filter{Expanded: true})
 	if err != nil {
 		return nil, err
 	}

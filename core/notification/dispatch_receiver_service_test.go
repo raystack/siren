@@ -41,7 +41,7 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
-				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(nil, errors.New("some error"))
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -53,7 +53,7 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
-				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(&receiver.Receiver{}, nil)
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{}, nil)
 			},
 			wantErr: true,
 		},
@@ -65,7 +65,7 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
-				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(&receiver.Receiver{
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 					Type: testPluginType,
 				}, nil)
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
@@ -80,7 +80,7 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
-				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("receiver.GetOption")).Return(&receiver.Receiver{
+				rs.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
 					ID:   11,
 					Type: testPluginType,
 				}, nil)

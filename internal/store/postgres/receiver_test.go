@@ -102,7 +102,9 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Name: "gotocompany-slack",
 					Type: "slack",
 					Labels: map[string]string{
-						"entity": "gotocompany,org-a,org-b",
+						"entity":   "gotocompany,org-a,org-b",
+						"severity": "warning",
+						"team":     "infra",
 					},
 					Configurations: map[string]any{
 						"token":     "xxxxxxxxxx",
@@ -115,6 +117,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Type: "http",
 					Labels: map[string]string{
 						"entity": "gotocompany,org-a,org-b,org-c",
+						"team":   "infra",
 					},
 					Configurations: map[string]any{
 						"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
@@ -146,6 +149,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					Type: "http",
 					Labels: map[string]string{
 						"entity": "gotocompany,org-a,org-b,org-c",
+						"team":   "infra",
 					},
 					Configurations: map[string]any{
 						"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
@@ -165,6 +169,31 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 				},
 			},
 		},
+		{
+			Description: "should get filtered receivers with labels",
+			Filter: receiver.Filter{
+				Labels: map[string]string{
+					"team":     "infra",
+					"severity": "warning",
+				},
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   1,
+					Name: "gotocompany-slack",
+					Type: "slack",
+					Labels: map[string]string{
+						"entity":   "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "warning",
+					},
+					Configurations: map[string]any{
+						"token":     "xxxxxxxxxx",
+						"workspace": "gotocompany",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -175,8 +204,8 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
 			}
-			if !cmp.Equal(got, tc.ExpectedReceivers, cmpopts.IgnoreFields(receiver.Receiver{}, "CreatedAt", "UpdatedAt")) {
-				s.T().Fatalf("got result %+v, expected was %+v", got, tc.ExpectedReceivers)
+			if diff := cmp.Diff(got, tc.ExpectedReceivers, cmpopts.IgnoreFields(receiver.Receiver{}, "CreatedAt", "UpdatedAt")); diff != "" {
+				s.T().Fatalf("got diff %+v", diff)
 			}
 		})
 	}
