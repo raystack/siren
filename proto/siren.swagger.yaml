@@ -1248,6 +1248,9 @@ definitions:
       updated_at:
         type: string
         format: date-time
+      parent_id:
+        type: string
+        format: uint64
   ReceiverMetadata:
     type: object
     properties:

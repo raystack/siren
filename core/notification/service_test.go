@@ -347,7 +347,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 				t.Errorf("BuildTypeReceiver() error = %v, wantErr %s", err, tt.errString)
 				return
 			}
-			if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreFields(notification.Notification{}, "ID", "UniqueKey")); diff != "" {
+			if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreFields(notification.Notification{}, "ID", "UniqueKey"), cmpopts.SortSlices(func(a, b notification.Notification) bool { return len(a.Labels) < len(b.Labels) })); diff != "" {
 				t.Errorf("BuildFromAlerts() got diff = %v", diff)
 			}
 		})

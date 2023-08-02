@@ -162,6 +162,36 @@ func TestService_CreateReceiver(t *testing.T) {
 				Err: errors.New("unsupported receiver type: \"random\""),
 			},
 			{
+				Description: "should return error if type child but wrong parent",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), uint64(2)).Return(&receiver.Receiver{Type: receiver.TypeFile}, nil)
+				},
+				Rcv: &receiver.Receiver{
+					ID:   123,
+					Type: receiver.TypeSlackChannel,
+					Configurations: map[string]any{
+						"token": "key",
+					},
+					ParentID: 2,
+				},
+				Err: errors.New("parent of slack_channel type should be slack but found file"),
+			},
+			{
+				Description: "should return error if validateParent return error",
+				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), uint64(2)).Return(nil, errors.New("some error"))
+				},
+				Rcv: &receiver.Receiver{
+					ID:   123,
+					Type: receiver.TypeSlackChannel,
+					Configurations: map[string]any{
+						"token": "key",
+					},
+					ParentID: 2,
+				},
+				Err: errors.New("failed to check parent id 2"),
+			},
+			{
 				Description: "should return error if PreHookDBTransformConfigs return error",
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver) {
 					ss.EXPECT().PreHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{"token": "key"}).Return(nil, errors.New("some error"))

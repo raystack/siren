@@ -35,6 +35,7 @@ func (s *GRPCServer) ListReceivers(ctx context.Context, req *sirenv1beta1.ListRe
 			Type:           rcv.Type,
 			Configurations: configurations,
 			Labels:         rcv.Labels,
+			ParentId:       rcv.ParentID,
 			CreatedAt:      timestamppb.New(rcv.CreatedAt),
 			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
 		}
@@ -92,6 +93,7 @@ func (s *GRPCServer) GetReceiver(ctx context.Context, req *sirenv1beta1.GetRecei
 			Labels:         rcv.Labels,
 			Configurations: configuration,
 			Data:           data,
+			ParentId:       rcv.ParentID,
 			CreatedAt:      timestamppb.New(rcv.CreatedAt),
 			UpdatedAt:      timestamppb.New(rcv.UpdatedAt),
 		},

@@ -70,6 +70,10 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
 
+	if err := s.validateParent(ctx, rcv); err != nil {
+		return err
+	}
+
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
 	if err != nil {
 		return err
@@ -236,4 +240,26 @@ func (s *Service) ExpandParents(ctx context.Context, rcvs []Receiver) ([]Receive
 	}
 
 	return rcvs, nil
+}
+
+func (s *Service) validateParent(ctx context.Context, rcv *Receiver) error {
+	if rcv.ParentID == 0 {
+		return nil
+	}
+
+	parentRcv, err := s.repository.Get(ctx, rcv.ParentID)
+	if err != nil {
+		return errors.ErrInvalid.WithMsgf("failed to check parent id %d", rcv.ParentID).WithCausef(err.Error())
+	}
+
+	switch rcv.Type {
+	case TypeSlackChannel:
+		if parentRcv.Type != TypeSlack {
+			return errors.ErrInvalid.WithMsgf("parent of slack_channel type should be slack but found %s", parentRcv.Type)
+		}
+	default:
+		return errors.ErrInvalid.WithMsgf("type %s should not have parent receiver", rcv.Type)
+	}
+
+	return nil
 }

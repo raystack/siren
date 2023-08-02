@@ -4716,6 +4716,8 @@ func (m *Receiver) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for ParentId
+
 	if len(errors) > 0 {
 		return ReceiverMultiError(errors)
 	}
