@@ -3573,16 +3573,7 @@ func (m *CreateSubscriptionRequest) validate(all bool) error {
 
 	var errors []error
 
-	if !_CreateSubscriptionRequest_Urn_Pattern.MatchString(m.GetUrn()) {
-		err := CreateSubscriptionRequestValidationError{
-			field:  "Urn",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Urn
 
 	// no validation rules for Namespace
 
@@ -3732,8 +3723,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateSubscriptionRequestValidationError{}
-
-var _CreateSubscriptionRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on CreateSubscriptionResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -4098,16 +4087,7 @@ func (m *UpdateSubscriptionRequest) validate(all bool) error {
 
 	// no validation rules for Id
 
-	if !_UpdateSubscriptionRequest_Urn_Pattern.MatchString(m.GetUrn()) {
-		err := UpdateSubscriptionRequestValidationError{
-			field:  "Urn",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Urn
 
 	// no validation rules for Namespace
 
@@ -4257,8 +4237,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateSubscriptionRequestValidationError{}
-
-var _UpdateSubscriptionRequest_Urn_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on UpdateSubscriptionResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -6390,16 +6368,7 @@ func (m *ListAlertsRequest) validate(all bool) error {
 
 	// no validation rules for ProviderId
 
-	if !_ListAlertsRequest_ResourceName_Pattern.MatchString(m.GetResourceName()) {
-		err := ListAlertsRequestValidationError{
-			field:  "ResourceName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ResourceName
 
 	// no validation rules for StartTime
 
@@ -6488,8 +6457,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAlertsRequestValidationError{}
-
-var _ListAlertsRequest_ResourceName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on ListAlertsResponse with the rules
 // defined in the proto definition for this message. If any rules are
