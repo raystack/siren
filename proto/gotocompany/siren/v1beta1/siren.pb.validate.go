@@ -7963,16 +7963,7 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_UpdateRuleRequest_Namespace_Pattern.MatchString(m.GetNamespace()) {
-		err := UpdateRuleRequestValidationError{
-			field:  "Namespace",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Namespace
 
 	if !_UpdateRuleRequest_Template_Pattern.MatchString(m.GetTemplate()) {
 		err := UpdateRuleRequestValidationError{
@@ -8102,8 +8093,6 @@ var _ interface {
 } = UpdateRuleRequestValidationError{}
 
 var _UpdateRuleRequest_GroupName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _UpdateRuleRequest_Namespace_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _UpdateRuleRequest_Template_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
@@ -8405,16 +8394,7 @@ func (m *Template) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if !_Template_Body_Pattern.MatchString(m.GetBody()) {
-		err := TemplateValidationError{
-			field:  "Body",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Body
 
 	if len(m.GetTags()) < 1 {
 		err := TemplateValidationError{
@@ -8608,8 +8588,6 @@ var _ interface {
 } = TemplateValidationError{}
 
 var _Template_Name_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
-
-var _Template_Body_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 // Validate checks the field values on ListTemplatesRequest with the rules
 // defined in the proto definition for this message. If any rules are
