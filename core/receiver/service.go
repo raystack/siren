@@ -218,7 +218,7 @@ func (s *Service) ExpandParents(ctx context.Context, rcvs []Receiver) ([]Receive
 		uniqueParentIDs = append(uniqueParentIDs, k)
 	}
 
-	parentReceivers, err := s.List(ctx, Filter{ReceiverIDs: uniqueParentIDs, Expanded: true})
+	parentReceivers, err := s.List(ctx, Filter{ReceiverIDs: uniqueParentIDs, Expanded: false})
 	if err != nil {
 		return nil, fmt.Errorf("failure when expanding receiver parents: %w", err)
 	}

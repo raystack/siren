@@ -674,7 +674,7 @@ func TestService_ExpandParents(t *testing.T) {
 				Setup: func(rr *mocks.ReceiverRepository, ss *mocks.ConfigResolver, sc *mocks.ConfigResolver) {
 					rr.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), receiver.Filter{
 						ReceiverIDs: []uint64{1, 2},
-						Expanded:    true,
+						Expanded:    false,
 					}).Return([]receiver.Receiver{
 						{
 							ID:   1,
@@ -705,20 +705,6 @@ func TestService_ExpandParents(t *testing.T) {
 							UpdatedAt: timeNow,
 						},
 					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
-						"token":     "key1",
-						"workspace": "company1",
-					}).Return(map[string]any{
-						"token":     "decrypted_key1",
-						"workspace": "company1",
-					}, nil)
-					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), map[string]any{
-						"token":     "key2",
-						"workspace": "company2",
-					}).Return(map[string]any{
-						"token":     "decrypted_key2",
-						"workspace": "company2",
-					}, nil)
 				},
 				Receivers: sampleReceivers,
 				ExpandedReceivers: []receiver.Receiver{
@@ -726,7 +712,7 @@ func TestService_ExpandParents(t *testing.T) {
 						ID: 3,
 						Configurations: map[string]any{
 							"channel_name": "my-channel",
-							"token":        "decrypted_key1",
+							"token":        "key1",
 							"workspace":    "company1",
 						},
 						ParentID: 1,
@@ -735,7 +721,7 @@ func TestService_ExpandParents(t *testing.T) {
 						ID: 4,
 						Configurations: map[string]any{
 							"channel_name": "any-channel",
-							"token":        "decrypted_key2",
+							"token":        "key2",
 							"workspace":    "company2",
 						},
 						ParentID: 2,
@@ -744,7 +730,7 @@ func TestService_ExpandParents(t *testing.T) {
 						ID: 5,
 						Configurations: map[string]any{
 							"channel_name": "my-channel",
-							"token":        "decrypted_key2",
+							"token":        "key2",
 							"workspace":    "company2",
 						},
 						ParentID: 2,
