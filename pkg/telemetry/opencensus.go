@@ -3,6 +3,7 @@ package telemetry
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"contrib.go.opencensus.io/exporter/ocagent"
 	"contrib.go.opencensus.io/exporter/prometheus"
@@ -63,7 +64,7 @@ func setupOpenCensus(ctx context.Context, mux *http.ServeMux, cfg Config) error 
 	}
 
 	pe, err := prometheus.NewExporter(prometheus.Options{
-		Namespace: cfg.ServiceName,
+		Namespace: strings.ReplaceAll(cfg.ServiceName, "-", "_"),
 	})
 	if err != nil {
 		return err

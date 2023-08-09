@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/xo/dburl"
 	"go.opencensus.io/trace"
 )
 
 type PostgresTracer struct {
-	dbSystem string
-	dbName   string
-	dbUser   string
-	dbAddr   string
-	dbPort   string
+	dbSystem           string
+	dbName             string
+	dbUser             string
+	dbAddr             string
+	dbPort             string
+	nrDataStoreSegment newrelic.DatastoreSegment
+	span               *trace.Span
 }
 
 func NewPostgresTracer(url string) (*PostgresTracer, error) {
@@ -31,12 +34,25 @@ func NewPostgresTracer(url string) (*PostgresTracer, error) {
 	}, err
 }
 
-func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName string, spanAttributes ...trace.Attribute) (context.Context, *trace.Span) {
+func (d *PostgresTracer) StartSpan(ctx context.Context, op string, tableName string, query string, spanAttributes ...trace.Attribute) (context.Context, *trace.Span) {
+	nrTx := newrelic.FromContext(ctx)
+	d.nrDataStoreSegment = newrelic.DatastoreSegment{
+		Product:            newrelic.DatastorePostgres,
+		DatabaseName:       d.dbName,
+		PortPathOrID:       d.dbPort,
+		Collection:         tableName,
+		Operation:          op,
+		Host:               d.dbAddr,
+		StartTime:          nrTx.StartSegmentNow(),
+		ParameterizedQuery: query,
+	}
+
 	// Refer https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/database.md
 	ctx, span := trace.StartSpan(ctx, fmt.Sprintf("%s %s.%s", op, d.dbName, tableName), trace.WithSpanKind(trace.SpanKindClient))
 
 	traceAttributes := []trace.Attribute{
 		trace.StringAttribute("db.system", d.dbSystem),
+		trace.StringAttribute("db.statement", query),
 		trace.StringAttribute("db.user", d.dbUser),
 		trace.StringAttribute("net.sock.peer.addr", d.dbAddr),
 		trace.StringAttribute("net.peer.port", d.dbPort),
@@ -51,5 +67,12 @@ func (d PostgresTracer) StartSpan(ctx context.Context, op string, tableName stri
 		traceAttributes...,
 	)
 
+	d.span = span
+
 	return ctx, span
+}
+
+func (d *PostgresTracer) StopSpan() {
+	d.nrDataStoreSegment.End()
+	d.span.End()
 }

@@ -61,6 +61,7 @@ func NewNamespaceRepository(client *pgc.Client) *NamespaceRepository {
 }
 
 func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNamespace, error) {
+
 	query, args, err := namespaceListQueryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return nil, err

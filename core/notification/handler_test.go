@@ -133,7 +133,7 @@ func TestHandler_MessageHandler(t *testing.T) {
 				tc.setup(mockQueue, mockNotifier)
 			}
 
-			h := notification.NewHandler(notification.HandlerConfig{}, log.NewNoop(), mockQueue, map[string]notification.Notifier{
+			h := notification.NewHandler(notification.HandlerConfig{}, log.NewNoop(), nil, mockQueue, map[string]notification.Notifier{
 				testReceiverType: mockNotifier,
 			})
 			if err := h.MessageHandler(context.TODO(), tc.messages); (err != nil) != tc.wantErr {

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/goto/siren/pkg/telemetry"
+	"github.com/newrelic/go-agent/v3/newrelic"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 type ClientOpt func(*Client)
@@ -43,8 +45,11 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 		}
 
 		c.httpClient = &http.Client{
-			Transport: &telemetry.Transport{
-				Base: transport,
+			Transport: &ochttp.Transport{
+				Base: newrelic.NewRoundTripper(&telemetry.Transport{
+					Origin: transport,
+				}),
+				NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
 			},
 		}
 

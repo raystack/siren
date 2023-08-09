@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/goto/salt/log"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 
@@ -25,16 +26,18 @@ type Handler struct {
 	notifierRegistry       map[string]Notifier
 	supportedReceiverTypes []string
 	messagingTracer        *telemetry.MessagingTracer
+	nrApp                  *newrelic.Application
 
 	batchSize int
 }
 
 // NewHandler creates a new handler with some supported type of Notifiers
-func NewHandler(cfg HandlerConfig, logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
+func NewHandler(cfg HandlerConfig, logger log.Logger, nrApp *newrelic.Application, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
 		batchSize: defaultBatchSize,
 
 		logger:           logger,
+		nrApp:            nrApp,
 		notifierRegistry: registry,
 		q:                q,
 	}
@@ -83,12 +86,18 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 }
 
 func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
+	txn := h.nrApp.StartTransaction(h.identifier)
+	defer txn.End()
+	nrCtx := newrelic.NewContext(ctx, txn)
+
 	receiverTypes := h.supportedReceiverTypes
 	if len(receiverTypes) == 0 {
-		return errors.New("no receiver type plugin registered, skipping dequeue")
+		err := errors.New("no receiver type plugin registered, skipping dequeue")
+		txn.NoticeError(err)
+		return err
 	} else {
-		traceCtx, span := h.messagingTracer.StartSpan(ctx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
-		defer span.End()
+		traceCtx, span := h.messagingTracer.StartSpan(nrCtx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
+		defer h.messagingTracer.StopSpan()
 
 		if err := h.q.Dequeue(traceCtx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if !errors.Is(err, ErrNoMessage) {
@@ -96,7 +105,12 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 					Code:    trace.StatusCodeUnknown,
 					Message: err.Error(),
 				})
-				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
+				err = fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
+				txn.NoticeError(err)
+				return err
+			} else {
+				// no messages found
+				txn.Ignore()
 			}
 		}
 	}

@@ -41,8 +41,15 @@ func InitDeps(
 	telemetry.Init(ctx, cfg.Telemetry, logger)
 
 	nrApp, err := newrelic.NewApplication(
-		newrelic.ConfigAppName(cfg.Telemetry.NewRelicAppName),
+		newrelic.ConfigAppName(cfg.Telemetry.ServiceName),
 		newrelic.ConfigLicense(cfg.Telemetry.NewRelicAPIKey),
+		func(c *newrelic.Config) {
+			c.DistributedTracer.Enabled = true
+			c.DatastoreTracer.DatabaseNameReporting.Enabled = true
+			c.DatastoreTracer.InstanceReporting.Enabled = true
+			c.DatastoreTracer.QueryParameters.Enabled = true
+			c.DatastoreTracer.SlowQuery.Enabled = true
+		},
 	)
 	if err != nil {
 		logger.Warn("failed to init newrelic", "err", err)

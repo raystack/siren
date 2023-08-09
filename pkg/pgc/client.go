@@ -80,10 +80,10 @@ func CheckError(err error) error {
 }
 
 func (c *Client) QueryRowxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) *sqlx.Row {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
-		trace.StringAttribute("db.statement", query),
-	)
-	defer span.End()
+
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
+	defer c.postgresTracer.StopSpan()
+
 	sqlxRow := c.GetDB(ctx).QueryRowxContext(ctx, query, args...)
 	if sqlxRow.Err() != nil {
 		span.SetStatus(trace.Status{
@@ -95,10 +95,9 @@ func (c *Client) QueryRowxContext(ctx context.Context, op string, tableName stri
 }
 
 func (c *Client) QueryxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (*sqlx.Rows, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
-		trace.StringAttribute("db.statement", query),
-	)
-	defer span.End()
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
+	defer c.postgresTracer.StopSpan()
+
 	sqlxRows, err := c.GetDB(ctx).QueryxContext(ctx, query, args...)
 	if err != nil {
 		span.SetStatus(trace.Status{
@@ -110,10 +109,8 @@ func (c *Client) QueryxContext(ctx context.Context, op string, tableName string,
 }
 
 func (c *Client) GetContext(ctx context.Context, op string, tableName string, dest interface{}, query string, args ...interface{}) error {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
-		trace.StringAttribute("db.statement", query),
-	)
-	defer span.End()
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
+	defer c.postgresTracer.StopSpan()
 
 	if err := c.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(dest); err != nil {
 		span.SetStatus(trace.Status{
@@ -127,10 +124,8 @@ func (c *Client) GetContext(ctx context.Context, op string, tableName string, de
 }
 
 func (c *Client) ExecContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (sql.Result, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
-		trace.StringAttribute("db.statement", query),
-	)
-	defer span.End()
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
+	defer c.postgresTracer.StopSpan()
 
 	res, err := c.db.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -145,10 +140,8 @@ func (c *Client) ExecContext(ctx context.Context, op string, tableName string, q
 }
 
 func (c *Client) NamedExecContext(ctx context.Context, op string, tableName string, query string, arg interface{}) (sql.Result, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName,
-		trace.StringAttribute("db.statement", query),
-	)
-	defer span.End()
+	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
+	defer c.postgresTracer.StopSpan()
 
 	res, err := c.db.NamedExecContext(ctx, query, arg)
 	if err != nil {

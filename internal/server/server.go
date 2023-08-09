@@ -58,11 +58,11 @@ func RunServer(
 	}
 
 	loggerOpts := []grpc_zap.Option{
-		grpc_zap.WithLevels(zaputil.GRPCCodeToLevel),
+		grpc_zap.WithLevels(grpc_zap.DefaultCodeToLevel),
 		grpc_zap.WithTimestampFormat(time.RFC3339Nano),
 		grpc_zap.WithDecider(func(fullMethodName string, err error) bool {
 			// will not log gRPC calls if it was a call to healthcheck and no error was raised
-			if err == nil && fullMethodName == "grpc.health.v1.Health.Check" {
+			if err == nil && fullMethodName == grpc_health_v1.Health_Check_FullMethodName {
 				return false
 			}
 			// by default everything will be logged

@@ -13,9 +13,8 @@ type Config struct {
 	ServiceName string `mapstructure:"service_name" yaml:"service_name" default:"siren"`
 
 	// NewRelic exporter.
-	EnableNewrelic  bool   `mapstructure:"enable_newrelic" yaml:"enable_newrelic" default:"false"`
-	NewRelicAppName string `mapstructure:"newrelic_app_name" yaml:"newrelic_app_name"`
-	NewRelicAPIKey  string `mapstructure:"newrelic_api_key" yaml:"newrelic_api_key" default:"____LICENSE_STRING_OF_40_CHARACTERS_____"`
+	EnableNewrelic bool   `mapstructure:"enable_newrelic" yaml:"enable_newrelic" default:"false"`
+	NewRelicAPIKey string `mapstructure:"newrelic_api_key" yaml:"newrelic_api_key" default:"____LICENSE_STRING_OF_40_CHARACTERS_____"`
 
 	// OpenTelemetry Agent exporter.
 	EnableOtelAgent  bool   `mapstructure:"enable_otel_agent" yaml:"enable_otel_agent" default:"false"`
