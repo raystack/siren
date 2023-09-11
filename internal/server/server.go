@@ -32,14 +32,22 @@ import (
 
 const defaultGracePeriod = 5 * time.Second
 
+type GRPCConfig struct {
+	Port           int `yaml:"port" mapstructure:"port" default:"8081"`
+	MaxRecvMsgSize int `yaml:"max_recv_msg_size" mapstructure:"max_recv_msg_size" default:"33554432"`
+	MaxSendMsgSize int `yaml:"max_send_msg_size" mapstructure:"max_send_msg_size" default:"33554432"`
+}
+
 type Config struct {
 	Host          string            `mapstructure:"host" yaml:"host" default:"localhost"`
 	Port          int               `mapstructure:"port" yaml:"port" default:"8080"`
 	EncryptionKey string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
 	APIHeaders    api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
+	GRPC          GRPCConfig        `mapstructure:"grpc"`
 }
 
-func (cfg Config) addr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
+func (cfg Config) addr() string     { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
+func (cfg Config) grpcAddr() string { return fmt.Sprintf("%s:%d", cfg.Host, cfg.GRPC.Port) }
 
 // RunServer runs the application server
 func RunServer(
@@ -143,9 +151,14 @@ func RunServer(
 
 	logger.Info("server is running", "host", c.Host, "port", c.Port)
 
-	return mux.Serve(runtimeCtx, c.addr(),
-		mux.WithHTTP(baseMux),
-		mux.WithGRPC(grpcServer),
+	return mux.Serve(runtimeCtx,
+		mux.WithHTTPTarget(c.addr(), &http.Server{
+			Handler:      baseMux,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+		}),
+		mux.WithGRPCTarget(c.grpcAddr(), grpcServer),
 		mux.WithGracePeriod(defaultGracePeriod),
 	)
 }
