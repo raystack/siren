@@ -3,6 +3,7 @@ project_name: siren-cortex
 release:
   draft: true
   prerelease: auto
+  name_template: "{{.ProjectName}}-v{{.Version}}"
 
 before:
   hooks:
