@@ -12,6 +12,7 @@ import (
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/jobs"
 	"github.com/goto/siren/pkg/errors"
+	"github.com/goto/siren/pkg/zaputil"
 	"github.com/goto/siren/plugins/queues"
 	"github.com/goto/siren/plugins/queues/postgresq"
 	"github.com/spf13/cobra"
@@ -153,9 +154,9 @@ func jobRunCleanupIdempotencyCommand() *cobra.Command {
 				return err
 			}
 
-			logger := initLogger(cfg.Log)
+			logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
-			apiDeps, _, pgClient, _, err := InitDeps(cmd.Context(), logger, cfg, nil)
+			apiDeps, _, pgClient, _, providersPluginManager, err := InitDeps(cmd.Context(), logger, cfg, nil)
 			if err != nil {
 				return err
 			}
@@ -187,6 +188,8 @@ func jobRunCleanupIdempotencyCommand() *cobra.Command {
 			if err := pgClient.Close(); err != nil {
 				logger.Error(err.Error())
 			}
+
+			providersPluginManager.Stop()
 
 			return nil
 		},

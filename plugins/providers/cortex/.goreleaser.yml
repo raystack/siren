@@ -1,0 +1,70 @@
+project_name: siren-cortex
+ 
+release:
+  draft: true
+  prerelease: auto
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod vendor
+
+builds:
+  - main: ./main.go
+    id: siren-cortex
+    binary: siren-cortex
+    flags:
+      - -a
+    ldflags:
+       - -s -w -X github.com/goto/siren/plugins/providers/cortex/config.Version={{.Tag}} -X github.com/goto/siren/plugins/providers/cortex/config.BuildCommit={{.FullCommit}} -X github.com/goto/siren/plugins/providers/cortex/config.BuildDate={{.Date}}
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, '386']
+
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "windows" }}windows
+      {{- else if eq .Arch "linux" }}linux
+      {{- else if eq .Arch "darwin" }}macos
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^build:"
+      - "Merge pull request"
+      - "Merge branch"
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+brews:
+  - name: siren-cortex
+    homepage: "https://github.com/goto/siren/plugins/providers/cortex"
+    description: "Cortex plugin for siren."
+    repository:
+      owner: goto
+      name: homebrew-taps
+    license: "Apache 2.0"
+    folder: Formula
+    dependencies:
+      - name: git
+    install: |-
+      bin.install "siren-cortex"
+    commit_author:
+      name: github-actions[bot]
+      email: 41898282+github-actions[bot]@users.noreply.github.com

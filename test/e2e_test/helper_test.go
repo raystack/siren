@@ -228,11 +228,12 @@ func getFreePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-func StartSirenServer(cfg config.Config) {
+func StartSirenServer(ctx context.Context, cfg config.Config) {
 	logger := log.NewZap()
 	logger.Info("starting up siren...")
+
 	go func() {
-		if err := cli.StartServer(context.Background(), cfg); err != nil {
+		if err := cli.StartServer(ctx, cfg); err != nil && err != context.Canceled {
 			logger.Fatal(err.Error())
 		}
 	}()
@@ -240,22 +241,22 @@ func StartSirenServer(cfg config.Config) {
 
 }
 
-func StartSirenMessageWorker(cfg config.Config, closeChannel chan struct{}) error {
+func StartSirenMessageWorker(ctx context.Context, cfg config.Config, closeChannel chan struct{}) error {
 	logger := log.NewZap()
 	logger.Info("starting up siren notification message worker...")
 
-	if err := cli.StartNotificationHandlerWorker(context.Background(), cfg, closeChannel); err != nil {
+	if err := cli.StartNotificationHandlerWorker(ctx, cfg, closeChannel); err != nil {
 		return err
 	}
 	logger.Info("siren notification message is running")
 	return nil
 }
 
-func StartSirenDLQWorker(cfg config.Config, closeChannel chan struct{}) error {
+func StartSirenDLQWorker(ctx context.Context, cfg config.Config, closeChannel chan struct{}) error {
 	logger := log.NewZap()
 	logger.Info("starting up siren notification dlq worker...")
 
-	if err := cli.StartNotificationDLQHandlerWorker(context.Background(), cfg, closeChannel); err != nil {
+	if err := cli.StartNotificationDLQHandlerWorker(ctx, cfg, closeChannel); err != nil {
 		return err
 	}
 

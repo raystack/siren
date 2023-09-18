@@ -22,7 +22,7 @@ import (
 	"github.com/goto/siren/pkg/pgc"
 	"github.com/goto/siren/pkg/secret"
 	"github.com/goto/siren/pkg/telemetry"
-	"github.com/goto/siren/plugins/providers/cortex"
+	"github.com/goto/siren/plugins/providers"
 	"github.com/goto/siren/plugins/receivers/file"
 	"github.com/goto/siren/plugins/receivers/httpreceiver"
 	"github.com/goto/siren/plugins/receivers/pagerduty"
@@ -36,7 +36,7 @@ func InitDeps(
 	logger saltlog.Logger,
 	cfg config.Config,
 	queue notification.Queuer,
-) (*api.Deps, *newrelic.Application, *pgc.Client, map[string]notification.Notifier, error) {
+) (*api.Deps, *newrelic.Application, *pgc.Client, map[string]notification.Notifier, *providers.PluginManager, error) {
 
 	telemetry.Init(ctx, cfg.Telemetry, logger)
 
@@ -57,17 +57,17 @@ func InitDeps(
 
 	dbClient, err := db.New(cfg.DB)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
 	pgClient, err := pgc.NewClient(logger, dbClient)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
 	encryptor, err := secret.New(cfg.Service.EncryptionKey)
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("cannot initialize encryptor: %w", err)
+		return nil, nil, nil, nil, nil, fmt.Errorf("cannot initialize encryptor: %w", err)
 	}
 
 	templateRepository := postgres.NewTemplateRepository(pgClient)
@@ -79,29 +79,42 @@ func InitDeps(
 	logRepository := postgres.NewLogRepository(pgClient)
 	logService := log.NewService(logRepository)
 
-	cortexPluginService := cortex.NewPluginService(logger, cfg.Providers.Cortex)
+	providersPluginManager := providers.NewPluginManager(logger, cfg.Providers)
+	providerPluginClients := providersPluginManager.InitClients()
+	providerPlugins, err := providersPluginManager.DispenseClients(providerPluginClients)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	if err := providersPluginManager.InitConfigs(ctx, providerPlugins, cfg.Log.Level); err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	var configSyncers = make(map[string]namespace.ConfigSyncer, 0)
+	var alertTransformers = make(map[string]alert.AlertTransformer, 0)
+	var ruleUploaders = make(map[string]rule.RuleUploader, 0)
+
+	for k, pc := range providerPlugins {
+		alertTransformers[k] = pc.(alert.AlertTransformer)
+		configSyncers[k] = pc.(namespace.ConfigSyncer)
+		ruleUploaders[k] = pc.(rule.RuleUploader)
+	}
+
 	alertRepository := postgres.NewAlertRepository(pgClient)
 	alertService := alert.NewService(
 		alertRepository,
 		logService,
-		map[string]alert.AlertTransformer{
-			provider.TypeCortex: cortexPluginService,
-		},
+		alertTransformers,
 	)
 
 	namespaceRepository := postgres.NewNamespaceRepository(pgClient)
-	namespaceService := namespace.NewService(encryptor, namespaceRepository, providerService, map[string]namespace.ConfigSyncer{
-		provider.TypeCortex: cortexPluginService,
-	})
+	namespaceService := namespace.NewService(encryptor, namespaceRepository, providerService, configSyncers)
 
 	ruleRepository := postgres.NewRuleRepository(pgClient)
 	ruleService := rule.NewService(
 		ruleRepository,
 		templateService,
 		namespaceService,
-		map[string]rule.RuleUploader{
-			provider.TypeCortex: cortexPluginService,
-		},
+		ruleUploaders,
 	)
 
 	silenceRepository := postgres.NewSilenceRepository(pgClient)
@@ -171,6 +184,6 @@ func InitDeps(
 			SubscriptionService: subscriptionService,
 			NotificationService: notificationService,
 			SilenceService:      silenceService,
-		}, nrApp, pgClient, notifierRegistry,
+		}, nrApp, pgClient, notifierRegistry, providersPluginManager,
 		nil
 }

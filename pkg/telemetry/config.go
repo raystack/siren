@@ -2,7 +2,7 @@ package telemetry
 
 type Config struct {
 	// Debug sets the bind address for pprof & zpages server.
-	Debug string `mapstructure:"debug_addr" yaml:"debug_addr" default:"localhost:8081"`
+	Debug string `mapstructure:"debug_addr" yaml:"debug_addr" default:"localhost:8083"`
 
 	// OpenCensus trace & metrics configurations.
 	EnableCPU        bool    `mapstructure:"enable_cpu" yaml:"enable_cpu" default:"true"`

@@ -99,7 +99,7 @@ func RunServer(
 	grpcDialCtx, grpcDialCancel := context.WithTimeout(ctx, time.Second*5)
 	defer grpcDialCancel()
 
-	grpcConn, err := grpc.DialContext(grpcDialCtx, c.addr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	grpcConn, err := grpc.DialContext(grpcDialCtx, c.grpcAddr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func RunServer(
 	}, http.NotFoundHandler()))
 	baseMux.Handle("/", httpGateway)
 
-	logger.Info("server is running", "host", c.Host, "port", c.Port)
+	logger.Info("server is running", "host", c.Host, "port", c.Port, "grpc_port", c.GRPC.Port)
 
 	return mux.Serve(runtimeCtx,
 		mux.WithHTTPTarget(c.addr(), &http.Server{

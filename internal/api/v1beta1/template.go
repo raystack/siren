@@ -5,7 +5,6 @@ import (
 
 	"github.com/goto/siren/core/template"
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *GRPCServer) ListTemplates(ctx context.Context, req *sirenv1beta1.ListTemplatesRequest) (*sirenv1beta1.ListTemplatesResponse, error) {
@@ -18,25 +17,7 @@ func (s *GRPCServer) ListTemplates(ctx context.Context, req *sirenv1beta1.ListTe
 
 	items := []*sirenv1beta1.Template{}
 	for _, tmpl := range templates {
-		variables := make([]*sirenv1beta1.TemplateVariables, 0)
-		for _, variable := range tmpl.Variables {
-			variables = append(variables, &sirenv1beta1.TemplateVariables{
-				Name:        variable.Name,
-				Type:        variable.Type,
-				Default:     variable.Default,
-				Description: variable.Description,
-			})
-		}
-
-		items = append(items, &sirenv1beta1.Template{
-			Id:        uint64(tmpl.ID),
-			Name:      tmpl.Name,
-			Body:      tmpl.Body,
-			Tags:      tmpl.Tags,
-			CreatedAt: timestamppb.New(tmpl.CreatedAt),
-			UpdatedAt: timestamppb.New(tmpl.UpdatedAt),
-			Variables: variables,
-		})
+		items = append(items, tmpl.ToV1beta1Proto())
 	}
 
 	return &sirenv1beta1.ListTemplatesResponse{
@@ -45,30 +26,13 @@ func (s *GRPCServer) ListTemplates(ctx context.Context, req *sirenv1beta1.ListTe
 }
 
 func (s *GRPCServer) GetTemplate(ctx context.Context, req *sirenv1beta1.GetTemplateRequest) (*sirenv1beta1.GetTemplateResponse, error) {
-	template, err := s.templateService.GetByName(ctx, req.GetName())
+	tmpl, err := s.templateService.GetByName(ctx, req.GetName())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}
 
-	variables := make([]*sirenv1beta1.TemplateVariables, 0)
-	for _, variable := range template.Variables {
-		variables = append(variables, &sirenv1beta1.TemplateVariables{
-			Name:        variable.Name,
-			Type:        variable.Type,
-			Default:     variable.Default,
-			Description: variable.Description,
-		})
-	}
 	return &sirenv1beta1.GetTemplateResponse{
-		Template: &sirenv1beta1.Template{
-			Id:        uint64(template.ID),
-			Name:      template.Name,
-			Body:      template.Body,
-			Tags:      template.Tags,
-			CreatedAt: timestamppb.New(template.CreatedAt),
-			UpdatedAt: timestamppb.New(template.UpdatedAt),
-			Variables: variables,
-		},
+		Template: tmpl.ToV1beta1Proto(),
 	}, nil
 }
 

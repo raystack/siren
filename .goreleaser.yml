@@ -67,7 +67,7 @@ brews:
   - name: siren
     homepage: "https://github.com/goto/siren"
     description: "Universal data observability tool."
-    tap:
+    repository:
       owner: goto
       name: homebrew-taps
     license: "Apache 2.0"

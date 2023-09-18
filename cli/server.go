@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/goto/salt/log"
 	"github.com/goto/salt/printer"
 	"github.com/goto/siren/config"
 	"github.com/goto/siren/core/notification"
@@ -18,8 +17,6 @@ import (
 	"github.com/goto/siren/plugins/queues/inmemory"
 	"github.com/goto/siren/plugins/queues/postgresq"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func serverCmd() *cobra.Command {
@@ -123,7 +120,7 @@ func serverMigrateCommand() *cobra.Command {
 }
 
 func StartServer(ctx context.Context, cfg config.Config) error {
-	logger := initLogger(cfg.Log)
+	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
 	var queue, dlq notification.Queuer
 	var err error
@@ -142,7 +139,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		dlq = inmemory.New(logger, 10)
 	}
 
-	apiDeps, nrApp, pgClient, notifierRegistry, err := InitDeps(ctx, logger, cfg, queue)
+	apiDeps, nrApp, pgClient, notifierRegistry, providersPluginManager, err := InitDeps(ctx, logger, cfg, queue)
 	if err != nil {
 		return err
 	}
@@ -196,6 +193,10 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), gracefulStopQueueWaitPeriod)
 	defer cancel()
 
+	logger.Warn("stopping plugins")
+	providersPluginManager.Stop()
+	logger.Warn("all plugins stopped")
+
 	logger.Warn("stopping queue...")
 	if err := queue.Stop(timeoutCtx); err != nil {
 		logger.Error("error stopping queue", "error", err)
@@ -214,55 +215,11 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 	logger.Warn("db closed...")
 
+	logger.Warn("exiting plugins...")
+	if err := pgClient.Close(); err != nil {
+		logger.Error("error when closing db", "err", err)
+	}
+	logger.Warn("plugins exited...")
+
 	return err
-}
-
-func initLogger(cfg config.Log) log.Logger {
-	defaultConfig := zap.NewProductionConfig()
-	defaultConfig.Level = zap.NewAtomicLevelAt(getZapLogLevelFromString(cfg.Level))
-
-	if cfg.GCPCompatible {
-		defaultConfig = zap.Config{
-			Level:       zap.NewAtomicLevelAt(getZapLogLevelFromString(cfg.Level)),
-			Encoding:    "json",
-			Development: false,
-			Sampling: &zap.SamplingConfig{
-				Initial:    100,
-				Thereafter: 100,
-			},
-			EncoderConfig:    zaputil.EncoderConfig,
-			OutputPaths:      []string{"stdout"},
-			ErrorOutputPaths: []string{"stderr"},
-		}
-	}
-
-	return log.NewZap(log.ZapWithConfig(
-		defaultConfig,
-		zap.Fields(zaputil.ServiceContext(serviceName)),
-		zap.AddCaller(),
-		zap.AddStacktrace(zap.DPanicLevel),
-	))
-
-}
-
-// getZapLogLevelFromString helps to set logLevel from string
-func getZapLogLevelFromString(level string) zapcore.Level {
-	switch level {
-	case "debug":
-		return zap.DebugLevel
-	case "info":
-		return zap.InfoLevel
-	case "warn":
-		return zap.WarnLevel
-	case "error":
-		return zap.ErrorLevel
-	case "dpanic":
-		return zap.DPanicLevel
-	case "panic":
-		return zap.PanicLevel
-	case "fatal":
-		return zap.FatalLevel
-	default:
-		return zap.InfoLevel
-	}
 }

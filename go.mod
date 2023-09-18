@@ -13,8 +13,8 @@ require (
 	github.com/go-openapi/runtime v0.19.29
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/goto/salt v0.3.4-0.20230911135847-d2678dd23ab8
-	github.com/grafana/cortex-tools v0.8.0
+	github.com/goto/salt v0.3.4-0.20230911142701-a7dafec674f2
+	github.com/grafana/cortex-tools v0.8.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.1
 	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
@@ -27,8 +27,8 @@ require (
 	github.com/newrelic/go-agent/v3/integrations/nrgrpc v1.3.2
 	github.com/newrelic/newrelic-opencensus-exporter-go v0.4.0
 	github.com/ory/dockertest/v3 v3.9.1
-	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a
-	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
+	github.com/prometheus/alertmanager v0.23.1-0.20210914172521-e35efbddb66a // indirect
+	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4 // indirect
 	github.com/slack-go/slack v0.11.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.4
@@ -44,6 +44,8 @@ require (
 
 require (
 	github.com/antonmedv/expr v1.9.0
+	github.com/goto/siren/plugins/providers/cortex v0.0.0-00010101000000-000000000000
+	github.com/hashicorp/go-plugin v1.5.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20230726155614-23370e0ffb3e
 )
 
@@ -86,7 +88,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/fatih/color v1.13.0 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -112,8 +114,10 @@ require (
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jeremywohl/flatten v1.0.1 // indirect
@@ -126,12 +130,13 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.17 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
+	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.14.0 // indirect
@@ -189,3 +194,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace github.com/goto/siren/plugins/providers/cortex => ./plugins/providers/cortex

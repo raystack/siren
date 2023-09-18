@@ -15,7 +15,6 @@ import (
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/config"
 	"github.com/goto/siren/internal/store/postgres/migrations"
-	"github.com/goto/siren/plugins/providers/cortex"
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/suite"
@@ -24,7 +23,6 @@ import (
 
 type CortexTest struct {
 	PGConfig          db.Config
-	CortexConfig      cortex.AppConfig
 	NginxHost         string
 	bridgeNetworkName string
 	pool              *dockertest.Pool

@@ -2,12 +2,9 @@ package v1beta1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/goto/siren/core/provider"
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
-	"google.golang.org/protobuf/types/known/structpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *GRPCServer) ListProviders(ctx context.Context, req *sirenv1beta1.ListProvidersRequest) (*sirenv1beta1.ListProvidersResponse, error) {
@@ -20,23 +17,12 @@ func (s *GRPCServer) ListProviders(ctx context.Context, req *sirenv1beta1.ListPr
 	}
 
 	items := []*sirenv1beta1.Provider{}
-	for _, provider := range providers {
-		credentials, err := structpb.NewStruct(provider.Credentials)
+	for _, prov := range providers {
+		item, err := prov.ToV1beta1Proto()
 		if err != nil {
-			return nil, s.generateRPCErr(fmt.Errorf("failed to fetch provider credentials: %w", err))
+			return nil, s.generateRPCErr(err)
 		}
 
-		item := &sirenv1beta1.Provider{
-			Id:          provider.ID,
-			Urn:         provider.URN,
-			Host:        provider.Host,
-			Type:        provider.Type,
-			Name:        provider.Name,
-			Credentials: credentials,
-			Labels:      provider.Labels,
-			CreatedAt:   timestamppb.New(provider.CreatedAt),
-			UpdatedAt:   timestamppb.New(provider.UpdatedAt),
-		}
 		items = append(items, item)
 	}
 	return &sirenv1beta1.ListProvidersResponse{
@@ -69,23 +55,13 @@ func (s *GRPCServer) GetProvider(ctx context.Context, req *sirenv1beta1.GetProvi
 		return nil, s.generateRPCErr(err)
 	}
 
-	grpcCredentials, err := structpb.NewStruct(fetchedProvider.Credentials)
+	protoProv, err := fetchedProvider.ToV1beta1Proto()
 	if err != nil {
-		return nil, s.generateRPCErr(fmt.Errorf("failed to fetch provider credentials: %w", err))
+		return nil, s.generateRPCErr(err)
 	}
 
 	return &sirenv1beta1.GetProviderResponse{
-		Provider: &sirenv1beta1.Provider{
-			Id:          fetchedProvider.ID,
-			Host:        fetchedProvider.Host,
-			Urn:         fetchedProvider.URN,
-			Name:        fetchedProvider.Name,
-			Type:        fetchedProvider.Type,
-			Credentials: grpcCredentials,
-			Labels:      fetchedProvider.Labels,
-			CreatedAt:   timestamppb.New(fetchedProvider.CreatedAt),
-			UpdatedAt:   timestamppb.New(fetchedProvider.UpdatedAt),
-		},
+		Provider: protoProv,
 	}, nil
 }
 

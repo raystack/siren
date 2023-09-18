@@ -2,21 +2,30 @@ NAME="github.com/goto/siren"
 LAST_COMMIT := $(shell git rev-parse --short HEAD)
 LAST_TAG := "$(shell git rev-list --tags --max-count=1)"
 APP_VERSION := "$(shell git describe --tags ${LAST_TAG})-next"
-PROTON_COMMIT := "96e1f08d485a1ff38d0939f6533726fb68f36126"
+PROTON_COMMIT := "4fc96a5406f640044ebe0572385336af7bd221ae"
 
 .PHONY: all build test clean dist vet proto install
 
 all: build
 
-build: ## Build the siren binary
+
+build: build-main build-plugins
+
+build-main: ## Build the siren binary
 	@echo " > building siren version ${APP_VERSION}"
 	go build -ldflags "-X main.Version=${APP_VERSION}" ${NAME}
+	@echo " > building plugins version ${APP_VERSION}"
+	@echo " - build complete"
+
+build-plugins:
+	@echo " > building plugins"
+	@go list -m | grep providers | while read path; do go build -o ./plugin/${shell basename "$$path"} "$$path"; done
 	@echo " - build complete"
 
 test: ## Run the tests
 	go test -race $(shell go list ./... | grep -v /test/) -covermode=atomic -coverprofile=coverage.out
 
-e2e-test: ## Run all e2e tests
+e2e-test: build-plugins ## Run all e2e tests
 	go test -v -race ./test/e2e_test/... -coverprofile=coverage.out --timeout 300s
 
 coverage: ## Print code coverage

@@ -1,18 +1,18 @@
-package cortex_test
+package cortexv1plugin_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/MakeNowJust/heredoc"
-	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
 	"github.com/goto/siren/core/template"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/plugins/providers/cortex"
-	"github.com/goto/siren/plugins/providers/cortex/mocks"
+	cortexv1plugin "github.com/goto/siren/plugins/providers/cortex/v1"
+	"github.com/goto/siren/plugins/providers/cortex/v1/mocks"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -142,7 +142,7 @@ func TestService_UpsertRule(t *testing.T) {
 			err: errors.New("cannot parse upserted rule"),
 		},
 		{
-			name: "should return error if getting rule group from cortex return error",
+			name: "should return error if getting rule group from cortexv1 return error",
 			setup: func(cc *mocks.CortexCaller) {
 				cc.EXPECT().GetRuleGroup(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 			},
@@ -151,7 +151,7 @@ func TestService_UpsertRule(t *testing.T) {
 				templateToUpdate: &sampleTemplate,
 				namespaceURN:     "gotocompany",
 			},
-			err: errors.New("cannot get rule group from cortex when upserting rules"),
+			err: errors.New("cannot get rule group from cortexv1 when upserting rules"),
 		},
 		{
 			name: "should return error if merge rule nodes return empty and delete rule group return error",
@@ -168,7 +168,7 @@ func TestService_UpsertRule(t *testing.T) {
 				templateToUpdate: &sampleTemplate,
 				namespaceURN:     "gotocompany",
 			},
-			err: errors.New("error calling cortex: some error"),
+			err: errors.New("error calling cortexv1: some error"),
 		},
 		{
 			name: "should return nil if create rule group return error",
@@ -181,7 +181,7 @@ func TestService_UpsertRule(t *testing.T) {
 				templateToUpdate: &sampleTemplate,
 				namespaceURN:     "gotocompany",
 			},
-			err: errors.New("error calling cortex: some error"),
+			err: errors.New("error calling cortexv1: some error"),
 		},
 		{
 			name: "should return nil if create rule group return no error",
@@ -199,9 +199,9 @@ func TestService_UpsertRule(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockCortexClient := new(mocks.CortexCaller)
-			tc.setup(mockCortexClient)
-			s := cortex.NewPluginService(log.NewNoop(), cortex.AppConfig{}, cortex.WithCortexClient(mockCortexClient))
+			mockcortexv1Client := new(mocks.CortexCaller)
+			tc.setup(mockcortexv1Client)
+			s := cortexv1plugin.NewPluginService(hclog.NewNullLogger(), cortexv1plugin.WithCortexClient(mockcortexv1Client))
 			err := s.UpsertRule(context.Background(), tc.args.namespaceURN, provider.Provider{}, tc.args.rl, tc.args.templateToUpdate)
 			if err != nil && tc.err.Error() != err.Error() {
 				t.Fatalf("got error %s, expected was %s", err.Error(), tc.err)

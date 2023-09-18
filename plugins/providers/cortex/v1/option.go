@@ -1,4 +1,4 @@
-package cortex
+package cortexv1plugin
 
 import "github.com/goto/siren/pkg/httpclient"
 

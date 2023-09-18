@@ -29,5 +29,6 @@ tmp
 dist/
 siren
 !siren/
+plugin/
 
 third_party/

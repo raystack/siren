@@ -23,27 +23,7 @@ func (s *GRPCServer) ListRules(ctx context.Context, req *sirenv1beta1.ListRulesR
 	rulesProto := []*sirenv1beta1.Rule{}
 
 	for _, rl := range rules {
-		variables := make([]*sirenv1beta1.Variables, 0)
-		for _, variable := range rl.Variables {
-			variables = append(variables, &sirenv1beta1.Variables{
-				Name:        variable.Name,
-				Value:       variable.Value,
-				Type:        variable.Type,
-				Description: variable.Description,
-			})
-		}
-		rulesProto = append(rulesProto, &sirenv1beta1.Rule{
-			Id:                rl.ID,
-			Name:              rl.Name,
-			Enabled:           rl.Enabled,
-			GroupName:         rl.GroupName,
-			Namespace:         rl.Namespace,
-			Template:          rl.Template,
-			Variables:         variables,
-			ProviderNamespace: rl.ProviderNamespace,
-			CreatedAt:         timestamppb.New(rl.CreatedAt),
-			UpdatedAt:         timestamppb.New(rl.UpdatedAt),
-		})
+		rulesProto = append(rulesProto, rl.ToV1beta1Proto())
 	}
 
 	return &sirenv1beta1.ListRulesResponse{

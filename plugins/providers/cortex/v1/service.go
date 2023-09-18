@@ -1,13 +1,13 @@
-package cortex
+package cortexv1plugin
 
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	texttemplate "text/template"
 	"time"
 
-	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/alert"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
@@ -17,6 +17,9 @@ import (
 	"github.com/goto/siren/plugins/receivers/base"
 	"github.com/grafana/cortex-tools/pkg/client"
 	"github.com/grafana/cortex-tools/pkg/rules/rwrulefmt"
+	"github.com/hashicorp/go-hclog"
+	"github.com/imdario/mergo"
+	"github.com/mcuadros/go-defaults"
 	"github.com/mitchellh/mapstructure"
 	promconfig "github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
@@ -36,8 +39,8 @@ type CortexCaller interface {
 type PluginService struct {
 	base.UnimplementedService
 
-	logger         log.Logger
-	appConfig      AppConfig
+	logger         hclog.Logger
+	cfg            Config
 	helperTemplate string
 	configYaml     string
 	cortexClient   CortexCaller
@@ -45,13 +48,11 @@ type PluginService struct {
 }
 
 // NewPluginService returns cortex service provider plugin struct
-func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOption) *PluginService {
+func NewPluginService(logger hclog.Logger, opts ...ServiceOption) *PluginService {
 	s := &PluginService{
 		logger:         logger,
-		appConfig:      appConfig,
 		helperTemplate: HelperTemplateString,
 		configYaml:     ConfigYamlString,
-		httpClient:     httpclient.New(appConfig.HTTPClient),
 	}
 
 	for _, opt := range opts {
@@ -59,6 +60,32 @@ func NewPluginService(logger log.Logger, appConfig AppConfig, opts ...ServiceOpt
 	}
 
 	return s
+}
+
+func (s *PluginService) SetConfig(ctx context.Context, configRaw string) error {
+	var defaultConfig = new(Config)
+	defaults.SetDefaults(defaultConfig)
+
+	var cfg Config
+	var configJSON = json.RawMessage(configRaw)
+
+	if err := json.Unmarshal(configJSON, &cfg); err != nil {
+		return errors.ErrInvalid.WithMsgf("invalid config json").WithCausef(err.Error())
+	}
+
+	if err := mergo.Merge(&cfg, defaultConfig); err != nil {
+		return errors.ErrInvalid.WithMsgf("failed to merge default config with the input config").WithCausef(err.Error())
+	}
+
+	if cfg.WebhookBaseAPI == "" {
+		return errors.New("Cortex webhook base api string in config cannot be empty")
+	}
+
+	s.cfg = cfg
+	s.httpClient = httpclient.New(cfg.HTTPClient)
+
+	s.logger.Debug("running cortex plugin with this config", "config", cfg)
+	return nil
 }
 
 // TransformToAlerts is a function to transform alert body in hook API to []*alert.Alert
@@ -128,16 +155,12 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 
 // SyncRuntimeConfig synchronizes runtime configuration of provider
 func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
-	if s.appConfig.WebhookBaseAPI == "" {
-		return errors.New("Cortex webhook base api string in config cannot be empty")
-	}
-
-	webhookURL := fmt.Sprintf("%s/%d/%d", s.appConfig.WebhookBaseAPI, prov.ID, namespaceID)
+	webhookURL := fmt.Sprintf("%s/%d/%d", s.cfg.WebhookBaseAPI, prov.ID, namespaceID)
 
 	tmplConfig := TemplateConfig{
-		GroupWaitDuration:      s.appConfig.GroupWaitDuration,
-		GroupIntervalDuration:  s.appConfig.GroupIntervalDuration,
-		RepeatIntervalDuration: s.appConfig.RepeatIntervalDuration,
+		GroupWaitDuration:      s.cfg.GroupWaitDuration,
+		GroupIntervalDuration:  s.cfg.GroupIntervalDuration,
+		RepeatIntervalDuration: s.cfg.RepeatIntervalDuration,
 		WebhookURL:             webhookURL,
 	}
 
