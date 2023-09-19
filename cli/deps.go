@@ -93,6 +93,10 @@ func InitDeps(
 	var alertTransformers = make(map[string]alert.AlertTransformer, 0)
 	var ruleUploaders = make(map[string]rule.RuleUploader, 0)
 
+	if len(providerPlugins) == 0 {
+		logger.Warn("no provider plugins found!")
+	}
+
 	for k, pc := range providerPlugins {
 		alertTransformers[k] = pc.(alert.AlertTransformer)
 		configSyncers[k] = pc.(namespace.ConfigSyncer)

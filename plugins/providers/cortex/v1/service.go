@@ -84,7 +84,7 @@ func (s *PluginService) SetConfig(ctx context.Context, configRaw string) error {
 	s.cfg = cfg
 	s.httpClient = httpclient.New(cfg.HTTPClient)
 
-	s.logger.Debug("running cortex plugin with this config", "config", cfg)
+	s.logger.Debug(fmt.Sprintf("running cortex plugin with this config: %+v", cfg))
 	return nil
 }
 

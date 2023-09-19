@@ -13,20 +13,24 @@ import (
 )
 
 type PluginManager struct {
+	logger        log.Logger
 	cfg           plugins.Config
 	pluginClients map[string]*plugin.Client
 }
 
 func NewPluginManager(logger log.Logger, cfg plugins.Config) *PluginManager {
 	return &PluginManager{
-		cfg: cfg,
+		cfg:    cfg,
+		logger: logger,
 	}
 }
 
 func (pl *PluginManager) InitClients() map[string]*plugin.Client {
 	var pluginClients = make(map[string]*plugin.Client, 0)
+	pl.logger.Info(fmt.Sprintf("initiating plugins with path %s", pl.cfg.PluginPath))
 	for k, v := range pl.cfg.Plugins {
 		// We're a host. Start by launching the plugin process.
+		pl.logger.Info(fmt.Sprintf("initiating plugin %s", k))
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: plugin.HandshakeConfig{
 				ProtocolVersion:  v.Handshake.ProtocolVersion,
@@ -45,6 +49,10 @@ func (pl *PluginManager) InitClients() map[string]*plugin.Client {
 	}
 
 	pl.pluginClients = pluginClients
+
+	if len(pl.pluginClients) == 0 {
+		pl.logger.Info("no plugins found")
+	}
 
 	return pl.pluginClients
 }
