@@ -1,6 +1,6 @@
 module github.com/goto/siren/plugins/providers/cortex
 
-go 1.18
+go 1.21
 
 require (
 	github.com/MakeNowJust/heredoc v1.0.0

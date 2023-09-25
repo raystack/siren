@@ -29,21 +29,21 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 		{
 			name: "should return error if subscription service match by labels return error",
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if no matching subscriptions",
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return(nil, nil)
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if match subscription exist but list silences return error",
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID: 123,
 						Receivers: []subscription.Receiver{
@@ -53,14 +53,14 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
 		{
 			name: "should return error if match subscription exist but list silences by label return error",
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID: 123,
 						Receivers: []subscription.Receiver{
@@ -70,7 +70,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -80,7 +80,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID: 123,
 						Match: map[string]string{
@@ -93,7 +93,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
@@ -116,7 +116,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID:        123,
 						Namespace: 1,
@@ -130,13 +130,13 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
 					},
 				}).Return(nil, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID:    1,
 					SubscriptionID: 123,
 				}).Return([]silence.Silence{
@@ -154,7 +154,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID:        123,
 						Namespace: 1,
@@ -168,13 +168,13 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
 					},
 				}).Return(nil, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID:    1,
 					SubscriptionID: 123,
 				}).Return([]silence.Silence{
@@ -195,7 +195,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID:        123,
 						Namespace: 1,
@@ -209,13 +209,13 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
 					},
 				}).Return(nil, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID:    1,
 					SubscriptionID: 123,
 				}).Return(nil, nil)
@@ -228,7 +228,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID:        123,
 						Namespace: 1,
@@ -243,17 +243,17 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
 					},
 				}).Return(nil, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID:    1,
 					SubscriptionID: 123,
 				}).Return(nil, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -263,7 +263,7 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				NamespaceID: 1,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
-				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
+				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
 					{
 						ID:        123,
 						Namespace: 1,
@@ -278,17 +278,17 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 						},
 					},
 				}, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID: 1,
 					SubscriptionMatch: map[string]string{
 						"k1": "v1",
 					},
 				}).Return(nil, nil)
-				ss2.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), silence.Filter{
+				ss2.EXPECT().List(mock.AnythingOfType("context.todoCtx"), silence.Filter{
 					NamespaceID:    1,
 					SubscriptionID: 123,
 				}).Return(nil, nil)
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 			},
 			want: []notification.Message{
 				{

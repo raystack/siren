@@ -26,7 +26,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 	}
 
 	t.Run("should return stored rules", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := context.TODO()
 		mockedRuleService := &mocks.RuleService{}
 		dummyResult := []rule.Rule{
 			{
@@ -70,7 +70,7 @@ func TestGRPCServer_ListRules(t *testing.T) {
 	})
 
 	t.Run("should return error Internal if getting rules failed", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := context.TODO()
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
@@ -122,7 +122,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	}
 
 	t.Run("should update rule", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := context.TODO()
 		mockedRuleService := &mocks.RuleService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
 		dummyResult := &rule.Rule{}
@@ -142,7 +142,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	})
 
 	t.Run("should return error AlreadyExist if update rules return err conflict", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := context.TODO()
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})
@@ -154,7 +154,7 @@ func TestGRPCServer_UpdateRules(t *testing.T) {
 	})
 
 	t.Run("should return error Internal if getting rules failed", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := context.TODO()
 		mockedRuleService := &mocks.RuleService{}
 
 		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{RuleService: mockedRuleService})

@@ -55,7 +55,7 @@ func TestService_Notify_HTTPCall(t *testing.T) {
 		}))
 
 		c := httpreceiver.NewPluginService(log.NewNoop(), httpreceiver.AppConfig{})
-		err := c.Notify(context.Background(), testServer.URL, nil)
+		err := c.Notify(context.TODO(), testServer.URL, nil)
 
 		assert.EqualError(t, err, "Too Many Requests")
 

@@ -13,21 +13,23 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+var supportedTypes = []string{"cortex"}
+
 func TestList(t *testing.T) {
 	ctx := context.TODO()
 	credentials := make(pgc.StringAnyMap)
-	credentials["foo"] = "bar"
+	credentials["foo"] = "cortex"
 	labels := make(pgc.StringStringMap)
-	labels["foo"] = "bar"
+	labels["foo"] = "cortex"
 
 	t.Run("should call repository List method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
 		dummyProviders := []provider.Provider{
 			{
 				ID:          10,
 				Host:        "foo",
-				Type:        "bar",
+				Type:        "cortex",
 				Name:        "foo",
 				Credentials: credentials,
 				Labels:      labels,
@@ -35,7 +37,7 @@ func TestList(t *testing.T) {
 				UpdatedAt:   time.Now(),
 			},
 		}
-		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), provider.Filter{}).Return(dummyProviders, nil).Once()
+		repositoryMock.EXPECT().List(mock.AnythingOfType("context.todoCtx"), provider.Filter{}).Return(dummyProviders, nil).Once()
 		result, err := dummyService.List(ctx, provider.Filter{})
 		assert.Nil(t, err)
 		assert.Equal(t, len(dummyProviders), len(result))
@@ -45,8 +47,8 @@ func TestList(t *testing.T) {
 
 	t.Run("should call repository List method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), provider.Filter{}).Return(nil, errors.New("random error")).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().List(mock.AnythingOfType("context.todoCtx"), provider.Filter{}).Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.List(ctx, provider.Filter{})
 		assert.Nil(t, result)
 		assert.EqualError(t, err, "random error")
@@ -57,15 +59,15 @@ func TestList(t *testing.T) {
 func TestCreate(t *testing.T) {
 	ctx := context.TODO()
 	credentials := make(pgc.StringAnyMap)
-	credentials["foo"] = "bar"
+	credentials["foo"] = "cortex"
 	labels := make(pgc.StringStringMap)
-	labels["foo"] = "bar"
+	labels["foo"] = "cortex"
 	timenow := time.Now()
 	dummyProviderID := uint64(10)
 	dummyProvider := &provider.Provider{
 		ID:          dummyProviderID,
 		Host:        "foo",
-		Type:        "bar",
+		Type:        "cortex",
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -75,8 +77,8 @@ func TestCreate(t *testing.T) {
 
 	t.Run("should call repository Create method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(nil).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(nil).Once()
 		err := dummyService.Create(ctx, dummyProvider)
 		assert.Nil(t, err)
 		repositoryMock.AssertExpectations(t)
@@ -84,8 +86,8 @@ func TestCreate(t *testing.T) {
 
 	t.Run("should call repository Create method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(errors.New("random error")).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(errors.New("random error")).Once()
 		err := dummyService.Create(ctx, dummyProvider)
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
@@ -93,8 +95,8 @@ func TestCreate(t *testing.T) {
 
 	t.Run("should call repository Create method and return conflict error if duplicated", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
 		err := dummyService.Create(ctx, dummyProvider)
 		assert.EqualError(t, err, "urn already exist")
 		repositoryMock.AssertExpectations(t)
@@ -105,14 +107,14 @@ func TestGetProvider(t *testing.T) {
 	ctx := context.TODO()
 	dummyProviderID := uint64(10)
 	credentials := make(pgc.StringAnyMap)
-	credentials["foo"] = "bar"
+	credentials["foo"] = "cortex"
 	labels := make(pgc.StringStringMap)
-	labels["foo"] = "bar"
+	labels["foo"] = "cortex"
 	timenow := time.Now()
 	dummyProvider := &provider.Provider{
 		ID:          dummyProviderID,
 		Host:        "foo",
-		Type:        "bar",
+		Type:        "cortex",
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -122,8 +124,8 @@ func TestGetProvider(t *testing.T) {
 
 	t.Run("should call repository Get method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyProviderID).Return(dummyProvider, nil).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), dummyProviderID).Return(dummyProvider, nil).Once()
 		result, err := dummyService.Get(ctx, dummyProviderID)
 		assert.Nil(t, err)
 		assert.Equal(t, dummyProvider, result)
@@ -132,8 +134,8 @@ func TestGetProvider(t *testing.T) {
 
 	t.Run("should call repository Get method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyProviderID).Return(nil, errors.New("random error")).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), dummyProviderID).Return(nil, errors.New("random error")).Once()
 		result, err := dummyService.Get(ctx, dummyProviderID)
 		assert.Empty(t, result)
 		assert.EqualError(t, err, "random error")
@@ -142,8 +144,8 @@ func TestGetProvider(t *testing.T) {
 
 	t.Run("should call repository Get method and return error if repository return not found error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), dummyProviderID).Return(nil, provider.NotFoundError{}).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), dummyProviderID).Return(nil, provider.NotFoundError{}).Once()
 		result, err := dummyService.Get(ctx, dummyProviderID)
 		assert.Empty(t, result)
 		assert.EqualError(t, err, "provider not found")
@@ -156,13 +158,13 @@ func TestUpdateProvider(t *testing.T) {
 	dummyProviderID := uint64(10)
 	timenow := time.Now()
 	credentials := make(pgc.StringAnyMap)
-	credentials["foo"] = "bar"
+	credentials["foo"] = "cortex"
 	labels := make(pgc.StringStringMap)
-	labels["foo"] = "bar"
+	labels["foo"] = "cortex"
 	dummyProvider := &provider.Provider{
 		ID:          dummyProviderID,
 		Host:        "foo",
-		Type:        "bar",
+		Type:        "cortex",
 		Name:        "foo",
 		Credentials: credentials,
 		Labels:      labels,
@@ -172,8 +174,8 @@ func TestUpdateProvider(t *testing.T) {
 
 	t.Run("should call repository Update method and return result in domain's type", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(nil).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(nil).Once()
 		err := dummyService.Update(ctx, dummyProvider)
 		assert.Nil(t, err)
 		repositoryMock.AssertExpectations(t)
@@ -181,8 +183,8 @@ func TestUpdateProvider(t *testing.T) {
 
 	t.Run("should call repository Update method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(errors.New("random error")).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(errors.New("random error")).Once()
 		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)
@@ -190,8 +192,8 @@ func TestUpdateProvider(t *testing.T) {
 
 	t.Run("should call repository Update method and return error not found if repository return not found error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.NotFoundError{}).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(provider.NotFoundError{}).Once()
 		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "provider not found")
 		repositoryMock.AssertExpectations(t)
@@ -199,8 +201,8 @@ func TestUpdateProvider(t *testing.T) {
 
 	t.Run("should call repository Update method and return conflict error if repository return duplicate error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Update(mock.AnythingOfType("*context.emptyCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), dummyProvider).Return(provider.ErrDuplicate).Once()
 		err := dummyService.Update(ctx, dummyProvider)
 		assert.EqualError(t, err, "urn already exist")
 		repositoryMock.AssertExpectations(t)
@@ -213,8 +215,8 @@ func TestDeleteProvider(t *testing.T) {
 
 	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), providerID).Return(nil).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), providerID).Return(nil).Once()
 		err := dummyService.Delete(ctx, providerID)
 		assert.Nil(t, err)
 		repositoryMock.AssertExpectations(t)
@@ -222,8 +224,8 @@ func TestDeleteProvider(t *testing.T) {
 
 	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
 		repositoryMock := &mocks.ProviderRepository{}
-		dummyService := provider.NewService(repositoryMock)
-		repositoryMock.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), providerID).Return(errors.New("random error")).Once()
+		dummyService := provider.NewService(repositoryMock, supportedTypes)
+		repositoryMock.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), providerID).Return(errors.New("random error")).Once()
 		err := dummyService.Delete(ctx, providerID)
 		assert.EqualError(t, err, "random error")
 		repositoryMock.AssertExpectations(t)

@@ -44,7 +44,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error and not retryable if notify return error",
 			setup: func(sc *mocks.SlackCaller) {
-				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(errors.New("some error"))
+				sc.EXPECT().Notify(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(errors.New("some error"))
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]any{
@@ -60,7 +60,7 @@ func TestService_Send(t *testing.T) {
 		{
 			name: "should return error and retryable if notify return retryable error",
 			setup: func(sc *mocks.SlackCaller) {
-				sc.EXPECT().Notify(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(retry.RetryableError{Err: errors.New("some error")})
+				sc.EXPECT().Notify(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("slack.NotificationConfig"), mock.AnythingOfType("slack.Message")).Return(retry.RetryableError{Err: errors.New("some error")})
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]any{
@@ -84,7 +84,7 @@ func TestService_Send(t *testing.T) {
 
 			s := slackchannel.NewPluginService(slack.AppConfig{}, nil, slack.WithSlackClient(mockSlackClient))
 
-			got, err := s.Send(context.Background(), tt.notificationMessage)
+			got, err := s.Send(context.TODO(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Service.Publish() error = %v, wantErr %v", err, tt.wantErr)
 				return

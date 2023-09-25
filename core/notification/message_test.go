@@ -31,7 +31,7 @@ func TestMessage_InitMessage(t *testing.T) {
 		{
 			name: "all notification labels and data should be merged to message detail and data takes precedence if key conflict",
 			setup: func(n *mocks.Notifier) {
-				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, nil)
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, nil)
 			},
 			n: notification.Notification{
 				Type: notification.TypeSubscriber,

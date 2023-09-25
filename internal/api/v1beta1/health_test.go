@@ -26,7 +26,7 @@ func TestHealthCheck(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := context.TODO()
 
 			healthHandler := &GRPCServer{}
 

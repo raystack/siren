@@ -35,7 +35,7 @@ func TestService_CheckAndInsertIdempotency(t *testing.T) {
 		{
 			name: "should return error if idempotency exist and success",
 			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(nil, errors.ErrConflict)
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(nil, errors.ErrConflict)
 			},
 			scope:   scope,
 			key:     key,
@@ -44,7 +44,7 @@ func TestService_CheckAndInsertIdempotency(t *testing.T) {
 		{
 			name: "should return error if repository returning some error",
 			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(nil, errors.New("some error"))
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(nil, errors.New("some error"))
 			},
 			scope:   scope,
 			key:     key,
@@ -53,7 +53,7 @@ func TestService_CheckAndInsertIdempotency(t *testing.T) {
 		{
 			name: "should return id and nil error if no idempotency exists",
 			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("*context.emptyCtx"), scope, key).Return(&notification.Idempotency{
+				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(&notification.Idempotency{
 					ID: 1,
 				}, nil)
 			},
@@ -72,7 +72,7 @@ func TestService_CheckAndInsertIdempotency(t *testing.T) {
 
 			ns := notification.NewService(saltlog.NewNoop(), notification.Config{}, nil, nil, nil, notification.Deps{IdempotencyRepository: mockIdempotencyRepository})
 
-			_, err := ns.CheckAndInsertIdempotency(context.Background(), tc.scope, tc.key)
+			_, err := ns.CheckAndInsertIdempotency(context.TODO(), tc.scope, tc.key)
 
 			if (err != nil) != tc.wantErr {
 				t.Errorf("NotificationService.CheckAndInsertIdempotency() error = %v, wantErr %v", err, tc.wantErr)
@@ -104,7 +104,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, _ *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, errors.New("some error"))
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -117,7 +117,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, errors.New("some error"))
 			},
 			wantErr: true,
@@ -131,7 +131,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, nil)
 			},
 			wantErr: true,
@@ -145,7 +145,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(errors.New("some error"))
 			},
@@ -160,7 +160,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
 				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(errors.New("some error"))
@@ -176,7 +176,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, q *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
 				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)
@@ -193,7 +193,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, q *mocks.Queuer, d *mocks.Dispatcher) {
-				r.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("notification.Notification")).Return(n, nil)
+				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(n, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
 				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)

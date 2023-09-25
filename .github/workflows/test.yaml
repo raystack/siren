@@ -1,6 +1,5 @@
-
 name: Test
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
@@ -20,10 +19,10 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-      - name: Set up Go 1.18
+      - name: Set up Go 1.21
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.21
         id: go
       - name: Install dependencies
         run: sudo apt-get install build-essential

@@ -41,7 +41,7 @@ Explore the following resources to get started with Siren:
 Siren requires the following dependencies:
 
 - Docker
-- Golang (version 1.18 or above)
+- Golang (version 1.21 or above)
 - Git
 
 Run the application dependencies using Docker:

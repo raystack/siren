@@ -95,7 +95,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 			dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{
 				IdempotencyKey: idempotencyHeaderKey,
 			}, &api.Deps{NotificationService: mockNotificationService})
-			ctx := metadata.NewIncomingContext(context.Background(), metadata.New(map[string]string{
+			ctx := metadata.NewIncomingContext(context.TODO(), metadata.New(map[string]string{
 				idempotencyHeaderKey: tc.idempotencyKey,
 			}))
 			_, err := dummyGRPCServer.NotifyReceiver(ctx, &sirenv1beta1.NotifyReceiverRequest{})

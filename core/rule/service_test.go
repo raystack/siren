@@ -39,7 +39,7 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -58,8 +58,8 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
@@ -78,15 +78,15 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
-							Type: provider.TypeCortex,
+							Type: "cortex",
 						},
 					}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(errors.New("some error"))
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
 				},
 				ErrString: "some error",
@@ -106,11 +106,11 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(errors.New("some error"))
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, errors.New("some error")).Return(nil)
 				},
 				ErrString: "some error",
@@ -129,15 +129,15 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
-							Type: provider.TypeCortex,
+							Type: "cortex",
 						},
 					}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
 					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(nil)
 					rr.EXPECT().Commit(ctx).Return(nil)
 				},
@@ -157,7 +157,7 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
 								Name:        "var1",
@@ -167,14 +167,14 @@ func TestService_Upsert(t *testing.T) {
 							},
 						},
 					}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
-							Type: provider.TypeCortex,
+							Type: "cortex",
 						},
 					}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
 					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, mock.Anything).Return(nil)
 				},
@@ -195,7 +195,7 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
 								Name:        "var1",
@@ -205,14 +205,14 @@ func TestService_Upsert(t *testing.T) {
 							},
 						},
 					}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
-							Type: provider.TypeCortex,
+							Type: "cortex",
 						},
 					}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
 					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(errors.New("some error"))
 					rr.EXPECT().Rollback(ctx, mock.Anything).Return(errors.New("rollback error"))
 				},
@@ -233,7 +233,7 @@ func TestService_Upsert(t *testing.T) {
 					},
 				},
 				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
-					ts.EXPECT().GetByName(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("string")).Return(&template.Template{
+					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
 								Name:        "var1",
@@ -243,14 +243,14 @@ func TestService_Upsert(t *testing.T) {
 							},
 						},
 					}, nil)
-					ns.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
+					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
-							Type: provider.TypeCortex,
+							Type: "cortex",
 						},
 					}, nil)
 
 					rr.EXPECT().WithTransaction(ctx).Return(ctx)
-					rr.EXPECT().Upsert(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
+					rr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*rule.Rule")).Return(nil)
 					ru.EXPECT().UpsertRule(mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("provider.Provider"), mock.AnythingOfType("*rule.Rule"), mock.AnythingOfType("*template.Template")).Return(nil)
 					rr.EXPECT().Commit(ctx).Return(errors.New("some commit error"))
 				},
@@ -272,7 +272,7 @@ func TestService_Upsert(t *testing.T) {
 				templateServiceMock,
 				namespaceServiceMock,
 				map[string]rule.RuleUploader{
-					provider.TypeCortex: ruleUploaderMock,
+					"cortex": ruleUploaderMock,
 				},
 			)
 

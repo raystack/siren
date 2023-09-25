@@ -8,13 +8,15 @@ import (
 
 // Service handles business logic
 type Service struct {
-	repository Repository
+	supportedTypes []string
+	repository     Repository
 }
 
 // NewService returns repository struct
-func NewService(repository Repository) *Service {
+func NewService(repository Repository, supportedProviders []string) *Service {
 	return &Service{
-		repository: repository,
+		repository:     repository,
+		supportedTypes: supportedProviders,
 	}
 }
 
@@ -25,6 +27,10 @@ func (s *Service) List(ctx context.Context, flt Filter) ([]Provider, error) {
 func (s *Service) Create(ctx context.Context, prov *Provider) error {
 	if prov == nil {
 		return errors.ErrInvalid.WithMsgf("provider is nil")
+	}
+
+	if !s.isTypeSupported(prov.Type) {
+		return errors.ErrInvalid.WithMsgf("type %s is not supported, supported types are: %+v", prov.Type, s.supportedTypes)
 	}
 
 	err := s.repository.Create(ctx, prov)
@@ -54,6 +60,10 @@ func (s *Service) Update(ctx context.Context, prov *Provider) error {
 		return errors.ErrInvalid.WithMsgf("provider is nil")
 	}
 
+	if !s.isTypeSupported(prov.Type) {
+		return errors.ErrInvalid.WithMsgf("type %s is not supported, supported types are: %+v", prov.Type, s.supportedTypes)
+	}
+
 	err := s.repository.Update(ctx, prov)
 	if err != nil {
 		if errors.Is(err, ErrDuplicate) {
@@ -70,4 +80,13 @@ func (s *Service) Update(ctx context.Context, prov *Provider) error {
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
+}
+
+func (s *Service) isTypeSupported(providerType string) bool {
+	for _, st := range s.supportedTypes {
+		if st == providerType {
+			return true
+		}
+	}
+	return false
 }

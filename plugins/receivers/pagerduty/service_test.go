@@ -41,7 +41,7 @@ func TestService_Send_V1(t *testing.T) {
 		{
 			name: "should return error and not retryable if notify return error",
 			setup: func(pd *mocks.PagerDutyCaller) {
-				pd.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(errors.New("some error"))
+				pd.EXPECT().NotifyV1(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(errors.New("some error"))
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]any{
@@ -57,7 +57,7 @@ func TestService_Send_V1(t *testing.T) {
 		{
 			name: "should return error and retryable if notify return retryable error",
 			setup: func(sc *mocks.PagerDutyCaller) {
-				sc.EXPECT().NotifyV1(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(retry.RetryableError{Err: errors.New("some error")})
+				sc.EXPECT().NotifyV1(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("pagerduty.MessageV1")).Return(retry.RetryableError{Err: errors.New("some error")})
 			},
 			notificationMessage: notification.Message{
 				Configs: map[string]any{
@@ -81,7 +81,7 @@ func TestService_Send_V1(t *testing.T) {
 
 			pd := pagerduty.NewPluginService(pagerduty.AppConfig{}, pagerduty.WithPagerDutyClient(mockPDClient))
 
-			got, err := pd.Send(context.Background(), tt.notificationMessage)
+			got, err := pd.Send(context.TODO(), tt.notificationMessage)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NotificationService.Send() error = %v, wantErr %v", err, tt.wantErr)
 				return

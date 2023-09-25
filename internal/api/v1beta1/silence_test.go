@@ -39,7 +39,7 @@ func TestGRPCServer_CreateSilence(t *testing.T) {
 		{
 			name: "return silence id when successfully created silence",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData).Return("123", nil)
+				ss.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mockSilenceData).Return("123", nil)
 			},
 			req: &sirenv1beta1.CreateSilenceRequest{
 				NamespaceId: mockSilenceData.NamespaceID,
@@ -57,7 +57,7 @@ func TestGRPCServer_CreateSilence(t *testing.T) {
 		{
 			name: "return error if service create return error",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Create(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData).Return("", errors.New("some error"))
+				ss.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mockSilenceData).Return("", errors.New("some error"))
 			},
 			req: &sirenv1beta1.CreateSilenceRequest{
 				NamespaceId: mockSilenceData.NamespaceID,
@@ -111,7 +111,7 @@ func TestGRPCServer_ListSilences(t *testing.T) {
 		{
 			name: "return silences when successfully list silences",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("silence.Filter")).Return([]silence.Silence{
+				ss.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("silence.Filter")).Return([]silence.Silence{
 					mockSilenceData,
 				}, nil)
 			},
@@ -131,7 +131,7 @@ func TestGRPCServer_ListSilences(t *testing.T) {
 		{
 			name: "return error if service list return error",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().List(mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
+				ss.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("silence.Filter")).Return(nil, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -179,7 +179,7 @@ func TestGRPCServer_GetSilence(t *testing.T) {
 		{
 			name: "return silence when successfully get silence",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData.ID).Return(mockSilenceData, nil)
+				ss.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mockSilenceData.ID).Return(mockSilenceData, nil)
 			},
 			req: &sirenv1beta1.GetSilenceRequest{
 				Id: mockSilenceData.ID,
@@ -198,7 +198,7 @@ func TestGRPCServer_GetSilence(t *testing.T) {
 		{
 			name: "return error if service get return error",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Get(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData.ID).Return(silence.Silence{}, errors.New("some error"))
+				ss.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mockSilenceData.ID).Return(silence.Silence{}, errors.New("some error"))
 			},
 			req: &sirenv1beta1.GetSilenceRequest{
 				Id: mockSilenceData.ID,
@@ -248,7 +248,7 @@ func TestGRPCServer_ExpireSilence(t *testing.T) {
 		{
 			name: "return success when successfully deleted silence",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData.ID).Return(nil)
+				ss.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), mockSilenceData.ID).Return(nil)
 			},
 			req: &sirenv1beta1.ExpireSilenceRequest{
 				Id: mockSilenceData.ID,
@@ -258,7 +258,7 @@ func TestGRPCServer_ExpireSilence(t *testing.T) {
 		{
 			name: "return error if service delete return error",
 			setup: func(ss *mocks.SilenceService) {
-				ss.EXPECT().Delete(mock.AnythingOfType("*context.emptyCtx"), mockSilenceData.ID).Return(errors.New("some error"))
+				ss.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), mockSilenceData.ID).Return(errors.New("some error"))
 			},
 			req: &sirenv1beta1.ExpireSilenceRequest{
 				Id: mockSilenceData.ID,
