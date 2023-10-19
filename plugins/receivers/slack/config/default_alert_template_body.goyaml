@@ -13,7 +13,7 @@
   [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.num_alerts_firing ]][[ end ]])
   [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
   [[- else ]] *([[ .Labels.severity | toUpper ]])*
-  [[- end]] [[ .Labels.alertname ]]
+  [[- end]] [[ if .Labels.alert_name ]][[.Labels.alert_name]][[ else]][[.Labels.alertname]][[end]]
 [[- end ]]
 [[- define "slack.color" -]]
 [[- if eq .Data.status "firing" -]]
