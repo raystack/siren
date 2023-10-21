@@ -96,9 +96,7 @@ $ siren namespace create --file ns1.yaml
   --data-raw '{
     "urn": "gotocompany-ns",
     "name": "gotocompany-ns",
-    "provider": {
-        "id": 1
-    }
+    "provider": 1
 }'`}
     </CodeBlock>
   </TabItem>
@@ -120,9 +118,7 @@ $ siren namespace create --file ns2.yaml
   --data-raw '{
     "urn": "non-gotocompany-ns",
     "name": "non-gotocompany-ns",
-    "provider": {
-        "id": 2
-    }
+    "provider": 2
 }'`}
     </CodeBlock>
   </TabItem>

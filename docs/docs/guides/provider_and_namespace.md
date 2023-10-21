@@ -32,8 +32,7 @@ Monitoring providers usually have tenants, a sharded way of storing and querying
   "id": "10",
   "urn": "gotocompany",
   "name": "gotocompany",
-  "provider": {
-    "id": 3
+  "provider": 3
   },
   "credentials": {},
   "created_at": "2021-10-26T06:00:52.627917Z",
