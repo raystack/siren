@@ -27,8 +27,8 @@ func (p *Provider) ToV1beta1Proto() (*sirenv1beta1.Provider, error) {
 	}, nil
 }
 
-func FromV1beta1Proto(proto *sirenv1beta1.Provider) *Provider {
-	return &Provider{
+func FromV1beta1Proto(proto *sirenv1beta1.Provider) Provider {
+	return Provider{
 		ID:          proto.GetId(),
 		Host:        proto.GetHost(),
 		URN:         proto.GetUrn(),
@@ -36,7 +36,7 @@ func FromV1beta1Proto(proto *sirenv1beta1.Provider) *Provider {
 		Type:        proto.GetType(),
 		Credentials: proto.GetCredentials().AsMap(),
 		Labels:      proto.GetLabels(),
-		CreatedAt:   proto.CreatedAt.AsTime(),
-		UpdatedAt:   proto.UpdatedAt.AsTime(),
+		CreatedAt:   proto.GetCreatedAt().AsTime(),
+		UpdatedAt:   proto.GetUpdatedAt().AsTime(),
 	}
 }

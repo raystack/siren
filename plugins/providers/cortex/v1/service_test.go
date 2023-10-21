@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/goto/siren/core/namespace"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
 	"github.com/goto/siren/core/template"
@@ -105,7 +106,7 @@ func TestService_UpsertRule(t *testing.T) {
 	type args struct {
 		rl               *rule.Rule
 		templateToUpdate *template.Template
-		namespaceURN     string
+		ns               namespace.Namespace
 	}
 	tests := []struct {
 		name  string
@@ -123,7 +124,9 @@ func TestService_UpsertRule(t *testing.T) {
 					copiedTemplate.Body = "[[x"
 					return &copiedTemplate
 				}(),
-				namespaceURN: "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: errors.New("template: parser:1: function \"x\" not defined"),
 		},
@@ -137,7 +140,9 @@ func TestService_UpsertRule(t *testing.T) {
 					copiedTemplate.Body = "name: a"
 					return &copiedTemplate
 				}(),
-				namespaceURN: "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: errors.New("cannot parse upserted rule"),
 		},
@@ -149,7 +154,9 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: errors.New("cannot get rule group from cortexv1 when upserting rules"),
 		},
@@ -166,7 +173,9 @@ func TestService_UpsertRule(t *testing.T) {
 					return &copiedRule
 				}(),
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: errors.New("error calling cortexv1: some error"),
 		},
@@ -179,7 +188,9 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: errors.New("error calling cortexv1: some error"),
 		},
@@ -192,7 +203,9 @@ func TestService_UpsertRule(t *testing.T) {
 			args: args{
 				rl:               &sampleRule,
 				templateToUpdate: &sampleTemplate,
-				namespaceURN:     "gotocompany",
+				ns: namespace.Namespace{
+					URN: "gotocompany",
+				},
 			},
 			err: nil,
 		},
@@ -202,7 +215,7 @@ func TestService_UpsertRule(t *testing.T) {
 			mockcortexv1Client := new(mocks.CortexCaller)
 			tc.setup(mockcortexv1Client)
 			s := cortexv1plugin.NewPluginService(hclog.NewNullLogger(), cortexv1plugin.WithCortexClient(mockcortexv1Client))
-			err := s.UpsertRule(context.Background(), tc.args.namespaceURN, provider.Provider{}, tc.args.rl, tc.args.templateToUpdate)
+			err := s.UpsertRule(context.Background(), tc.args.ns, provider.Provider{}, tc.args.rl, tc.args.templateToUpdate)
 			if err != nil && tc.err.Error() != err.Error() {
 				t.Fatalf("got error %s, expected was %s", err.Error(), tc.err)
 			}

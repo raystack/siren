@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/namespace"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
 	"github.com/goto/siren/core/template"
@@ -19,7 +20,7 @@ import (
 
 type ProviderV1beta1 interface {
 	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error
-	UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error
+	UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error
 	SetConfig(ctx context.Context, configRaw string) error
 	TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]any) ([]alert.Alert, int, error)
 }
@@ -40,8 +41,8 @@ func (c *GRPCClient) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, 
 		return err
 	}
 	if _, err := c.client.SyncRuntimeConfig(ctx, &sirenproviderv1beta1.SyncRuntimeConfigRequest{
-		NamespaceID:  fmt.Sprintf("%d", namespaceID),
-		NamespaceURN: namespaceURN,
+		NamespaceId:  fmt.Sprintf("%d", namespaceID),
+		NamespaceUrn: namespaceURN,
 		Provider:     protoProv,
 	}); err != nil {
 		return err
@@ -49,16 +50,20 @@ func (c *GRPCClient) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, 
 	return nil
 }
 
-func (c *GRPCClient) UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
+func (c *GRPCClient) UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
 	protoProv, err := prov.ToV1beta1Proto()
 	if err != nil {
 		return err
 	}
+	nsProto, err := ns.ToV1beta1Proto()
+	if err != nil {
+		return err
+	}
 	if _, err := c.client.UpsertRule(ctx, &sirenproviderv1beta1.UpsertRuleRequest{
-		NamespaceURN: namespaceURN,
-		Provider:     protoProv,
-		Rule:         rl.ToV1beta1Proto(),
-		Template:     templateToUpdate.ToV1beta1Proto(),
+		Namespace: nsProto,
+		Provider:  protoProv,
+		Rule:      rl.ToV1beta1Proto(),
+		Template:  templateToUpdate.ToV1beta1Proto(),
 	}); err != nil {
 		return err
 	}
@@ -80,8 +85,8 @@ func (c *GRPCClient) TransformToAlerts(ctx context.Context, providerID uint64, n
 		return nil, 0, fmt.Errorf("failed to transform body to structpb: %s", err.Error())
 	}
 	resp, err := c.client.TransformToAlerts(ctx, &sirenproviderv1beta1.TransformToAlertsRequest{
-		ProviderID:  fmt.Sprintf("%d", providerID),
-		NamespaceID: fmt.Sprintf("%d", namespaceID),
+		ProviderId:  fmt.Sprintf("%d", providerID),
+		NamespaceId: fmt.Sprintf("%d", namespaceID),
 		Body:        bodyPB,
 	})
 	if err != nil {
@@ -122,12 +127,12 @@ func (s *GRPCServer) SyncRuntimeConfig(ctx context.Context, req *sirenproviderv1
 		prov.UpdatedAt = grpcProvider.GetUpdatedAt().AsTime()
 	}
 
-	namespaceIDUint64, err := strconv.ParseUint(req.GetNamespaceID(), 10, 64)
+	namespaceIDUint64, err := strconv.ParseUint(req.GetNamespaceId(), 10, 64)
 	if err != nil {
 		return nil, errors.New("error parsing namespace ID")
 	}
 
-	return &sirenproviderv1beta1.SyncRuntimeConfigResponse{}, s.service.SyncRuntimeConfig(ctx, namespaceIDUint64, req.GetNamespaceURN(), prov)
+	return &sirenproviderv1beta1.SyncRuntimeConfigResponse{}, s.service.SyncRuntimeConfig(ctx, namespaceIDUint64, req.GetNamespaceUrn(), prov)
 }
 
 func (s *GRPCServer) UpsertRule(ctx context.Context, req *sirenproviderv1beta1.UpsertRuleRequest) (*sirenproviderv1beta1.UpsertRuleResponse, error) {
@@ -135,72 +140,30 @@ func (s *GRPCServer) UpsertRule(ctx context.Context, req *sirenproviderv1beta1.U
 	if req.GetProvider() != nil {
 		grpcProvider := req.GetProvider()
 
-		prov.ID = grpcProvider.GetId()
-		prov.URN = grpcProvider.GetUrn()
-		prov.Host = grpcProvider.GetHost()
-		prov.Name = grpcProvider.GetName()
-		prov.Type = grpcProvider.GetType()
-		prov.Credentials = grpcProvider.GetCredentials().AsMap()
-		prov.Labels = grpcProvider.GetLabels()
-		prov.CreatedAt = grpcProvider.GetCreatedAt().AsTime()
-		prov.UpdatedAt = grpcProvider.GetUpdatedAt().AsTime()
+		prov = provider.FromV1beta1Proto(grpcProvider)
+	}
+
+	ns := namespace.Namespace{}
+	if req.GetNamespace() != nil {
+		grpcNamespace := req.GetNamespace()
+
+		ns = namespace.FromV1beta1Proto(grpcNamespace)
 	}
 
 	rl := rule.Rule{}
 	if req.GetRule() != nil {
 		grpcRule := req.GetRule()
 
-		rl.ID = grpcRule.GetId()
-		rl.Name = grpcRule.GetName()
-		rl.Enabled = grpcRule.GetEnabled()
-		rl.GroupName = grpcRule.GetGroupName()
-		rl.Namespace = grpcRule.GetNamespace()
-		rl.Template = grpcRule.GetTemplate()
-
-		ruleVariables := []rule.RuleVariable{}
-		if grpcRule.GetVariables() != nil {
-			for _, rv := range grpcRule.GetVariables() {
-				ruleVariables = append(ruleVariables, rule.RuleVariable{
-					Name:        rv.Name,
-					Type:        rv.Type,
-					Value:       rv.Value,
-					Description: rv.Description,
-				})
-			}
-		}
-		rl.Variables = ruleVariables
-
-		rl.ProviderNamespace = grpcRule.GetProviderNamespace()
-		rl.CreatedAt = grpcRule.GetCreatedAt().AsTime()
-		rl.UpdatedAt = grpcRule.GetUpdatedAt().AsTime()
+		rl = rule.FromV1beta1Proto(grpcRule)
 	}
 
 	tmplt := template.Template{}
 	if req.GetTemplate() != nil {
 		grpcTemplate := req.GetTemplate()
 
-		tmplt.ID = grpcTemplate.GetId()
-		tmplt.Name = grpcTemplate.GetName()
-		tmplt.Body = grpcTemplate.GetBody()
-		tmplt.Tags = grpcTemplate.GetTags()
-
-		templateVariables := []template.Variable{}
-		if grpcTemplate.GetVariables() != nil {
-			for _, tv := range grpcTemplate.GetVariables() {
-				templateVariables = append(templateVariables, template.Variable{
-					Name:        tv.Name,
-					Type:        tv.Type,
-					Default:     tv.Default,
-					Description: tv.Description,
-				})
-			}
-		}
-		tmplt.Variables = templateVariables
-
-		tmplt.CreatedAt = grpcTemplate.GetCreatedAt().AsTime()
-		tmplt.UpdatedAt = grpcTemplate.GetUpdatedAt().AsTime()
+		tmplt = template.FromV1beta1Proto(grpcTemplate)
 	}
-	return &sirenproviderv1beta1.UpsertRuleResponse{}, s.service.UpsertRule(ctx, req.GetNamespaceURN(), prov, &rl, &tmplt)
+	return &sirenproviderv1beta1.UpsertRuleResponse{}, s.service.UpsertRule(ctx, ns, prov, &rl, &tmplt)
 }
 
 func (s *GRPCServer) SetConfig(ctx context.Context, req *sirenproviderv1beta1.SetConfigRequest) (*sirenproviderv1beta1.SetConfigResponse, error) {
@@ -208,11 +171,11 @@ func (s *GRPCServer) SetConfig(ctx context.Context, req *sirenproviderv1beta1.Se
 }
 
 func (s *GRPCServer) TransformToAlerts(ctx context.Context, req *sirenproviderv1beta1.TransformToAlertsRequest) (*sirenproviderv1beta1.TransformToAlertsResponse, error) {
-	providerIDUint64, err := strconv.ParseUint(req.GetProviderID(), 10, 64)
+	providerIDUint64, err := strconv.ParseUint(req.GetProviderId(), 10, 64)
 	if err != nil {
 		return nil, errors.New("error parsing provider ID")
 	}
-	namespaceIDUint64, err := strconv.ParseUint(req.GetNamespaceID(), 10, 64)
+	namespaceIDUint64, err := strconv.ParseUint(req.GetNamespaceId(), 10, 64)
 	if err != nil {
 		return nil, errors.New("error parsing namespace ID")
 	}

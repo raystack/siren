@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/namespace"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
 	"github.com/goto/siren/core/template"
@@ -185,7 +186,7 @@ func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint6
 
 // UpsertRule manages upsert logic to cortex ruler. Cortex client API granularity is on the rule-group.
 // This function has a logic to work with rule-level granurality and adapt it to cortex logic.
-func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
+func (s *PluginService) UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
 	inputValues := make(map[string]string)
 	for _, v := range rl.Variables {
 		inputValues[v.Name] = v.Value
@@ -196,7 +197,7 @@ func (s *PluginService) UpsertRule(ctx context.Context, namespaceURN string, pro
 		return err
 	}
 
-	cortexClient, err := s.getCortexClient(prov.Host, namespaceURN)
+	cortexClient, err := s.getCortexClient(prov.Host, ns.URN)
 	if err != nil {
 		return err
 	}

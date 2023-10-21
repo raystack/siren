@@ -3,6 +3,7 @@ package rule
 import (
 	"context"
 
+	"github.com/goto/siren/core/namespace"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/template"
 )
@@ -13,5 +14,5 @@ import (
 //
 //go:generate mockery --name=RuleUploader -r --case underscore --with-expecter --structname RuleUploader --filename rule_uploader.go --output=./mocks
 type RuleUploader interface {
-	UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *Rule, templateToUpdate *template.Template) error
+	UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *Rule, templateToUpdate *template.Template) error
 }

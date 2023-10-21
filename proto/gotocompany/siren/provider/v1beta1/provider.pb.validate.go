@@ -57,9 +57,9 @@ func (m *SyncRuntimeConfigRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for NamespaceID
+	// no validation rules for NamespaceId
 
-	// no validation rules for NamespaceURN
+	// no validation rules for NamespaceUrn
 
 	if all {
 		switch v := interface{}(m.GetProvider()).(type) {
@@ -294,7 +294,34 @@ func (m *UpsertRuleRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for NamespaceURN
+	if all {
+		switch v := interface{}(m.GetNamespace()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpsertRuleRequestValidationError{
+					field:  "Namespace",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpsertRuleRequestValidationError{
+					field:  "Namespace",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNamespace()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpsertRuleRequestValidationError{
+				field:  "Namespace",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if all {
 		switch v := interface{}(m.GetProvider()).(type) {
@@ -791,9 +818,9 @@ func (m *TransformToAlertsRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for ProviderID
+	// no validation rules for ProviderId
 
-	// no validation rules for NamespaceID
+	// no validation rules for NamespaceId
 
 	if all {
 		switch v := interface{}(m.GetBody()).(type) {

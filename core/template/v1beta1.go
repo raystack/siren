@@ -27,7 +27,7 @@ func (t *Template) ToV1beta1Proto() *sirenv1beta1.Template {
 	}
 }
 
-func FromV1beta1Proto(proto *sirenv1beta1.Template) *Template {
+func FromV1beta1Proto(proto *sirenv1beta1.Template) Template {
 	variables := make([]Variable, 0)
 	for _, variable := range proto.GetVariables() {
 		variables = append(variables, Variable{
@@ -38,7 +38,7 @@ func FromV1beta1Proto(proto *sirenv1beta1.Template) *Template {
 		})
 	}
 
-	return &Template{
+	return Template{
 		ID:        proto.GetId(),
 		Name:      proto.GetName(),
 		Body:      proto.GetBody(),

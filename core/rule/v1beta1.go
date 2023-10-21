@@ -29,7 +29,7 @@ func (r *Rule) ToV1beta1Proto() *sirenv1beta1.Rule {
 	}
 }
 
-func FromV1beta1Proto(proto *sirenv1beta1.Rule) *Rule {
+func FromV1beta1Proto(proto *sirenv1beta1.Rule) Rule {
 	variables := make([]RuleVariable, 0)
 	for _, variable := range proto.GetVariables() {
 		variables = append(variables, RuleVariable{
@@ -40,7 +40,7 @@ func FromV1beta1Proto(proto *sirenv1beta1.Rule) *Rule {
 		})
 	}
 
-	return &Rule{
+	return Rule{
 		ID:                proto.GetId(),
 		Name:              proto.GetName(),
 		Enabled:           proto.GetEnabled(),

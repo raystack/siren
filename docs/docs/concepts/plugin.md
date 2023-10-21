@@ -25,7 +25,7 @@ type ProviderPlugin interface {
 	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error
 	
 	// RuleUploader
-	UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error
+	UpsertRule(ctx context.Context, ns namespace.Namespace,  prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error
 }
 ```
 - **AlertTransformer** interface is being used by alert service to transform incoming alert body in Siren's Hook API to a list of `*alert.Alert`.

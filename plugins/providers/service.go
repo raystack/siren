@@ -5,6 +5,7 @@ import (
 	"html/template"
 
 	"github.com/goto/siren/core/alert"
+	"github.com/goto/siren/core/namespace"
 	"github.com/goto/siren/core/provider"
 	"github.com/goto/siren/core/rule"
 	"github.com/goto/siren/plugins"
@@ -17,7 +18,7 @@ func (s *UnimplementedService) SyncRuntimeConfig(ctx context.Context, namespaceI
 	return nil
 }
 
-func (s *UnimplementedService) UpsertRule(ctx context.Context, namespaceURN string, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
+func (s *UnimplementedService) UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
 	return plugins.ErrNotImplemented
 }
 
