@@ -14,6 +14,7 @@ type Repository interface {
 	Create(context.Context, *EncryptedNamespace) error
 	Get(context.Context, uint64) (*EncryptedNamespace, error)
 	Update(context.Context, *EncryptedNamespace) error
+	UpdateLabels(context.Context, uint64, map[string]string) error
 	Delete(context.Context, uint64) error
 }
 

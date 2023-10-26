@@ -69,12 +69,9 @@ func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	ctx = s.repository.WithTransaction(ctx)
-	err = s.repository.Create(ctx, encryptedNamespace)
-	if err != nil {
-		if err := s.repository.Rollback(ctx, err); err != nil {
-			return err
-		}
+	// this is without transaction to decouple creation in siren and runtime config sync in remote
+	// to cover case where the provider plugin needs to validate webhook to siren
+	if err = s.repository.Create(ctx, encryptedNamespace); err != nil {
 		if errors.Is(err, ErrDuplicate) {
 			return errors.ErrConflict.WithMsgf(err.Error())
 		}
@@ -84,14 +81,25 @@ func (s *Service) Create(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	if err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, ns.URN, *prov); err != nil {
-		if err := s.repository.Rollback(ctx, err); err != nil {
-			return err
-		}
+	encryptedNamespace.Provider = *prov
+
+	labels, err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, encryptedNamespace.URN, encryptedNamespace.Labels, encryptedNamespace.Provider)
+	if err != nil {
 		return err
 	}
 
-	if err := s.repository.Commit(ctx); err != nil {
+	if encryptedNamespace.Labels == nil {
+		encryptedNamespace.Labels = make(map[string]string)
+	}
+
+	for k, v := range labels {
+		encryptedNamespace.Labels[k] = v
+	}
+
+	if err = s.repository.UpdateLabels(ctx, encryptedNamespace.ID, encryptedNamespace.Labels); err != nil {
+		if errors.As(err, new(NotFoundError)) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
+		}
 		return err
 	}
 
@@ -134,7 +142,6 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 
 	// urn is immutable
 	ns.URN = existingNS.URN
-	ns.Provider = existingNS.Provider
 
 	encryptedNamespace, err := s.encrypt(ns)
 	if err != nil {
@@ -142,8 +149,12 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 	}
 
 	ctx = s.repository.WithTransaction(ctx)
-	err = s.repository.Update(ctx, encryptedNamespace)
-	if err != nil {
+	// merge existing labels
+	for k, v := range encryptedNS.Labels {
+		ns.Labels[k] = v
+	}
+
+	if err = s.repository.Update(ctx, encryptedNamespace); err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
 		}
@@ -159,9 +170,30 @@ func (s *Service) Update(ctx context.Context, ns *Namespace) error {
 		return err
 	}
 
-	if err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, ns.URN, ns.Provider); err != nil {
+	encryptedNamespace.Provider = existingNS.Provider
+
+	labels, err := pluginService.SyncRuntimeConfig(ctx, encryptedNamespace.ID, encryptedNamespace.URN, encryptedNamespace.Labels, encryptedNamespace.Provider)
+	if err != nil {
 		if err := s.repository.Rollback(ctx, err); err != nil {
 			return err
+		}
+		return err
+	}
+
+	if encryptedNamespace.Labels == nil {
+		encryptedNamespace.Labels = make(map[string]string)
+	}
+
+	for k, v := range labels {
+		encryptedNamespace.Labels[k] = v
+	}
+
+	if err = s.repository.UpdateLabels(ctx, encryptedNamespace.ID, encryptedNamespace.Labels); err != nil {
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return err
+		}
+		if errors.As(err, new(NotFoundError)) {
+			return errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		return err
 	}

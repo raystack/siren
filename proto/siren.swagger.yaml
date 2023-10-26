@@ -1390,6 +1390,11 @@ definitions:
         type: string
   SyncRuntimeConfigResponse:
     type: object
+    properties:
+      labels:
+        type: object
+        additionalProperties:
+          type: string
   Template:
     type: object
     properties:

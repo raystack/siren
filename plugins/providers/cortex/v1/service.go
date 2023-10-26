@@ -155,7 +155,7 @@ func (s *PluginService) TransformToAlerts(ctx context.Context, providerID uint64
 }
 
 // SyncRuntimeConfig synchronizes runtime configuration of provider
-func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
+func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, namespaceLabels map[string]string, prov provider.Provider) (map[string]string, error) {
 	webhookURL := fmt.Sprintf("%s/%d/%d", s.cfg.WebhookBaseAPI, prov.ID, namespaceID)
 
 	tmplConfig := TemplateConfig{
@@ -167,7 +167,7 @@ func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint6
 
 	cfg, err := s.generateAlertmanagerConfig(tmplConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	templates := map[string]string{
 		"helper.tmpl": s.helperTemplate,
@@ -175,13 +175,13 @@ func (s *PluginService) SyncRuntimeConfig(ctx context.Context, namespaceID uint6
 
 	cortexClient, err := s.getCortexClient(prov.Host, namespaceURN)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = cortexClient.CreateAlertmanagerConfig(ctx, cfg, templates); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return make(map[string]string), nil
 }
 
 // UpsertRule manages upsert logic to cortex ruler. Cortex client API granularity is on the rule-group.

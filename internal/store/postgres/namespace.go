@@ -25,6 +25,12 @@ WHERE id = $1
 RETURNING *
 `
 
+const namespaceUpdateLabelQuery = `
+UPDATE namespaces SET labels=$2, updated_at=now()
+WHERE id = $1
+RETURNING *
+`
+
 var namespaceListQueryBuilder = sq.Select(`
 	n.id as id,
 	n.urn as urn,
@@ -168,12 +174,27 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 	return nil
 }
 
+func (r NamespaceRepository) UpdateLabels(ctx context.Context, id uint64, labels map[string]string) error {
+	if len(labels) == 0 {
+		return nil
+	}
+	pgLabels := pgc.StringStringMap(labels)
+	var updatedNamespace model.Namespace
+	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, namespaceUpdateLabelQuery, id, pgLabels).
+		StructScan(&updatedNamespace); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return namespace.NotFoundError{ID: id}
+		}
+	}
+	return nil
+}
+
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
 	rows, err := r.client.QueryxContext(ctx, pgc.OpDelete, r.tableName, namespaceDeleteQuery, id)
 	if err != nil {
 		return err
 	}
-	rows.Close()
+	defer rows.Close()
 	return nil
 }
 

@@ -23,18 +23,30 @@ func (_m *ConfigSyncer) EXPECT() *ConfigSyncer_Expecter {
 	return &ConfigSyncer_Expecter{mock: &_m.Mock}
 }
 
-// SyncRuntimeConfig provides a mock function with given fields: ctx, namespaceID, namespaceURN, prov
-func (_m *ConfigSyncer) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
-	ret := _m.Called(ctx, namespaceID, namespaceURN, prov)
+// SyncRuntimeConfig provides a mock function with given fields: ctx, namespaceID, namespaceURN, namespaceLabels, prov
+func (_m *ConfigSyncer) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, namespaceLabels map[string]string, prov provider.Provider) (map[string]string, error) {
+	ret := _m.Called(ctx, namespaceID, namespaceURN, namespaceLabels, prov)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, string, provider.Provider) error); ok {
-		r0 = rf(ctx, namespaceID, namespaceURN, prov)
+	var r0 map[string]string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, string, map[string]string, provider.Provider) (map[string]string, error)); ok {
+		return rf(ctx, namespaceID, namespaceURN, namespaceLabels, prov)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, string, map[string]string, provider.Provider) map[string]string); ok {
+		r0 = rf(ctx, namespaceID, namespaceURN, namespaceLabels, prov)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]string)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, string, map[string]string, provider.Provider) error); ok {
+		r1 = rf(ctx, namespaceID, namespaceURN, namespaceLabels, prov)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // ConfigSyncer_SyncRuntimeConfig_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SyncRuntimeConfig'
@@ -46,24 +58,25 @@ type ConfigSyncer_SyncRuntimeConfig_Call struct {
 //   - ctx context.Context
 //   - namespaceID uint64
 //   - namespaceURN string
+//   - namespaceLabels map[string]string
 //   - prov provider.Provider
-func (_e *ConfigSyncer_Expecter) SyncRuntimeConfig(ctx interface{}, namespaceID interface{}, namespaceURN interface{}, prov interface{}) *ConfigSyncer_SyncRuntimeConfig_Call {
-	return &ConfigSyncer_SyncRuntimeConfig_Call{Call: _e.mock.On("SyncRuntimeConfig", ctx, namespaceID, namespaceURN, prov)}
+func (_e *ConfigSyncer_Expecter) SyncRuntimeConfig(ctx interface{}, namespaceID interface{}, namespaceURN interface{}, namespaceLabels interface{}, prov interface{}) *ConfigSyncer_SyncRuntimeConfig_Call {
+	return &ConfigSyncer_SyncRuntimeConfig_Call{Call: _e.mock.On("SyncRuntimeConfig", ctx, namespaceID, namespaceURN, namespaceLabels, prov)}
 }
 
-func (_c *ConfigSyncer_SyncRuntimeConfig_Call) Run(run func(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider)) *ConfigSyncer_SyncRuntimeConfig_Call {
+func (_c *ConfigSyncer_SyncRuntimeConfig_Call) Run(run func(ctx context.Context, namespaceID uint64, namespaceURN string, namespaceLabels map[string]string, prov provider.Provider)) *ConfigSyncer_SyncRuntimeConfig_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(string), args[3].(provider.Provider))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(string), args[3].(map[string]string), args[4].(provider.Provider))
 	})
 	return _c
 }
 
-func (_c *ConfigSyncer_SyncRuntimeConfig_Call) Return(_a0 error) *ConfigSyncer_SyncRuntimeConfig_Call {
-	_c.Call.Return(_a0)
+func (_c *ConfigSyncer_SyncRuntimeConfig_Call) Return(_a0 map[string]string, _a1 error) *ConfigSyncer_SyncRuntimeConfig_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *ConfigSyncer_SyncRuntimeConfig_Call) RunAndReturn(run func(context.Context, uint64, string, provider.Provider) error) *ConfigSyncer_SyncRuntimeConfig_Call {
+func (_c *ConfigSyncer_SyncRuntimeConfig_Call) RunAndReturn(run func(context.Context, uint64, string, map[string]string, provider.Provider) (map[string]string, error)) *ConfigSyncer_SyncRuntimeConfig_Call {
 	_c.Call.Return(run)
 	return _c
 }

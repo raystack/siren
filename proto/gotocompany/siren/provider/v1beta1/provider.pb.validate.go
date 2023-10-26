@@ -90,6 +90,8 @@ func (m *SyncRuntimeConfigRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Labels
+
 	if len(errors) > 0 {
 		return SyncRuntimeConfigRequestMultiError(errors)
 	}
@@ -191,6 +193,8 @@ func (m *SyncRuntimeConfigResponse) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for Labels
 
 	if len(errors) > 0 {
 		return SyncRuntimeConfigResponseMultiError(errors)

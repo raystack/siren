@@ -19,7 +19,7 @@ import (
 )
 
 type ProviderV1beta1 interface {
-	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error
+	SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, namespaceLabels map[string]string, prov provider.Provider) (map[string]string, error)
 	UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error
 	SetConfig(ctx context.Context, configRaw string) error
 	TransformToAlerts(ctx context.Context, providerID uint64, namespaceID uint64, body map[string]any) ([]alert.Alert, int, error)
@@ -35,19 +35,21 @@ func NewProviderClient(c sirenproviderv1beta1.ProviderServiceClient) *GRPCClient
 	}
 }
 
-func (c *GRPCClient) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, prov provider.Provider) error {
+func (c *GRPCClient) SyncRuntimeConfig(ctx context.Context, namespaceID uint64, namespaceURN string, namespaceLabels map[string]string, prov provider.Provider) (map[string]string, error) {
 	protoProv, err := prov.ToV1beta1Proto()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if _, err := c.client.SyncRuntimeConfig(ctx, &sirenproviderv1beta1.SyncRuntimeConfigRequest{
+	resp, err := c.client.SyncRuntimeConfig(ctx, &sirenproviderv1beta1.SyncRuntimeConfigRequest{
 		NamespaceId:  fmt.Sprintf("%d", namespaceID),
 		NamespaceUrn: namespaceURN,
 		Provider:     protoProv,
-	}); err != nil {
-		return err
+		Labels:       namespaceLabels,
+	})
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return resp.GetLabels(), nil
 }
 
 func (c *GRPCClient) UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *rule.Rule, templateToUpdate *template.Template) error {
@@ -132,7 +134,14 @@ func (s *GRPCServer) SyncRuntimeConfig(ctx context.Context, req *sirenproviderv1
 		return nil, errors.New("error parsing namespace ID")
 	}
 
-	return &sirenproviderv1beta1.SyncRuntimeConfigResponse{}, s.service.SyncRuntimeConfig(ctx, namespaceIDUint64, req.GetNamespaceUrn(), prov)
+	encrichedLabels, err := s.service.SyncRuntimeConfig(ctx, namespaceIDUint64, req.GetNamespaceUrn(), req.GetLabels(), prov)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sirenproviderv1beta1.SyncRuntimeConfigResponse{
+		Labels: encrichedLabels,
+	}, nil
 }
 
 func (s *GRPCServer) UpsertRule(ctx context.Context, req *sirenproviderv1beta1.UpsertRuleRequest) (*sirenproviderv1beta1.UpsertRuleResponse, error) {

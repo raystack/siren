@@ -401,6 +401,47 @@ func (s *NamespaceRepositoryTestSuite) TestUpdate() {
 	}
 }
 
+func (s *NamespaceRepositoryTestSuite) TestUpdateLabels() {
+	type testCase struct {
+		Description    string
+		ID             uint64
+		Labels         map[string]string
+		ExpectedLabels map[string]string
+		Err            error
+	}
+
+	var testCases = []testCase{
+		{
+			Description: "should update existing namespace label",
+			ID:          1,
+			Labels: map[string]string{
+				"k": "v",
+			},
+			Err: nil,
+		},
+		{
+			Description: "should return error not found if id not found",
+			ID:          1000,
+			Labels: map[string]string{
+				"k": "v",
+			},
+			Err: namespace.NotFoundError{ID: 1000},
+		},
+		{
+			ID:          1,
+			Description: "should return nil if label is empty",
+			Err:         nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.Description, func() {
+			err := s.repository.UpdateLabels(s.ctx, tc.ID, tc.Labels)
+			s.Assert().Equal(tc.Err, err)
+		})
+	}
+}
+
 func (s *NamespaceRepositoryTestSuite) TestDelete() {
 	type testCase struct {
 		Description string
