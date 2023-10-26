@@ -131,7 +131,7 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
-	_, nrApp, pgClient, notifierRegistry, providersPluginManager, err := InitDeps(ctx, logger, cfg, nil)
+	_, nrApp, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
 	if err != nil {
 		return err
 	}
@@ -159,10 +159,6 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 			return notificationHandler.Process(ctx, runningAt)
 		})
 
-		logger.Warn("stopping plugins")
-		providersPluginManager.Stop()
-		logger.Warn("all plugins stopped")
-
 		logger.Info("closing all clients")
 		if err := pgClient.Close(); err != nil {
 			logger.Error(err.Error())
@@ -175,7 +171,7 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
-	_, nrApp, pgClient, notifierRegistry, providersPluginManager, err := InitDeps(ctx, logger, cfg, nil)
+	_, nrApp, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
 	if err != nil {
 		return err
 	}
@@ -202,10 +198,6 @@ func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, c
 		workerTicker.Run(ctx, cancelWorkerChan, func(ctx context.Context, runningAt time.Time) error {
 			return notificationHandler.Process(ctx, runningAt)
 		})
-
-		logger.Warn("stopping plugins")
-		providersPluginManager.Stop()
-		logger.Warn("all plugins stopped")
 
 		logger.Info("closing all clients")
 		if err := pgClient.Close(); err != nil {

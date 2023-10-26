@@ -36,6 +36,7 @@ func InitDeps(
 	logger saltlog.Logger,
 	cfg config.Config,
 	queue notification.Queuer,
+	withProviderPlugin bool,
 ) (*api.Deps, *newrelic.Application, *pgc.Client, map[string]notification.Notifier, *providers.PluginManager, error) {
 
 	telemetry.Init(ctx, cfg.Telemetry, logger)
@@ -76,35 +77,41 @@ func InitDeps(
 	logRepository := postgres.NewLogRepository(pgClient)
 	logService := log.NewService(logRepository)
 
-	providersPluginManager := providers.NewPluginManager(logger, cfg.Providers)
-	providerPluginClients := providersPluginManager.InitClients()
-	providerPlugins, err := providersPluginManager.DispenseClients(providerPluginClients)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	if err := providersPluginManager.InitConfigs(ctx, providerPlugins, cfg.Log.Level); err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-
-	var supportedProviderTypes = []string{}
-	for typ := range providerPlugins {
-		supportedProviderTypes = append(supportedProviderTypes, typ)
-	}
-	providerRepository := postgres.NewProviderRepository(pgClient)
-	providerService := provider.NewService(providerRepository, supportedProviderTypes)
-
+	// TODO: need to figure out the way on how to nicely load deps without plugins dependency
+	// in case the caller does not need that
+	var providerService api.ProviderService
 	var configSyncers = make(map[string]namespace.ConfigSyncer, 0)
 	var alertTransformers = make(map[string]alert.AlertTransformer, 0)
 	var ruleUploaders = make(map[string]rule.RuleUploader, 0)
+	var providersPluginManager *providers.PluginManager
 
-	if len(providerPlugins) == 0 {
-		logger.Warn("no provider plugins found!")
-	}
+	if withProviderPlugin {
+		providersPluginManager := providers.NewPluginManager(logger, cfg.Providers)
+		providerPluginClients := providersPluginManager.InitClients()
+		providerPlugins, err := providersPluginManager.DispenseClients(providerPluginClients)
+		if err != nil {
+			return nil, nil, nil, nil, nil, err
+		}
+		if err := providersPluginManager.InitConfigs(ctx, providerPlugins, cfg.Log.Level); err != nil {
+			return nil, nil, nil, nil, nil, err
+		}
 
-	for k, pc := range providerPlugins {
-		alertTransformers[k] = pc.(alert.AlertTransformer)
-		configSyncers[k] = pc.(namespace.ConfigSyncer)
-		ruleUploaders[k] = pc.(rule.RuleUploader)
+		var supportedProviderTypes = []string{}
+		for typ := range providerPlugins {
+			supportedProviderTypes = append(supportedProviderTypes, typ)
+		}
+		providerRepository := postgres.NewProviderRepository(pgClient)
+		providerService = provider.NewService(providerRepository, supportedProviderTypes)
+
+		if len(providerPlugins) == 0 {
+			logger.Warn("no provider plugins found!")
+		}
+
+		for k, pc := range providerPlugins {
+			alertTransformers[k] = pc.(alert.AlertTransformer)
+			configSyncers[k] = pc.(namespace.ConfigSyncer)
+			ruleUploaders[k] = pc.(rule.RuleUploader)
+		}
 	}
 
 	alertRepository := postgres.NewAlertRepository(pgClient)
