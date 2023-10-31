@@ -86,7 +86,7 @@ func InitDeps(
 	var providersPluginManager *providers.PluginManager
 
 	if withProviderPlugin {
-		providersPluginManager := providers.NewPluginManager(logger, cfg.Providers)
+		providersPluginManager = providers.NewPluginManager(logger, cfg.Providers)
 		providerPluginClients := providersPluginManager.InitClients()
 		providerPlugins, err := providersPluginManager.DispenseClients(providerPluginClients)
 		if err != nil {

@@ -90,7 +90,7 @@ services:
       - cortex-all
   # Collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.66.0
+    image: otel/opentelemetry-collector-contrib:0.88.0
     command: [ "--config=/etc/otel/otel-collector-config.yaml" ]
     volumes:
       - ./docker:/etc/otel
