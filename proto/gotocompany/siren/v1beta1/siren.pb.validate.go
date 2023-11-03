@@ -8022,16 +8022,7 @@ func (m *UpdateRuleRequest) validate(all bool) error {
 
 	// no validation rules for Enabled
 
-	if !_UpdateRuleRequest_GroupName_Pattern.MatchString(m.GetGroupName()) {
-		err := UpdateRuleRequestValidationError{
-			field:  "GroupName",
-			reason: "value does not match regex pattern \"^[A-Za-z0-9_-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for GroupName
 
 	// no validation rules for Namespace
 
@@ -8161,8 +8152,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateRuleRequestValidationError{}
-
-var _UpdateRuleRequest_GroupName_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
 var _UpdateRuleRequest_Template_Pattern = regexp.MustCompile("^[A-Za-z0-9_-]+$")
 
