@@ -39,11 +39,12 @@ type GRPCConfig struct {
 }
 
 type Config struct {
-	Host          string            `mapstructure:"host" yaml:"host" default:"localhost"`
-	Port          int               `mapstructure:"port" yaml:"port" default:"8080"`
-	EncryptionKey string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
-	APIHeaders    api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
-	GRPC          GRPCConfig        `mapstructure:"grpc"`
+	Host                  string            `mapstructure:"host" yaml:"host" default:"localhost"`
+	Port                  int               `mapstructure:"port" yaml:"port" default:"8080"`
+	EncryptionKey         string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
+	APIHeaders            api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
+	UseGlobalSubscription bool              `mapstructure:"use_global_subscription" yaml:"use_global_subscription" default:"false"`
+	GRPC                  GRPCConfig        `mapstructure:"grpc"`
 }
 
 func (cfg Config) addr() string     { return fmt.Sprintf("%s:%d", cfg.Host, cfg.Port) }
@@ -132,6 +133,7 @@ func RunServer(
 		logger,
 		c.APIHeaders,
 		apiDeps,
+		v1beta1.WithGlobalSubscription(c.UseGlobalSubscription),
 	)
 	grpcServer.RegisterService(&sirenv1beta1.SirenService_ServiceDesc, sirenServiceRPC)
 	grpcServer.RegisterService(&grpc_health_v1.Health_ServiceDesc, sirenServiceRPC)

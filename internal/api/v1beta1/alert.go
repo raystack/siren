@@ -53,7 +53,11 @@ func (s *GRPCServer) CreateAlerts(ctx context.Context, req *sirenv1beta1.CreateA
 }
 
 func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1beta1.CreateAlertsWithNamespaceRequest) (*sirenv1beta1.CreateAlertsWithNamespaceResponse, error) {
-	items, err := s.createAlerts(ctx, req.GetProviderType(), req.GetProviderId(), req.GetNamespaceId(), req.GetBody().AsMap())
+	var namespaceID uint64 = 0
+	if !s.useGlobalSubscription {
+		namespaceID = req.GetNamespaceId()
+	}
+	items, err := s.createAlerts(ctx, req.GetProviderType(), req.GetProviderId(), namespaceID, req.GetBody().AsMap())
 	if err != nil {
 		return nil, s.generateRPCErr(err)
 	}

@@ -11,10 +11,20 @@ import (
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
 )
 
+// GRPCServerOption provides ability to configure the grpc initialization
+type GRPCServerOption func(*GRPCServer)
+
+func WithGlobalSubscription(useGlobalSubscription bool) GRPCServerOption {
+	return func(s *GRPCServer) {
+		s.useGlobalSubscription = useGlobalSubscription
+	}
+}
+
 type GRPCServer struct {
-	newrelic *newrelic.Application
-	logger   log.Logger
-	headers  api.HeadersConfig
+	newrelic              *newrelic.Application
+	logger                log.Logger
+	headers               api.HeadersConfig
+	useGlobalSubscription bool
 	sirenv1beta1.UnimplementedSirenServiceServer
 	templateService     api.TemplateService
 	ruleService         api.RuleService
@@ -31,8 +41,10 @@ func NewGRPCServer(
 	nr *newrelic.Application,
 	logger log.Logger,
 	headers api.HeadersConfig,
-	apiDeps *api.Deps) *GRPCServer {
-	return &GRPCServer{
+	apiDeps *api.Deps,
+	opts ...GRPCServerOption) *GRPCServer {
+
+	s := &GRPCServer{
 		newrelic:            nr,
 		headers:             headers,
 		logger:              logger,
@@ -46,6 +58,12 @@ func NewGRPCServer(
 		notificationService: apiDeps.NotificationService,
 		silenceService:      apiDeps.SilenceService,
 	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 func (s *GRPCServer) generateRPCErr(e error) error {
