@@ -20,11 +20,18 @@ func WithGlobalSubscription(useGlobalSubscription bool) GRPCServerOption {
 	}
 }
 
+func WithDebugRequest(debugRequest bool) GRPCServerOption {
+	return func(s *GRPCServer) {
+		s.withDebugRequest = debugRequest
+	}
+}
+
 type GRPCServer struct {
 	newrelic              *newrelic.Application
 	logger                log.Logger
 	headers               api.HeadersConfig
 	useGlobalSubscription bool
+	withDebugRequest      bool
 	sirenv1beta1.UnimplementedSirenServiceServer
 	templateService     api.TemplateService
 	ruleService         api.RuleService

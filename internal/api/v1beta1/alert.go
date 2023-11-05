@@ -6,6 +6,7 @@ import (
 
 	"github.com/goto/siren/core/alert"
 	sirenv1beta1 "github.com/goto/siren/proto/gotocompany/siren/v1beta1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -56,6 +57,13 @@ func (s *GRPCServer) CreateAlertsWithNamespace(ctx context.Context, req *sirenv1
 	var namespaceID uint64 = 0
 	if !s.useGlobalSubscription {
 		namespaceID = req.GetNamespaceId()
+	}
+	if s.withDebugRequest {
+		reqJSON, err := protojson.Marshal(req)
+		if err != nil {
+			s.logger.Debug("cannot marshal CreateAlertsWithNamespace req to json", "err", err.Error())
+		}
+		s.logger.Debug("incoming create alert with namespace", "json", string(reqJSON))
 	}
 	items, err := s.createAlerts(ctx, req.GetProviderType(), req.GetProviderId(), namespaceID, req.GetBody().AsMap())
 	if err != nil {
