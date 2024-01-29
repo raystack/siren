@@ -70,7 +70,7 @@ func TestService_CheckAndInsertIdempotency(t *testing.T) {
 				tc.setup(mockIdempotencyRepository)
 			}
 
-			ns := notification.NewService(saltlog.NewNoop(), notification.Config{}, nil, nil, nil, notification.Deps{IdempotencyRepository: mockIdempotencyRepository})
+			ns := notification.NewService(saltlog.NewNoop(), notification.Config{}, nil, nil, nil, notification.Deps{IdempotencyRepository: mockIdempotencyRepository}, false)
 
 			_, err := ns.CheckAndInsertIdempotency(context.TODO(), tc.scope, tc.key)
 
@@ -228,6 +228,7 @@ func TestService_Dispatch(t *testing.T) {
 					DispatchReceiverService:   mockDispatcher,
 					DispatchSubscriberService: mockDispatcher,
 				},
+				true,
 			)
 			if err := s.Dispatch(context.TODO(), tt.n); (err != nil) != tt.wantErr {
 				t.Errorf("Service.Dispatch() error = %v, wantErr %v", err, tt.wantErr)
@@ -341,6 +342,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 				nil,
 				nil,
 				notification.Deps{},
+				false,
 			)
 			got, err := s.BuildFromAlerts(tt.alerts, tt.firingLen, time.Time{})
 			if (err != nil) && (err.Error() != tt.errString) {

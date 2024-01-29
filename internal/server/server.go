@@ -44,6 +44,7 @@ type Config struct {
 	EncryptionKey         string            `mapstructure:"encryption_key" yaml:"encryption_key" default:"_ENCRYPTIONKEY_OF_32_CHARACTERS_"`
 	APIHeaders            api.HeadersConfig `mapstructure:"api_headers" yaml:"api_headers"`
 	UseGlobalSubscription bool              `mapstructure:"use_global_subscription" yaml:"use_global_subscription" default:"false"`
+	EnableSilenceFeature  bool              `mapstructure:"enable_silence_feature" yaml:"enable_silence_feature" default:"false"`
 	DebugRequest          bool              `mapstructure:"debug_request" yaml:"debug_request" default:"false"`
 	GRPC                  GRPCConfig        `mapstructure:"grpc"`
 }

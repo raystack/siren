@@ -315,7 +315,9 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				mockSubscriptionService,
 				mockSilenceService, map[string]notification.Notifier{
 					testPluginType: mockNotifier,
-				})
+				},
+				true,
+			)
 
 			if tt.setup != nil {
 				tt.setup(mockSubscriptionService, mockSilenceService, mockNotifier)

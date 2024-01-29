@@ -12,22 +12,26 @@ import (
 )
 
 type DispatchSubscriberService struct {
-	logger              saltlog.Logger
-	subscriptionService SubscriptionService
-	silenceService      SilenceService
-	notifierPlugins     map[string]Notifier
+	logger               saltlog.Logger
+	subscriptionService  SubscriptionService
+	silenceService       SilenceService
+	notifierPlugins      map[string]Notifier
+	enableSilenceFeature bool
 }
 
 func NewDispatchSubscriberService(
 	logger saltlog.Logger,
 	subscriptionService SubscriptionService,
 	silenceService SilenceService,
-	notifierPlugins map[string]Notifier) *DispatchSubscriberService {
+	notifierPlugins map[string]Notifier,
+	enableSilenceFeature bool,
+) *DispatchSubscriberService {
 	return &DispatchSubscriberService{
-		logger:              logger,
-		subscriptionService: subscriptionService,
-		silenceService:      silenceService,
-		notifierPlugins:     notifierPlugins,
+		logger:               logger,
+		subscriptionService:  subscriptionService,
+		silenceService:       silenceService,
+		notifierPlugins:      notifierPlugins,
+		enableSilenceFeature: enableSilenceFeature,
 	}
 }
 
@@ -64,13 +68,18 @@ func (s *DispatchSubscriberService) PrepareMessage(ctx context.Context, n Notifi
 			continue
 		}
 
-		// try silencing by labels
-		silences, err := s.silenceService.List(ctx, silence.Filter{
-			NamespaceID:       n.NamespaceID,
-			SubscriptionMatch: sub.Match,
-		})
-		if err != nil {
-			return nil, nil, false, err
+		var silences []silence.Silence
+
+		// Reliability of silence feature need to be tested more
+		if s.enableSilenceFeature {
+			// try silencing by labels
+			silences, err = s.silenceService.List(ctx, silence.Filter{
+				NamespaceID:       n.NamespaceID,
+				SubscriptionMatch: sub.Match,
+			})
+			if err != nil {
+				return nil, nil, false, err
+			}
 		}
 
 		if len(silences) != 0 {
@@ -93,13 +102,16 @@ func (s *DispatchSubscriberService) PrepareMessage(ctx context.Context, n Notifi
 			continue
 		}
 
-		// subscription not being silenced by label
-		silences, err = s.silenceService.List(ctx, silence.Filter{
-			NamespaceID:    n.NamespaceID,
-			SubscriptionID: sub.ID,
-		})
-		if err != nil {
-			return nil, nil, false, err
+		// Reliability of silence feature need to be tested more
+		if s.enableSilenceFeature {
+			// subscription not being silenced by label
+			silences, err = s.silenceService.List(ctx, silence.Filter{
+				NamespaceID:    n.NamespaceID,
+				SubscriptionID: sub.ID,
+			})
+			if err != nil {
+				return nil, nil, false, err
+			}
 		}
 
 		silencedReceiversMap, validReceivers, err := sub.SilenceReceivers(silences)

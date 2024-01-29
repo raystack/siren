@@ -187,6 +187,7 @@ func InitDeps(
 			SilenceService:        silenceService,
 			AlertService:          alertService,
 		},
+		cfg.Service.EnableSilenceFeature,
 	)
 
 	return &api.Deps{

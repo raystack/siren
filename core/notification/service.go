@@ -63,6 +63,7 @@ type Service struct {
 	notifierPlugins       map[string]Notifier
 	dispatcher            map[string]Dispatcher
 	messagingTracer       *telemetry.MessagingTracer
+	enableSilenceFeature  bool
 }
 
 type Deps struct {
@@ -84,6 +85,7 @@ func NewService(
 	q Queuer,
 	notifierPlugins map[string]Notifier,
 	deps Deps,
+	enableSilenceFeature bool,
 ) *Service {
 	var (
 		dispatchReceiverService   = deps.DispatchReceiverService
@@ -93,7 +95,7 @@ func NewService(
 		dispatchReceiverService = NewDispatchReceiverService(deps.ReceiverService, notifierPlugins)
 	}
 	if deps.DispatchSubscriberService == nil {
-		dispatchSubscriberService = NewDispatchSubscriberService(logger, deps.SubscriptionService, deps.SilenceService, notifierPlugins)
+		dispatchSubscriberService = NewDispatchSubscriberService(logger, deps.SubscriptionService, deps.SilenceService, notifierPlugins, enableSilenceFeature)
 	}
 
 	ns := &Service{
@@ -111,7 +113,8 @@ func NewService(
 			TypeReceiver:   dispatchReceiverService,
 			TypeSubscriber: dispatchSubscriberService,
 		},
-		notifierPlugins: notifierPlugins,
+		notifierPlugins:      notifierPlugins,
+		enableSilenceFeature: enableSilenceFeature,
 	}
 
 	ns.messagingTracer = telemetry.NewMessagingTracer("default")
@@ -165,8 +168,11 @@ func (s *Service) Dispatch(ctx context.Context, n Notification) error {
 		return fmt.Errorf("failed logging notifications: %w", err)
 	}
 
-	if err := s.alertService.UpdateSilenceStatus(ctx, n.AlertIDs, hasSilenced, len(messages) != 0); err != nil {
-		return fmt.Errorf("failed updating silence status: %w", err)
+	// Reliability of silence feature need to be tested more
+	if s.enableSilenceFeature {
+		if err := s.alertService.UpdateSilenceStatus(ctx, n.AlertIDs, hasSilenced, len(messages) != 0); err != nil {
+			return fmt.Errorf("failed updating silence status: %w", err)
+		}
 	}
 
 	if len(messages) == 0 {
