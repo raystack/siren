@@ -29,7 +29,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, _ *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 			},
 			wantErr: true,
 		},
@@ -41,7 +40,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
 				q.EXPECT().ErrorCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
@@ -55,7 +53,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
 				q.EXPECT().ErrorCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
@@ -69,7 +66,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 				n.EXPECT().Send(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
 				q.EXPECT().ErrorCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
@@ -84,7 +80,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 				n.EXPECT().Send(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(false, errors.New("some error"))
 				q.EXPECT().ErrorCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
@@ -99,7 +94,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 				n.EXPECT().Send(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
 				q.EXPECT().SuccessCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
@@ -114,7 +108,6 @@ func TestHandler_MessageHandler(t *testing.T) {
 				},
 			},
 			setup: func(q *mocks.Queuer, n *mocks.Notifier) {
-				q.EXPECT().Type().Return("postgresql")
 				n.EXPECT().PostHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
 				n.EXPECT().Send(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(false, nil)
 				q.EXPECT().SuccessCallback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
@@ -133,7 +126,7 @@ func TestHandler_MessageHandler(t *testing.T) {
 				tc.setup(mockQueue, mockNotifier)
 			}
 
-			h := notification.NewHandler(notification.HandlerConfig{}, log.NewNoop(), nil, mockQueue, map[string]notification.Notifier{
+			h := notification.NewHandler(notification.HandlerConfig{}, log.NewNoop(), mockQueue, map[string]notification.Notifier{
 				testReceiverType: mockNotifier,
 			})
 			if err := h.MessageHandler(context.TODO(), tc.messages); (err != nil) != tc.wantErr {

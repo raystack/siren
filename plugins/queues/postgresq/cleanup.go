@@ -7,7 +7,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/goto/siren/pkg/pgc"
 	"github.com/goto/siren/plugins/queues"
 )
 
@@ -62,7 +61,7 @@ func (q *Queue) Cleanup(ctx context.Context, filter queues.FilterCleanup) error 
 		return err
 	}
 
-	res, err := q.pgClient.ExecContext(ctx, pgc.OpDelete, MessageQueueTableFullName, query, args...)
+	res, err := q.pgClient.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}

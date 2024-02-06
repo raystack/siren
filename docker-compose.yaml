@@ -90,15 +90,28 @@ services:
       - cortex-all
   # Collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.88.0
+    image: otel/opentelemetry-collector-contrib:0.93.0
     command: [ "--config=/etc/otel/otel-collector-config.yaml" ]
     volumes:
       - ./docker:/etc/otel
     ports:
-      - "55678:55678" # Opencensus port
+      - "55678:55678" # Opencensus port`
+      - "4317:4317" # Otel grpc port`
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    ports:
+     - '3003:3000'
+    volumes:
+      - ./docker/grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - grafana-storage:/var/lib/grafana
 volumes:
   siren_dbdata:
   data1-1:
+  grafana-storage:  
 
 
 networks:

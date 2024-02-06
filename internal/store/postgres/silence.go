@@ -38,13 +38,12 @@ RETURNING *
 
 // SilenceRepository talks to the store to read or insert data
 type SilenceRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewSilenceRepository returns repository struct
 func NewSilenceRepository(client *pgc.Client) *SilenceRepository {
-	return &SilenceRepository{client, "silences"}
+	return &SilenceRepository{client}
 }
 
 func (r *SilenceRepository) Create(ctx context.Context, s silence.Silence) (string, error) {
@@ -52,7 +51,7 @@ func (r *SilenceRepository) Create(ctx context.Context, s silence.Silence) (stri
 	sModel.FromDomain(s)
 
 	var newSModel model.Silence
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, silenceInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, silenceInsertQuery,
 		sModel.NamespaceID,
 		sModel.Type,
 		sModel.TargetID,
@@ -104,7 +103,7 @@ func (r *SilenceRepository) List(ctx context.Context, flt silence.Filter) ([]sil
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,7 @@ func (r *SilenceRepository) Get(ctx context.Context, id string) (silence.Silence
 	}
 
 	var modelSilence model.Silence
-	if err := r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &modelSilence, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, &modelSilence, query, args...); err != nil {
 		return silence.Silence{}, err
 	}
 
@@ -140,7 +139,7 @@ func (r *SilenceRepository) Get(ctx context.Context, id string) (silence.Silence
 }
 
 func (r *SilenceRepository) SoftDelete(ctx context.Context, id string) error {
-	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, silenceSoftDeleteQuery, id); err != nil {
+	if _, err := r.client.ExecContext(ctx, silenceSoftDeleteQuery, id); err != nil {
 		return err
 	}
 

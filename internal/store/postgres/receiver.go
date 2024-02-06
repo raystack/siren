@@ -43,13 +43,12 @@ var receiverListQueryBuilder = sq.Select(
 
 // ReceiverRepository talks to the store to read or insert data
 type ReceiverRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewReceiverRepository returns repository struct
 func NewReceiverRepository(client *pgc.Client) *ReceiverRepository {
-	return &ReceiverRepository{client, "receivers"}
+	return &ReceiverRepository{client}
 }
 
 func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
@@ -72,7 +71,7 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +98,7 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 	receiverModel.FromDomain(*rcv)
 
 	var createdReceiver model.Receiver
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, receiverInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, receiverInsertQuery,
 		receiverModel.Name,
 		receiverModel.Type,
 		receiverModel.Labels,
@@ -125,7 +124,7 @@ func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Recei
 	}
 
 	var receiverModel model.Receiver
-	if err := r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &receiverModel, query, args...); err != nil {
+	if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, receiver.NotFoundError{ID: id}
 		}
@@ -144,7 +143,7 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 	receiverModel.FromDomain(*rcv)
 
 	var updatedReceiver model.Receiver
-	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, receiverUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, receiverUpdateQuery,
 		receiverModel.ID,
 		receiverModel.Name,
 		receiverModel.Labels,
@@ -162,7 +161,7 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 }
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, receiverDeleteQuery, id); err != nil {
+	if _, err := r.client.ExecContext(ctx, receiverDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

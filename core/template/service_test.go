@@ -16,13 +16,13 @@ func TestService_Upsert(t *testing.T) {
 	type testCase struct {
 		Description string
 		Tmpl        *template.Template
-		Setup       func(*mocks.TemplateRepository)
+		Setup       func(*mocks.Repository)
 		Err         error
 	}
 	var testCases = []testCase{
 		{
 			Description: "should return error if upsert repository error",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), &template.Template{
 					ID:   1,
 					Name: "template-1",
@@ -38,7 +38,7 @@ func TestService_Upsert(t *testing.T) {
 		},
 		{
 			Description: "should return error conflict if upsert repository return error duplicate",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), &template.Template{
 					ID:   1,
 					Name: "template-1",
@@ -54,7 +54,7 @@ func TestService_Upsert(t *testing.T) {
 		},
 		{
 			Description: "should return nil error if upsert repository not error",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().Upsert(mock.AnythingOfType("context.todoCtx"), &template.Template{
 					ID:   1,
 					Name: "template-1",
@@ -73,7 +73,7 @@ func TestService_Upsert(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock = new(mocks.TemplateRepository)
+				repositoryMock = new(mocks.Repository)
 			)
 			svc := template.NewService(repositoryMock)
 
@@ -95,27 +95,27 @@ func TestService_GetTemplate(t *testing.T) {
 	var templateName = "a-template"
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.TemplateRepository)
+		Setup       func(*mocks.Repository)
 		Err         error
 	}
 	var testCases = []testCase{
 		{
 			Description: "should return error if get repository return error",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), templateName).Return(nil, errors.New("some error"))
 			},
 			Err: errors.New("some error"),
 		},
 		{
 			Description: "should return error not found if get repository return error not found",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), templateName).Return(nil, template.NotFoundError{})
 			},
 			Err: errors.New("template not found"),
 		},
 		{
 			Description: "should return nil error if get by name repository not error",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), templateName).Return(&template.Template{
 					ID:   1,
 					Name: "template-1",
@@ -129,7 +129,7 @@ func TestService_GetTemplate(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock = new(mocks.TemplateRepository)
+				repositoryMock = new(mocks.Repository)
 			)
 			svc := template.NewService(repositoryMock)
 
@@ -151,7 +151,7 @@ func TestService_Render(t *testing.T) {
 	type testCase struct {
 		Description          string
 		RequestVariables     map[string]string
-		Setup                func(*mocks.TemplateRepository)
+		Setup                func(*mocks.Repository)
 		ExpectedRenderedBody string
 		ErrString            string
 	}
@@ -159,7 +159,7 @@ func TestService_Render(t *testing.T) {
 	var testCases = []testCase{
 		{
 			Description: "should render template body from the input",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 					Name: "foo",
 					Body: "The quick [[.color]] fox jumped over the [[.adjective]] dog.",
@@ -188,7 +188,7 @@ func TestService_Render(t *testing.T) {
 		},
 		{
 			Description: "should render template body enriched with defaults",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 					Name: "foo",
 					Body: "The quick [[.color]] fox jumped over the [[.adjective]] dog.",
@@ -216,7 +216,7 @@ func TestService_Render(t *testing.T) {
 		},
 		{
 			Description: "should return not found if name does not exist",
-			Setup: func(tr *mocks.TemplateRepository) {
+			Setup: func(tr *mocks.Repository) {
 				tr.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(nil, template.NotFoundError{})
 			},
 			ErrString: "template not found",
@@ -226,7 +226,7 @@ func TestService_Render(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock = new(mocks.TemplateRepository)
+				repositoryMock = new(mocks.Repository)
 			)
 			svc := template.NewService(repositoryMock)
 
@@ -251,7 +251,7 @@ func TestService_List(t *testing.T) {
 	ctx := context.TODO()
 
 	t.Run("should call repository List method and return no error if repository return nil error", func(t *testing.T) {
-		repositoryMock := &mocks.TemplateRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := template.NewService(repositoryMock)
 		repositoryMock.EXPECT().List(mock.AnythingOfType("context.todoCtx"), template.Filter{}).Return([]template.Template{}, nil).Once()
 		_, err := dummyService.List(ctx, template.Filter{})
@@ -260,7 +260,7 @@ func TestService_List(t *testing.T) {
 	})
 
 	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
-		repositoryMock := &mocks.TemplateRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := template.NewService(repositoryMock)
 		repositoryMock.EXPECT().List(mock.AnythingOfType("context.todoCtx"), template.Filter{}).Return(nil, errors.New("random error")).Once()
 		_, err := dummyService.List(ctx, template.Filter{})
@@ -274,7 +274,7 @@ func TestService_Delete(t *testing.T) {
 	templateName := "template-name"
 
 	t.Run("should call repository Delete method and return nil if no error", func(t *testing.T) {
-		repositoryMock := &mocks.TemplateRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := template.NewService(repositoryMock)
 		repositoryMock.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), templateName).Return(nil).Once()
 		err := dummyService.Delete(ctx, templateName)
@@ -283,7 +283,7 @@ func TestService_Delete(t *testing.T) {
 	})
 
 	t.Run("should call repository Delete method and return error if any", func(t *testing.T) {
-		repositoryMock := &mocks.TemplateRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := template.NewService(repositoryMock)
 		repositoryMock.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), templateName).Return(errors.New("random error")).Once()
 		err := dummyService.Delete(ctx, templateName)

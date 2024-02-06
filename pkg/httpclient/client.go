@@ -4,9 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/goto/siren/pkg/telemetry"
-	"github.com/newrelic/go-agent/v3/newrelic"
-	"go.opencensus.io/plugin/ochttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type ClientOpt func(*Client)
@@ -45,12 +43,7 @@ func New(cfg Config, opts ...ClientOpt) *Client {
 		}
 
 		c.httpClient = &http.Client{
-			Transport: &ochttp.Transport{
-				Base: newrelic.NewRoundTripper(&telemetry.Transport{
-					Origin: transport,
-				}),
-				NewClientTrace: ochttp.NewSpanAnnotatingClientTrace,
-			},
+			Transport: otelhttp.NewTransport(transport),
 		}
 
 		if c.cfg.TimeoutMS != 0 {

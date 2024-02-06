@@ -67,9 +67,7 @@ func (s *CortexWebhookTestSuite) SetupTest() {
 			Enabled: false,
 		},
 	}
-	s.appConfig.Telemetry.Debug = ""
-	s.appConfig.Telemetry.EnableNewrelic = false
-	s.appConfig.Telemetry.EnableOtelAgent = false
+	s.appConfig.Telemetry.OpenTelemetry.Enabled = false
 	s.appConfig.Service.EnableSilenceFeature = true
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)

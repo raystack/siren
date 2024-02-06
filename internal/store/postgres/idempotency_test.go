@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/goto/salt/db"
 	"github.com/goto/salt/dockertestx"
 	"github.com/goto/salt/log"
 	"github.com/ory/dockertest/v3"
@@ -46,12 +45,7 @@ func (s *IdempotencyRepositoryTestSuite) SetupSuite() {
 	s.resource = dpg.GetResource()
 
 	dbConfig.URL = dpg.GetExternalConnString()
-	dbc, err := db.New(dbConfig)
-	if err != nil {
-		s.T().Fatal(err)
-	}
-
-	s.client, err = pgc.NewClient(logger, dbc)
+	s.client, err = pgc.NewClient(logger, dbConfig)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -145,7 +139,7 @@ func (s *IdempotencyRepositoryTestSuite) TestUpdateSuccess() {
 }
 
 func (s *IdempotencyRepositoryTestSuite) TestDelete() {
-	_, err := s.client.ExecContext(s.ctx, "", "", `
+	_, err := s.client.ExecContext(s.ctx, `
 		INSERT INTO idempotencies (scope, key, created_at, updated_at) VALUES
 			('a-scope', 'old-key-1', now() - interval '2 days', now() - interval '2 days'),
 			('a-scope', 'old-key-2', now() - interval '2 days', now() - interval '2 days'),
@@ -167,7 +161,7 @@ func (s *IdempotencyRepositoryTestSuite) TestDelete() {
 		s.Assert().Nil(err)
 
 		numRows := 0
-		rows, err := s.client.QueryxContext(s.ctx, "", "", `
+		rows, err := s.client.QueryxContext(s.ctx, `
 			SELECT * FROM idempotencies
 		`)
 		s.Require().Nil(err)

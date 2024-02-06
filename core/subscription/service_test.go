@@ -15,7 +15,7 @@ import (
 func TestService_List(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.SubscriptionRepository)
+		Setup       func(*mocks.Repository)
 		ErrString   string
 	}
 	var (
@@ -23,13 +23,13 @@ func TestService_List(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return nil error if subscription list repository return no error",
-				Setup: func(sr *mocks.SubscriptionRepository) {
+				Setup: func(sr *mocks.Repository) {
 					sr.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("subscription.Filter")).Return([]subscription.Subscription{}, nil)
 				},
 			},
 			{
 				Description: "should return error if subscription list repository return error",
-				Setup: func(sr *mocks.SubscriptionRepository) {
+				Setup: func(sr *mocks.Repository) {
 					sr.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("subscription.Filter")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
@@ -40,7 +40,7 @@ func TestService_List(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock = new(mocks.SubscriptionRepository)
+				repositoryMock = new(mocks.Repository)
 				logServiceMock = new(mocks.LogService)
 			)
 			svc := subscription.NewService(repositoryMock, logServiceMock, nil, nil)
@@ -62,7 +62,7 @@ func TestService_List(t *testing.T) {
 func TestService_Get(t *testing.T) {
 	type testCase struct {
 		Description string
-		Setup       func(*mocks.SubscriptionRepository)
+		Setup       func(*mocks.Repository)
 		ErrString   string
 	}
 	var (
@@ -70,20 +70,20 @@ func TestService_Get(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return nil error if subscription get repository return no error",
-				Setup: func(sr *mocks.SubscriptionRepository) {
+				Setup: func(sr *mocks.Repository) {
 					sr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&subscription.Subscription{}, nil)
 				},
 			},
 			{
 				Description: "should return error if subscription get repository return error",
-				Setup: func(sr *mocks.SubscriptionRepository) {
+				Setup: func(sr *mocks.Repository) {
 					sr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return error not found if subscription get repository return not found",
-				Setup: func(sr *mocks.SubscriptionRepository) {
+				Setup: func(sr *mocks.Repository) {
 					sr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil, subscription.NotFoundError{})
 				},
 				ErrString: "subscription not found",
@@ -94,7 +94,7 @@ func TestService_Get(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock = new(mocks.SubscriptionRepository)
+				repositoryMock = new(mocks.Repository)
 				logServiceMock = new(mocks.LogService)
 			)
 			svc := subscription.NewService(repositoryMock, logServiceMock, nil, nil)
@@ -117,7 +117,7 @@ func TestService_Create(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService)
+		Setup        func(*mocks.Repository, *mocks.NamespaceService, *mocks.ReceiverService)
 		ErrString    string
 	}
 
@@ -126,28 +126,28 @@ func TestService_Create(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error conflict if create subscription return error duplicate",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(subscription.ErrDuplicate)
 				},
 				ErrString: "urn already exist",
 			},
 			{
 				Description: "should return error not found if create subscription return error relation",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(subscription.ErrRelation)
 				},
 				ErrString: "namespace id does not exist",
 			},
 			{
 				Description: "should return error if create subscription return some error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return no error if create subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
 				},
 			},
@@ -157,7 +157,7 @@ func TestService_Create(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock       = new(mocks.SubscriptionRepository)
+				repositoryMock       = new(mocks.Repository)
 				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
@@ -188,7 +188,7 @@ func TestService_Update(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService)
+		Setup        func(*mocks.Repository, *mocks.NamespaceService, *mocks.ReceiverService)
 		ErrString    string
 	}
 	var (
@@ -196,35 +196,35 @@ func TestService_Update(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error conflict if update subscription return error duplicate",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(subscription.ErrDuplicate)
 				},
 				ErrString: "urn already exist",
 			},
 			{
 				Description: "should return error not found if update subscription return error relation",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(subscription.ErrRelation)
 				},
 				ErrString: "namespace id does not exist",
 			},
 			{
 				Description: "should return error not found if update subscription return not found error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(subscription.NotFoundError{})
 				},
 				ErrString: "subscription not found",
 			},
 			{
 				Description: "should return error if update subscription return some error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return no error if update subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*subscription.Subscription")).Return(nil)
 				},
 			},
@@ -234,7 +234,7 @@ func TestService_Update(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock       = new(mocks.SubscriptionRepository)
+				repositoryMock       = new(mocks.Repository)
 				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)
@@ -265,7 +265,7 @@ func TestService_Delete(t *testing.T) {
 	type testCase struct {
 		Description  string
 		Subscription *subscription.Subscription
-		Setup        func(*mocks.SubscriptionRepository, *mocks.NamespaceService, *mocks.ReceiverService)
+		Setup        func(*mocks.Repository, *mocks.NamespaceService, *mocks.ReceiverService)
 		ErrString    string
 	}
 	var (
@@ -273,21 +273,21 @@ func TestService_Delete(t *testing.T) {
 		testCases = []testCase{
 			{
 				Description: "should return error if delete subscription return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return error if delete subscription return error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(errors.New("some error"))
 				},
 				ErrString: "some error",
 			},
 			{
 				Description: "should return no error if delete subscription return no error",
-				Setup: func(sr *mocks.SubscriptionRepository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
+				Setup: func(sr *mocks.Repository, ns *mocks.NamespaceService, rs *mocks.ReceiverService) {
 					sr.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil)
 				},
 			},
@@ -297,7 +297,7 @@ func TestService_Delete(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock       = new(mocks.SubscriptionRepository)
+				repositoryMock       = new(mocks.Repository)
 				logServiceMock       = new(mocks.LogService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				receiverServiceMock  = new(mocks.ReceiverService)

@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname ProviderRepository --filename provider_repository.go --output=./mocks
 type Repository interface {
 	List(context.Context, Filter) ([]Provider, error)
 	Create(context.Context, *Provider) error

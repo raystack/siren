@@ -92,7 +92,7 @@ func TestGRPCServer_NotifyReceiver(t *testing.T) {
 				tc.setup(mockNotificationService)
 			}
 
-			dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{
+			dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{
 				IdempotencyKey: idempotencyHeaderKey,
 			}, &api.Deps{NotificationService: mockNotificationService})
 			ctx := metadata.NewIncomingContext(context.TODO(), metadata.New(map[string]string{

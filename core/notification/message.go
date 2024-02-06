@@ -7,8 +7,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/goto/siren/core/template"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
-	"go.opencensus.io/tag"
 	"gopkg.in/yaml.v3"
 )
 
@@ -98,12 +96,6 @@ func InitMessage(
 
 	newConfigs, err := notifierPlugin.PreHookQueueTransformConfigs(ctx, messageConfig)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-			tag.Upsert(telemetry.TagNotificationType, n.Type),
-			tag.Upsert(telemetry.TagReceiverType, receiverType),
-			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookQueue),
-		)
-
 		return Message{}, err
 	}
 
@@ -162,11 +154,6 @@ func InitMessage(
 	}
 
 	m.Details[DetailsKeyNotificationType] = n.Type
-
-	telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-		tag.Upsert(telemetry.TagNotificationType, TypeSubscriber),
-		tag.Upsert(telemetry.TagMessageStatus, m.Status.String()),
-		tag.Upsert(telemetry.TagReceiverType, m.ReceiverType))
 
 	return *m, nil
 }

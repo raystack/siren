@@ -8,18 +8,10 @@ import (
 	"github.com/goto/salt/db"
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"go.opencensus.io/trace"
-)
-
-const (
-	OpInsert    = "INSERT"
-	OpSelectAll = "SELECT_ALL"
-	OpSelect    = "SELECT"
-	OpUpdate    = "UPDATE"
-	OpDelete    = "DELETE"
+	"go.nhat.io/otelsql"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
 var (
@@ -31,28 +23,51 @@ var (
 )
 
 type Client struct {
-	db             *db.Client
-	logger         log.Logger
-	postgresTracer *telemetry.PostgresTracer
+	db     *db.Client
+	logger log.Logger
 }
 
 // NewClient wraps salt/db client
-func NewClient(logger log.Logger, dbc *db.Client) (*Client, error) {
-	if dbc == nil {
-		return nil, errors.New("error creating postgres client: nil db client")
-	}
-
-	postgresTracer, err := telemetry.NewPostgresTracer(
-		dbc.ConnectionURL(),
+func NewClient(logger log.Logger, cfg db.Config) (*Client, error) {
+	driverName, err := otelsql.Register(
+		cfg.Driver,
+		otelsql.TraceQueryWithoutArgs(),
+		otelsql.TraceRowsClose(),
+		otelsql.TraceRowsAffected(),
+		otelsql.WithSystem(semconv.DBSystemPostgreSQL),
 	)
 	if err != nil {
+		return nil, fmt.Errorf("new pgq processor: %w", err)
+	}
+
+	// backup origin driver name that is going to be overrided
+	originDriverName := cfg.Driver
+	cfg.Driver = driverName
+
+	dbClient, err := db.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("error creating postgres client: %w", err)
+	}
+
+	sqlDB := dbClient.DB.DB
+
+	// need to use NewDb if we want to use NamedContext with otelsql
+	// ref: https://github.com/nhatthm/otelsql?tab=readme-ov-file#jmoironsqlx
+	wrappedSQLxDB := sqlx.NewDb(sqlDB, originDriverName)
+
+	if err := otelsql.RecordStats(
+		sqlDB,
+		otelsql.WithSystem(semconv.DBSystemPostgreSQL),
+		otelsql.WithInstanceName(dbClient.Host()),
+	); err != nil {
 		return nil, err
 	}
 
+	dbClient.DB = wrappedSQLxDB
+
 	return &Client{
-		db:             dbc,
-		logger:         logger,
-		postgresTracer: postgresTracer,
+		db:     dbClient,
+		logger: logger,
 	}, nil
 }
 
@@ -79,80 +94,24 @@ func CheckError(err error) error {
 	return err
 }
 
-func (c *Client) QueryRowxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) *sqlx.Row {
-
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
-	defer c.postgresTracer.StopSpan()
-
-	sqlxRow := c.GetDB(ctx).QueryRowxContext(ctx, query, args...)
-	if sqlxRow.Err() != nil {
-		span.SetStatus(trace.Status{
-			Code:    trace.StatusCodeUnknown,
-			Message: sqlxRow.Err().Error(),
-		})
-	}
-	return sqlxRow
+func (c *Client) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+	return c.GetDB(ctx).QueryRowxContext(ctx, query, args...)
 }
 
-func (c *Client) QueryxContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (*sqlx.Rows, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
-	defer c.postgresTracer.StopSpan()
-
-	sqlxRows, err := c.GetDB(ctx).QueryxContext(ctx, query, args...)
-	if err != nil {
-		span.SetStatus(trace.Status{
-			Code:    trace.StatusCodeUnknown,
-			Message: err.Error(),
-		})
-	}
-	return sqlxRows, err
+func (c *Client) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+	return c.GetDB(ctx).QueryxContext(ctx, query, args...)
 }
 
-func (c *Client) GetContext(ctx context.Context, op string, tableName string, dest interface{}, query string, args ...interface{}) error {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
-	defer c.postgresTracer.StopSpan()
-
-	if err := c.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(dest); err != nil {
-		span.SetStatus(trace.Status{
-			Code:    trace.StatusCodeUnknown,
-			Message: err.Error(),
-		})
-		return err
-	}
-
-	return nil
+func (c *Client) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	return c.GetDB(ctx).QueryRowxContext(ctx, query, args...).StructScan(dest)
 }
 
-func (c *Client) ExecContext(ctx context.Context, op string, tableName string, query string, args ...interface{}) (sql.Result, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
-	defer c.postgresTracer.StopSpan()
-
-	res, err := c.db.ExecContext(ctx, query, args...)
-	if err != nil {
-		span.SetStatus(trace.Status{
-			Code:    trace.StatusCodeUnknown,
-			Message: err.Error(),
-		})
-		return nil, err
-	}
-
-	return res, nil
+func (c *Client) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return c.db.ExecContext(ctx, query, args...)
 }
 
-func (c *Client) NamedExecContext(ctx context.Context, op string, tableName string, query string, arg interface{}) (sql.Result, error) {
-	ctx, span := c.postgresTracer.StartSpan(ctx, op, tableName, query)
-	defer c.postgresTracer.StopSpan()
-
-	res, err := c.db.NamedExecContext(ctx, query, arg)
-	if err != nil {
-		span.SetStatus(trace.Status{
-			Code:    trace.StatusCodeUnknown,
-			Message: err.Error(),
-		})
-		return nil, err
-	}
-
-	return res, nil
+func (c *Client) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
+	return c.db.NamedExecContext(ctx, query, arg)
 }
 
 func (c *Client) WithTransaction(ctx context.Context, opts *sql.TxOptions) context.Context {
@@ -187,6 +146,10 @@ func (c *Client) GetDB(ctx context.Context) sqlx.QueryerContext {
 	if tx := extractTransaction(ctx); tx != nil {
 		return tx
 	}
+	return c.db
+}
+
+func (c *Client) GetSaltDB(ctx context.Context) *db.Client {
 	return c.db
 }
 

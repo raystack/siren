@@ -1,40 +1,111 @@
 receivers:
+  statsd:
+    endpoint: :8125
+    aggregation_interval: 60s
+    enable_metric_type: true
+    is_monotonic_counter: false
+    timer_histogram_mapping:
+    - statsd_type: "histogram"
+      observer_type: "summary"
+    - statsd_type: "timing"
+      observer_type: "summary"
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: :14250
+      thrift_http:
+        endpoint: :14268
+      thrift_compact:
+        endpoint: :6831
   opencensus:
-
-processors:
-  batch:
+    endpoint: :55678
+  otlp:
+    protocols:
+      grpc:
+        endpoint: :4317
+      http:
+        endpoint: :4318
+  # prometheus:
+  #   config:
+  #     scrape_configs:
+  #       - job_name: opentelemetry-collector
+  #         scrape_interval: 10s
+  #         static_configs:
+  #           - targets:
+  #               - 127.0.0.1:8888
+  zipkin:
+    endpoint: :9411
 
 exporters:
+  logging:
+    loglevel: warn
+    sampling_initial: 2
+    sampling_thereafter: 500
+  # otlp:
+  #   endpoint: "https://otlp.nr-data.net:443"
+  #   headers:
+  #     api-key: xxxxxxxxxx
   prometheusremotewrite:
     endpoint: http://host.docker.internal:9009/api/v1/push
     tls:
       insecure: true
     headers:
       X-Scope-OrgID: gotocompany
-    external_labels:
-      service: siren
-      team: gotocompany-infra
-      environment: development
-      host: local
-  logging:
-    loglevel: debug
+    # external_labels:
+    #   service: siren
+    #   team: gotocompany-infra
+    #   environment: development
+    #   host: local
+    remote_write_queue:
+      enabled: true
+      queue_size: 5000
+      num_consumers: 2
 
 extensions:
-  health_check:
+  health_check: {}
+  memory_ballast: {}
 
+processors:
+  batch: {}
+  # If set to null, will be overridden with values based on k8s resource limits
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 50
 service:
-  extensions: [health_check]
   telemetry:
-    logs:
-      level: debug
-      initial_fields:
-        service: my-instance
-  pipelines:
-    traces:
-      receivers: [opencensus]
-      processors: [batch]
-      exporters: [logging]
     metrics:
-      receivers: [opencensus]
-      processors: [batch]
-      exporters: [prometheusremotewrite, logging]
+      address: 0.0.0.0:8888
+  extensions:
+    - health_check
+    - memory_ballast
+  pipelines:
+    logs:
+      exporters:
+        - logging
+      processors:
+        - memory_limiter
+        - batch
+      receivers:
+        - otlp
+    metrics:
+      exporters:
+        - prometheusremotewrite
+      processors:
+        - memory_limiter
+        - batch
+      receivers:
+        - statsd
+        - otlp
+        - opencensus
+        # - prometheus
+    # traces:
+    #   exporters:
+    #     - otlp
+    #   processors:
+    #     - memory_limiter
+    #     - batch
+    #   receivers:
+    #     - otlp
+    #     - jaeger
+    #     - zipkin
+    #     - opencensus

@@ -205,48 +205,40 @@ func (s *QueueTestSuite) TestEnqueueDequeueWithCallback() {
 	s.Run("should update row with error for id \"5\"", func() {
 		var anError = errors.New("some error")
 
-		err := s.q.Enqueue(s.ctx, messages...)
-		s.Require().NoError(err)
+		s.Require().NoError(s.q.Enqueue(s.ctx, messages...))
 
 		for _, m := range messages {
 			if m.ID == "5" {
 				m.MarkFailed(time.Now(), true, anError)
-				err = s.q.ErrorCallback(s.ctx, m)
-				s.Assert().NoError(err)
+				s.Assert().NoError(s.q.ErrorCallback(s.ctx, m))
 			}
 		}
 
 		tempMessage := &postgresq.NotificationMessage{}
-		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s WHERE id = '5'", postgresq.MessageQueueTableFullName))
-		s.Require().NoError(err)
+		s.Require().NoError(s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s WHERE id = '5'", postgresq.MessageQueueTableFullName)))
 
 		s.Assert().Equal(string(notification.MessageStatusFailed), tempMessage.Status)
 		s.Assert().Equal(anError.Error(), tempMessage.LastError.String)
 		s.Assert().Equal(1, tempMessage.TryCount)
 
-		err = s.cleanup()
-		s.Require().NoError(err)
+		s.Require().NoError(s.cleanup())
 	})
 
 	s.Run("should update row with when successfully published", func() {
-		err := s.q.Enqueue(s.ctx, messages...)
-		s.Require().NoError(err)
+		s.Require().NoError(s.q.Enqueue(s.ctx, messages...))
 
 		for _, m := range messages {
 			m.MarkPublished(time.Now())
-			err = s.q.SuccessCallback(s.ctx, m)
-			s.Assert().NoError(err)
+			s.Assert().NoError(s.q.SuccessCallback(s.ctx, m))
 		}
 
 		tempMessage := &postgresq.NotificationMessage{}
-		err = s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MessageQueueTableFullName))
-		s.Require().NoError(err)
+		s.Require().NoError(s.dbc.Get(tempMessage, fmt.Sprintf("SELECT * FROM %s LIMIT 1", postgresq.MessageQueueTableFullName)))
 
 		s.Assert().Equal(string(notification.MessageStatusPublished), tempMessage.Status)
 		s.Assert().Equal(1, tempMessage.TryCount)
 
-		err = s.cleanup()
-		s.Require().NoError(err)
+		s.Require().NoError(s.cleanup())
 	})
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/goto/siren/core/log"
 	"github.com/goto/siren/core/silence"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
 )
 
 type DispatchSubscriberService struct {
@@ -57,7 +56,7 @@ func (s *DispatchSubscriberService) PrepareMessage(ctx context.Context, n Notifi
 	}
 
 	if len(subscriptions) == 0 {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationSubscriberNotFound)
+		// telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationSubscriberNotFound)
 		return nil, nil, false, errors.ErrInvalid.WithMsgf("not matching any subscription")
 	}
 

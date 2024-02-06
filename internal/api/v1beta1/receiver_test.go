@@ -36,7 +36,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 
 	t.Run("should return list of all receiver", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().List(mock.AnythingOfType("context.todoCtx"), receiver.Filter{}).
 			Return(dummyResult, nil).Once()
 
@@ -52,7 +52,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if getting providers failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().List(mock.AnythingOfType("context.todoCtx"), receiver.Filter{}).
 			Return(nil, errors.New("random error"))
 
@@ -63,7 +63,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if NewStruct conversion failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		configurations["foo"] = string([]byte{0xff})
 		dummyResult := []receiver.Receiver{
 			{
@@ -111,7 +111,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("Should create a receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), payload).Run(func(ctx context.Context, rcv *receiver.Receiver) {
 			rcv.ID = generatedID
 		}).Return(nil).Once()
@@ -122,7 +122,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if create receiver failed with err invalid", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 
 		mockedReceiverService.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), payload).Return(errors.ErrInvalid).Once()
 
@@ -135,7 +135,7 @@ func TestGRPCServer_CreateReceiver(t *testing.T) {
 	t.Run("should return error Internal if creating receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), payload).Return(errors.New("random error")).Once()
 
 		res, err := dummyGRPCServer.CreateReceiver(context.TODO(), dummyReq)
@@ -164,7 +164,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 	t.Run("should return a receiver", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), receiverId, mock.AnythingOfType("receiver.GetOption")).
 			Return(payload, nil).Once()
 
@@ -178,7 +178,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 	t.Run("should return error Not Found if no receiver found", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), receiverId, mock.AnythingOfType("receiver.GetOption")).
 			Return(nil, errors.ErrNotFound).Once()
 
@@ -189,7 +189,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if getting receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), receiverId, mock.AnythingOfType("receiver.GetOption")).
 			Return(payload, errors.New("random error")).Once()
 
@@ -200,7 +200,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if NewStruct conversion of configuration failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 
 		configurations["foo"] = string([]byte{0xff})
 		payload := &receiver.Receiver{
@@ -219,7 +219,7 @@ func TestGRPCServer_GetReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if data NewStruct conversion of data failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		data := make(map[string]any)
 		data["channels"] = string([]byte{0xff})
 		payload := &receiver.Receiver{
@@ -264,7 +264,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should update receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), payload).Run(func(ctx context.Context, rcv *receiver.Receiver) {
 			rcv.ID = payload.ID
 		}).Return(nil).Once()
@@ -276,7 +276,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 
 	t.Run("should return error Invalid Argument if update receiver return invalid error", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 
 		mockedReceiverService.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), payload).Return(errors.ErrInvalid).Once()
 
@@ -288,7 +288,7 @@ func TestGRPCServer_UpdateReceiver(t *testing.T) {
 	t.Run("should return error Internal if updating receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), payload).Return(errors.New("random error"))
 
 		res, err := dummyGRPCServer.UpdateReceiver(context.TODO(), dummyReq)
@@ -305,7 +305,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 
 	t.Run("should delete receiver object", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), providerId).
 			Return(nil).Once()
 
@@ -316,7 +316,7 @@ func TestGRPCServer_DeleteReceiver(t *testing.T) {
 
 	t.Run("should return error Internal if deleting receiver failed", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
 		mockedReceiverService.EXPECT().Delete(mock.AnythingOfType("context.todoCtx"), providerId).
 			Return(errors.New("random error")).Once()
 

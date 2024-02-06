@@ -39,13 +39,12 @@ var ruleListQueryBuilder = sq.Select(
 
 // RuleRepository talks to the store to read or insert data
 type RuleRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewRuleRepository returns repository struct
 func NewRuleRepository(client *pgc.Client) *RuleRepository {
-	return &RuleRepository{client, "rules"}
+	return &RuleRepository{client}
 }
 
 func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
@@ -59,7 +58,7 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 	}
 
 	var newRuleModel model.Rule
-	if err := r.client.QueryRowxContext(ctx, "UPSERT", r.tableName, ruleUpsertQuery,
+	if err := r.client.QueryRowxContext(ctx, ruleUpsertQuery,
 		ruleModel.Name,
 		ruleModel.Namespace,
 		ruleModel.GroupName,
@@ -111,7 +110,7 @@ func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

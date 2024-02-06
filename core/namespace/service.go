@@ -9,7 +9,6 @@ import (
 	"github.com/goto/siren/pkg/secret"
 )
 
-//go:generate mockery --name=ProviderService -r --case underscore --with-expecter --structname ProviderService --filename provider_service.go --output=./mocks
 type ProviderService interface {
 	Get(ctx context.Context, id uint64) (*provider.Provider, error)
 }

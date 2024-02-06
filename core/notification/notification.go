@@ -16,7 +16,6 @@ const (
 	TypeSubscriber string = "subscriber"
 )
 
-//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname Repository --filename repository.go --output=./mocks
 type Repository interface {
 	Create(context.Context, Notification) (Notification, error)
 }

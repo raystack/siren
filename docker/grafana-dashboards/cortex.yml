@@ -1,0 +1,7 @@
+apiVersion: 1
+ 
+datasources:
+  - name: Cortex
+    type: prometheus
+    access: proxy
+    url: http://host.docker.internal:9009/prometheus

@@ -6,10 +6,10 @@ import (
 
 	"github.com/goto/salt/config"
 	"github.com/goto/salt/db"
+	"github.com/goto/salt/telemetry"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/server"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
 	"github.com/goto/siren/plugins"
 	"github.com/goto/siren/plugins/receivers"
 )

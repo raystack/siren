@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-//go:generate mockery --name=NotificationLogRepository -r --case underscore --with-expecter --structname NotificationLogRepository --filename notification_log_repository.go --output=./mocks
 type NotificationLogRepository interface {
 	BulkCreate(context.Context, []Notification) error
 	ListAlertIDsBySilenceID(context.Context, string) ([]int64, error)

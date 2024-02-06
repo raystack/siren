@@ -12,7 +12,7 @@ import (
 // Provider plugin needs to implement this interface in order to
 // support rule synchronization from siren to provider
 //
-//go:generate mockery --name=RuleUploader -r --case underscore --with-expecter --structname RuleUploader --filename rule_uploader.go --output=./mocks
+
 type RuleUploader interface {
 	UpsertRule(ctx context.Context, ns namespace.Namespace, prov provider.Provider, rl *Rule, templateToUpdate *template.Template) error
 }

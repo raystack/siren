@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"github.com/goto/salt/log"
-	"github.com/newrelic/go-agent/v3/newrelic"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -27,7 +26,6 @@ func WithDebugRequest(debugRequest bool) GRPCServerOption {
 }
 
 type GRPCServer struct {
-	newrelic              *newrelic.Application
 	logger                log.Logger
 	headers               api.HeadersConfig
 	useGlobalSubscription bool
@@ -45,14 +43,12 @@ type GRPCServer struct {
 }
 
 func NewGRPCServer(
-	nr *newrelic.Application,
 	logger log.Logger,
 	headers api.HeadersConfig,
 	apiDeps *api.Deps,
 	opts ...GRPCServerOption) *GRPCServer {
 
 	s := &GRPCServer{
-		newrelic:            nr,
 		headers:             headers,
 		logger:              logger,
 		templateService:     apiDeps.TemplateService,

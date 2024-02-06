@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/goto/salt/db"
 	"github.com/goto/salt/dockertestx"
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/silence"
@@ -44,12 +43,7 @@ func (s *SilenceRepositoryTestSuite) SetupSuite() {
 	s.resource = dpg.GetResource()
 
 	dbConfig.URL = dpg.GetExternalConnString()
-	dbc, err := db.New(dbConfig)
-	if err != nil {
-		s.T().Fatal(err)
-	}
-
-	s.client, err = pgc.NewClient(logger, dbc)
+	s.client, err = pgc.NewClient(logger, dbConfig)
 	if err != nil {
 		s.T().Fatal(err)
 	}

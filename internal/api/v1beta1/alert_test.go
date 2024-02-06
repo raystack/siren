@@ -32,7 +32,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 			StartTime:    100,
 			EndTime:      200,
 		}).Return(dummyAlerts, nil).Once()
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, nil, api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(nil, api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
 
 		dummyReq := &sirenv1beta1.ListAlertsRequest{
 			ResourceName: "foo",
@@ -54,7 +54,7 @@ func TestGRPCServer_ListAlerts(t *testing.T) {
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
 
 		mockedAlertService.EXPECT().List(mock.AnythingOfType("context.todoCtx"), alert.Filter{
 			ProviderID:   1,
@@ -175,7 +175,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockNotificationService.EXPECT().BuildFromAlerts(mock.AnythingOfType("[]alert.Alert"), mock.AnythingOfType("int"), mock.AnythingOfType("time.Time")).Return([]notification.Notification{}, nil)
 		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		res, err := dummyGRPCServer.CreateAlerts(context.TODO(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -284,7 +284,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 		mockNotificationService.EXPECT().BuildFromAlerts(mock.AnythingOfType("[]alert.Alert"), mock.AnythingOfType("int"), mock.AnythingOfType("time.Time")).Return([]notification.Notification{}, nil)
 		mockNotificationService.EXPECT().Dispatch(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil)
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		res, err := dummyGRPCServer.CreateAlerts(context.TODO(), dummyReq)
 		assert.Equal(t, 1, len(res.GetAlerts()))
@@ -300,7 +300,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 
 	t.Run("should return error Internal if getting alert history failed", func(t *testing.T) {
 		mockedAlertService := &mocks.AlertService{}
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService})
 
 		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), payload).
 			Return(nil, 0, errors.New("random error")).Once()
@@ -459,7 +459,7 @@ func TestGRPCServer_CreateAlertHistory(t *testing.T) {
 			TriggeredAt:  time.Now(),
 		}}
 
-		dummyGRPCServer := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
+		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{AlertService: mockedAlertService, NotificationService: mockNotificationService})
 
 		mockedAlertService.EXPECT().CreateAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), payload).
 			Return(dummyAlerts, 2, nil).Once()

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	saltlog "github.com/goto/salt/log"
-	"go.opencensus.io/trace"
 
 	"github.com/goto/siren/core/alert"
 	"github.com/goto/siren/core/log"
@@ -15,35 +14,28 @@ import (
 	"github.com/goto/siren/core/subscription"
 	"github.com/goto/siren/core/template"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
 )
 
-//go:generate mockery --name=Dispatcher -r --case underscore --with-expecter --structname Dispatcher --filename dispatcher.go --output=./mocks
 type Dispatcher interface {
 	PrepareMessage(ctx context.Context, n Notification) ([]Message, []log.Notification, bool, error)
 }
 
-//go:generate mockery --name=SubscriptionService -r --case underscore --with-expecter --structname SubscriptionService --filename subscription_service.go --output=./mocks
 type SubscriptionService interface {
 	MatchByLabels(ctx context.Context, namespaceID uint64, labels map[string]string) ([]subscription.Subscription, error)
 }
 
-//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
 	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
 }
 
-//go:generate mockery --name=SilenceService -r --case underscore --with-expecter --structname SilenceService --filename silence_service.go --output=./mocks
 type SilenceService interface {
 	List(ctx context.Context, filter silence.Filter) ([]silence.Silence, error)
 }
 
-//go:generate mockery --name=AlertService -r --case underscore --with-expecter --structname AlertService --filename alert_service.go --output=./mocks
 type AlertService interface {
 	UpdateSilenceStatus(ctx context.Context, alertIDs []int64, hasSilenced bool, hasNonSilenced bool) error
 }
 
-//go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks
 type LogService interface {
 	LogNotifications(ctx context.Context, nlogs ...log.Notification) error
 }
@@ -62,7 +54,6 @@ type Service struct {
 	alertService          AlertService
 	notifierPlugins       map[string]Notifier
 	dispatcher            map[string]Dispatcher
-	messagingTracer       *telemetry.MessagingTracer
 	enableSilenceFeature  bool
 }
 
@@ -117,11 +108,6 @@ func NewService(
 		enableSilenceFeature: enableSilenceFeature,
 	}
 
-	ns.messagingTracer = telemetry.NewMessagingTracer("default")
-	if q != nil {
-		ns.messagingTracer = telemetry.NewMessagingTracer(q.Type())
-	}
-
 	return ns
 }
 
@@ -150,12 +136,7 @@ func (s *Service) Dispatch(ctx context.Context, n Notification) error {
 		return err
 	}
 
-	ctx, span := s.messagingTracer.StartSpan(ctx, "prepare_message",
-		trace.StringAttribute("messaging.notification_id", n.ID),
-		trace.StringAttribute("messaging.routing_method", n.Type),
-	)
 	messages, notificationLogs, hasSilenced, err := dispatcherService.PrepareMessage(ctx, n)
-	span.End()
 	if err != nil {
 		return err
 	}

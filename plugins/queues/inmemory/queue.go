@@ -89,10 +89,6 @@ func (q *Queue) Cleanup(ctx context.Context, filter queues.FilterCleanup) error 
 	return plugins.ErrNotImplemented
 }
 
-func (q *Queue) Type() string {
-	return "inmemory"
-}
-
 // Stop is a inmemmory queue function
 // this will close the channel to simulate queue
 func (q *Queue) Stop(ctx context.Context) error {

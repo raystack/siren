@@ -7,7 +7,6 @@ import (
 	"github.com/goto/siren/core/provider"
 )
 
-//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname NamespaceRepository --filename namespace_repository.go --output=./mocks
 type Repository interface {
 	Transactor
 	List(context.Context) ([]EncryptedNamespace, error)
@@ -18,7 +17,6 @@ type Repository interface {
 	Delete(context.Context, uint64) error
 }
 
-//go:generate mockery --name=Transactor -r --case underscore --with-expecter --structname Transactor --filename transactor.go --output=./mocks
 type Transactor interface {
 	WithTransaction(ctx context.Context) context.Context
 	Rollback(ctx context.Context, err error) error

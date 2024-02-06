@@ -17,7 +17,7 @@ func TestService_List(t *testing.T) {
 	ctx := context.TODO()
 
 	t.Run("should call repository List method with proper arguments and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := alert.NewService(repositoryMock, nil, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
@@ -44,7 +44,7 @@ func TestService_List(t *testing.T) {
 	})
 
 	t.Run("should call repository List method with proper arguments if endtime is zero", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := alert.NewService(repositoryMock, nil, nil)
 		timenow := time.Now()
 		dummyAlerts := []alert.Alert{
@@ -66,7 +66,7 @@ func TestService_List(t *testing.T) {
 	})
 
 	t.Run("should call repository List method and handle errors", func(t *testing.T) {
-		repositoryMock := &mocks.AlertRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := alert.NewService(repositoryMock, nil, nil)
 		repositoryMock.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.Anything).
 			Return(nil, errors.New("random error"))
@@ -107,7 +107,7 @@ func TestService_CreateAlerts(t *testing.T) {
 
 	var testCases = []struct {
 		name              string
-		setup             func(*mocks.AlertRepository, *mocks.AlertTransformer)
+		setup             func(*mocks.Repository, *mocks.AlertTransformer)
 		alertsToBeCreated map[string]any
 		expectedAlerts    []alert.Alert
 		expectedFiringLen int
@@ -115,7 +115,7 @@ func TestService_CreateAlerts(t *testing.T) {
 	}{
 		{
 			name: "should return error if TransformToAlerts return error",
-			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+			setup: func(ar *mocks.Repository, at *mocks.AlertTransformer) {
 				at.EXPECT().TransformToAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return(nil, 0, errors.New("some error"))
 			},
 			alertsToBeCreated: alertsToBeCreated,
@@ -123,7 +123,7 @@ func TestService_CreateAlerts(t *testing.T) {
 		},
 		{
 			name: "should call repository Create method with proper arguments",
-			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+			setup: func(ar *mocks.Repository, at *mocks.AlertTransformer) {
 				at.EXPECT().TransformToAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
@@ -140,7 +140,7 @@ func TestService_CreateAlerts(t *testing.T) {
 		},
 		{
 			name: "should return error not found if repository return err relation",
-			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+			setup: func(ar *mocks.Repository, at *mocks.AlertTransformer) {
 				at.EXPECT().TransformToAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
@@ -152,7 +152,7 @@ func TestService_CreateAlerts(t *testing.T) {
 		},
 		{
 			name: "should handle errors from repository",
-			setup: func(ar *mocks.AlertRepository, at *mocks.AlertTransformer) {
+			setup: func(ar *mocks.Repository, at *mocks.AlertTransformer) {
 				at.EXPECT().TransformToAlerts(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]interface {}")).Return([]alert.Alert{
 					{ID: 1, ProviderID: 1, ResourceName: "foo", Severity: "CRITICAL", MetricName: "lag", MetricValue: "20",
 						Rule: "lagHigh", TriggeredAt: timenow},
@@ -167,7 +167,7 @@ func TestService_CreateAlerts(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var (
-				repositoryMock       = &mocks.AlertRepository{}
+				repositoryMock       = &mocks.Repository{}
 				alertTransformerMock = &mocks.AlertTransformer{}
 			)
 

@@ -50,9 +50,7 @@ func (s *CortexNamespaceTestSuite) SetupTest() {
 			Enabled: false,
 		},
 	}
-	s.appConfig.Telemetry.Debug = ""
-	s.appConfig.Telemetry.EnableNewrelic = false
-	s.appConfig.Telemetry.EnableOtelAgent = false
+	s.appConfig.Telemetry.OpenTelemetry.Enabled = false
 
 	s.testBench, err = InitCortexEnvironment(s.appConfig)
 	s.Require().NoError(err)

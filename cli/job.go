@@ -8,6 +8,7 @@ import (
 	"github.com/goto/salt/cmdx"
 	"github.com/goto/salt/log"
 	"github.com/goto/salt/printer"
+	"github.com/goto/salt/telemetry"
 	"github.com/goto/siren/config"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/jobs"
@@ -149,14 +150,21 @@ func jobRunCleanupIdempotencyCommand() *cobra.Command {
 			$ siren job run cleanup_idempotency
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			cfg, err := config.Load(configFile)
 			if err != nil {
 				return err
 			}
 
 			logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
+			cleanUpTelemetry, err := telemetry.Init(ctx, cfg.Telemetry, logger)
+			if err != nil {
+				return err
+			}
 
-			apiDeps, _, pgClient, _, _, err := InitDeps(cmd.Context(), logger, cfg, nil, false)
+			defer cleanUpTelemetry()
+
+			apiDeps, pgClient, _, _, err := InitDeps(ctx, logger, cfg, nil, false)
 			if err != nil {
 				return err
 			}

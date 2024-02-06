@@ -7,6 +7,7 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/goto/salt/printer"
+	"github.com/goto/salt/telemetry"
 	"github.com/goto/siren/config"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/server"
@@ -122,8 +123,14 @@ func serverMigrateCommand() *cobra.Command {
 func StartServer(ctx context.Context, cfg config.Config) error {
 	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
+	cleanUpTelemetry, err := telemetry.Init(ctx, cfg.Telemetry, logger)
+	if err != nil {
+		return err
+	}
+
+	defer cleanUpTelemetry()
+
 	var queue, dlq notification.Queuer
-	var err error
 	switch cfg.Notification.Queue.Kind {
 	case queues.KindPostgres:
 		queue, err = postgresq.New(logger, cfg.DB)
@@ -139,7 +146,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		dlq = inmemory.New(logger, 10)
 	}
 
-	apiDeps, nrApp, pgClient, notifierRegistry, providersPluginManager, err := InitDeps(ctx, logger, cfg, queue, true)
+	apiDeps, pgClient, notifierRegistry, providersPluginManager, err := InitDeps(ctx, logger, cfg, queue, true)
 	if err != nil {
 		return err
 	}
@@ -151,7 +158,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 
 	if cfg.Notification.MessageHandler.Enabled {
 		workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration), worker.WithID("message-handler"))
-		notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, nrApp, queue, notifierRegistry,
+		notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, queue, notifierRegistry,
 			notification.HandlerWithIdentifier(workerTicker.GetID()))
 		wg.Add(1)
 		go func() {
@@ -163,7 +170,7 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 	}
 	if cfg.Notification.DLQHandler.Enabled {
 		workerDLQTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration), worker.WithID("dlq-handler"))
-		notificationDLQHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, nrApp, dlq, notifierRegistry,
+		notificationDLQHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, dlq, notifierRegistry,
 			notification.HandlerWithIdentifier(workerDLQTicker.GetID()))
 		wg.Add(1)
 		go func() {
@@ -178,7 +185,6 @@ func StartServer(ctx context.Context, cfg config.Config) error {
 		ctx,
 		cfg.Service,
 		logger,
-		nrApp,
 		apiDeps,
 	)
 

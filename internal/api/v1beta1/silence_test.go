@@ -80,7 +80,7 @@ func TestGRPCServer_CreateSilence(t *testing.T) {
 				tt.setup(mockSilenceService)
 			}
 
-			s := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
+			s := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
 			got, err := s.CreateSilence(ctx, tt.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GRPCServer.CreateSilence() error = %v, wantErr %v", err, tt.wantErr)
@@ -145,7 +145,7 @@ func TestGRPCServer_ListSilences(t *testing.T) {
 				tt.setup(mockSilenceService)
 			}
 
-			s := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
+			s := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
 			got, err := s.ListSilences(ctx, &sirenv1beta1.ListSilencesRequest{})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GRPCServer.ListSilences() error = %v, wantErr %v", err, tt.wantErr)
@@ -215,7 +215,7 @@ func TestGRPCServer_GetSilence(t *testing.T) {
 				tt.setup(mockSilenceService)
 			}
 
-			s := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
+			s := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
 			got, err := s.GetSilence(ctx, tt.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GRPCServer.GetSilence() error = %v, wantErr %v", err, tt.wantErr)
@@ -275,7 +275,7 @@ func TestGRPCServer_ExpireSilence(t *testing.T) {
 				tt.setup(mockSilenceService)
 			}
 
-			s := v1beta1.NewGRPCServer(nil, log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
+			s := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{SilenceService: mockSilenceService})
 			got, err := s.ExpireSilence(ctx, tt.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GRPCServer.ExpireSilence() error = %v, wantErr %v", err, tt.wantErr)

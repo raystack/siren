@@ -10,7 +10,6 @@ import (
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/pkg/pgc"
-	"github.com/goto/siren/pkg/telemetry"
 	"github.com/goto/siren/plugins/queues/postgresq/migrations"
 )
 
@@ -28,10 +27,9 @@ const (
 )
 
 type Queue struct {
-	logger         log.Logger
-	pgClient       *pgc.Client
-	strategy       Strategy
-	postgresTracer *telemetry.PostgresTracer
+	logger   log.Logger
+	pgClient *pgc.Client
+	strategy Strategy
 }
 
 var (
@@ -93,12 +91,7 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 		strategy: StrategyDefault,
 	}
 
-	dbClient, err := db.New(dbConfig)
-	if err != nil {
-		return nil, fmt.Errorf("error creating db queue client: %w", err)
-	}
-
-	pgClient, err := pgc.NewClient(logger, dbClient)
+	pgClient, err := pgc.NewClient(logger, dbConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error creating postgres queue client: %w", err)
 	}
@@ -106,7 +99,7 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 	q.pgClient = pgClient
 
 	// create schema if not exist
-	_, err = dbClient.ExecContext(context.Background(), fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", MessageQueueSchemaName))
+	_, err = pgClient.ExecContext(context.Background(), fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", MessageQueueSchemaName))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create notification schema: %w", err)
 	}
@@ -120,15 +113,6 @@ func New(logger log.Logger, dbConfig db.Config, opts ...QueueOption) (*Queue, er
 	for _, opt := range opts {
 		opt(q)
 	}
-
-	postgresTracer, err := telemetry.NewPostgresTracer(
-		dbClient.ConnectionURL(),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	q.postgresTracer = postgresTracer
 
 	return q, nil
 }
@@ -147,7 +131,7 @@ func (q *Queue) Dequeue(ctx context.Context, receiverTypes []string, batchSize i
 		dequeueQuery = getQueueDequeueQuery(batchSize, receiverTypesQuery)
 	}
 
-	rows, err := q.pgClient.QueryxContext(ctx, "SELECT_UPDATE", MessageQueueTableFullName, dequeueQuery)
+	rows, err := q.pgClient.GetDB(ctx).QueryxContext(ctx, dequeueQuery)
 	if err != nil {
 		return err
 	}
@@ -184,7 +168,7 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 		messages = append(messages, *message)
 	}
 
-	res, err := q.pgClient.NamedExecContext(ctx, pgc.OpInsert, MessageQueueTableFullName, queueEnqueueNamedQuery, messages)
+	res, err := q.pgClient.NamedExecContext(ctx, queueEnqueueNamedQuery, messages)
 	if err != nil {
 		return err
 	}
@@ -201,7 +185,7 @@ func (q *Queue) Enqueue(ctx context.Context, ms ...notification.Message) error {
 // SuccessCallback is a callback that will be called once the message is succesfully handled by handlerFn
 func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) error {
 	q.logger.Debug("marking a message as published", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.pgClient.ExecContext(ctx, "UPDATE_SUCCESS", MessageQueueTableFullName, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, successCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.ID)
 	if err != nil {
 		return err
 	}
@@ -219,7 +203,7 @@ func (q *Queue) SuccessCallback(ctx context.Context, ms notification.Message) er
 // ErrorCallback is a callback that will be called once the message is failed to be handled by handlerFn
 func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) error {
 	q.logger.Debug("marking a message as failed with", "strategy", q.strategy, "id", ms.ID)
-	res, err := q.pgClient.ExecContext(ctx, "UPDATE_ERROR", MessageQueueTableFullName, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
+	res, err := q.pgClient.ExecContext(ctx, errorCallbackQuery, ms.UpdatedAt, ms.Status, ms.TryCount, ms.LastError, ms.Retryable, ms.ID)
 	if err != nil {
 		return err
 	}
@@ -232,10 +216,6 @@ func (q *Queue) ErrorCallback(ctx context.Context, ms notification.Message) erro
 	}
 	q.logger.Debug("marked a message as failed with", "strategy", q.strategy, "id", ms.ID)
 	return nil
-}
-
-func (q *Queue) Type() string {
-	return "postgresql"
 }
 
 // Stop will close the db

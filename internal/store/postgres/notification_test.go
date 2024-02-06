@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goto/salt/db"
 	"github.com/goto/salt/dockertestx"
 	"github.com/goto/salt/log"
 	"github.com/goto/siren/core/notification"
@@ -42,12 +41,7 @@ func (s *NotificationRepositoryTestSuite) SetupSuite() {
 	s.resource = dpg.GetResource()
 
 	dbConfig.URL = dpg.GetExternalConnString()
-	dbc, err := db.New(dbConfig)
-	if err != nil {
-		s.T().Fatal(err)
-	}
-
-	s.client, err = pgc.NewClient(logger, dbc)
+	s.client, err = pgc.NewClient(logger, dbConfig)
 	if err != nil {
 		s.T().Fatal(err)
 	}

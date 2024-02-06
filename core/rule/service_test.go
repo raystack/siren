@@ -18,7 +18,7 @@ func TestService_Upsert(t *testing.T) {
 	type testCase struct {
 		Description string
 		Rule        *rule.Rule
-		Setup       func(*mocks.RuleRepository, *mocks.TemplateService, *mocks.NamespaceService, *mocks.RuleUploader)
+		Setup       func(*mocks.Repository, *mocks.TemplateService, *mocks.NamespaceService, *mocks.RuleUploader)
 		ErrString   string
 	}
 	var (
@@ -38,7 +38,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
 				},
 				ErrString: "some error",
@@ -57,7 +57,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(nil, errors.New("some error"))
 				},
@@ -77,7 +77,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -105,7 +105,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{}, nil)
 
@@ -128,7 +128,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{}, nil)
 					ns.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&namespace.Namespace{
 						Provider: provider.Provider{
@@ -156,7 +156,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
@@ -194,7 +194,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
@@ -232,7 +232,7 @@ func TestService_Upsert(t *testing.T) {
 						},
 					},
 				},
-				Setup: func(rr *mocks.RuleRepository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
+				Setup: func(rr *mocks.Repository, ts *mocks.TemplateService, ns *mocks.NamespaceService, ru *mocks.RuleUploader) {
 					ts.EXPECT().GetByName(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("string")).Return(&template.Template{
 						Variables: []template.Variable{
 							{
@@ -262,7 +262,7 @@ func TestService_Upsert(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
 			var (
-				repositoryMock       = new(mocks.RuleRepository)
+				repositoryMock       = new(mocks.Repository)
 				templateServiceMock  = new(mocks.TemplateService)
 				namespaceServiceMock = new(mocks.NamespaceService)
 				ruleUploaderMock     = new(mocks.RuleUploader)
@@ -295,7 +295,7 @@ func TestService_Upsert(t *testing.T) {
 
 func TestService_List(t *testing.T) {
 	t.Run("should call repository List method and return result in domain's type", func(t *testing.T) {
-		repositoryMock := &mocks.RuleRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := rule.NewService(repositoryMock, nil, nil, nil)
 		ctx := context.Background()
 
@@ -331,7 +331,7 @@ func TestService_List(t *testing.T) {
 	})
 
 	t.Run("should call repository List method and return error if any", func(t *testing.T) {
-		repositoryMock := &mocks.RuleRepository{}
+		repositoryMock := &mocks.Repository{}
 		dummyService := rule.NewService(repositoryMock, nil, nil, nil)
 		ctx := context.Background()
 

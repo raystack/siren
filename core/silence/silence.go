@@ -10,7 +10,6 @@ import (
 
 const TargetExpressionRuleKey = "rule"
 
-//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname SubscriptionRepository --filename subscription_repository.go --output=./mocks
 type Repository interface {
 	Create(context.Context, Silence) (string, error)
 	List(context.Context, Filter) ([]Silence, error)

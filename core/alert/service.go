@@ -7,7 +7,6 @@ import (
 	"github.com/goto/siren/pkg/errors"
 )
 
-//go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks
 type LogService interface {
 	ListAlertIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error)
 }

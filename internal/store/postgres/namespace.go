@@ -57,13 +57,12 @@ DELETE from namespaces where id=$1
 
 // NamespaceRepository talks to the store to read or insert data
 type NamespaceRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewNamespaceRepository returns repository struct
 func NewNamespaceRepository(client *pgc.Client) *NamespaceRepository {
-	return &NamespaceRepository{client, "namespaces"}
+	return &NamespaceRepository{client}
 }
 
 func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNamespace, error) {
@@ -73,7 +72,7 @@ func (r NamespaceRepository) List(ctx context.Context) ([]namespace.EncryptedNam
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +99,7 @@ func (r NamespaceRepository) Create(ctx context.Context, ns *namespace.Encrypted
 	nsModel.FromDomain(*ns)
 
 	var createdNamespace model.Namespace
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, namespaceInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, namespaceInsertQuery,
 		nsModel.ProviderID,
 		nsModel.URN,
 		nsModel.Name,
@@ -129,7 +128,7 @@ func (r NamespaceRepository) Get(ctx context.Context, id uint64) (*namespace.Enc
 	}
 
 	var nsDetailModel model.NamespaceDetail
-	if err := r.client.QueryRowxContext(ctx, pgc.OpSelect, r.tableName, query, args...).StructScan(&nsDetailModel); err != nil {
+	if err := r.client.QueryRowxContext(ctx, query, args...).StructScan(&nsDetailModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, namespace.NotFoundError{ID: id}
 		}
@@ -148,7 +147,7 @@ func (r NamespaceRepository) Update(ctx context.Context, ns *namespace.Encrypted
 	namespaceModel.FromDomain(*ns)
 
 	var updatedNamespace model.Namespace
-	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, namespaceUpdateQuery,
+	if err := r.client.QueryRowxContext(ctx, namespaceUpdateQuery,
 		namespaceModel.ID,
 		namespaceModel.ProviderID,
 		namespaceModel.URN,
@@ -180,7 +179,7 @@ func (r NamespaceRepository) UpdateLabels(ctx context.Context, id uint64, labels
 	}
 	pgLabels := pgc.StringStringMap(labels)
 	var updatedNamespace model.Namespace
-	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, namespaceUpdateLabelQuery, id, pgLabels).
+	if err := r.client.QueryRowxContext(ctx, namespaceUpdateLabelQuery, id, pgLabels).
 		StructScan(&updatedNamespace); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return namespace.NotFoundError{ID: id}
@@ -190,7 +189,7 @@ func (r NamespaceRepository) UpdateLabels(ctx context.Context, id uint64, labels
 }
 
 func (r NamespaceRepository) Delete(ctx context.Context, id uint64) error {
-	rows, err := r.client.QueryxContext(ctx, pgc.OpDelete, r.tableName, namespaceDeleteQuery, id)
+	rows, err := r.client.QueryxContext(ctx, namespaceDeleteQuery, id)
 	if err != nil {
 		return err
 	}

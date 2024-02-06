@@ -27,18 +27,17 @@ DELETE FROM idempotencies WHERE now() - interval '%d seconds' > updated_at
 
 // IdempotencyRepository talks to the store to read or insert idempotency keys
 type IdempotencyRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewIdempotencyRepository returns repository struct
 func NewIdempotencyRepository(client *pgc.Client) *IdempotencyRepository {
-	return &IdempotencyRepository{client, "idempotencies"}
+	return &IdempotencyRepository{client}
 }
 
 func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, scope, key string) (*notification.Idempotency, error) {
 	var idempotencyModel model.Idempotency
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, idempotencyInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, idempotencyInsertQuery,
 		scope, key,
 	).StructScan(&idempotencyModel); err != nil {
 		return nil, pgc.CheckError(err)
@@ -48,7 +47,7 @@ func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, s
 }
 
 func (r *IdempotencyRepository) UpdateSuccess(ctx context.Context, id uint64, success bool) error {
-	rows, err := r.client.ExecContext(ctx, pgc.OpUpdate, r.tableName, idempotencyUpdateQuery,
+	rows, err := r.client.ExecContext(ctx, idempotencyUpdateQuery,
 		id, success,
 	)
 	if err != nil {
@@ -75,7 +74,7 @@ func (r *IdempotencyRepository) Delete(ctx context.Context, filter notification.
 
 	ttlInSecond := int(filter.TTL.Seconds())
 
-	rows, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, fmt.Sprintf(idempotencyDeleteTemplateQuery, ttlInSecond))
+	rows, err := r.client.ExecContext(ctx, fmt.Sprintf(idempotencyDeleteTemplateQuery, ttlInSecond))
 	if err != nil {
 		return err
 	}

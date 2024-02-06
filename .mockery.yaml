@@ -1,0 +1,239 @@
+with-expecter: True
+packages:
+  github.com/goto/siren/internal/api:
+    config:
+      dir: "internal/api/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      AlertService:
+        config:
+          filename: "alert_service.go"
+      NamespaceService:
+        config:
+          filename: "namespace_service.go"
+      ProviderService:
+        config:
+          filename: "provider_service.go"
+      ReceiverService:
+        config:
+          filename: "receiver_service.go"
+      RuleService:
+        config:
+          filename: "rule_service.go"
+      SubscriptionService:
+        config:
+          filename: "subscription_service.go"
+      TemplateService:
+        config:
+          filename: "template_service.go"
+      NotificationService:
+        config:
+          filename: "notification_service.go"
+      SilenceService:
+        config:
+          filename: "silence_service.go"
+  github.com/goto/siren/core/alert:
+    config:
+      dir: "core/alert/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Repository:
+        config:
+          filename: "alert_repository.go"
+      AlertTransformer:
+        config:
+          filename: "alert_transformer.go"
+      LogService:
+        config:
+          filename: "log_service.go"
+  github.com/goto/siren/core/log:
+    config:
+      dir: "core/log/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      NotificationLogRepository:
+        config:
+          filename: "notification_log_repository.go"
+  github.com/goto/siren/core/namespace:
+    config:
+      dir: "core/namespace/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Encryptor:
+        config:
+          filename: "encryptor.go"
+      Repository:
+        config:
+          filename: "namespace_repository.go"
+      Transactor:
+        config:
+          filename: "transactor.go"
+      ConfigSyncer:
+        config:
+          filename: "config_syncer.go"
+      ProviderService:
+        config:
+          filename: "provider_service.go"
+  github.com/goto/siren/core/notification:
+    config:
+      dir: "core/notification/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      IdempotencyRepository:
+        config:
+          filename: "idempotency_repository.go"
+      Repository:
+        config:
+          filename: "notification_repository.go"
+      Notifier:
+        config:
+          filename: "notifier.go"
+      Queuer:
+        config:
+          filename: "queuer.go"
+      Dispatcher:
+        config:
+          filename: "dispatcher.go"
+      SubscriptionService:
+        config:
+          filename: "subscription_service.go"
+      ReceiverService:
+        config:
+          filename: "receiver_service.go"
+      SilenceService:
+        config:
+          filename: "silence_service.go"
+      AlertService:
+        config:
+          filename: "alert_service.go"
+      LogService:
+        config:
+          filename: "log_service.go"
+  github.com/goto/siren/core/provider:
+    config:
+      dir: "core/provider/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Repository:
+        config:
+          filename: "provider_repository.go"
+  github.com/goto/siren/core/receiver:
+    config:
+      dir: "core/receiver/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Encryptor:
+        config:
+          filename: "encryptor.go"
+      ConfigResolver:
+        config:
+          filename: "config_resolver.go"
+      Repository:
+        config:
+          filename: "receiver_repository.go"
+  github.com/goto/siren/core/rule:
+    config:
+      dir: "core/rule/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      RuleUploader:
+        config:
+          filename: "rule_uploader.go"
+      Repository:
+        config:
+          filename: "rule_repository.go"
+      Transactor:
+        config:
+          filename: "transactor.go"
+      NamespaceService:
+        config:
+          filename: "namespace_service.go"
+      TemplateService:
+        config:
+          filename: "template_service.go"
+  github.com/goto/siren/core/silence:
+    config:
+      dir: "core/silence/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Repository:
+        config:
+          filename: "silence_repository.go"
+  github.com/goto/siren/core/subscription:
+    config:
+      dir: "core/subscription/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      LogService:
+        config:
+          filename: "log_service.go"
+      NamespaceService:
+        config:
+          filename: "namespace_service.go"
+      ReceiverService:
+        config:
+          filename: "receiver_service.go"
+      Repository:
+        config:
+          filename: "subscription_repository.go"
+  github.com/goto/siren/core/template:
+    config:
+      dir: "core/template/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Repository:
+        config:
+          filename: "template_repository.go"
+  github.com/goto/siren/internal/jobs:
+    config:
+      dir: "internal/jobs/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      Repository:
+        config:
+          filename: "notification_service.go"
+  github.com/goto/siren/plugins/providers/cortex/v1:
+    config:
+      dir: "plugins/providers/cortex/v1/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      CortexCaller:
+        config:
+          filename: "cortex_caller.go"
+  github.com/goto/siren/plugins/receivers/pagerduty:
+    config:
+      dir: "plugins/receivers/pagerduty/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      PagerDutyCaller:
+        config:
+          filename: "pagerduty_caller.go"
+  github.com/goto/siren/plugins/receivers/slack:
+    config:
+      dir: "plugins/receivers/slack/mocks"
+      outpkg: "mocks"
+      mockname: "{{.InterfaceName}}"
+    interfaces:
+      GoSlackCaller:
+        config:
+          filename: "goslack_caller.go"
+      Encryptor:
+        config:
+          filename: "encryptor.go"
+      SlackCaller:
+        config:
+          filename: "slack_caller.go"

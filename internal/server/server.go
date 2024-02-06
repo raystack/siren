@@ -20,9 +20,7 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/newrelic/go-agent/v3/integrations/nrgrpc"
-	"github.com/newrelic/go-agent/v3/newrelic"
-	"go.opencensus.io/plugin/ocgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -57,7 +55,6 @@ func RunServer(
 	ctx context.Context,
 	c Config,
 	logger log.Logger,
-	nr *newrelic.Application,
 	apiDeps *api.Deps) error {
 
 	var err error
@@ -81,20 +78,18 @@ func RunServer(
 		}),
 	}
 	grpcServer := grpc.NewServer(
-		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_recovery.UnaryServerInterceptor(),
 			grpc_ctxtags.UnaryServerInterceptor(),
-			nrgrpc.UnaryServerInterceptor(nr),
 			grpc_validator.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(zapLogger, loggerOpts...),
+			grpc_recovery.UnaryServerInterceptor(),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
-			nrgrpc.StreamServerInterceptor(nr),
 			grpc_validator.StreamServerInterceptor(),
 			grpc_zap.StreamServerInterceptor(zapLogger, loggerOpts...),
+			grpc_recovery.StreamServerInterceptor(),
 		)),
 	)
 
@@ -131,7 +126,6 @@ func RunServer(
 	defer runtimeCancel()
 
 	sirenServiceRPC := v1beta1.NewGRPCServer(
-		nr,
 		logger,
 		c.APIHeaders,
 		apiDeps,

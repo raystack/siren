@@ -27,7 +27,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//go:generate mockery --name=CortexCaller -r --case underscore --with-expecter --structname CortexCaller --filename cortex_caller.go --output=./mocks
 type CortexCaller interface {
 	CreateAlertmanagerConfig(ctx context.Context, cfg string, templates map[string]string) error
 	CreateRuleGroup(ctx context.Context, namespace string, rg rwrulefmt.RuleGroup) error

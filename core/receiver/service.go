@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
-	"go.opencensus.io/tag"
 )
 
 // Service handles business logic
@@ -81,11 +79,6 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-			tag.Upsert(telemetry.TagReceiverType, rcv.Type),
-			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPreHookDB),
-		)
-
 		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
 
@@ -148,11 +141,6 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-			tag.Upsert(telemetry.TagReceiverType, rcv.Type),
-			tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPostHookDB),
-		)
-
 		return nil, err
 	}
 	rcv.Configurations = transformedConfigs

@@ -38,13 +38,12 @@ var alertListQueryBuilder = sq.Select(
 
 // AlertRepository talks to the store to read or insert data
 type AlertRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewAlertRepository returns repository struct
 func NewAlertRepository(client *pgc.Client) *AlertRepository {
-	return &AlertRepository{client, "alerts"}
+	return &AlertRepository{client}
 }
 
 func (r AlertRepository) Create(ctx context.Context, alrt alert.Alert) (alert.Alert, error) {
@@ -52,7 +51,7 @@ func (r AlertRepository) Create(ctx context.Context, alrt alert.Alert) (alert.Al
 	alertModel.FromDomain(alrt)
 
 	var newAlertModel model.Alert
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, alertInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, alertInsertQuery,
 		alertModel.ProviderID,
 		alertModel.NamespaceID,
 		alertModel.ResourceName,
@@ -100,7 +99,7 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +125,7 @@ func (r AlertRepository) BulkUpdateSilence(ctx context.Context, alertIDs []int64
 	} else {
 		silenceStatusPG = sql.NullString{Valid: true, String: silenceStatus}
 	}
-	if _, err := r.client.ExecContext(ctx, pgc.OpUpdate, r.tableName, alertUpdateBulkSilenceQuery,
+	if _, err := r.client.ExecContext(ctx, alertUpdateBulkSilenceQuery,
 		silenceStatusPG,
 		sqlAlertIDs,
 	); err != nil {

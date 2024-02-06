@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-//go:generate mockery --name=Repository -r --case underscore --with-expecter --structname RuleRepository --filename rule_repository.go --output=./mocks
 type Repository interface {
 	Transactor
 	Upsert(context.Context, *Rule) error

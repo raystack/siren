@@ -31,7 +31,7 @@ func NewLogRepository(client *pgc.Client) *LogRepository {
 }
 
 func (r *LogRepository) ListAlertIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error) {
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, notificationLogTableName, fmt.Sprintf(`
+	rows, err := r.client.QueryxContext(ctx, fmt.Sprintf(`
 	SELECT distinct unnest(alert_ids) AS alert_ids FROM %s WHERE silence_ids @> '{%s}'
 	`, notificationLogTableName, silenceID))
 	if err != nil {
@@ -53,7 +53,7 @@ func (r *LogRepository) ListAlertIDsBySilenceID(ctx context.Context, silenceID s
 }
 
 func (r *LogRepository) ListSubscriptionIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error) {
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, notificationLogTableName, fmt.Sprintf(`
+	rows, err := r.client.QueryxContext(ctx, fmt.Sprintf(`
 	SELECT distinct subscription_id FROM %s WHERE silence_ids @> '{%s}'
 	`, notificationLogTableName, silenceID))
 	if err != nil {
@@ -83,7 +83,7 @@ func (r *LogRepository) BulkCreate(ctx context.Context, nss []log.Notification) 
 		nssModel = append(nssModel, *nsModel)
 	}
 
-	res, err := r.client.NamedExecContext(ctx, pgc.OpInsert, notificationLogTableName, notificationLogInsertNamedQuery, nssModel)
+	res, err := r.client.NamedExecContext(ctx, notificationLogInsertNamedQuery, nssModel)
 	if err != nil {
 		return err
 	}
@@ -96,61 +96,3 @@ func (r *LogRepository) BulkCreate(ctx context.Context, nss []log.Notification) 
 	}
 	return nil
 }
-
-// func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscription.Subscription, error) {
-// 	query, args, err := subscriptionListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	var subscriptionModel model.Subscription
-// 	if err := r.client.QueryRowxContext(ctx, pgc.OpSelect, r.tableName, query, args...).StructScan(&subscriptionModel); err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return nil, subscription.NotFoundError{ID: id}
-// 		}
-// 		return nil, err
-// 	}
-
-// 	return subscriptionModel.ToDomain(), nil
-// }
-
-// func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.Subscription) error {
-// 	if sub == nil {
-// 		return errors.New("subscription domain is nil")
-// 	}
-
-// 	subscriptionModel := new(model.Subscription)
-// 	subscriptionModel.FromDomain(*sub)
-
-// 	var newSubscriptionModel model.Subscription
-// 	if err := r.client.QueryRowxContext(ctx, pgc.OpUpdate, r.tableName, subscriptionUpdateQuery,
-// 		subscriptionModel.ID,
-// 		subscriptionModel.NamespaceID,
-// 		subscriptionModel.URN,
-// 		subscriptionModel.Receiver,
-// 		subscriptionModel.Match,
-// 	).StructScan(&newSubscriptionModel); err != nil {
-// 		err := pgc.CheckError(err)
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return subscription.NotFoundError{ID: subscriptionModel.ID}
-// 		}
-// 		if errors.Is(err, pgc.ErrDuplicateKey) {
-// 			return subscription.ErrDuplicate
-// 		}
-// 		if errors.Is(err, pgc.ErrForeignKeyViolation) {
-// 			return subscription.ErrRelation
-// 		}
-// 		return err
-// 	}
-
-// 	*sub = *newSubscriptionModel.ToDomain()
-
-// 	return nil
-// }
-
-// func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-// 	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, subscriptionDeleteQuery, id); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

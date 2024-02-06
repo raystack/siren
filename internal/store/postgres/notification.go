@@ -16,15 +16,13 @@ RETURNING *
 
 // NotificationRepository talks to the store to read or insert data
 type NotificationRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewNotificationRepository returns NotificationRepository struct
 func NewNotificationRepository(client *pgc.Client) *NotificationRepository {
 	return &NotificationRepository{
-		client:    client,
-		tableName: "notifications",
+		client: client,
 	}
 }
 
@@ -33,7 +31,7 @@ func (r *NotificationRepository) Create(ctx context.Context, n notification.Noti
 	nModel.FromDomain(n)
 
 	var newNModel model.Notification
-	if err := r.client.QueryRowxContext(ctx, pgc.OpInsert, r.tableName, notificationInsertQuery,
+	if err := r.client.QueryRowxContext(ctx, notificationInsertQuery,
 		nModel.NamespaceID,
 		nModel.Type,
 		nModel.Data,

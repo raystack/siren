@@ -7,7 +7,6 @@ import (
 	"github.com/goto/salt/log"
 )
 
-//go:generate mockery --name=NotificationService -r --case underscore --with-expecter --structname NotificationService --filename notification_service.go --output=./mocks
 type NotificationService interface {
 	RemoveIdempotencies(ctx context.Context, TTL time.Duration) error
 }

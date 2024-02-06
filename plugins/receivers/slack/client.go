@@ -21,7 +21,6 @@ const (
 	oAuthSlackPath      = "/oauth.v2.access"
 )
 
-//go:generate mockery --name=GoSlackCaller -r --case underscore --with-expecter --structname GoSlackCaller --filename goslack_caller.go --output=./mocks
 type GoSlackCaller interface {
 	GetConversationsForUserContext(ctx context.Context, params *goslack.GetConversationsForUserParameters) (channels []goslack.Channel, nextCursor string, err error)
 	GetUserByEmailContext(ctx context.Context, email string) (*goslack.User, error)

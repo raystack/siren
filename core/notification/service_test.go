@@ -14,7 +14,6 @@ import (
 	"github.com/goto/siren/core/notification/mocks"
 	"github.com/goto/siren/core/template"
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/plugins/queues"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -118,7 +117,7 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, errors.New("some error"))
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -132,7 +131,7 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, nil)
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, nil)
 			},
 			wantErr: true,
 		},
@@ -146,8 +145,8 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
-				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(errors.New("some error"))
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
+				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -161,9 +160,9 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
-				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
-				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(errors.New("some error"))
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
+				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
+				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -177,10 +176,10 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, q *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
-				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
-				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
+				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
+				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(errors.New("some error"))
 			},
 			wantErr: true,
 		},
@@ -194,10 +193,10 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, q *mocks.Queuer, d *mocks.Dispatcher) {
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(n, nil)
-				d.EXPECT().PrepareMessage(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
-				l.EXPECT().LogNotifications(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
-				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)
-				q.EXPECT().Enqueue(mock.AnythingOfType("*context.valueCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
+				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
+				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
+				a.EXPECT().UpdateSilenceStatus(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("[]int64"), mock.AnythingOfType("bool"), mock.AnythingOfType("bool")).Return(nil)
+				q.EXPECT().Enqueue(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Message")).Return(nil)
 			},
 		},
 	}
@@ -215,7 +214,6 @@ func TestService_Dispatch(t *testing.T) {
 				tt.setup(tt.n, mockRepository, mockLogService, mockAlertService, mockQueuer, mockDispatcher)
 			}
 
-			mockQueuer.EXPECT().Type().Return(queues.KindPostgres.String())
 			s := notification.NewService(
 				saltlog.NewNoop(),
 				notification.Config{},

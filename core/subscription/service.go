@@ -8,12 +8,10 @@ import (
 	"github.com/goto/siren/pkg/errors"
 )
 
-//go:generate mockery --name=LogService -r --case underscore --with-expecter --structname LogService --filename log_service.go --output=./mocks
 type LogService interface {
 	ListSubscriptionIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error)
 }
 
-//go:generate mockery --name=NamespaceService -r --case underscore --with-expecter --structname NamespaceService --filename namespace_service.go --output=./mocks
 type NamespaceService interface {
 	List(context.Context) ([]namespace.Namespace, error)
 	Create(context.Context, *namespace.Namespace) error
@@ -22,7 +20,6 @@ type NamespaceService interface {
 	Delete(context.Context, uint64) error
 }
 
-//go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
 	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
 }

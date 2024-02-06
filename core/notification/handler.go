@@ -6,12 +6,8 @@ import (
 	"time"
 
 	"github.com/goto/salt/log"
-	"github.com/newrelic/go-agent/v3/newrelic"
-	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
 
 	"github.com/goto/siren/pkg/errors"
-	"github.com/goto/siren/pkg/telemetry"
 )
 
 const (
@@ -25,19 +21,15 @@ type Handler struct {
 	identifier             string
 	notifierRegistry       map[string]Notifier
 	supportedReceiverTypes []string
-	messagingTracer        *telemetry.MessagingTracer
-	nrApp                  *newrelic.Application
-
-	batchSize int
+	batchSize              int
 }
 
 // NewHandler creates a new handler with some supported type of Notifiers
-func NewHandler(cfg HandlerConfig, logger log.Logger, nrApp *newrelic.Application, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
+func NewHandler(cfg HandlerConfig, logger log.Logger, q Queuer, registry map[string]Notifier, opts ...HandlerOption) *Handler {
 	h := &Handler{
 		batchSize: defaultBatchSize,
 
 		logger:           logger,
-		nrApp:            nrApp,
 		notifierRegistry: registry,
 		q:                q,
 	}
@@ -72,8 +64,6 @@ func NewHandler(cfg HandlerConfig, logger log.Logger, nrApp *newrelic.Applicatio
 		opt(h)
 	}
 
-	h.messagingTracer = telemetry.NewMessagingTracer(q.Type())
-
 	return h
 }
 
@@ -86,31 +76,13 @@ func (h *Handler) getNotifierPlugin(receiverType string) (Notifier, error) {
 }
 
 func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
-	txn := h.nrApp.StartTransaction(h.identifier)
-	defer txn.End()
-	nrCtx := newrelic.NewContext(ctx, txn)
-
 	receiverTypes := h.supportedReceiverTypes
 	if len(receiverTypes) == 0 {
-		err := errors.New("no receiver type plugin registered, skipping dequeue")
-		txn.NoticeError(err)
-		return err
+		return errors.New("no receiver type plugin registered, skipping dequeue")
 	} else {
-		traceCtx, span := h.messagingTracer.StartSpan(nrCtx, "batch_dequeue", trace.StringAttribute("messaging.handler_id", h.identifier))
-		defer h.messagingTracer.StopSpan()
-
-		if err := h.q.Dequeue(traceCtx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
+		if err := h.q.Dequeue(ctx, receiverTypes, h.batchSize, h.MessageHandler); err != nil {
 			if !errors.Is(err, ErrNoMessage) {
-				span.SetStatus(trace.Status{
-					Code:    trace.StatusCodeUnknown,
-					Message: err.Error(),
-				})
-				err = fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
-				txn.NoticeError(err)
-				return err
-			} else {
-				// no messages found
-				txn.Ignore()
+				return fmt.Errorf("dequeue failed on handler with id %s: %w", h.identifier, err)
 			}
 		}
 	}
@@ -120,10 +92,6 @@ func (h *Handler) Process(ctx context.Context, runAt time.Time) error {
 // MessageHandler is a function to handler dequeued message
 func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error {
 	for _, message := range messages {
-
-		telemetry.GaugeMillisecond(ctx, telemetry.MetricNotificationMessageQueueTime, time.Since(message.UpdatedAt).Milliseconds(),
-			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
 		notifier, err := h.getNotifierPlugin(message.ReceiverType)
 		if err != nil {
 			return err
@@ -131,22 +99,9 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 
 		message.MarkPending(time.Now())
 
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
 		newConfig, err := notifier.PostHookQueueTransformConfigs(ctx, message.Configs)
 		if err != nil {
 			message.MarkFailed(time.Now(), false, err)
-
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricReceiverHookFailed,
-				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType),
-				tag.Upsert(telemetry.TagHookCondition, telemetry.HookConditionPostHookQueue),
-			)
-
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
 			if cerr := h.q.ErrorCallback(ctx, message); cerr != nil {
 				return cerr
@@ -158,10 +113,6 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		if retryable, err := notifier.Send(ctx, message); err != nil {
 			message.MarkFailed(time.Now(), retryable, err)
 
-			telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-				tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-				tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
-
 			if cerr := h.q.ErrorCallback(ctx, message); cerr != nil {
 				return cerr
 			}
@@ -169,10 +120,6 @@ func (h *Handler) MessageHandler(ctx context.Context, messages []Message) error 
 		}
 
 		message.MarkPublished(time.Now())
-
-		telemetry.IncrementInt64Counter(ctx, telemetry.MetricNotificationMessageCounter,
-			tag.Upsert(telemetry.TagMessageStatus, message.Status.String()),
-			tag.Upsert(telemetry.TagReceiverType, message.ReceiverType))
 
 		if err := h.q.SuccessCallback(ctx, message); err != nil {
 			return err

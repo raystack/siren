@@ -36,13 +36,12 @@ var templateListQueryBuilder = sq.Select(
 
 // TemplateRepository talks to the store to read or insert data
 type TemplateRepository struct {
-	client    *pgc.Client
-	tableName string
+	client *pgc.Client
 }
 
 // NewTemplateRepository returns repository struct
 func NewTemplateRepository(client *pgc.Client) *TemplateRepository {
-	return &TemplateRepository{client, "templates"}
+	return &TemplateRepository{client}
 }
 
 func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template) error {
@@ -56,7 +55,7 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 	}
 
 	var upsertedTemplate model.Template
-	if err := r.client.QueryRowxContext(ctx, "UPSERT", r.tableName, templateUpsertQuery,
+	if err := r.client.QueryRowxContext(ctx, templateUpsertQuery,
 		templateModel.Name,
 		templateModel.Body,
 		templateModel.Tags,
@@ -90,7 +89,7 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, pgc.OpSelectAll, r.tableName, query, args...)
+	rows, err := r.client.QueryxContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 	}
 
 	var templateModel model.Template
-	if err = r.client.GetContext(ctx, pgc.OpSelect, r.tableName, &templateModel, query, args...); err != nil {
+	if err = r.client.GetContext(ctx, &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, template.NotFoundError{Name: name}
 		}
@@ -135,7 +134,7 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
-	if _, err := r.client.ExecContext(ctx, pgc.OpDelete, r.tableName, templateDeleteByNameQuery, name); err != nil {
+	if _, err := r.client.ExecContext(ctx, templateDeleteByNameQuery, name); err != nil {
 		return err
 	}
 	return nil

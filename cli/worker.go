@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/goto/salt/telemetry"
 	"github.com/goto/siren/config"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/pkg/worker"
@@ -131,7 +132,14 @@ func workerStartNotificationDLQHandlerCommand() *cobra.Command {
 func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
-	_, nrApp, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
+	cleanUpTelemetry, err := telemetry.Init(ctx, cfg.Telemetry, logger)
+	if err != nil {
+		return err
+	}
+
+	defer cleanUpTelemetry()
+
+	_, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
 	if err != nil {
 		return err
 	}
@@ -151,7 +159,7 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 						`, cfg.Notification.Queue.Kind.String()))
 	}
 	workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.MessageHandler.PollDuration), worker.WithID("message-worker"))
-	notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, nrApp, queue, notifierRegistry,
+	notificationHandler := notification.NewHandler(cfg.Notification.MessageHandler, logger, queue, notifierRegistry,
 		notification.HandlerWithIdentifier(workerTicker.GetID()))
 
 	go func() {
@@ -171,7 +179,14 @@ func StartNotificationHandlerWorker(ctx context.Context, cfg config.Config, canc
 func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, cancelWorkerChan chan struct{}) error {
 	logger := zaputil.InitLogger(serviceName, cfg.Log.Level, cfg.Log.GCPCompatible)
 
-	_, nrApp, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
+	cleanUpTelemetry, err := telemetry.Init(ctx, cfg.Telemetry, logger)
+	if err != nil {
+		return err
+	}
+
+	defer cleanUpTelemetry()
+
+	_, pgClient, notifierRegistry, _, err := InitDeps(ctx, logger, cfg, nil, false)
 	if err != nil {
 		return err
 	}
@@ -192,7 +207,7 @@ func StartNotificationDLQHandlerWorker(ctx context.Context, cfg config.Config, c
 	}
 
 	workerTicker := worker.NewTicker(logger, worker.WithTickerDuration(cfg.Notification.DLQHandler.PollDuration), worker.WithID("dlq-worker"))
-	notificationHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, nrApp, queue, notifierRegistry,
+	notificationHandler := notification.NewHandler(cfg.Notification.DLQHandler, logger, queue, notifierRegistry,
 		notification.HandlerWithIdentifier("dlq-"+workerTicker.GetID()))
 	go func() {
 		workerTicker.Run(ctx, cancelWorkerChan, func(ctx context.Context, runningAt time.Time) error {
