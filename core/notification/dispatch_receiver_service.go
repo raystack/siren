@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/goto/siren/core/log"
+	"github.com/goto/siren/core/receiver"
 	"github.com/goto/siren/pkg/errors"
 )
 
@@ -38,10 +39,19 @@ func (s *DispatchReceiverService) PrepareMessage(ctx context.Context, n Notifica
 		return nil, nil, false, err
 	}
 
-	rcv, err := s.receiverService.Get(ctx, receiverID)
+	rcvs, err := s.receiverService.List(ctx, receiver.Filter{
+		ReceiverIDs: []uint64{receiverID},
+		Expanded:    true,
+	})
 	if err != nil {
 		return nil, nil, false, err
 	}
+
+	if len(rcvs) == 0 {
+		return nil, nil, false, errors.ErrNotFound
+	}
+
+	rcv := rcvs[0]
 
 	notifierPlugin, err := s.getNotifierPlugin(rcv.Type)
 	if err != nil {

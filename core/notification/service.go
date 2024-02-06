@@ -30,7 +30,7 @@ type SubscriptionService interface {
 
 //go:generate mockery --name=ReceiverService -r --case underscore --with-expecter --structname ReceiverService --filename receiver_service.go --output=./mocks
 type ReceiverService interface {
-	Get(ctx context.Context, id uint64, gopts ...receiver.GetOption) (*receiver.Receiver, error)
+	List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error)
 }
 
 //go:generate mockery --name=SilenceService -r --case underscore --with-expecter --structname SilenceService --filename silence_service.go --output=./mocks
