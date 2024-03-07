@@ -41,6 +41,17 @@ var receiverListQueryBuilder = sq.Select(
 	"updated_at",
 ).From("receivers")
 
+var receiverListLeftJoinSelfQueryBuilder = sq.Select(
+	"r.id",
+	"r.name",
+	"r.type",
+	"r.labels",
+	"r.configurations || p.configurations AS configurations",
+	"r.parent_id",
+	"r.created_at",
+	"r.updated_at",
+).From("receivers r")
+
 // ReceiverRepository talks to the store to read or insert data
 type ReceiverRepository struct {
 	client *pgc.Client
@@ -117,18 +128,32 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 	return nil
 }
 
-func (r ReceiverRepository) Get(ctx context.Context, id uint64) (*receiver.Receiver, error) {
-	query, args, err := receiverListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return nil, err
-	}
-
+func (r ReceiverRepository) Get(ctx context.Context, id uint64, filter receiver.Filter) (*receiver.Receiver, error) {
 	var receiverModel model.Receiver
-	if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, receiver.NotFoundError{ID: id}
+	if filter.Expanded {
+		query, args, err := receiverListLeftJoinSelfQueryBuilder.LeftJoin("receivers p ON r.parent_id = p.id").Where("r.id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+
+		if err != nil {
+			return nil, err
 		}
-		return nil, err
+		if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, receiver.NotFoundError{ID: id}
+			}
+			return nil, err
+		}
+		return receiverModel.ToDomain(), nil
+	} else {
+		query, args, err := receiverListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+		if err != nil {
+			return nil, err
+		}
+		if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, receiver.NotFoundError{ID: id}
+			}
+			return nil, err
+		}
 	}
 
 	return receiverModel.ToDomain(), nil

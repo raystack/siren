@@ -53,3 +53,4 @@ func (rcv *Receiver) ToDomain() *receiver.Receiver {
 		UpdatedAt: rcv.UpdatedAt,
 	}
 }
+

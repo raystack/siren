@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	List(context.Context, Filter) ([]Receiver, error)
 	Create(context.Context, *Receiver) error
-	Get(context.Context, uint64) (*Receiver, error)
+	Get(context.Context, uint64, Filter) (*Receiver, error)
 	Update(context.Context, *Receiver) error
 	Delete(context.Context, uint64) error
 }

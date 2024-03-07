@@ -33,5 +33,18 @@
         "configurations": {
             "service_key": "1212121212121212121212121"
         }
+    },
+    {
+        "name": "de-infra-slack",
+        "type": "slack_channel",
+        "labels": {
+            "org": "gotocompany,org-a,org-b, org-de",
+            "team": "de-infra",
+            "severity": "warning"
+        },
+        "configurations": {
+            "channel_name": "test-pilot-alert"
+        },
+        "parent_id" : 1
     }
 ]

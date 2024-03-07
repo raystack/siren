@@ -116,7 +116,11 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 		g(opt)
 	}
 
-	rcv, err := s.repository.Get(ctx, id)
+	filter := Filter{
+		Expanded: opt.withExpand,
+	}
+
+	rcv, err := s.repository.Get(ctx, id, filter)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
@@ -132,12 +136,6 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 	if err != nil {
 		return nil, err
 	}
-
-	receivers, err := s.ExpandParents(ctx, []Receiver{*rcv})
-	if err != nil {
-		return nil, err
-	}
-	rcv = &receivers[0]
 
 	transformedConfigs, err := receiverPlugin.PostHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
@@ -158,7 +156,10 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 }
 
 func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
-	oldReceiver, err := s.repository.Get(ctx, rcv.ID)
+	filter := Filter{
+		Expanded: false,
+	}
+	oldReceiver, err := s.repository.Get(ctx, rcv.ID, filter)
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return errors.ErrNotFound.WithMsgf(err.Error())
@@ -235,7 +236,11 @@ func (s *Service) validateParent(ctx context.Context, rcv *Receiver) error {
 		return nil
 	}
 
-	parentRcv, err := s.repository.Get(ctx, rcv.ParentID)
+	filter := Filter{
+		Expanded: false,
+	}
+
+	parentRcv, err := s.repository.Get(ctx, rcv.ParentID, filter)
 	if err != nil {
 		return errors.ErrInvalid.WithMsgf("failed to check parent id %d", rcv.ParentID).WithCausef(err.Error())
 	}

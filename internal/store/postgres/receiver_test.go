@@ -129,6 +129,20 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 						"service_key": "1212121212121212121212121",
 					},
 				},
+				{
+					ID:   4,
+					Name: "de-infra-slack",
+					Type: "slack_channel",
+					Labels: map[string]string{
+						"org":      "gotocompany,org-a,org-b, org-de",
+						"team":     "de-infra",
+						"severity": "warning",
+					},
+					Configurations: map[string]any{
+						"channel_name": "test-pilot-alert",
+					},
+					ParentID: 1,
+				},
 			},
 		},
 		{
@@ -211,6 +225,7 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 		PassedID         uint64
 		ExpectedReceiver *receiver.Receiver
 		ErrString        string
+		WithExpand       bool
 	}
 
 	var testCases = []testCase{
@@ -229,17 +244,43 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 					"service_key": "1212121212121212121212121",
 				},
 			},
+			WithExpand: false,
 		},
 		{
 			Description: "should return not found if id not found",
 			PassedID:    1000,
 			ErrString:   "receiver with id 1000 not found",
+			WithExpand:  false,
+		},
+		{
+			Description: "should get a receiver with parent configurations when with expand set to true",
+			PassedID:    4,
+			ExpectedReceiver: &receiver.Receiver{
+				ID:   4,
+				Name: "de-infra-slack",
+				Type: "slack_channel",
+				Labels: map[string]string{
+					"org":      "gotocompany,org-a,org-b, org-de",
+					"team":     "de-infra",
+					"severity": "warning",
+				},
+				Configurations: map[string]any{
+					"token":        "xxxxxxxxxx",
+					"workspace":    "gotocompany",
+					"channel_name": "test-pilot-alert",
+				},
+				ParentID: 1,
+			},
+			WithExpand: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.Description, func() {
-			got, err := s.repository.Get(s.ctx, tc.PassedID)
+			filter := receiver.Filter{
+				Expanded: tc.WithExpand,
+			}
+			got, err := s.repository.Get(s.ctx, tc.PassedID, filter)
 			if tc.ErrString != "" {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)

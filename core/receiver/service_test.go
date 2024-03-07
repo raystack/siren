@@ -164,7 +164,8 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if type child but wrong parent",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), uint64(2)).Return(&receiver.Receiver{Type: receiver.TypeFile}, nil)
+
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), uint64(2), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{Type: receiver.TypeFile}, nil)
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -179,7 +180,7 @@ func TestService_CreateReceiver(t *testing.T) {
 			{
 				Description: "should return error if validateParent return error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), uint64(2)).Return(nil, errors.New("some error"))
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), uint64(2), receiver.Filter{Expanded: false}).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -298,14 +299,14 @@ func TestService_GetReceiver(t *testing.T) {
 			{
 				Description: "should return error if Get repository error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID).Return(nil, errors.New("some error"))
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(nil, errors.New("some error"))
 				},
 				Err: errors.New("some error"),
 			},
 			{
 				Description: "should return error if type unknown",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(&receiver.Receiver{
 						Type: "random",
 					}, nil)
 				},
@@ -314,14 +315,14 @@ func TestService_GetReceiver(t *testing.T) {
 			{
 				Description: "should return error not found if Get repository return not found error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID).Return(nil, receiver.NotFoundError{})
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(nil, receiver.NotFoundError{})
 				},
 				Err: errors.New("receiver not found"),
 			},
 			{
 				Description: "should return error if Get repository success and decrypt error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
 						Type: receiver.TypeSlack,
@@ -343,7 +344,7 @@ func TestService_GetReceiver(t *testing.T) {
 			{
 				Description: "should success if Get repository and decrypt success",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(&receiver.Receiver{
 						ID:   10,
 						Name: "foo",
 						Type: receiver.TypeSlack,
@@ -385,6 +386,58 @@ func TestService_GetReceiver(t *testing.T) {
 				},
 				Err: nil,
 			},
+			{
+				Description: "should success if Get repository and decrypt success with parent",
+				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), testID, receiver.Filter{Expanded: true}).Return(&receiver.Receiver{
+						ID:   10,
+						Name: "foo",
+						Type: receiver.TypeSlackChannel,
+						Labels: map[string]string{
+							"foo": "bar",
+						},
+						Configurations: map[string]any{
+							"channel_name": "de",
+							"token":        "val",
+						},
+						CreatedAt: timeNow,
+						UpdatedAt: timeNow,
+						ParentID:  9,
+					}, nil)
+					ss.EXPECT().PostHookDBTransformConfigs(mock.AnythingOfType("context.todoCtx"), map[string]any{
+						"token":        "val",
+						"channel_name": "de",
+					}).Return(map[string]any{
+						"token":        "decrypted_key",
+						"channel_name": "de",
+					}, nil)
+					ss.EXPECT().BuildData(mock.AnythingOfType("context.todoCtx"), map[string]any{
+						"token":        "decrypted_key",
+						"channel_name": "de",
+					}).Return(map[string]any{
+						"newdata": "populated",
+					}, nil)
+				},
+				ExpectedReceiver: &receiver.Receiver{
+					ID:   10,
+					Name: "foo",
+					Type: receiver.TypeSlackChannel,
+					Labels: map[string]string{
+						"foo": "bar",
+					},
+					Data: map[string]any{
+						"newdata": "populated",
+					},
+					Configurations: map[string]any{
+						"token":        "decrypted_key",
+						"channel_name": "de",
+					},
+					CreatedAt: timeNow,
+					UpdatedAt: timeNow,
+					ParentID:  9,
+				},
+				Err: nil,
+			},
 		}
 	)
 
@@ -396,7 +449,8 @@ func TestService_GetReceiver(t *testing.T) {
 			)
 
 			registry := map[string]receiver.ConfigResolver{
-				receiver.TypeSlack: resolverMock,
+				receiver.TypeSlack:        resolverMock,
+				receiver.TypeSlackChannel: resolverMock,
 			}
 
 			svc := receiver.NewService(repositoryMock, registry)
@@ -431,7 +485,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if get receiver return error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(nil, errors.New("some error"))
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(nil, errors.New("some error"))
 				},
 				Rcv: &receiver.Receiver{
 					ID: 123,
@@ -441,7 +495,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if type unknown",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{
 						Type: "random",
 					}, nil)
 				},
@@ -453,7 +507,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if PreHookDBTransformConfigs return error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
 						Configurations: map[string]any{
@@ -474,7 +528,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return error if Update repository return error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
 						Configurations: map[string]any{
@@ -504,7 +558,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			{
 				Description: "should return nil error if no error returned",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
 						Configurations: map[string]any{
@@ -533,7 +587,7 @@ func TestService_UpdateReceiver(t *testing.T) {
 			}, {
 				Description: "should return error not found if repository return not found error",
 				Setup: func(rr *mocks.Repository, ss *mocks.ConfigResolver) {
-					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64")).Return(&receiver.Receiver{
+					rr.EXPECT().Get(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), receiver.Filter{Expanded: false}).Return(&receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
 						Configurations: map[string]any{
