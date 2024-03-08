@@ -35,12 +35,12 @@
         }
     },
     {
-        "name": "de-infra-slack",
+        "name": "gotocompany-slack",
         "type": "slack_channel",
         "labels": {
-            "org": "gotocompany,org-a,org-b, org-de",
-            "team": "de-infra",
-            "severity": "warning"
+            "org": "gotocompany,org-a,org-b",
+            "team": "infra",
+            "severity": "critical"
         },
         "configurations": {
             "channel_name": "test-pilot-alert"

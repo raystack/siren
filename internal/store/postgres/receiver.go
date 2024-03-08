@@ -46,10 +46,11 @@ var receiverListLeftJoinSelfQueryBuilder = sq.Select(
 	"r.name",
 	"r.type",
 	"r.labels",
-	"r.configurations || p.configurations AS configurations",
 	"r.parent_id",
 	"r.created_at",
 	"r.updated_at",
+).Column(
+	sq.Expr("COALESCE(r.configurations || p.configurations, r.configurations) AS configurations"),
 ).From("receivers r")
 
 // ReceiverRepository talks to the store to read or insert data
@@ -63,40 +64,75 @@ func NewReceiverRepository(client *pgc.Client) *ReceiverRepository {
 }
 
 func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
-	var queryBuilder = receiverListQueryBuilder
-	if len(flt.ReceiverIDs) > 0 {
-		queryBuilder = queryBuilder.Where(sq.Eq{"id": flt.ReceiverIDs})
-	}
-
-	// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
-	if len(flt.Labels) != 0 {
-		labelsJSON, err := json.Marshal(flt.Labels)
-		if err != nil {
-			return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
-		}
-		queryBuilder = queryBuilder.Where(fmt.Sprintf("labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
-	}
-
-	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := r.client.QueryxContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	receiversDomain := []receiver.Receiver{}
-	for rows.Next() {
-		var receiverModel model.Receiver
-		if err := rows.StructScan(&receiverModel); err != nil {
+	if flt.Expanded {
+		var queryBuilder = receiverListLeftJoinSelfQueryBuilder
+		if len(flt.ReceiverIDs) > 0 {
+			queryBuilder = queryBuilder.Where(sq.Eq{"r.id": flt.ReceiverIDs})
+		}
+
+		// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
+		if len(flt.Labels) != 0 {
+			labelsJSON, err := json.Marshal(flt.Labels)
+			if err != nil {
+				return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
+			}
+			queryBuilder = queryBuilder.Where(fmt.Sprintf("r.labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
+		}
+
+		query, args, err := queryBuilder.LeftJoin("receivers p ON r.parent_id = p.id").PlaceholderFormat(sq.Dollar).ToSql()
+		if err != nil {
 			return nil, err
 		}
-		receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
-	}
 
+		rows, err := r.client.QueryxContext(ctx, query, args...)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var receiverModel model.Receiver
+			if err := rows.StructScan(&receiverModel); err != nil {
+				return nil, err
+			}
+			receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
+		}
+		return receiversDomain, nil
+	} else {
+		var queryBuilder = receiverListQueryBuilder
+		if len(flt.ReceiverIDs) > 0 {
+			queryBuilder = queryBuilder.Where(sq.Eq{"id": flt.ReceiverIDs})
+		}
+
+		// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
+		if len(flt.Labels) != 0 {
+			labelsJSON, err := json.Marshal(flt.Labels)
+			if err != nil {
+				return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
+			}
+			queryBuilder = queryBuilder.Where(fmt.Sprintf("labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
+		}
+
+		query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+		if err != nil {
+			return nil, err
+		}
+
+		rows, err := r.client.QueryxContext(ctx, query, args...)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var receiverModel model.Receiver
+			if err := rows.StructScan(&receiverModel); err != nil {
+				return nil, err
+			}
+			receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
+		}
+	}
 	return receiversDomain, nil
 }
 

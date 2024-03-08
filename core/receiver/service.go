@@ -2,7 +2,6 @@ package receiver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/goto/siren/pkg/errors"
 )
@@ -30,15 +29,6 @@ func (s *Service) getReceiverPlugin(receiverType string) (ConfigResolver, error)
 
 func (s *Service) List(ctx context.Context, flt Filter) ([]Receiver, error) {
 	receivers, err := s.repository.List(ctx, flt)
-	if err != nil {
-		return nil, err
-	}
-
-	if !flt.Expanded {
-		return receivers, nil
-	}
-
-	receivers, err = s.ExpandParents(ctx, receivers)
 	if err != nil {
 		return nil, err
 	}
@@ -189,46 +179,6 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 
 func (s *Service) Delete(ctx context.Context, id uint64) error {
 	return s.repository.Delete(ctx, id)
-}
-
-func (s *Service) ExpandParents(ctx context.Context, rcvs []Receiver) ([]Receiver, error) {
-	var uniqueParentIDsMap = map[uint64]bool{}
-	for _, rcv := range rcvs {
-		if rcv.ParentID != 0 {
-			uniqueParentIDsMap[rcv.ParentID] = true
-		}
-	}
-	if len(uniqueParentIDsMap) == 0 {
-		return rcvs, nil
-	}
-
-	var uniqueParentIDs []uint64
-	for k := range uniqueParentIDsMap {
-		uniqueParentIDs = append(uniqueParentIDs, k)
-	}
-
-	parentReceivers, err := s.List(ctx, Filter{ReceiverIDs: uniqueParentIDs, Expanded: false})
-	if err != nil {
-		return nil, fmt.Errorf("failure when expanding receiver parents: %w", err)
-	}
-
-	var parentReceiversMap = map[uint64]Receiver{}
-	for _, parentRcv := range parentReceivers {
-		parentReceiversMap[parentRcv.ID] = parentRcv
-	}
-
-	// enrich existing receivers
-	for _, rcv := range rcvs {
-		if rcv.ParentID != 0 {
-			if len(parentReceiversMap[rcv.ParentID].Configurations) != 0 {
-				for k, v := range parentReceiversMap[rcv.ParentID].Configurations {
-					rcv.Configurations[k] = v
-				}
-			}
-		}
-	}
-
-	return rcvs, nil
 }
 
 func (s *Service) validateParent(ctx context.Context, rcv *Receiver) error {

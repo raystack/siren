@@ -131,12 +131,12 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 				},
 				{
 					ID:   4,
-					Name: "de-infra-slack",
+					Name: "gotocompany-slack",
 					Type: "slack_channel",
 					Labels: map[string]string{
-						"org":      "gotocompany,org-a,org-b, org-de",
-						"team":     "de-infra",
-						"severity": "warning",
+						"org":      "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "critical",
 					},
 					Configurations: map[string]any{
 						"channel_name": "test-pilot-alert",
@@ -202,6 +202,134 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 				},
 			},
 		},
+		{
+			Description: "should get all receivers with parent configs merged",
+			Filter: receiver.Filter{
+				Expanded: true,
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   1,
+					Name: "gotocompany-slack",
+					Type: "slack",
+					Labels: map[string]string{
+						"entity":   "gotocompany,org-a,org-b",
+						"severity": "warning",
+						"team":     "infra",
+					},
+					Configurations: map[string]any{
+						"token":     "xxxxxxxxxx",
+						"workspace": "gotocompany",
+					},
+				},
+				{
+					ID:   2,
+					Name: "alert-history",
+					Type: "http",
+					Labels: map[string]string{
+						"entity": "gotocompany,org-a,org-b,org-c",
+						"team":   "infra",
+					},
+					Configurations: map[string]any{
+						"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
+					},
+				},
+				{
+					ID:   3,
+					Name: "gotocompany_pagerduty",
+					Type: "pagerduty",
+					Labels: map[string]string{
+						"entity": "gotocompany",
+						"team":   "siren-gotocompany",
+					},
+					Configurations: map[string]any{
+						"service_key": "1212121212121212121212121",
+					},
+				},
+				{
+					ID:   4,
+					Name: "gotocompany-slack",
+					Type: "slack_channel",
+					Labels: map[string]string{
+						"org":      "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "critical",
+					},
+					Configurations: map[string]any{
+						"token":        "xxxxxxxxxx",
+						"workspace":    "gotocompany",
+						"channel_name": "test-pilot-alert",
+					},
+					ParentID: 1,
+				},
+			},
+		},
+		{
+			Description: "should get filtered receivers with list of ids with parent configs merged",
+			Filter: receiver.Filter{
+				ReceiverIDs: []uint64{3, 4},
+				Expanded:    true,
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   4,
+					Name: "gotocompany-slack",
+					Type: "slack_channel",
+					Labels: map[string]string{
+						"org":      "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "critical",
+					},
+					Configurations: map[string]any{
+						"token":        "xxxxxxxxxx",
+						"workspace":    "gotocompany",
+						"channel_name": "test-pilot-alert",
+					},
+					ParentID: 1,
+				},
+				{
+					ID:   3,
+					Name: "gotocompany_pagerduty",
+					Type: "pagerduty",
+					Labels: map[string]string{
+						"entity": "gotocompany",
+						"team":   "siren-gotocompany",
+					},
+					Configurations: map[string]any{
+						"service_key": "1212121212121212121212121",
+					},
+				},
+			},
+		},
+		{
+			Description: "should get filtered receivers with labels with parent configs merged",
+			Filter: receiver.Filter{
+				Labels: map[string]string{
+					"org":      "gotocompany,org-a,org-b",
+					"team":     "infra",
+					"severity": "critical",
+				},
+				Expanded: true,
+			},
+			ExpectedReceivers: []receiver.Receiver{
+				{
+					ID:   4,
+					Name: "gotocompany-slack",
+					Type: "slack_channel",
+					Labels: map[string]string{
+						"org":      "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "critical",
+					},
+					Configurations: map[string]any{
+						"token":        "xxxxxxxxxx",
+						"workspace":    "gotocompany",
+						"channel_name": "test-pilot-alert",
+					},
+					ParentID: 1,
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -257,12 +385,12 @@ func (s *ReceiverRepositoryTestSuite) TestGet() {
 			PassedID:    4,
 			ExpectedReceiver: &receiver.Receiver{
 				ID:   4,
-				Name: "de-infra-slack",
+				Name: "gotocompany-slack",
 				Type: "slack_channel",
 				Labels: map[string]string{
-					"org":      "gotocompany,org-a,org-b, org-de",
-					"team":     "de-infra",
-					"severity": "warning",
+					"org":      "gotocompany,org-a,org-b",
+					"team":     "infra",
+					"severity": "critical",
 				},
 				Configurations: map[string]any{
 					"token":        "xxxxxxxxxx",
