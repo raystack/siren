@@ -163,6 +163,8 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 		return err
 	}
 
+	// override passed type, type is immutable
+	rcv.Type = oldReceiver.Type
 	rcv.Configurations, err = receiverPlugin.PreHookDBTransformConfigs(ctx, rcv.Configurations)
 	if err != nil {
 		return errors.ErrInvalid.WithMsgf("%s", err.Error())
