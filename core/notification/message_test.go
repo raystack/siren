@@ -34,7 +34,7 @@ func TestMessage_InitMessage(t *testing.T) {
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, nil)
 			},
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.FlowSubscriber,
 				Labels: map[string]string{
 					"labelkey1": "value1",
 					"samekey":   "label_value",
@@ -51,7 +51,7 @@ func TestMessage_InitMessage(t *testing.T) {
 					"labelkey1":                             "value1",
 					"varkey1":                               "value1",
 					"samekey":                               "var_value",
-					notification.DetailsKeyNotificationType: notification.TypeSubscriber,
+					notification.DetailsKeyNotificationType: notification.FlowSubscriber,
 				},
 				CreatedAt: testTimeNow,
 				UpdatedAt: testTimeNow,

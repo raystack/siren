@@ -22,6 +22,127 @@ func (_m *IdempotencyRepository) EXPECT() *IdempotencyRepository_Expecter {
 	return &IdempotencyRepository_Expecter{mock: &_m.Mock}
 }
 
+// Check provides a mock function with given fields: ctx, scope, key
+func (_m *IdempotencyRepository) Check(ctx context.Context, scope string, key string) (*notification.Idempotency, error) {
+	ret := _m.Called(ctx, scope, key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Check")
+	}
+
+	var r0 *notification.Idempotency
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*notification.Idempotency, error)); ok {
+		return rf(ctx, scope, key)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *notification.Idempotency); ok {
+		r0 = rf(ctx, scope, key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*notification.Idempotency)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, scope, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IdempotencyRepository_Check_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Check'
+type IdempotencyRepository_Check_Call struct {
+	*mock.Call
+}
+
+// Check is a helper method to define mock.On call
+//   - ctx context.Context
+//   - scope string
+//   - key string
+func (_e *IdempotencyRepository_Expecter) Check(ctx interface{}, scope interface{}, key interface{}) *IdempotencyRepository_Check_Call {
+	return &IdempotencyRepository_Check_Call{Call: _e.mock.On("Check", ctx, scope, key)}
+}
+
+func (_c *IdempotencyRepository_Check_Call) Run(run func(ctx context.Context, scope string, key string)) *IdempotencyRepository_Check_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *IdempotencyRepository_Check_Call) Return(_a0 *notification.Idempotency, _a1 error) *IdempotencyRepository_Check_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IdempotencyRepository_Check_Call) RunAndReturn(run func(context.Context, string, string) (*notification.Idempotency, error)) *IdempotencyRepository_Check_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Create provides a mock function with given fields: ctx, scope, key, notificationID
+func (_m *IdempotencyRepository) Create(ctx context.Context, scope string, key string, notificationID string) (*notification.Idempotency, error) {
+	ret := _m.Called(ctx, scope, key, notificationID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Create")
+	}
+
+	var r0 *notification.Idempotency
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*notification.Idempotency, error)); ok {
+		return rf(ctx, scope, key, notificationID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *notification.Idempotency); ok {
+		r0 = rf(ctx, scope, key, notificationID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*notification.Idempotency)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, scope, key, notificationID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IdempotencyRepository_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
+type IdempotencyRepository_Create_Call struct {
+	*mock.Call
+}
+
+// Create is a helper method to define mock.On call
+//   - ctx context.Context
+//   - scope string
+//   - key string
+//   - notificationID string
+func (_e *IdempotencyRepository_Expecter) Create(ctx interface{}, scope interface{}, key interface{}, notificationID interface{}) *IdempotencyRepository_Create_Call {
+	return &IdempotencyRepository_Create_Call{Call: _e.mock.On("Create", ctx, scope, key, notificationID)}
+}
+
+func (_c *IdempotencyRepository_Create_Call) Run(run func(ctx context.Context, scope string, key string, notificationID string)) *IdempotencyRepository_Create_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *IdempotencyRepository_Create_Call) Return(_a0 *notification.Idempotency, _a1 error) *IdempotencyRepository_Create_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *IdempotencyRepository_Create_Call) RunAndReturn(run func(context.Context, string, string, string) (*notification.Idempotency, error)) *IdempotencyRepository_Create_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Delete provides a mock function with given fields: _a0, _a1
 func (_m *IdempotencyRepository) Delete(_a0 context.Context, _a1 notification.IdempotencyFilter) error {
 	ret := _m.Called(_a0, _a1)
@@ -65,114 +186,6 @@ func (_c *IdempotencyRepository_Delete_Call) Return(_a0 error) *IdempotencyRepos
 }
 
 func (_c *IdempotencyRepository_Delete_Call) RunAndReturn(run func(context.Context, notification.IdempotencyFilter) error) *IdempotencyRepository_Delete_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// InsertOnConflictReturning provides a mock function with given fields: _a0, _a1, _a2
-func (_m *IdempotencyRepository) InsertOnConflictReturning(_a0 context.Context, _a1 string, _a2 string) (*notification.Idempotency, error) {
-	ret := _m.Called(_a0, _a1, _a2)
-
-	if len(ret) == 0 {
-		panic("no return value specified for InsertOnConflictReturning")
-	}
-
-	var r0 *notification.Idempotency
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*notification.Idempotency, error)); ok {
-		return rf(_a0, _a1, _a2)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *notification.Idempotency); ok {
-		r0 = rf(_a0, _a1, _a2)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*notification.Idempotency)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(_a0, _a1, _a2)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// IdempotencyRepository_InsertOnConflictReturning_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InsertOnConflictReturning'
-type IdempotencyRepository_InsertOnConflictReturning_Call struct {
-	*mock.Call
-}
-
-// InsertOnConflictReturning is a helper method to define mock.On call
-//   - _a0 context.Context
-//   - _a1 string
-//   - _a2 string
-func (_e *IdempotencyRepository_Expecter) InsertOnConflictReturning(_a0 interface{}, _a1 interface{}, _a2 interface{}) *IdempotencyRepository_InsertOnConflictReturning_Call {
-	return &IdempotencyRepository_InsertOnConflictReturning_Call{Call: _e.mock.On("InsertOnConflictReturning", _a0, _a1, _a2)}
-}
-
-func (_c *IdempotencyRepository_InsertOnConflictReturning_Call) Run(run func(_a0 context.Context, _a1 string, _a2 string)) *IdempotencyRepository_InsertOnConflictReturning_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *IdempotencyRepository_InsertOnConflictReturning_Call) Return(_a0 *notification.Idempotency, _a1 error) *IdempotencyRepository_InsertOnConflictReturning_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *IdempotencyRepository_InsertOnConflictReturning_Call) RunAndReturn(run func(context.Context, string, string) (*notification.Idempotency, error)) *IdempotencyRepository_InsertOnConflictReturning_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// UpdateSuccess provides a mock function with given fields: _a0, _a1, _a2
-func (_m *IdempotencyRepository) UpdateSuccess(_a0 context.Context, _a1 uint64, _a2 bool) error {
-	ret := _m.Called(_a0, _a1, _a2)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateSuccess")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, bool) error); ok {
-		r0 = rf(_a0, _a1, _a2)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// IdempotencyRepository_UpdateSuccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateSuccess'
-type IdempotencyRepository_UpdateSuccess_Call struct {
-	*mock.Call
-}
-
-// UpdateSuccess is a helper method to define mock.On call
-//   - _a0 context.Context
-//   - _a1 uint64
-//   - _a2 bool
-func (_e *IdempotencyRepository_Expecter) UpdateSuccess(_a0 interface{}, _a1 interface{}, _a2 interface{}) *IdempotencyRepository_UpdateSuccess_Call {
-	return &IdempotencyRepository_UpdateSuccess_Call{Call: _e.mock.On("UpdateSuccess", _a0, _a1, _a2)}
-}
-
-func (_c *IdempotencyRepository_UpdateSuccess_Call) Run(run func(_a0 context.Context, _a1 uint64, _a2 bool)) *IdempotencyRepository_UpdateSuccess_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(bool))
-	})
-	return _c
-}
-
-func (_c *IdempotencyRepository_UpdateSuccess_Call) Return(_a0 error) *IdempotencyRepository_UpdateSuccess_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *IdempotencyRepository_UpdateSuccess_Call) RunAndReturn(run func(context.Context, uint64, bool) error) *IdempotencyRepository_UpdateSuccess_Call {
 	_c.Call.Return(run)
 	return _c
 }

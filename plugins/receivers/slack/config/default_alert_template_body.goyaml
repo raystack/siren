@@ -1,9 +1,9 @@
 [[- define "__alert_severity_prefix_emoji" -]]
   [[if ne .Data.status "firing" -]]
   :white_check_mark:
-  [[- else if eq .Labels.severity "CRITICAL" -]]
+  [[- else if eq .Data.severity "CRITICAL" -]]
   :fire:
-  [[- else if eq .Labels.severity "WARNING" -]]
+  [[- else if eq .Data.severity "WARNING" -]]
   :warning:
   [[- else -]]
   :question:
@@ -11,15 +11,15 @@
 [[- end]]
 [[- define "slack.pretext" -]]
   [[- template "__alert_severity_prefix_emoji" . ]] ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.num_alerts_firing ]][[ end ]])
-  [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
-  [[- else ]] *([[ .Labels.severity | toUpper ]])*
-  [[- end]] [[ if .Labels.alert_name ]][[.Labels.alert_name]][[else]][[.Labels.alertname]][[end]]
+  [[- if eq .Data.status "resolved" ]] ~([[ .Data.severity | toUpper ]])~
+  [[- else ]] *([[ .Data.severity | toUpper ]])*
+  [[- end]] [[ if .Data.alert_name ]][[.Data.alert_name]][[else]][[.Data.alertname]][[end]]
 [[- end ]]
 [[- define "slack.color" -]]
 [[- if eq .Data.status "firing" -]]
-  [[if eq .Labels.severity "WARNING" -]]
+  [[if eq .Data.severity "WARNING" -]]
   warning
-  [[- else if eq .Labels.severity "CRITICAL" -]]
+  [[- else if eq .Data.severity "CRITICAL" -]]
   danger
   [[- else -]]
   #439FE0

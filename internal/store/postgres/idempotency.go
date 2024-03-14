@@ -2,23 +2,27 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/store/model"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
 )
 
-const idempotencyInsertQuery = `
-INSERT INTO idempotencies (scope, key, success, created_at, updated_at)
-    VALUES ($1, $2, false, now(), now()) ON CONFLICT (scope, key) DO UPDATE SET scope=$1, updated_at=now()
-RETURNING *
-`
+var idempotenctListQueryBuilder = sq.Select(
+	"scope",
+	"key",
+	"notification_id",
+	"created_at",
+	"updated_at",
+).From("idempotencies")
 
-const idempotencyUpdateQuery = `
-UPDATE idempotencies SET success=$2, updated_at=now()
-  WHERE id=$1
+const idempotencyInsertQuery = `
+INSERT INTO idempotencies (scope, key, notification_id, created_at, updated_at)
+    VALUES ($1, $2, $3, now(), now()) RETURNING *
 `
 
 const idempotencyDeleteTemplateQuery = `
@@ -35,10 +39,13 @@ func NewIdempotencyRepository(client *pgc.Client) *IdempotencyRepository {
 	return &IdempotencyRepository{client}
 }
 
-func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, scope, key string) (*notification.Idempotency, error) {
+func (r *IdempotencyRepository) Create(ctx context.Context, scope, key, notificationID string) (*notification.Idempotency, error) {
+	if scope == "" || key == "" {
+		return nil, errors.ErrInvalid.WithMsgf("scope or key cannot be empty")
+	}
 	var idempotencyModel model.Idempotency
 	if err := r.client.QueryRowxContext(ctx, idempotencyInsertQuery,
-		scope, key,
+		scope, key, notificationID,
 	).StructScan(&idempotencyModel); err != nil {
 		return nil, pgc.CheckError(err)
 	}
@@ -46,24 +53,25 @@ func (r *IdempotencyRepository) InsertOnConflictReturning(ctx context.Context, s
 	return idempotencyModel.ToDomain(), nil
 }
 
-func (r *IdempotencyRepository) UpdateSuccess(ctx context.Context, id uint64, success bool) error {
-	rows, err := r.client.ExecContext(ctx, idempotencyUpdateQuery,
-		id, success,
-	)
+func (r *IdempotencyRepository) Check(ctx context.Context, scope, key string) (*notification.Idempotency, error) {
+	var idempotencyModel model.Idempotency
+
+	query, args, err := idempotenctListQueryBuilder.
+		Where("scope = ?", scope).
+		Where("key = ?", key).
+		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ra, err := rows.RowsAffected()
-	if err != nil {
-		return err
+	if err := r.client.GetContext(ctx, &idempotencyModel, query, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound
+		}
+		return nil, err
 	}
 
-	if ra == 0 {
-		return errors.ErrNotFound
-	}
-
-	return nil
+	return idempotencyModel.ToDomain(), nil
 }
 
 func (r *IdempotencyRepository) Delete(ctx context.Context, filter notification.IdempotencyFilter) error {

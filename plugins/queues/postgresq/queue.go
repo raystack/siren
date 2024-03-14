@@ -47,8 +47,8 @@ WHERE id = $6
 
 	queueEnqueueNamedQuery = fmt.Sprintf(`
 INSERT INTO %s
-	(id, status, receiver_type, configs, details, last_error, max_tries, try_count, retryable, expired_at, created_at, updated_at)
-    VALUES (:id,:status,:receiver_type,:configs,:details,:last_error,:max_tries,:try_count,:retryable,:expired_at,:created_at,:updated_at)
+	(id, notification_id, status, receiver_type, configs, details, last_error, max_tries, try_count, retryable, expired_at, created_at, updated_at)
+    VALUES (:id,:notification_id,:status,:receiver_type,:configs,:details,:last_error,:max_tries,:try_count,:retryable,:expired_at,:created_at,:updated_at)
 `, MessageQueueTableFullName)
 )
 

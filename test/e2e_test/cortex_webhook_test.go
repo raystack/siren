@@ -221,7 +221,7 @@ func (s *CortexWebhookTestSuite) TestIncomingHookAPI() {
 				Template         string `json:"template"`
 			}
 
-			expectedBody := `{"alertname":"some alert name","environment":"integration","generator_url":"","id":"0998ab88-3f5d-4d4a-a66f-40960b105f37","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","notification_type":"subscriber","num_alerts_firing":1,"resource":"test_alert","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"gotocompany","template":"alert_test"}`
+			expectedBody := `{"alertname":"some alert name","environment":"integration","generator_url":"","id":"0998ab88-3f5d-4d4a-a66f-40960b105f37","key1":"value1","key2":"value2","metric_name":"test_alert","metric_value":"1","notification_type":"alert","num_alerts_firing":1,"resource":"test_alert","service":"some-service","severity":"WARNING","status":"firing","summary":"this is test alert","team":"gotocompany","template":"alert_test"}`
 
 			var (
 				expectedStruct sampleStruct

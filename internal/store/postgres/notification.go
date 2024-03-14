@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/internal/store/model"
@@ -9,8 +10,8 @@ import (
 )
 
 const notificationInsertQuery = `
-INSERT INTO notifications (namespace_id, type, data, labels, valid_duration, template, unique_key, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+INSERT INTO notifications (namespace_id, type, data, labels, valid_duration, template, unique_key, receiver_selectors, created_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
 RETURNING *
 `
 
@@ -39,9 +40,25 @@ func (r *NotificationRepository) Create(ctx context.Context, n notification.Noti
 		nModel.ValidDuration,
 		nModel.Template,
 		nModel.UniqueKey,
+		nModel.ReceiverSelectors,
 	).StructScan(&newNModel); err != nil {
 		return notification.Notification{}, err
 	}
 
 	return newNModel.ToDomain(), nil
+}
+
+func (r *NotificationRepository) WithTransaction(ctx context.Context) context.Context {
+	return r.client.WithTransaction(ctx, nil)
+}
+
+func (r *NotificationRepository) Rollback(ctx context.Context, err error) error {
+	if txErr := r.client.Rollback(ctx); txErr != nil {
+		return fmt.Errorf("rollback error %s with error: %w", txErr.Error(), err)
+	}
+	return nil
+}
+
+func (r *NotificationRepository) Commit(ctx context.Context) error {
+	return r.client.Commit(ctx)
 }

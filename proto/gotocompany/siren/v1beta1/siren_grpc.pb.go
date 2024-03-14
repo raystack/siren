@@ -27,6 +27,7 @@ type SirenServiceClient interface {
 	GetProvider(ctx context.Context, in *GetProviderRequest, opts ...grpc.CallOption) (*GetProviderResponse, error)
 	UpdateProvider(ctx context.Context, in *UpdateProviderRequest, opts ...grpc.CallOption) (*UpdateProviderResponse, error)
 	DeleteProvider(ctx context.Context, in *DeleteProviderRequest, opts ...grpc.CallOption) (*DeleteProviderResponse, error)
+	// Deprecated: Do not use.
 	NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error)
 	ListNamespaces(ctx context.Context, in *ListNamespacesRequest, opts ...grpc.CallOption) (*ListNamespacesResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
@@ -57,6 +58,7 @@ type SirenServiceClient interface {
 	ListSilences(ctx context.Context, in *ListSilencesRequest, opts ...grpc.CallOption) (*ListSilencesResponse, error)
 	GetSilence(ctx context.Context, in *GetSilenceRequest, opts ...grpc.CallOption) (*GetSilenceResponse, error)
 	ExpireSilence(ctx context.Context, in *ExpireSilenceRequest, opts ...grpc.CallOption) (*ExpireSilenceResponse, error)
+	PostNotification(ctx context.Context, in *PostNotificationRequest, opts ...grpc.CallOption) (*PostNotificationResponse, error)
 }
 
 type sirenServiceClient struct {
@@ -112,6 +114,7 @@ func (c *sirenServiceClient) DeleteProvider(ctx context.Context, in *DeleteProvi
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *sirenServiceClient) NotifyReceiver(ctx context.Context, in *NotifyReceiverRequest, opts ...grpc.CallOption) (*NotifyReceiverResponse, error) {
 	out := new(NotifyReceiverResponse)
 	err := c.cc.Invoke(ctx, "/gotocompany.siren.v1beta1.SirenService/NotifyReceiver", in, out, opts...)
@@ -382,6 +385,15 @@ func (c *sirenServiceClient) ExpireSilence(ctx context.Context, in *ExpireSilenc
 	return out, nil
 }
 
+func (c *sirenServiceClient) PostNotification(ctx context.Context, in *PostNotificationRequest, opts ...grpc.CallOption) (*PostNotificationResponse, error) {
+	out := new(PostNotificationResponse)
+	err := c.cc.Invoke(ctx, "/gotocompany.siren.v1beta1.SirenService/PostNotification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SirenServiceServer is the server API for SirenService service.
 // All implementations must embed UnimplementedSirenServiceServer
 // for forward compatibility
@@ -391,6 +403,7 @@ type SirenServiceServer interface {
 	GetProvider(context.Context, *GetProviderRequest) (*GetProviderResponse, error)
 	UpdateProvider(context.Context, *UpdateProviderRequest) (*UpdateProviderResponse, error)
 	DeleteProvider(context.Context, *DeleteProviderRequest) (*DeleteProviderResponse, error)
+	// Deprecated: Do not use.
 	NotifyReceiver(context.Context, *NotifyReceiverRequest) (*NotifyReceiverResponse, error)
 	ListNamespaces(context.Context, *ListNamespacesRequest) (*ListNamespacesResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
@@ -421,6 +434,7 @@ type SirenServiceServer interface {
 	ListSilences(context.Context, *ListSilencesRequest) (*ListSilencesResponse, error)
 	GetSilence(context.Context, *GetSilenceRequest) (*GetSilenceResponse, error)
 	ExpireSilence(context.Context, *ExpireSilenceRequest) (*ExpireSilenceResponse, error)
+	PostNotification(context.Context, *PostNotificationRequest) (*PostNotificationResponse, error)
 	mustEmbedUnimplementedSirenServiceServer()
 }
 
@@ -532,6 +546,9 @@ func (UnimplementedSirenServiceServer) GetSilence(context.Context, *GetSilenceRe
 }
 func (UnimplementedSirenServiceServer) ExpireSilence(context.Context, *ExpireSilenceRequest) (*ExpireSilenceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExpireSilence not implemented")
+}
+func (UnimplementedSirenServiceServer) PostNotification(context.Context, *PostNotificationRequest) (*PostNotificationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostNotification not implemented")
 }
 func (UnimplementedSirenServiceServer) mustEmbedUnimplementedSirenServiceServer() {}
 
@@ -1176,6 +1193,24 @@ func _SirenService_ExpireSilence_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SirenService_PostNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SirenServiceServer).PostNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gotocompany.siren.v1beta1.SirenService/PostNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SirenServiceServer).PostNotification(ctx, req.(*PostNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SirenService_ServiceDesc is the grpc.ServiceDesc for SirenService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1322,6 +1357,10 @@ var SirenService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExpireSilence",
 			Handler:    _SirenService_ExpireSilence_Handler,
+		},
+		{
+			MethodName: "PostNotification",
+			Handler:    _SirenService_PostNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -66,11 +66,11 @@ type TemplateService interface {
 }
 
 type NotificationService interface {
-	Dispatch(ctx context.Context, n notification.Notification) error
-	CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error)
-	MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error
+	Dispatch(ctx context.Context, n notification.Notification) (string, error)
 	RemoveIdempotencies(ctx context.Context, TTL time.Duration) error
 	BuildFromAlerts(alerts []alert.Alert, firingLen int, createdTime time.Time) ([]notification.Notification, error)
+	CheckIdempotency(ctx context.Context, scope, key string) (string, error)
+	InsertIdempotency(ctx context.Context, scope, key, notificationID string) error
 }
 
 type SilenceService interface {

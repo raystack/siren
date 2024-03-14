@@ -1,0 +1,12 @@
+[
+    {
+        "scope": "test-default",
+        "key": "xxx-yyy",
+        "notification_id": "1234-5678"
+    },
+    {
+        "scope": "test-default",
+        "key": "xxx-zzz",
+        "notification_id": "4321-5678"
+    }
+]

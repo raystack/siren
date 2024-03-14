@@ -6,12 +6,18 @@ import (
 	"time"
 )
 
+const (
+	LabelKeyID   = "id"
+	LabelKeyType = "type"
+)
+
 type Repository interface {
 	List(context.Context, Filter) ([]Receiver, error)
 	Create(context.Context, *Receiver) error
 	Get(context.Context, uint64, Filter) (*Receiver, error)
 	Update(context.Context, *Receiver) error
 	Delete(context.Context, uint64) error
+	PatchLabels(context.Context, *Receiver) error
 }
 
 type Receiver struct {
@@ -37,4 +43,13 @@ func (r *Receiver) Validate() error {
 	}
 
 	return nil
+}
+
+func (r *Receiver) enrichPredefinedLabels() {
+	// populate predefined labels: id, type
+	if len(r.Labels) == 0 {
+		r.Labels = make(map[string]string)
+	}
+	r.Labels[LabelKeyID] = fmt.Sprintf("%d", r.ID)
+	r.Labels[LabelKeyType] = r.Type
 }

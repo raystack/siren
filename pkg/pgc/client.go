@@ -107,15 +107,22 @@ func (c *Client) GetContext(ctx context.Context, dest interface{}, query string,
 }
 
 func (c *Client) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	return c.db.ExecContext(ctx, query, args...)
+	return c.GetDB(ctx).ExecContext(ctx, query, args...)
 }
 
 func (c *Client) NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
-	return c.db.NamedExecContext(ctx, query, arg)
+	return sqlx.NamedExecContext(ctx, c.GetDB(ctx), query, arg)
 }
 
 func (c *Client) WithTransaction(ctx context.Context, opts *sql.TxOptions) context.Context {
-	tx, err := c.db.BeginTxx(ctx, opts)
+	var (
+		tx  *sqlx.Tx
+		err error
+	)
+	if tx = extractTransaction(ctx); tx != nil {
+		return ctx
+	}
+	tx, err = c.db.BeginTxx(ctx, opts)
 	if err != nil {
 		return ctx
 	}
@@ -142,7 +149,7 @@ func (c *Client) Commit(ctx context.Context) error {
 	return errors.New("no transaction")
 }
 
-func (c *Client) GetDB(ctx context.Context) sqlx.QueryerContext {
+func (c *Client) GetDB(ctx context.Context) sqlx.ExtContext {
 	if tx := extractTransaction(ctx); tx != nil {
 		return tx
 	}

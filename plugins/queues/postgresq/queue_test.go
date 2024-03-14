@@ -95,44 +95,56 @@ func (s *QueueTestSuite) cleanup() error {
 }
 
 func (s *QueueTestSuite) TestSimpleEnqueueDequeue() {
-	timeNow := time.Now()
+	var (
+		timeNow         = time.Now()
+		notificationIDs = []string{
+			uuid.NewString(),
+			uuid.NewString(),
+			uuid.NewString(),
+		}
+	)
 
 	messagesGenerator := func() []notification.Message {
 		return []notification.Message{
 			{
-				ID:           uuid.NewString(),
-				ReceiverType: receiver.TypeSlack,
-				Status:       notification.MessageStatusEnqueued,
-				CreatedAt:    timeNow,
-				UpdatedAt:    timeNow,
+				ID:             uuid.NewString(),
+				NotificationID: notificationIDs[0],
+				ReceiverType:   receiver.TypeSlack,
+				Status:         notification.MessageStatusEnqueued,
+				CreatedAt:      timeNow,
+				UpdatedAt:      timeNow,
 			},
 			{
-				ID:           uuid.NewString(),
-				ReceiverType: receiver.TypeSlack,
-				Status:       notification.MessageStatusEnqueued,
-				CreatedAt:    timeNow,
-				UpdatedAt:    timeNow,
+				ID:             uuid.NewString(),
+				NotificationID: notificationIDs[0],
+				ReceiverType:   receiver.TypeSlack,
+				Status:         notification.MessageStatusEnqueued,
+				CreatedAt:      timeNow,
+				UpdatedAt:      timeNow,
 			},
 			{
-				ID:           uuid.NewString(),
-				ReceiverType: receiver.TypeSlack,
-				Status:       notification.MessageStatusEnqueued,
-				CreatedAt:    timeNow,
-				UpdatedAt:    timeNow,
+				ID:             uuid.NewString(),
+				NotificationID: notificationIDs[1],
+				ReceiverType:   receiver.TypeSlack,
+				Status:         notification.MessageStatusEnqueued,
+				CreatedAt:      timeNow,
+				UpdatedAt:      timeNow,
 			},
 			{
-				ID:           uuid.NewString(),
-				ReceiverType: receiver.TypeSlack,
-				Status:       notification.MessageStatusEnqueued,
-				CreatedAt:    timeNow,
-				UpdatedAt:    timeNow,
+				ID:             uuid.NewString(),
+				NotificationID: notificationIDs[1],
+				ReceiverType:   receiver.TypeSlack,
+				Status:         notification.MessageStatusEnqueued,
+				CreatedAt:      timeNow,
+				UpdatedAt:      timeNow,
 			},
 			{
-				ID:           uuid.NewString(),
-				ReceiverType: receiver.TypeSlack,
-				Status:       notification.MessageStatusEnqueued,
-				CreatedAt:    timeNow,
-				UpdatedAt:    timeNow,
+				ID:             uuid.NewString(),
+				NotificationID: notificationIDs[2],
+				ReceiverType:   receiver.TypeSlack,
+				Status:         notification.MessageStatusEnqueued,
+				CreatedAt:      timeNow,
+				UpdatedAt:      timeNow,
 			},
 		}
 	}

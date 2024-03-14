@@ -51,11 +51,11 @@ exporters:
       insecure: true
     headers:
       X-Scope-OrgID: gotocompany
-    # external_labels:
-    #   service: siren
-    #   team: gotocompany-infra
-    #   environment: development
-    #   host: local
+    external_labels:
+      service: siren
+      team: gotocompany-infra
+      environment: development
+      host: local
     remote_write_queue:
       enabled: true
       queue_size: 5000

@@ -2,39 +2,46 @@ package notification
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/goto/siren/pkg/errors"
 )
 
 const (
-	ReceiverIDLabelKey      string = "receiver_id"
 	ValidDurationRequestKey string = "valid_duration"
 
-	TypeReceiver   string = "receiver"
-	TypeSubscriber string = "subscriber"
+	FlowReceiver   string = "receiver"
+	FlowSubscriber string = "subscriber"
+
+	TypeAlert string = "alert"
+	TypeEvent string = "event"
 )
 
 type Repository interface {
+	Transactor
 	Create(context.Context, Notification) (Notification, error)
 }
 
-// Notification is a model of notification
-// if type is `receiver`, it is expected for the labels to have
-// receiver_id = int
-type Notification struct {
-	ID            string            `json:"id"`
-	NamespaceID   uint64            `json:"namespace_id"`
-	Type          string            `json:"type"`
-	Data          map[string]any    `json:"data"`
-	Labels        map[string]string `json:"labels"`
-	ValidDuration time.Duration     `json:"valid_duration"`
-	Template      string            `json:"template"`
-	UniqueKey     string            `json:"unique_key"`
-	CreatedAt     time.Time         `json:"created_at"`
+type Transactor interface {
+	WithTransaction(ctx context.Context) context.Context
+	Rollback(ctx context.Context, err error) error
+	Commit(ctx context.Context) error
+}
 
-	// won't be stored in notification table, only to propaget this to notification_subscriber
+// Notification is a model of notification
+type Notification struct {
+	ID                string              `json:"id"`
+	NamespaceID       uint64              `json:"namespace_id"`
+	Type              string              `json:"type"`
+	Data              map[string]any      `json:"data"`
+	Labels            map[string]string   `json:"labels"`
+	ValidDuration     time.Duration       `json:"valid_duration"`
+	Template          string              `json:"template"`
+	UniqueKey         string              `json:"unique_key"`
+	ReceiverSelectors []map[string]string `json:"receiver_selectors"`
+	CreatedAt         time.Time           `json:"created_at"`
+
+	// won't be stored in notification table, only to propagate this to notification_subscriber
 	AlertIDs []int64
 }
 
@@ -51,16 +58,13 @@ func (n *Notification) EnrichID(id string) {
 	n.Data["id"] = id
 }
 
-func (n Notification) Validate() error {
-	if n.Type == TypeReceiver {
-		if v, ok := n.Labels[ReceiverIDLabelKey]; ok {
-			intVar, err := strconv.ParseInt(v, 0, 64)
-			if err == nil && intVar != 0 {
-				return nil
-			}
+func (n Notification) Validate(flow string) error {
+	if flow == FlowReceiver {
+		if len(n.ReceiverSelectors) != 0 {
+			return nil
 		}
-		return errors.ErrInvalid.WithCausef("notification type receiver should have valid receiver_id: %v", n)
-	} else if n.Type == TypeSubscriber {
+		return errors.ErrInvalid.WithCausef("notification type receiver should have receiver_selectors: %v", n)
+	} else if flow == FlowSubscriber {
 		if len(n.Labels) != 0 {
 			return nil
 		}

@@ -15,6 +15,7 @@ import (
 )
 
 func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
+	var notificationID = "1234-5678"
 	tests := []struct {
 		name    string
 		setup   func(*mocks.ReceiverService, *mocks.Notifier)
@@ -25,21 +26,8 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "should return error if receiver id in label is not parsable",
-			n: notification.Notification{
-				Labels: map[string]string{
-					notification.ReceiverIDLabelKey: "x",
-				},
-			},
-			wantErr: true,
-		},
-		{
 			name: "should return error if receiver service return error",
-			n: notification.Notification{
-				Labels: map[string]string{
-					notification.ReceiverIDLabelKey: "11",
-				},
-			},
+			n:    notification.Notification{},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
 				rs.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("receiver.Filter")).Return(nil, errors.New("some error"))
 			},
@@ -48,8 +36,11 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 		{
 			name: "should return error if receiver type is unknown",
 			n: notification.Notification{
-				Labels: map[string]string{
-					notification.ReceiverIDLabelKey: "11",
+				ID: notificationID,
+				ReceiverSelectors: []map[string]string{
+					{
+						"id": "11",
+					},
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
@@ -60,13 +51,18 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 		{
 			name: "should return error if init message return error",
 			n: notification.Notification{
-				Labels: map[string]string{
-					notification.ReceiverIDLabelKey: "11",
+				ID: notificationID,
+				ReceiverSelectors: []map[string]string{
+					{
+						"id": "11",
+					},
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
 				rs.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("receiver.Filter")).Return([]receiver.Receiver{
-					{Type: testPluginType},
+					{
+						ID:   11,
+						Type: testPluginType},
 				}, nil)
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, errors.New("some error"))
 			},
@@ -75,13 +71,17 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 		{
 			name: "should return no error if all flow passed",
 			n: notification.Notification{
-				Labels: map[string]string{
-					notification.ReceiverIDLabelKey: "11",
+				ID: notificationID,
+				ReceiverSelectors: []map[string]string{
+					{
+						"id": "11",
+					},
 				},
 			},
 			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
 				rs.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("receiver.Filter")).Return([]receiver.Receiver{
-					{ID: 11,
+					{
+						ID:   11,
 						Type: testPluginType,
 					},
 				}, nil)
@@ -89,14 +89,18 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 			},
 			want: []notification.Message{
 				{
-					Status:       notification.MessageStatusEnqueued,
-					ReceiverType: testPluginType,
-					Configs:      map[string]any{},
-					Details:      map[string]any{"notification_type": string(""), "receiver_id": string("11")},
-					MaxTries:     3,
+					Status:         notification.MessageStatusEnqueued,
+					NotificationID: notificationID,
+					ReceiverType:   testPluginType,
+					Configs:        map[string]any{},
+					Details:        map[string]any{"notification_type": string("")},
+					MaxTries:       3,
 				},
 			},
-			want1: []log.Notification{{ReceiverID: 11}},
+			want1: []log.Notification{{
+				NotificationID: notificationID,
+				ReceiverID:     11,
+			}},
 		},
 	}
 	for _, tt := range tests {

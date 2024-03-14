@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/goto/salt/dockertestx"
 	"github.com/goto/salt/log"
 	"github.com/ory/dockertest/v3"
@@ -52,6 +50,11 @@ func (s *IdempotencyRepositoryTestSuite) SetupSuite() {
 	s.ctx = context.TODO()
 	s.Require().NoError(migrate(s.ctx, logger, s.client, dbConfig))
 	s.repository = postgres.NewIdempotencyRepository(s.client)
+
+	_, err = bootstrapIdempotency(s.client)
+	if err != nil {
+		s.T().Fatal(err)
+	}
 }
 
 func (s *IdempotencyRepositoryTestSuite) TearDownTest() {
@@ -74,68 +77,41 @@ func (s *IdempotencyRepositoryTestSuite) cleanup() error {
 	return execQueries(context.TODO(), s.client, queries)
 }
 
-func (s *IdempotencyRepositoryTestSuite) TestInsertReturnOnConflict() {
+func (s *IdempotencyRepositoryTestSuite) TestCreate() {
 	data1 := &notification.Idempotency{
-		Scope: "a-scope",
-		Key:   "key-1",
+		Scope:          "a-scope",
+		Key:            "key-1",
+		NotificationID: "1234-5678-9087",
 	}
-	s.Run("should return the inserted idempotency data if not exist", func() {
-		res, err := s.repository.InsertOnConflictReturning(context.Background(), data1.Scope, data1.Key)
+	s.Run("should return the created idempotency data if not exist", func() {
+		res, err := s.repository.Create(context.Background(), data1.Scope, data1.Key, data1.NotificationID)
 		s.Assert().NoError(err)
 		data1 = res
 		s.Assert().Equal("a-scope", data1.Scope)
 		s.Assert().Equal("key-1", data1.Key)
+		s.Assert().Equal("1234-5678-9087", data1.NotificationID)
 	})
 
-	s.Run("should return the existing conflicted data if exist", func() {
-		res, err := s.repository.InsertOnConflictReturning(context.Background(), data1.Scope, data1.Key)
-		s.Assert().NoError(err)
-
-		if diff := cmp.Diff(data1, res, cmpopts.IgnoreFields(notification.Idempotency{}, "UpdatedAt")); diff != "" {
-			s.T().Error(diff)
-		}
+	s.Run("should return error if scope or key are empty when creating data", func() {
+		_, err := s.repository.Create(context.Background(), "", "", "")
+		s.Assert().EqualError(err, "scope or key cannot be empty")
 	})
 }
 
-func (s *IdempotencyRepositoryTestSuite) TestUpdateSuccess() {
-	data := &notification.Idempotency{
-		Scope: "a-scope",
-		Key:   "existing-key-1",
-	}
-	res, err := s.repository.InsertOnConflictReturning(context.Background(), data.Scope, data.Key)
-	s.Require().NoError(err)
-	s.Require().Equal(data.Scope, res.Scope)
-	s.Require().Equal(data.Key, res.Key)
+func (s *IdempotencyRepositoryTestSuite) TestCheck() {
+	s.Run("should return the idempotency if exist", func() {
+		res, err := s.repository.Check(context.Background(), "test-default", "xxx-yyy")
+		s.Assert().NoError(err)
 
-	type testCase struct {
-		Description string
-		ID          uint64
-		Status      string
-		ErrString   string
-	}
+		s.Assert().Equal("test-default", res.Scope)
+		s.Assert().Equal("xxx-yyy", res.Key)
+		s.Assert().Equal("1234-5678", res.NotificationID)
+	})
 
-	var testCases = []testCase{
-		{
-			Description: "should update existing idempotency if exist",
-			ID:          res.ID,
-		},
-		{
-			Description: "should return not found if idempotency not exist",
-			ID:          999,
-			ErrString:   "requested entity not found",
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.Description, func() {
-			err := s.repository.UpdateSuccess(s.ctx, tc.ID, true)
-			if tc.ErrString != "" {
-				if err.Error() != tc.ErrString {
-					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
-				}
-			}
-		})
-	}
+	s.Run("should return error not found if idempotency not exist", func() {
+		_, err := s.repository.Check(context.Background(), "test-default", "random")
+		s.Assert().EqualError(err, "requested entity not found")
+	})
 }
 
 func (s *IdempotencyRepositoryTestSuite) TestDelete() {

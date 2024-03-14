@@ -25,7 +25,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type CortexDirectNotificationSubscriptionTestSuite struct {
+type NotificationSubscriptionTestSuite struct {
 	suite.Suite
 	cancelContext context.CancelFunc
 	grpcClient    sirenv1beta1.SirenServiceClient
@@ -35,7 +35,7 @@ type CortexDirectNotificationSubscriptionTestSuite struct {
 	testBench     *CortexTest
 }
 
-func (s *CortexDirectNotificationSubscriptionTestSuite) SetupTest() {
+func (s *NotificationSubscriptionTestSuite) SetupTest() {
 	apiHTTPPort, err := getFreePort()
 	s.Require().Nil(err)
 	apiGRPCPort, err := getFreePort()
@@ -112,7 +112,7 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) SetupTest() {
 	}
 }
 
-func (s *CortexDirectNotificationSubscriptionTestSuite) TearDownTest() {
+func (s *NotificationSubscriptionTestSuite) TearDownTest() {
 	s.cancelClient()
 
 	// Clean tests
@@ -122,7 +122,7 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TearDownTest() {
 	s.cancelContext()
 }
 
-func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
+func (s *NotificationSubscriptionTestSuite) TestSendNotification() {
 	ctx := context.Background()
 
 	_, err := s.grpcClient.CreateNamespace(ctx, &sirenv1beta1.CreateNamespaceRequest{
@@ -136,7 +136,7 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
 	})
 	s.Require().NoError(err)
 
-	s.Run("triggering alert with matching subscription labels should trigger notification", func() {
+	s.Run("sending notification with matching subscription labels should trigger notification", func() {
 		waitChan := make(chan struct{}, 1)
 
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -152,7 +152,7 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
 				ReceiverID       string `json:"receiver_id"`
 			}
 
-			expectedBody := `{"key1":"value1","key2":"value2","key3":"value3","notification_type":"receiver","receiver_id":"1"}`
+			expectedBody := `{"key1":"value1","key2":"value2","key3":"value3","notification_type":"event"}`
 			var (
 				expectedStruct sampleStruct
 				resultStruct   sampleStruct
@@ -180,6 +180,7 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
 			Labels: map[string]string{
 				"entity": "gotocompany",
 				"kind":   "http",
+				"id":     "1",
 			},
 			Configurations: configs,
 		})
@@ -201,18 +202,30 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
 		})
 		s.Require().NoError(err)
 
-		payload, err := structpb.NewStruct(map[string]any{
-			"data": map[string]any{
-				"key1": "value1",
-				"key2": "value2",
-				"key3": "value3",
-			},
+		data, err := structpb.NewStruct(map[string]any{
+			"key1": "value1",
+			"key2": "value2",
+			"key3": "value3",
 		})
 		s.Require().NoError(err)
 
-		_, err = s.grpcClient.NotifyReceiver(ctx, &sirenv1beta1.NotifyReceiverRequest{
-			Id:      1,
-			Payload: payload,
+		// var receiverSelectors []*structpb.Struct
+
+		// receiverSelector, err := structpb.NewStruct(map[string]any{
+		// 	"id": "1",
+		// })
+		// s.Require().NoError(err)
+
+		// receiverSelectors = append(receiverSelectors, receiverSelector)
+
+		_, err = s.grpcClient.PostNotification(ctx, &sirenv1beta1.PostNotificationRequest{
+			// Receivers: receiverSelectors,
+			Data: data,
+			Labels: map[string]string{
+				"team":        "gotocompany",
+				"service":     "some-service",
+				"environment": "integration",
+			},
 		})
 		s.Assert().NoError(err)
 
@@ -220,6 +233,6 @@ func (s *CortexDirectNotificationSubscriptionTestSuite) TestSendNotification() {
 	})
 }
 
-func TestCortexDirectNotificationSubscriptionTestSuite(t *testing.T) {
-	suite.Run(t, new(CortexDirectNotificationSubscriptionTestSuite))
+func TestNotificationSubscriptionTestSuite(t *testing.T) {
+	suite.Run(t, new(NotificationSubscriptionTestSuite))
 }

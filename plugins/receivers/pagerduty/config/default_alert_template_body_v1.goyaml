@@ -10,9 +10,9 @@
 event_type: "[[template "pagerduty.event_type" . ]]"
 [[if .Data.id]]incident_key: "[[.UniqueKey]]"[[ end ]]
 description: ([[ .Data.status | toUpper ]][[ if eq .Data.status "firing" ]]:[[ .Data.num_alerts_firing ]][[ end ]])
-  [[- if eq .Data.status "resolved" ]] ~([[ .Labels.severity | toUpper ]])~
-  [[- else ]] *([[ .Labels.severity | toUpper ]])*
-  [[- end]] [[ if .Labels.alert_name ]][[.Labels.alert_name]][[else]][[.Labels.alertname]][[end]]
+  [[- if eq .Data.status "resolved" ]] ~([[ .Data.severity | toUpper ]])~
+  [[- else ]] *([[ .Data.severity | toUpper ]])*
+  [[- end]] [[ if .Data.alert_name ]][[.Data.alert_name]][[else]][[.Data.alertname]][[end]]
 client: Siren
 details:
   Labels:

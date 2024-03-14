@@ -19,70 +19,7 @@ import (
 
 const testPluginType = "test"
 
-func TestService_CheckAndInsertIdempotency(t *testing.T) {
-	var (
-		scope = "test-scope"
-		key   = "test-key"
-	)
-	testCases := []struct {
-		name    string
-		setup   func(*mocks.IdempotencyRepository)
-		scope   string
-		key     string
-		wantErr bool
-	}{
-		{
-			name: "should return error if idempotency exist and success",
-			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(nil, errors.ErrConflict)
-			},
-			scope:   scope,
-			key:     key,
-			wantErr: true,
-		},
-		{
-			name: "should return error if repository returning some error",
-			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(nil, errors.New("some error"))
-			},
-			scope:   scope,
-			key:     key,
-			wantErr: true,
-		},
-		{
-			name: "should return id and nil error if no idempotency exists",
-			setup: func(ir *mocks.IdempotencyRepository) {
-				ir.EXPECT().InsertOnConflictReturning(mock.AnythingOfType("context.todoCtx"), scope, key).Return(&notification.Idempotency{
-					ID: 1,
-				}, nil)
-			},
-			scope:   scope,
-			key:     key,
-			wantErr: false,
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockIdempotencyRepository := new(mocks.IdempotencyRepository)
-
-			if tc.setup != nil {
-				tc.setup(mockIdempotencyRepository)
-			}
-
-			ns := notification.NewService(saltlog.NewNoop(), notification.Config{}, nil, nil, nil, notification.Deps{IdempotencyRepository: mockIdempotencyRepository}, false)
-
-			_, err := ns.CheckAndInsertIdempotency(context.TODO(), tc.scope, tc.key)
-
-			if (err != nil) != tc.wantErr {
-				t.Errorf("NotificationService.CheckAndInsertIdempotency() error = %v, wantErr %v", err, tc.wantErr)
-			}
-
-			mockIdempotencyRepository.AssertExpectations(t)
-		})
-	}
-}
-
-func TestService_Dispatch(t *testing.T) {
+func TestService_DispatchFailure(t *testing.T) {
 	tests := []struct {
 		name    string
 		n       notification.Notification
@@ -90,19 +27,15 @@ func TestService_Dispatch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "should return error if notification type is unknown",
-			n:       notification.Notification{},
-			wantErr: true,
-		},
-		{
 			name: "should return error if repository return error",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, _ *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, errors.New("some error"))
 			},
 			wantErr: true,
@@ -110,12 +43,13 @@ func TestService_Dispatch(t *testing.T) {
 		{
 			name: "should return error if dispatcher service return error",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, errors.New("some error"))
 			},
@@ -124,12 +58,13 @@ func TestService_Dispatch(t *testing.T) {
 		{
 			name: "should return error if dispatcher service return empty results",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, _ *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*errors.errorString")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(nil, nil, false, nil)
 			},
@@ -138,12 +73,13 @@ func TestService_Dispatch(t *testing.T) {
 		{
 			name: "should return error if log notifications return error",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, _ *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*fmt.wrapError")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(errors.New("some error"))
@@ -153,12 +89,13 @@ func TestService_Dispatch(t *testing.T) {
 		{
 			name: "should return error if update alerts silence status return error",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, _ *mocks.Queuer, d *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*fmt.wrapError")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
@@ -169,12 +106,13 @@ func TestService_Dispatch(t *testing.T) {
 		{
 			name: "should return error if enqueue return error",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
 			},
 			setup: func(n notification.Notification, r *mocks.Repository, l *mocks.LogService, a *mocks.AlertService, q *mocks.Queuer, d *mocks.Dispatcher) {
+				r.EXPECT().Rollback(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("*fmt.wrapError")).Return(nil)
 				r.EXPECT().Create(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return(notification.Notification{}, nil)
 				d.EXPECT().PrepareMessage(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("notification.Notification")).Return([]notification.Message{{ID: "123"}}, []log.Notification{{ReceiverID: 123}}, false, nil)
 				l.EXPECT().LogNotifications(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("log.Notification")).Return(nil)
@@ -183,10 +121,54 @@ func TestService_Dispatch(t *testing.T) {
 			},
 			wantErr: true,
 		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				mockQueuer       = new(mocks.Queuer)
+				mockRepository   = new(mocks.Repository)
+				mockDispatcher   = new(mocks.Dispatcher)
+				mockLogService   = new(mocks.LogService)
+				mockAlertService = new(mocks.AlertService)
+			)
+
+			if tt.setup != nil {
+				mockRepository.EXPECT().WithTransaction(mock.AnythingOfType("context.todoCtx")).Return(context.TODO())
+				tt.setup(tt.n, mockRepository, mockLogService, mockAlertService, mockQueuer, mockDispatcher)
+			}
+
+			s := notification.NewService(
+				saltlog.NewNoop(),
+				notification.Config{},
+				mockRepository,
+				mockQueuer,
+				nil,
+				notification.Deps{
+					AlertService:              mockAlertService,
+					LogService:                mockLogService,
+					DispatchReceiverService:   mockDispatcher,
+					DispatchSubscriberService: mockDispatcher,
+				},
+				true,
+			)
+			if _, err := s.Dispatch(context.TODO(), tt.n); (err != nil) != tt.wantErr {
+				t.Errorf("Service.DispatchFailure() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestService_DispatchSuccess(t *testing.T) {
+	tests := []struct {
+		name    string
+		n       notification.Notification
+		setup   func(notification.Notification, *mocks.Repository, *mocks.LogService, *mocks.AlertService, *mocks.Queuer, *mocks.Dispatcher)
+		wantErr bool
+	}{
 		{
 			name: "should return no error if enqueue success",
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
+				Type: notification.TypeAlert,
 				Labels: map[string]string{
 					"k1": "v1",
 				},
@@ -211,6 +193,8 @@ func TestService_Dispatch(t *testing.T) {
 			)
 
 			if tt.setup != nil {
+				mockRepository.EXPECT().WithTransaction(mock.AnythingOfType("context.todoCtx")).Return(context.TODO())
+				mockRepository.EXPECT().Commit(mock.AnythingOfType("context.todoCtx")).Return(nil)
 				tt.setup(tt.n, mockRepository, mockLogService, mockAlertService, mockQueuer, mockDispatcher)
 			}
 
@@ -228,7 +212,7 @@ func TestService_Dispatch(t *testing.T) {
 				},
 				true,
 			)
-			if err := s.Dispatch(context.TODO(), tt.n); (err != nil) != tt.wantErr {
+			if _, err := s.Dispatch(context.TODO(), tt.n); (err != nil) != tt.wantErr {
 				t.Errorf("Service.Dispatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -295,12 +279,13 @@ func TestService_BuildFromAlerts(t *testing.T) {
 			want: []notification.Notification{
 				{
 					NamespaceID: 1,
-					Type:        notification.TypeSubscriber,
+					Type:        notification.TypeAlert,
 					Data: map[string]any{
 						"generator_url":     "",
 						"num_alerts_firing": 2,
 						"status":            "FIRING",
 						"ak1":               "akv1",
+						"lk1":               "lv1",
 					},
 					Labels: map[string]string{
 						"lk1": "lv1",
@@ -311,7 +296,7 @@ func TestService_BuildFromAlerts(t *testing.T) {
 				},
 				{
 					NamespaceID: 1,
-					Type:        notification.TypeSubscriber,
+					Type:        notification.TypeAlert,
 
 					Data: map[string]any{
 						"generator_url":     "",
@@ -319,6 +304,8 @@ func TestService_BuildFromAlerts(t *testing.T) {
 						"status":            "FIRING",
 						"ak1":               "akv1\nakv11",
 						"ak2":               "akv2",
+						"lk1":               "lv1",
+						"lk2":               "lv2",
 					},
 					Labels: map[string]string{
 						"lk1": "lv1",

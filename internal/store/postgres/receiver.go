@@ -26,20 +26,26 @@ WHERE id = $1
 RETURNING *
 `
 
+const receiverPatchLabelsQuery = `
+UPDATE receivers SET labels=$2, updated_at=now()
+WHERE id = $1
+RETURNING *
+`
+
 const receiverDeleteQuery = `
 DELETE from receivers where id=$1
 `
 
 var receiverListQueryBuilder = sq.Select(
-	"id",
-	"name",
-	"type",
-	"labels",
-	"configurations",
-	"parent_id",
-	"created_at",
-	"updated_at",
-).From("receivers")
+	"r.id as id",
+	"r.name as name",
+	"r.type as type",
+	"r.labels as labels",
+	"r.parent_id as parent_id",
+	"r.created_at as created_at",
+	"r.updated_at as updated_at",
+	"r.configurations as configurations",
+).From("receivers r")
 
 var receiverListLeftJoinSelfQueryBuilder = sq.Select(
 	"r.id",
@@ -50,7 +56,7 @@ var receiverListLeftJoinSelfQueryBuilder = sq.Select(
 	"r.created_at",
 	"r.updated_at",
 ).Column(
-	sq.Expr("COALESCE(r.configurations || p.configurations, r.configurations) AS configurations"),
+	sq.Expr("r.configurations || COALESCE(p.configurations, '{}'::jsonb) AS configurations"),
 ).From("receivers r")
 
 // ReceiverRepository talks to the store to read or insert data
@@ -64,74 +70,51 @@ func NewReceiverRepository(client *pgc.Client) *ReceiverRepository {
 }
 
 func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]receiver.Receiver, error) {
-	receiversDomain := []receiver.Receiver{}
+	var queryBuilder sq.SelectBuilder
 	if flt.Expanded {
-		var queryBuilder = receiverListLeftJoinSelfQueryBuilder
-		if len(flt.ReceiverIDs) > 0 {
-			queryBuilder = queryBuilder.Where(sq.Eq{"r.id": flt.ReceiverIDs})
-		}
-
-		// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
-		if len(flt.Labels) != 0 {
-			labelsJSON, err := json.Marshal(flt.Labels)
-			if err != nil {
-				return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
-			}
-			queryBuilder = queryBuilder.Where(fmt.Sprintf("r.labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
-		}
-
-		query, args, err := queryBuilder.LeftJoin("receivers p ON r.parent_id = p.id").PlaceholderFormat(sq.Dollar).ToSql()
-		if err != nil {
-			return nil, err
-		}
-
-		rows, err := r.client.QueryxContext(ctx, query, args...)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var receiverModel model.Receiver
-			if err := rows.StructScan(&receiverModel); err != nil {
-				return nil, err
-			}
-			receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
-		}
-		return receiversDomain, nil
+		queryBuilder = receiverListLeftJoinSelfQueryBuilder.LeftJoin("receivers p ON r.parent_id = p.id")
 	} else {
-		var queryBuilder = receiverListQueryBuilder
-		if len(flt.ReceiverIDs) > 0 {
-			queryBuilder = queryBuilder.Where(sq.Eq{"id": flt.ReceiverIDs})
-		}
+		queryBuilder = receiverListQueryBuilder
+	}
 
-		// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
-		if len(flt.Labels) != 0 {
-			labelsJSON, err := json.Marshal(flt.Labels)
+	if len(flt.ReceiverIDs) > 0 {
+		queryBuilder = queryBuilder.Where(sq.Eq{"r.id": flt.ReceiverIDs})
+	}
+
+	// given map of string from input [lf], look for rows that [lf] exist in labels column in DB
+	if len(flt.MultipleLabels) != 0 {
+		var matchLabelsExpression = sq.Or{}
+		for _, labels := range flt.MultipleLabels {
+			labelsJSON, err := json.Marshal(labels)
 			if err != nil {
-				return nil, errors.ErrInvalid.WithCausef("problem marshalling Labels json to string with err: %s", err.Error())
+				return nil, errors.ErrInvalid.WithCausef("problem marshalling labels %v json to string with err: %s", labels, err.Error())
 			}
-			queryBuilder = queryBuilder.Where(fmt.Sprintf("labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON))))
+			matchLabelsExpression = append(
+				matchLabelsExpression,
+				sq.Expr(fmt.Sprintf("r.labels @> '%s'::jsonb", string(json.RawMessage(labelsJSON)))),
+			)
 		}
+		queryBuilder = queryBuilder.Where(matchLabelsExpression)
+	}
 
-		query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
-		if err != nil {
+	query, args, err := queryBuilder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := r.client.QueryxContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	receiversDomain := []receiver.Receiver{}
+	for rows.Next() {
+		var receiverModel model.Receiver
+		if err := rows.StructScan(&receiverModel); err != nil {
 			return nil, err
 		}
-
-		rows, err := r.client.QueryxContext(ctx, query, args...)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var receiverModel model.Receiver
-			if err := rows.StructScan(&receiverModel); err != nil {
-				return nil, err
-			}
-			receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
-		}
+		receiversDomain = append(receiversDomain, *receiverModel.ToDomain())
 	}
 	return receiversDomain, nil
 }
@@ -164,32 +147,26 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 	return nil
 }
 
-func (r ReceiverRepository) Get(ctx context.Context, id uint64, filter receiver.Filter) (*receiver.Receiver, error) {
-	var receiverModel model.Receiver
-	if filter.Expanded {
-		query, args, err := receiverListLeftJoinSelfQueryBuilder.LeftJoin("receivers p ON r.parent_id = p.id").Where("r.id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+func (r ReceiverRepository) Get(ctx context.Context, id uint64, flt receiver.Filter) (*receiver.Receiver, error) {
 
-		if err != nil {
-			return nil, err
-		}
-		if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, receiver.NotFoundError{ID: id}
-			}
-			return nil, err
-		}
-		return receiverModel.ToDomain(), nil
+	var queryBuilder sq.SelectBuilder
+	if flt.Expanded {
+		queryBuilder = receiverListLeftJoinSelfQueryBuilder.LeftJoin("receivers p ON r.parent_id = p.id")
 	} else {
-		query, args, err := receiverListQueryBuilder.Where("id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
-		if err != nil {
-			return nil, err
+		queryBuilder = receiverListQueryBuilder
+	}
+
+	query, args, err := queryBuilder.Where("r.id = ?", id).PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var receiverModel model.Receiver
+	if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, receiver.NotFoundError{ID: id}
 		}
-		if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, receiver.NotFoundError{ID: id}
-			}
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return receiverModel.ToDomain(), nil
@@ -217,6 +194,30 @@ func (r ReceiverRepository) Update(ctx context.Context, rcv *receiver.Receiver) 
 	}
 
 	*rcv = *updatedReceiver.ToDomain()
+
+	return nil
+}
+
+func (r ReceiverRepository) PatchLabels(ctx context.Context, rcv *receiver.Receiver) error {
+	if rcv == nil {
+		return errors.ErrInvalid.WithCausef("receiver cannot be nil")
+	}
+
+	receiverModel := new(model.Receiver)
+	receiverModel.FromDomain(*rcv)
+
+	var patchedLabelReceiver model.Receiver
+	if err := r.client.QueryRowxContext(ctx, receiverPatchLabelsQuery,
+		receiverModel.ID,
+		receiverModel.Labels,
+	).StructScan(&patchedLabelReceiver); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return receiver.NotFoundError{ID: receiverModel.ID}
+		}
+		return err
+	}
+
+	*rcv = *patchedLabelReceiver.ToDomain()
 
 	return nil
 }

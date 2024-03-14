@@ -7,12 +7,14 @@ import (
 )
 
 type HeadersConfig struct {
-	IdempotencyKey string `mapstructure:"idempotency_key" yaml:"idempotency_key" default:"Idempotency-Key"`
+	IdempotencyKey   string `mapstructure:"idempotency_key" yaml:"idempotency_key" default:"Idempotency-Key"`
+	IdempotencyScope string `mapstructure:"idempotency_scope" yaml:"idempotency_scope" default:"Idempotency-Scope"`
 }
 
 func SupportedHeaders(cfg HeadersConfig) map[string]bool {
 	return map[string]bool{
-		cfg.IdempotencyKey: true,
+		cfg.IdempotencyKey:   true,
+		cfg.IdempotencyScope: true,
 	}
 }
 

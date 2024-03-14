@@ -37,7 +37,6 @@ func receiversCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 		getReceiverCmd(cmdxConfig),
 		updateReceiverCmd(cmdxConfig),
 		deleteReceiverCmd(cmdxConfig),
-		notifyReceiverCmd(cmdxConfig),
 	)
 
 	return cmd
@@ -357,88 +356,6 @@ func deleteReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 			return nil
 		},
 	}
-
-	return cmd
-}
-
-func notifyReceiverCmd(cmdxConfig *cmdx.Config) *cobra.Command {
-
-	type notifyReceiverRequest struct {
-		Payload map[string]any `mapstructure:"payload" yaml:"payload"`
-	}
-
-	var id uint64
-	var filePath string
-	cmd := &cobra.Command{
-		Use:   "send",
-		Short: "Send a receiver notification",
-		Long: heredoc.Doc(`
-			Send a notification to receiver.
-		`),
-		Annotations: map[string]string{
-			"group": "core",
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			spinner := printer.Spin("")
-			defer spinner.Stop()
-
-			ctx := cmd.Context()
-
-			c, err := loadClientConfig(cmd, cmdxConfig)
-			if err != nil {
-				return err
-			}
-
-			client, cancel, err := createClient(ctx, c.Host)
-			if err != nil {
-				return err
-			}
-			defer cancel()
-
-			rcv, err := client.GetReceiver(ctx, &sirenv1beta1.GetReceiverRequest{
-				Id: id,
-			})
-			if err != nil {
-				return err
-			}
-
-			if rcv.GetReceiver() == nil {
-				return errors.New("no response from server")
-			}
-
-			notifyReceiverReq := &notifyReceiverRequest{}
-			if err := parseFile(filePath, &notifyReceiverReq); err != nil {
-				return err
-			}
-
-			payloadPB, err := structpb.NewStruct(notifyReceiverReq.Payload)
-			if err != nil {
-				return err
-			}
-
-			notifyReceiverReqPB := &sirenv1beta1.NotifyReceiverRequest{
-				Id:      id,
-				Payload: payloadPB,
-			}
-
-			_, err = client.NotifyReceiver(ctx, notifyReceiverReqPB)
-			if err != nil {
-				return err
-			}
-
-			spinner.Stop()
-			printer.Success("Successfully send receiver notification")
-			printer.Space()
-			printer.SuccessIcon()
-
-			return nil
-		},
-	}
-
-	cmd.Flags().Uint64Var(&id, "id", 0, "receiver id")
-	cmd.MarkFlagRequired("id")
-	cmd.Flags().StringVarP(&filePath, "file", "f", "", "Path to the receiver notification message")
-	cmd.MarkFlagRequired("file")
 
 	return cmd
 }

@@ -28,7 +28,7 @@ func TestService_BuildData(t *testing.T) {
 				Description: "should return error if configuration is invalid",
 				Setup:       func(sc *mocks.SlackCaller, e *mocks.Encryptor) {},
 				Confs:       make(map[string]any),
-				Err:         errors.New("invalid slack receiver config, workspace: , token: "),
+				Err:         errors.New("request is not valid"),
 			},
 			{
 				Description: "should return error if failed to get workspace channels with slack client",

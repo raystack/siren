@@ -2,7 +2,6 @@ package notification
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/goto/siren/core/log"
 	"github.com/goto/siren/core/receiver"
@@ -33,15 +32,9 @@ func (s *DispatchReceiverService) PrepareMessage(ctx context.Context, n Notifica
 
 	var notificationLogs []log.Notification
 
-	receiverID, err := strconv.ParseUint(n.Labels[ReceiverIDLabelKey], 0, 64)
-	if err != nil {
-		// should not goes here as this already have been checked
-		return nil, nil, false, err
-	}
-
 	rcvs, err := s.receiverService.List(ctx, receiver.Filter{
-		ReceiverIDs: []uint64{receiverID},
-		Expanded:    true,
+		MultipleLabels: n.ReceiverSelectors,
+		Expanded:       true,
 	})
 	if err != nil {
 		return nil, nil, false, err
@@ -51,32 +44,34 @@ func (s *DispatchReceiverService) PrepareMessage(ctx context.Context, n Notifica
 		return nil, nil, false, errors.ErrNotFound
 	}
 
-	rcv := rcvs[0]
+	var messages []Message
 
-	notifierPlugin, err := s.getNotifierPlugin(rcv.Type)
-	if err != nil {
-		return nil, nil, false, errors.ErrInvalid.WithMsgf("invalid receiver type: %s", err.Error())
+	for _, rcv := range rcvs {
+		notifierPlugin, err := s.getNotifierPlugin(rcv.Type)
+		if err != nil {
+			return nil, nil, false, errors.ErrInvalid.WithMsgf("invalid receiver type: %s", err.Error())
+		}
+
+		message, err := InitMessage(
+			ctx,
+			notifierPlugin,
+			n,
+			rcv.Type,
+			rcv.Configurations,
+			InitWithExpiryDuration(n.ValidDuration),
+		)
+		if err != nil {
+			return nil, nil, false, err
+		}
+
+		messages = append(messages, message)
+		notificationLogs = append(notificationLogs, log.Notification{
+			NamespaceID:    n.NamespaceID,
+			NotificationID: n.ID,
+			ReceiverID:     rcv.ID,
+			AlertIDs:       n.AlertIDs,
+		})
 	}
-
-	message, err := InitMessage(
-		ctx,
-		notifierPlugin,
-		n,
-		rcv.Type,
-		rcv.Configurations,
-		InitWithExpiryDuration(n.ValidDuration),
-	)
-	if err != nil {
-		return nil, nil, false, err
-	}
-
-	messages := []Message{message}
-	notificationLogs = append(notificationLogs, log.Notification{
-		NamespaceID:    n.NamespaceID,
-		NotificationID: n.ID,
-		ReceiverID:     rcv.ID,
-		AlertIDs:       n.AlertIDs,
-	})
 
 	return messages, notificationLogs, false, nil
 }

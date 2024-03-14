@@ -9,7 +9,9 @@ import (
 )
 
 type NotificationMessage struct {
-	ID     string `db:"id"`
+	ID             string `db:"id"`
+	NotificationID string `db:"notification_id"`
+
 	Status string `db:"status"`
 
 	ReceiverType string           `db:"receiver_type"`
@@ -29,6 +31,7 @@ type NotificationMessage struct {
 
 func (nm *NotificationMessage) FromDomain(domainMessage notification.Message) {
 	nm.ID = domainMessage.ID
+	nm.NotificationID = domainMessage.NotificationID
 	nm.Status = string(domainMessage.Status)
 	nm.ReceiverType = domainMessage.ReceiverType
 	nm.Configs = domainMessage.Configs
@@ -57,8 +60,9 @@ func (nm *NotificationMessage) FromDomain(domainMessage notification.Message) {
 
 func (nm *NotificationMessage) ToDomain() notification.Message {
 	return notification.Message{
-		ID:     nm.ID,
-		Status: notification.MessageStatus(nm.Status),
+		ID:             nm.ID,
+		NotificationID: nm.NotificationID,
+		Status:         notification.MessageStatus(nm.Status),
 
 		ReceiverType: nm.ReceiverType,
 		Configs:      nm.Configs,

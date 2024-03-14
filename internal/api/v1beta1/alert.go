@@ -104,7 +104,7 @@ func (s *GRPCServer) createAlerts(ctx context.Context, providerType string, prov
 		}
 
 		for _, n := range ns {
-			if err := s.notificationService.Dispatch(ctx, n); err != nil {
+			if _, err := s.notificationService.Dispatch(ctx, n); err != nil {
 				s.logger.Warn("failed to send alert as notification", "err", err, "notification", n)
 			}
 		}

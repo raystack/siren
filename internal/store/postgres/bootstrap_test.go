@@ -369,3 +369,30 @@ func bootstrapNotificationLog(
 
 	return nil
 }
+
+func bootstrapIdempotency(client *pgc.Client) ([]notification.Idempotency, error) {
+	filePath := "./testdata/mock-idempotency.json"
+	testFixtureJSON, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var data []notification.Idempotency
+	if err = json.Unmarshal(testFixtureJSON, &data); err != nil {
+		return nil, err
+	}
+
+	repo := postgres.NewIdempotencyRepository(client)
+
+	var insertedData []notification.Idempotency
+	for _, d := range data {
+		newD, err := repo.Create(context.Background(), d.Scope, d.Key, d.NotificationID)
+		if err != nil {
+			return nil, err
+		}
+
+		insertedData = append(insertedData, *newD)
+	}
+
+	return insertedData, nil
+}

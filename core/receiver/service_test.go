@@ -243,6 +243,17 @@ func TestService_CreateReceiver(t *testing.T) {
 							"token": "encrypted_key",
 						},
 					}).Return(nil)
+					rr.EXPECT().PatchLabels(mock.AnythingOfType("context.todoCtx"), &receiver.Receiver{
+						ID:   123,
+						Type: receiver.TypeSlack,
+						Labels: map[string]string{
+							"id":   "123",
+							"type": "slack",
+						},
+						Configurations: map[string]any{
+							"token": "encrypted_key",
+						},
+					}).Return(nil)
 				},
 				Rcv: &receiver.Receiver{
 					ID:   123,
@@ -541,6 +552,10 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
+						Labels: map[string]string{
+							"id":   "123",
+							"type": "slack",
+						},
 						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
@@ -571,6 +586,10 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
+						Labels: map[string]string{
+							"id":   "123",
+							"type": "slack",
+						},
 						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},
@@ -600,6 +619,10 @@ func TestService_UpdateReceiver(t *testing.T) {
 					rr.EXPECT().Update(mock.AnythingOfType("context.todoCtx"), &receiver.Receiver{
 						ID:   123,
 						Type: receiver.TypeSlack,
+						Labels: map[string]string{
+							"id":   "123",
+							"type": "slack",
+						},
 						Configurations: map[string]any{
 							"token": "encrypted_key",
 						},

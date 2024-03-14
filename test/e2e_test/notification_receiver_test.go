@@ -25,7 +25,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-type NotificationTestSuite struct {
+type NotificationReceiverTestSuite struct {
 	suite.Suite
 	cancelContext      context.CancelFunc
 	client             sirenv1beta1.SirenServiceClient
@@ -35,7 +35,7 @@ type NotificationTestSuite struct {
 	closeWorkerChannel chan struct{}
 }
 
-func (s *NotificationTestSuite) SetupTest() {
+func (s *NotificationReceiverTestSuite) SetupTest() {
 
 	apiPort, err := getFreePort()
 	s.Require().Nil(err)
@@ -97,7 +97,7 @@ func (s *NotificationTestSuite) SetupTest() {
 	bootstrapCortexTestData(&s.Suite, ctx, s.client, s.testBench.NginxHost)
 }
 
-func (s *NotificationTestSuite) TearDownTest() {
+func (s *NotificationReceiverTestSuite) TearDownTest() {
 	s.cancelClient()
 
 	// Clean tests
@@ -109,7 +109,7 @@ func (s *NotificationTestSuite) TearDownTest() {
 	s.cancelContext()
 }
 
-func (s *NotificationTestSuite) TestSendNotification() {
+func (s *NotificationReceiverTestSuite) TestSendNotification() {
 	ctx := context.Background()
 
 	controlChan := make(chan struct{}, 1)
@@ -126,7 +126,7 @@ func (s *NotificationTestSuite) TestSendNotification() {
 			Text             string `json:"text"`
 		}
 
-		expectedNotification := `{"icon_emoji":":smile:","notification_type":"receiver","receiver_id":"2","text":"test send notification"}`
+		expectedNotification := `{"icon_emoji":":smile:","notification_type":"event","text":"test send notification"}`
 
 		var (
 			resultStruct   sampleStruct
@@ -158,16 +158,18 @@ func (s *NotificationTestSuite) TestSendNotification() {
 
 	time.Sleep(100 * time.Millisecond)
 
-	_, err = s.client.NotifyReceiver(ctx, &sirenv1beta1.NotifyReceiverRequest{
-		Id: rcv.GetId(),
-		Payload: &structpb.Struct{
+	_, err = s.client.PostNotification(ctx, &sirenv1beta1.PostNotificationRequest{
+		Receivers: []*structpb.Struct{
+			{
+				Fields: map[string]*structpb.Value{
+					"id": structpb.NewStringValue(fmt.Sprintf("%d", rcv.GetId())),
+				},
+			},
+		},
+		Data: &structpb.Struct{
 			Fields: map[string]*structpb.Value{
-				"data": structpb.NewStructValue(&structpb.Struct{
-					Fields: map[string]*structpb.Value{
-						"text":       structpb.NewStringValue("test send notification"),
-						"icon_emoji": structpb.NewStringValue(":smile:"),
-					},
-				}),
+				"text":       structpb.NewStringValue("test send notification"),
+				"icon_emoji": structpb.NewStringValue(":smile:"),
 			},
 		},
 	})
@@ -177,6 +179,6 @@ func (s *NotificationTestSuite) TestSendNotification() {
 
 }
 
-func TestNotificationTestSuite(t *testing.T) {
-	suite.Run(t, new(NotificationTestSuite))
+func TestNotificationReceiverTestSuite(t *testing.T) {
+	suite.Run(t, new(NotificationReceiverTestSuite))
 }

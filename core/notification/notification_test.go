@@ -10,21 +10,21 @@ func TestNotification_Validate(t *testing.T) {
 	testCases := []struct {
 		name                string
 		n                   notification.Notification
+		Flow                string
 		receiverType        string
 		notificationConfigs map[string]any
 		wantErr             bool
 	}{
 		{
-			name: "should return error if type is unknown",
-			n: notification.Notification{
-				Type: "random",
-			},
+			name:    "should return error if flow is unknown",
+			Flow:    "random",
+			n:       notification.Notification{},
 			wantErr: true,
 		},
 		{
-			name: "should return error if type receiver but has no 'receiver_id' key label",
+			name: "should return error if flow receiver but has no receiver_selectors",
+			Flow: notification.FlowReceiver,
 			n: notification.Notification{
-				Type: notification.TypeReceiver,
 				Labels: map[string]string{
 					"labelkey1": "value1",
 				},
@@ -35,47 +35,23 @@ func TestNotification_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return error if type receiver but has empty 'receiver_id' label value",
+			name: "should return nil error if flow receiver and receiver_selectors exist",
+			Flow: notification.FlowReceiver,
 			n: notification.Notification{
-				Type: notification.TypeReceiver,
-				Labels: map[string]string{
-					"receiver_id": "",
-				},
-				Data: map[string]any{
-					"varkey1": "value1",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "should return error if type receiver but has 'receiver_id' value is non parsable to integer",
-			n: notification.Notification{
-				Type: notification.TypeReceiver,
-				Labels: map[string]string{
-					"receiver_id": "xxx",
-				},
-				Data: map[string]any{
-					"varkey1": "value1",
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "should return nil error if type receiver and 'receiver_id' is valid",
-			n: notification.Notification{
-				Type: notification.TypeReceiver,
 				Labels: map[string]string{
 					"receiver_id": "2",
 				},
-				Data: map[string]any{
-					"varkey1": "value1",
+				ReceiverSelectors: []map[string]string{
+					{
+						"varkey1": "value1",
+					},
 				},
 			},
 		},
 		{
-			name: "should return error if type subscriber but has no kv labels",
+			name: "should return error if flow subscriber but has no kv labels",
+			Flow: notification.FlowSubscriber,
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
 				Data: map[string]any{
 					"varkey1": "value1",
 				},
@@ -83,9 +59,9 @@ func TestNotification_Validate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return nil error if type subscriber and has kv labels",
+			name: "should return nil error if flow subscriber and has kv labels",
+			Flow: notification.FlowSubscriber,
 			n: notification.Notification{
-				Type: notification.TypeSubscriber,
 				Labels: map[string]string{
 					"receiver_id": "xxx",
 				},
@@ -97,7 +73,7 @@ func TestNotification_Validate(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.n.Validate()
+			err := tc.n.Validate(tc.Flow)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Notification.ToMessage() error = %v, wantErr %v", err, tc.wantErr)
 				return

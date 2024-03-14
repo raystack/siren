@@ -40,7 +40,8 @@ func (s *PluginService) PreHookDBTransformConfigs(ctx context.Context, configura
 // PostHookTransformConfigs do transformation in post-hook service lifecycle
 func (s *PluginService) PostHookDBTransformConfigs(ctx context.Context, configurations map[string]any) (map[string]any, error) {
 	transformedConfigs, err := s.slackPluginService.PostHookDBTransformConfigs(ctx, configurations)
-	if err != nil {
+	// if slack_channel is not expaneded, it is okay to have slack config empty
+	if err != nil && !errors.Is(err, errors.ErrInvalid) {
 		return nil, fmt.Errorf("slack channel post hook db failed: %w", err)
 	}
 

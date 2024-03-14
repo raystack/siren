@@ -7,21 +7,21 @@ import (
 )
 
 type Idempotency struct {
-	ID        uint64    `db:"id"`
-	Scope     string    `db:"scope"`
-	Key       string    `db:"key"`
-	Success   bool      `db:"success"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID             uint64    `db:"id"`
+	Scope          string    `db:"scope"`
+	Key            string    `db:"key"`
+	NotificationID string    `db:"notification_id"`
+	CreatedAt      time.Time `db:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at"`
 }
 
 func (i *Idempotency) ToDomain() *notification.Idempotency {
 	return &notification.Idempotency{
-		ID:        i.ID,
-		Scope:     i.Scope,
-		Key:       i.Key,
-		Success:   i.Success,
-		CreatedAt: i.CreatedAt,
-		UpdatedAt: i.UpdatedAt,
+		ID:             i.ID,
+		Scope:          i.Scope,
+		Key:            i.Key,
+		NotificationID: i.NotificationID,
+		CreatedAt:      i.CreatedAt,
+		UpdatedAt:      i.UpdatedAt,
 	}
 }

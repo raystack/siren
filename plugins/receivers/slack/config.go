@@ -3,6 +3,7 @@ package slack
 import (
 	"fmt"
 
+	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/httpclient"
 	"github.com/goto/siren/pkg/retry"
 	"github.com/goto/siren/pkg/secret"
@@ -40,7 +41,7 @@ func (c *ReceiverConfig) Validate() error {
 	if c.Token != "" && c.Workspace != "" {
 		return nil
 	}
-	return fmt.Errorf("invalid slack receiver config, workspace: %s, token: %s", c.Workspace, c.Token)
+	return errors.ErrInvalid.WithCausef("invalid slack receiver config, workspace: %s, token: %s", c.Workspace, c.Token)
 }
 
 func (c *ReceiverConfig) AsMap() map[string]any {

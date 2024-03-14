@@ -63,15 +63,16 @@ func InitWithMaxTries(mt int) MessageOption {
 
 // Message is the model to be sent for a specific subscription's receiver
 type Message struct {
-	ID           string
-	Status       MessageStatus
-	ReceiverType string
-	Configs      map[string]any // the datasource to build vendor-specific configs
-	Details      map[string]any // the datasource to build vendor-specific message
-	MaxTries     int
-	ExpiredAt    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             string
+	NotificationID string
+	Status         MessageStatus
+	ReceiverType   string
+	Configs        map[string]any // the datasource to build vendor-specific configs
+	Details        map[string]any // the datasource to build vendor-specific message
+	MaxTries       int
+	ExpiredAt      time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 
 	LastError string
 	TryCount  int
@@ -112,14 +113,15 @@ func InitMessage(
 	}
 
 	m := &Message{
-		ID:           uuid.NewString(),
-		Status:       MessageStatusEnqueued,
-		ReceiverType: receiverType,
-		Configs:      newConfigs,
-		Details:      details,
-		MaxTries:     defaultMaxTries,
-		CreatedAt:    timeNow,
-		UpdatedAt:    timeNow,
+		ID:             uuid.NewString(),
+		NotificationID: n.ID,
+		Status:         MessageStatusEnqueued,
+		ReceiverType:   receiverType,
+		Configs:        newConfigs,
+		Details:        details,
+		MaxTries:       defaultMaxTries,
+		CreatedAt:      timeNow,
+		UpdatedAt:      timeNow,
 	}
 
 	for _, opt := range opts {

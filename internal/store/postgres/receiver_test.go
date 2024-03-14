@@ -180,9 +180,11 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 		{
 			Description: "should get filtered receivers with labels",
 			Filter: receiver.Filter{
-				Labels: map[string]string{
-					"team":     "infra",
-					"severity": "warning",
+				MultipleLabels: []map[string]string{
+					{
+						"team":     "infra",
+						"severity": "warning",
+					},
 				},
 			},
 			ExpectedReceivers: []receiver.Receiver{
@@ -203,7 +205,7 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 			},
 		},
 		{
-			Description: "should get all receivers with parent configs merged",
+			Description: "should get all receivers with parent configs merged if expanded",
 			Filter: receiver.Filter{
 				Expanded: true,
 			},
@@ -304,10 +306,12 @@ func (s *ReceiverRepositoryTestSuite) TestList() {
 		{
 			Description: "should get filtered receivers with labels with parent configs merged",
 			Filter: receiver.Filter{
-				Labels: map[string]string{
-					"org":      "gotocompany,org-a,org-b",
-					"team":     "infra",
-					"severity": "critical",
+				MultipleLabels: []map[string]string{
+					{
+						"org":      "gotocompany,org-a,org-b",
+						"team":     "infra",
+						"severity": "critical",
+					},
 				},
 				Expanded: true,
 			},
@@ -533,6 +537,63 @@ func (s *ReceiverRepositoryTestSuite) TestDelete() {
 				if err.Error() != tc.ErrString {
 					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
 				}
+			}
+		})
+	}
+}
+
+func (s *ReceiverRepositoryTestSuite) TestPatchLabels() {
+	var (
+		receiverID uint64 = 2
+	)
+	type testCase struct {
+		Description      string
+		ReceiverToPatch  *receiver.Receiver
+		ExpectedReceiver *receiver.Receiver
+		ErrString        string
+	}
+
+	var testCases = []testCase{
+		{
+			Description: "should patch existing receiver",
+			ReceiverToPatch: &receiver.Receiver{
+				ID: receiverID,
+				Labels: map[string]string{
+					"foo": "newbar",
+					"a":   "b",
+				},
+			},
+			ExpectedReceiver: &receiver.Receiver{
+				ID:   receiverID,
+				Type: receiver.TypeHTTP,
+				Name: "alert-history",
+				Labels: map[string]string{
+					"foo": "newbar",
+					"a":   "b",
+				},
+				Configurations: map[string]any{
+					"url": "http://siren.gotocompany.com/v1beta1/alerts/cortex/1",
+				},
+			},
+		},
+		{
+			Description:     "should return error not found if receiver is nil",
+			ReceiverToPatch: nil,
+			ErrString:       "request is not valid",
+		},
+	}
+
+	for _, tc := range testCases {
+		rcv := tc.ReceiverToPatch
+		s.Run(tc.Description, func() {
+			err := s.repository.PatchLabels(s.ctx, rcv)
+			if tc.ErrString != "" {
+				if err.Error() != tc.ErrString {
+					s.T().Fatalf("got error %s, expected was %s", err.Error(), tc.ErrString)
+				}
+			}
+			if diff := cmp.Diff(rcv, tc.ExpectedReceiver, cmpopts.IgnoreFields(receiver.Receiver{}, "CreatedAt", "UpdatedAt")); diff != "" {
+				s.T().Fatalf("got diff %+v", diff)
 			}
 		})
 	}

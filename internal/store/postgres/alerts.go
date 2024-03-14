@@ -125,6 +125,7 @@ func (r AlertRepository) BulkUpdateSilence(ctx context.Context, alertIDs []int64
 	} else {
 		silenceStatusPG = sql.NullString{Valid: true, String: silenceStatus}
 	}
+
 	if _, err := r.client.ExecContext(ctx, alertUpdateBulkSilenceQuery,
 		silenceStatusPG,
 		sqlAlertIDs,

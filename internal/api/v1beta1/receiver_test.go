@@ -37,8 +37,7 @@ func TestGRPCServer_ListReceiver(t *testing.T) {
 	t.Run("should return list of all receiver", func(t *testing.T) {
 		mockedReceiverService := &mocks.ReceiverService{}
 		dummyGRPCServer := v1beta1.NewGRPCServer(log.NewNoop(), api.HeadersConfig{}, &api.Deps{ReceiverService: mockedReceiverService})
-		mockedReceiverService.EXPECT().List(mock.AnythingOfType("context.todoCtx"), receiver.Filter{}).
-			Return(dummyResult, nil).Once()
+		mockedReceiverService.EXPECT().List(mock.AnythingOfType("context.todoCtx"), receiver.Filter{}).Return(dummyResult, nil).Once()
 
 		res, err := dummyGRPCServer.ListReceivers(context.TODO(), &sirenv1beta1.ListReceiversRequest{})
 		assert.Nil(t, err)

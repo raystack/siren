@@ -20,5 +20,26 @@
             "label-key": "label-value"
         },
         "template": ""
+    },
+    {
+        "id": "789",
+        "namespace_id": 1,
+        "type": "subscriber",
+        "data": {
+            "data-key": "data-value"
+        },
+        "labels": {
+            "label-key": "label-value"
+        },
+        "template": "",
+        "receiver_selectors": [
+            {
+                "team": "gotocompany-infra",
+                "severity": "WARNING"
+            },
+            {
+                "id": "2"
+            }
+        ]
     }
 ]

@@ -72,8 +72,13 @@ func (s *Service) Create(ctx context.Context, rcv *Receiver) error {
 		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
 
-	err = s.repository.Create(ctx, rcv)
-	if err != nil {
+	if err = s.repository.Create(ctx, rcv); err != nil {
+		return err
+	}
+
+	rcv.enrichPredefinedLabels()
+
+	if err = s.repository.PatchLabels(ctx, rcv); err != nil {
 		return err
 	}
 
@@ -87,12 +92,14 @@ type getOpts struct {
 
 type GetOption func(*getOpts)
 
+// GetWithData populates receiver with data
 func GetWithData() GetOption {
 	return func(g *getOpts) {
 		g.withData = true
 	}
 }
 
+// GetWithExpand populates receiver configs with parent config
 func GetWithExpand() GetOption {
 	return func(g *getOpts) {
 		g.withExpand = true
@@ -106,20 +113,14 @@ func (s *Service) Get(ctx context.Context, id uint64, gopts ...GetOption) (*Rece
 		g(opt)
 	}
 
-	filter := Filter{
+	rcv, err := s.repository.Get(ctx, id, Filter{
 		Expanded: opt.withExpand,
-	}
-
-	rcv, err := s.repository.Get(ctx, id, filter)
+	})
 	if err != nil {
 		if errors.As(err, new(NotFoundError)) {
 			return nil, errors.ErrNotFound.WithMsgf(err.Error())
 		}
 		return nil, err
-	}
-
-	if !opt.withExpand {
-		return rcv, nil
 	}
 
 	receiverPlugin, err := s.getReceiverPlugin(rcv.Type)
@@ -166,6 +167,8 @@ func (s *Service) Update(ctx context.Context, rcv *Receiver) error {
 	if err != nil {
 		return errors.ErrInvalid.WithMsgf("%s", err.Error())
 	}
+
+	rcv.enrichPredefinedLabels()
 
 	if err = s.repository.Update(ctx, rcv); err != nil {
 		if errors.As(err, new(NotFoundError)) {

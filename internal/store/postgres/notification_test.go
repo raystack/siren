@@ -83,7 +83,7 @@ func (s *NotificationRepositoryTestSuite) TestCreate() {
 			Description: "should create a notification",
 			NotificationToCreate: notification.Notification{
 				NamespaceID: 1,
-				Type:        notification.TypeReceiver,
+				Type:        notification.TypeAlert,
 				Data:        map[string]any{},
 				Labels:      map[string]string{},
 				CreatedAt:   time.Now(),
@@ -93,7 +93,7 @@ func (s *NotificationRepositoryTestSuite) TestCreate() {
 			Description: "should return error if a notification is invalid",
 			NotificationToCreate: notification.Notification{
 				NamespaceID: 1,
-				Type:        notification.TypeReceiver,
+				Type:        notification.TypeAlert,
 				Data: map[string]any{
 					"k1": func(x chan struct{}) {
 						<-x

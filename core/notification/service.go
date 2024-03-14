@@ -101,8 +101,8 @@ func NewService(
 		silenceService:        deps.SilenceService,
 		alertService:          deps.AlertService,
 		dispatcher: map[string]Dispatcher{
-			TypeReceiver:   dispatchReceiverService,
-			TypeSubscriber: dispatchSubscriberService,
+			FlowReceiver:   dispatchReceiverService,
+			FlowSubscriber: dispatchSubscriberService,
 		},
 		notifierPlugins:      notifierPlugins,
 		enableSilenceFeature: enableSilenceFeature,
@@ -111,27 +111,61 @@ func NewService(
 	return ns
 }
 
-func (s *Service) getDispatcherService(notificationType string) (Dispatcher, error) {
-	selectedDispatcher, exist := s.dispatcher[notificationType]
+func (s *Service) getDispatcherFlowService(notificationFlow string) (Dispatcher, error) {
+	selectedDispatcher, exist := s.dispatcher[notificationFlow]
 	if !exist {
-		return nil, errors.ErrInvalid.WithMsgf("unsupported notification type: %q", notificationType)
+		return nil, errors.ErrInvalid.WithMsgf("unsupported notification type: %q", notificationFlow)
 	}
 	return selectedDispatcher, nil
 }
 
-func (s *Service) Dispatch(ctx context.Context, n Notification) error {
-	if err := n.Validate(); err != nil {
-		return err
-	}
-
+func (s *Service) Dispatch(ctx context.Context, n Notification) (string, error) {
+	ctx = s.repository.WithTransaction(ctx)
 	no, err := s.repository.Create(ctx, n)
 	if err != nil {
-		return err
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return "", err
+		}
+		return "", err
 	}
 
 	n.EnrichID(no.ID)
 
-	dispatcherService, err := s.getDispatcherService(n.Type)
+	switch n.Type {
+	case TypeAlert:
+		if err := s.dispatchAlerts(ctx, n); err != nil {
+			if err := s.repository.Rollback(ctx, err); err != nil {
+				return "", err
+			}
+			return "", err
+		}
+	case TypeEvent:
+		if err := s.dispatchEvents(ctx, n); err != nil {
+			if err := s.repository.Rollback(ctx, err); err != nil {
+				return "", err
+			}
+			return "", err
+		}
+	default:
+		if err := s.repository.Rollback(ctx, err); err != nil {
+			return "", err
+		}
+		return "", errors.ErrInternal.WithMsgf("unknown notification type")
+	}
+
+	if err := s.repository.Commit(ctx); err != nil {
+		return "", err
+	}
+
+	return n.ID, nil
+}
+
+func (s *Service) dispatchByFlow(ctx context.Context, n Notification, flow string) error {
+	if err := n.Validate(flow); err != nil {
+		return err
+	}
+
+	dispatcherService, err := s.getDispatcherFlowService(flow)
 	if err != nil {
 		return err
 	}
@@ -168,21 +202,48 @@ func (s *Service) Dispatch(ctx context.Context, n Notification) error {
 	return nil
 }
 
-func (s *Service) CheckAndInsertIdempotency(ctx context.Context, scope, key string) (uint64, error) {
-	idempt, err := s.idempotencyRepository.InsertOnConflictReturning(ctx, scope, key)
-	if err != nil {
-		return 0, err
+func (s *Service) dispatchEvents(ctx context.Context, n Notification) error {
+	if len(n.ReceiverSelectors) == 0 && len(n.Labels) == 0 {
+		return errors.ErrInvalid.WithMsgf("no receivers found")
 	}
 
-	if idempt.Success {
-		return 0, errors.ErrConflict
+	if len(n.ReceiverSelectors) != 0 {
+		if err := s.dispatchByFlow(ctx, n, FlowReceiver); err != nil {
+			return err
+		}
 	}
 
-	return idempt.ID, nil
+	if len(n.Labels) != 0 {
+		if err := s.dispatchByFlow(ctx, n, FlowSubscriber); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (s *Service) MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error {
-	return s.idempotencyRepository.UpdateSuccess(ctx, id, true)
+func (s *Service) dispatchAlerts(ctx context.Context, n Notification) error {
+	if err := s.dispatchByFlow(ctx, n, FlowSubscriber); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) CheckIdempotency(ctx context.Context, scope, key string) (string, error) {
+	idempt, err := s.idempotencyRepository.Check(ctx, scope, key)
+	if err != nil {
+		return "", err
+	}
+
+	return idempt.NotificationID, nil
+}
+
+func (s *Service) InsertIdempotency(ctx context.Context, scope, key, notificationID string) error {
+	if _, err := s.idempotencyRepository.Create(ctx, scope, key, notificationID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) RemoveIdempotencies(ctx context.Context, TTL time.Duration) error {
@@ -260,9 +321,13 @@ func (s *Service) BuildFromAlerts(
 			alertIDs = append(alertIDs, int64(a.ID))
 		}
 
+		for k, v := range sampleAlert.Labels {
+			data[k] = v
+		}
+
 		notifications = append(notifications, Notification{
 			NamespaceID: sampleAlert.NamespaceID,
-			Type:        TypeSubscriber,
+			Type:        TypeAlert,
 			Data:        data,
 			Labels:      sampleAlert.Labels,
 			Template:    template.ReservedName_SystemDefault,

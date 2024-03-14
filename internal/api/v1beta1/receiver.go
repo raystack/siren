@@ -15,8 +15,14 @@ import (
 )
 
 func (s *GRPCServer) ListReceivers(ctx context.Context, req *sirenv1beta1.ListReceiversRequest) (*sirenv1beta1.ListReceiversResponse, error) {
+	var filterMultipleLabels []map[string]string
+
+	if len(req.GetLabels()) > 0 {
+		filterMultipleLabels = []map[string]string{req.GetLabels()}
+	}
+
 	receivers, err := s.receiverService.List(ctx, receiver.Filter{
-		Labels: req.GetLabels(),
+		MultipleLabels: filterMultipleLabels,
 	})
 	if err != nil {
 		return nil, s.generateRPCErr(err)

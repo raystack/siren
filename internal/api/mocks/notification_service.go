@@ -87,23 +87,23 @@ func (_c *NotificationService_BuildFromAlerts_Call) RunAndReturn(run func([]aler
 	return _c
 }
 
-// CheckAndInsertIdempotency provides a mock function with given fields: ctx, scope, key
-func (_m *NotificationService) CheckAndInsertIdempotency(ctx context.Context, scope string, key string) (uint64, error) {
+// CheckIdempotency provides a mock function with given fields: ctx, scope, key
+func (_m *NotificationService) CheckIdempotency(ctx context.Context, scope string, key string) (string, error) {
 	ret := _m.Called(ctx, scope, key)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckAndInsertIdempotency")
+		panic("no return value specified for CheckIdempotency")
 	}
 
-	var r0 uint64
+	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (uint64, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (string, error)); ok {
 		return rf(ctx, scope, key)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) uint64); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) string); ok {
 		r0 = rf(ctx, scope, key)
 	} else {
-		r0 = ret.Get(0).(uint64)
+		r0 = ret.Get(0).(string)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
@@ -115,52 +115,62 @@ func (_m *NotificationService) CheckAndInsertIdempotency(ctx context.Context, sc
 	return r0, r1
 }
 
-// NotificationService_CheckAndInsertIdempotency_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckAndInsertIdempotency'
-type NotificationService_CheckAndInsertIdempotency_Call struct {
+// NotificationService_CheckIdempotency_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckIdempotency'
+type NotificationService_CheckIdempotency_Call struct {
 	*mock.Call
 }
 
-// CheckAndInsertIdempotency is a helper method to define mock.On call
+// CheckIdempotency is a helper method to define mock.On call
 //   - ctx context.Context
 //   - scope string
 //   - key string
-func (_e *NotificationService_Expecter) CheckAndInsertIdempotency(ctx interface{}, scope interface{}, key interface{}) *NotificationService_CheckAndInsertIdempotency_Call {
-	return &NotificationService_CheckAndInsertIdempotency_Call{Call: _e.mock.On("CheckAndInsertIdempotency", ctx, scope, key)}
+func (_e *NotificationService_Expecter) CheckIdempotency(ctx interface{}, scope interface{}, key interface{}) *NotificationService_CheckIdempotency_Call {
+	return &NotificationService_CheckIdempotency_Call{Call: _e.mock.On("CheckIdempotency", ctx, scope, key)}
 }
 
-func (_c *NotificationService_CheckAndInsertIdempotency_Call) Run(run func(ctx context.Context, scope string, key string)) *NotificationService_CheckAndInsertIdempotency_Call {
+func (_c *NotificationService_CheckIdempotency_Call) Run(run func(ctx context.Context, scope string, key string)) *NotificationService_CheckIdempotency_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *NotificationService_CheckAndInsertIdempotency_Call) Return(_a0 uint64, _a1 error) *NotificationService_CheckAndInsertIdempotency_Call {
+func (_c *NotificationService_CheckIdempotency_Call) Return(_a0 string, _a1 error) *NotificationService_CheckIdempotency_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *NotificationService_CheckAndInsertIdempotency_Call) RunAndReturn(run func(context.Context, string, string) (uint64, error)) *NotificationService_CheckAndInsertIdempotency_Call {
+func (_c *NotificationService_CheckIdempotency_Call) RunAndReturn(run func(context.Context, string, string) (string, error)) *NotificationService_CheckIdempotency_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Dispatch provides a mock function with given fields: ctx, n
-func (_m *NotificationService) Dispatch(ctx context.Context, n notification.Notification) error {
+func (_m *NotificationService) Dispatch(ctx context.Context, n notification.Notification) (string, error) {
 	ret := _m.Called(ctx, n)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Dispatch")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, notification.Notification) error); ok {
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, notification.Notification) (string, error)); ok {
+		return rf(ctx, n)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, notification.Notification) string); ok {
 		r0 = rf(ctx, n)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, notification.Notification) error); ok {
+		r1 = rf(ctx, n)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // NotificationService_Dispatch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Dispatch'
@@ -182,27 +192,27 @@ func (_c *NotificationService_Dispatch_Call) Run(run func(ctx context.Context, n
 	return _c
 }
 
-func (_c *NotificationService_Dispatch_Call) Return(_a0 error) *NotificationService_Dispatch_Call {
-	_c.Call.Return(_a0)
+func (_c *NotificationService_Dispatch_Call) Return(_a0 string, _a1 error) *NotificationService_Dispatch_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *NotificationService_Dispatch_Call) RunAndReturn(run func(context.Context, notification.Notification) error) *NotificationService_Dispatch_Call {
+func (_c *NotificationService_Dispatch_Call) RunAndReturn(run func(context.Context, notification.Notification) (string, error)) *NotificationService_Dispatch_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// MarkIdempotencyAsSuccess provides a mock function with given fields: ctx, id
-func (_m *NotificationService) MarkIdempotencyAsSuccess(ctx context.Context, id uint64) error {
-	ret := _m.Called(ctx, id)
+// InsertIdempotency provides a mock function with given fields: ctx, scope, key, notificationID
+func (_m *NotificationService) InsertIdempotency(ctx context.Context, scope string, key string, notificationID string) error {
+	ret := _m.Called(ctx, scope, key, notificationID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for MarkIdempotencyAsSuccess")
+		panic("no return value specified for InsertIdempotency")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, scope, key, notificationID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -210,31 +220,33 @@ func (_m *NotificationService) MarkIdempotencyAsSuccess(ctx context.Context, id 
 	return r0
 }
 
-// NotificationService_MarkIdempotencyAsSuccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'MarkIdempotencyAsSuccess'
-type NotificationService_MarkIdempotencyAsSuccess_Call struct {
+// NotificationService_InsertIdempotency_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InsertIdempotency'
+type NotificationService_InsertIdempotency_Call struct {
 	*mock.Call
 }
 
-// MarkIdempotencyAsSuccess is a helper method to define mock.On call
+// InsertIdempotency is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id uint64
-func (_e *NotificationService_Expecter) MarkIdempotencyAsSuccess(ctx interface{}, id interface{}) *NotificationService_MarkIdempotencyAsSuccess_Call {
-	return &NotificationService_MarkIdempotencyAsSuccess_Call{Call: _e.mock.On("MarkIdempotencyAsSuccess", ctx, id)}
+//   - scope string
+//   - key string
+//   - notificationID string
+func (_e *NotificationService_Expecter) InsertIdempotency(ctx interface{}, scope interface{}, key interface{}, notificationID interface{}) *NotificationService_InsertIdempotency_Call {
+	return &NotificationService_InsertIdempotency_Call{Call: _e.mock.On("InsertIdempotency", ctx, scope, key, notificationID)}
 }
 
-func (_c *NotificationService_MarkIdempotencyAsSuccess_Call) Run(run func(ctx context.Context, id uint64)) *NotificationService_MarkIdempotencyAsSuccess_Call {
+func (_c *NotificationService_InsertIdempotency_Call) Run(run func(ctx context.Context, scope string, key string, notificationID string)) *NotificationService_InsertIdempotency_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
 
-func (_c *NotificationService_MarkIdempotencyAsSuccess_Call) Return(_a0 error) *NotificationService_MarkIdempotencyAsSuccess_Call {
+func (_c *NotificationService_InsertIdempotency_Call) Return(_a0 error) *NotificationService_InsertIdempotency_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *NotificationService_MarkIdempotencyAsSuccess_Call) RunAndReturn(run func(context.Context, uint64) error) *NotificationService_MarkIdempotencyAsSuccess_Call {
+func (_c *NotificationService_InsertIdempotency_Call) RunAndReturn(run func(context.Context, string, string, string) error) *NotificationService_InsertIdempotency_Call {
 	_c.Call.Return(run)
 	return _c
 }
