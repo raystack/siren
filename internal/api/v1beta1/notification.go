@@ -50,7 +50,6 @@ func (s *GRPCServer) PostNotification(ctx context.Context, req *sirenv1beta1.Pos
 	var notificationTemplate = template.ReservedName_SystemDefault
 
 	n := notification.Notification{
-		NamespaceID:       req.GetNamespaceId(),
 		Type:              notification.TypeEvent,
 		Data:              req.GetData().AsMap(),
 		Labels:            req.GetLabels(),

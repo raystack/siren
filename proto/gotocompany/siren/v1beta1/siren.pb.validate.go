@@ -11046,8 +11046,6 @@ func (m *PostNotificationRequest) validate(all bool) error {
 
 	}
 
-	// no validation rules for NamespaceId
-
 	if all {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
@@ -11077,11 +11075,7 @@ func (m *PostNotificationRequest) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for Template
-
 	// no validation rules for Labels
-
-	// no validation rules for UniqueKey
 
 	if len(errors) > 0 {
 		return PostNotificationRequestMultiError(errors)

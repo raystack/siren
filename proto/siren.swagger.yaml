@@ -1249,19 +1249,12 @@ definitions:
         type: array
         items:
           type: object
-      namespace_id:
-        type: string
-        format: uint64
       data:
         type: object
-      template:
-        type: string
       labels:
         type: object
         additionalProperties:
           type: string
-      unique_key:
-        type: string
   PostNotificationResponse:
     type: object
     properties:
