@@ -12,6 +12,8 @@ import (
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
 	"github.com/lib/pq"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const subscriptionInsertQuery = `
@@ -98,7 +100,13 @@ func (r *SubscriptionRepository) List(ctx context.Context, flt subscription.Filt
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, query, args...)
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "subscriptions"),
+	}
+
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +134,13 @@ func (r *SubscriptionRepository) Create(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, subscriptionInsertQuery,
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "subscriptions"),
+	}
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), subscriptionInsertQuery,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
 		subscriptionModel.Receiver,
@@ -157,7 +171,14 @@ func (r *SubscriptionRepository) Get(ctx context.Context, id uint64) (*subscript
 	}
 
 	var subscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, query, args...).StructScan(&subscriptionModel); err != nil {
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select"),
+		attribute.String("db.sql.table", "subscriptions"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...).StructScan(&subscriptionModel); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, subscription.NotFoundError{ID: id}
 		}
@@ -176,7 +197,14 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 	subscriptionModel.FromDomain(*sub)
 
 	var newSubscriptionModel model.Subscription
-	if err := r.client.QueryRowxContext(ctx, subscriptionUpdateQuery,
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Update"),
+		attribute.String("db.sql.table", "subscriptions"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), subscriptionUpdateQuery,
 		subscriptionModel.ID,
 		subscriptionModel.NamespaceID,
 		subscriptionModel.URN,
@@ -204,7 +232,12 @@ func (r *SubscriptionRepository) Update(ctx context.Context, sub *subscription.S
 }
 
 func (r *SubscriptionRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.ExecContext(ctx, subscriptionDeleteQuery, id); err != nil {
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Delete"),
+		attribute.String("db.sql.table", "subscriptions"),
+	}
+	if _, err := r.client.ExecContext(otelsql.AddMeterLabels(ctx, attrs...), subscriptionDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

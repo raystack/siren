@@ -8,6 +8,8 @@ import (
 	"github.com/goto/siren/internal/store/model"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const notificationLogTableName = "notification_log"
@@ -31,7 +33,13 @@ func NewLogRepository(client *pgc.Client) *LogRepository {
 }
 
 func (r *LogRepository) ListAlertIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error) {
-	rows, err := r.client.QueryxContext(ctx, fmt.Sprintf(`
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "notification_log"),
+	}
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), fmt.Sprintf(`
 	SELECT distinct unnest(alert_ids) AS alert_ids FROM %s WHERE silence_ids @> '{%s}'
 	`, notificationLogTableName, silenceID))
 	if err != nil {
@@ -53,7 +61,14 @@ func (r *LogRepository) ListAlertIDsBySilenceID(ctx context.Context, silenceID s
 }
 
 func (r *LogRepository) ListSubscriptionIDsBySilenceID(ctx context.Context, silenceID string) ([]int64, error) {
-	rows, err := r.client.QueryxContext(ctx, fmt.Sprintf(`
+	
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "notification_log"),
+	}
+
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), fmt.Sprintf(`
 	SELECT distinct subscription_id FROM %s WHERE silence_ids @> '{%s}'
 	`, notificationLogTableName, silenceID))
 	if err != nil {
@@ -83,7 +98,12 @@ func (r *LogRepository) BulkCreate(ctx context.Context, nss []log.Notification) 
 		nssModel = append(nssModel, *nsModel)
 	}
 
-	res, err := r.client.NamedExecContext(ctx, notificationLogInsertNamedQuery, nssModel)
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "notification_log"),
+	}
+	res, err := r.client.NamedExecContext(otelsql.AddMeterLabels(ctx, attrs...), notificationLogInsertNamedQuery, nssModel)
 	if err != nil {
 		return err
 	}

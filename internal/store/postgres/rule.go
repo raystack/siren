@@ -9,6 +9,8 @@ import (
 	"github.com/goto/siren/internal/store/model"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const ruleUpsertQuery = `
@@ -58,7 +60,14 @@ func (r *RuleRepository) Upsert(ctx context.Context, rl *rule.Rule) error {
 	}
 
 	var newRuleModel model.Rule
-	if err := r.client.QueryRowxContext(ctx, ruleUpsertQuery,
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "rules"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), ruleUpsertQuery,
 		ruleModel.Name,
 		ruleModel.Namespace,
 		ruleModel.GroupName,
@@ -110,7 +119,12 @@ func (r *RuleRepository) List(ctx context.Context, flt rule.Filter) ([]rule.Rule
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, query, args...)
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "rules"),
+	}
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...)
 	if err != nil {
 		return nil, err
 	}

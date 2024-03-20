@@ -12,6 +12,8 @@ import (
 	"github.com/goto/siren/internal/store/model"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const receiverInsertQuery = `
@@ -102,7 +104,12 @@ func (r ReceiverRepository) List(ctx context.Context, flt receiver.Filter) ([]re
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, query, args...)
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "receivers"),
+	}
+
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +135,14 @@ func (r ReceiverRepository) Create(ctx context.Context, rcv *receiver.Receiver) 
 	receiverModel.FromDomain(*rcv)
 
 	var createdReceiver model.Receiver
-	if err := r.client.QueryRowxContext(ctx, receiverInsertQuery,
+	
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "receivers"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), receiverInsertQuery,
 		receiverModel.Name,
 		receiverModel.Type,
 		receiverModel.Labels,
@@ -162,7 +176,12 @@ func (r ReceiverRepository) Get(ctx context.Context, id uint64, flt receiver.Fil
 	}
 
 	var receiverModel model.Receiver
-	if err := r.client.GetContext(ctx, &receiverModel, query, args...); err != nil {
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select"),
+		attribute.String("db.sql.table", "receivers"),
+	}
+
+	if err := r.client.GetContext(otelsql.AddMeterLabels(ctx, attrs...), &receiverModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, receiver.NotFoundError{ID: id}
 		}
@@ -207,7 +226,12 @@ func (r ReceiverRepository) PatchLabels(ctx context.Context, rcv *receiver.Recei
 	receiverModel.FromDomain(*rcv)
 
 	var patchedLabelReceiver model.Receiver
-	if err := r.client.QueryRowxContext(ctx, receiverPatchLabelsQuery,
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Update"),
+		attribute.String("db.sql.table", "receivers"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), receiverPatchLabelsQuery,
 		receiverModel.ID,
 		receiverModel.Labels,
 	).StructScan(&patchedLabelReceiver); err != nil {
@@ -223,7 +247,13 @@ func (r ReceiverRepository) PatchLabels(ctx context.Context, rcv *receiver.Recei
 }
 
 func (r ReceiverRepository) Delete(ctx context.Context, id uint64) error {
-	if _, err := r.client.ExecContext(ctx, receiverDeleteQuery, id); err != nil {
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Delete"),
+		attribute.String("db.sql.table", "receivers"),
+	}
+	
+	if _, err := r.client.ExecContext(otelsql.AddMeterLabels(ctx, attrs...), receiverDeleteQuery, id); err != nil {
 		return err
 	}
 	return nil

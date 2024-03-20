@@ -9,6 +9,8 @@ import (
 	"github.com/goto/siren/internal/store/model"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const templateUpsertQuery = `
@@ -55,7 +57,14 @@ func (r TemplateRepository) Upsert(ctx context.Context, tmpl *template.Template)
 	}
 
 	var upsertedTemplate model.Template
-	if err := r.client.QueryRowxContext(ctx, templateUpsertQuery,
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "templates"),
+	}
+	
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), templateUpsertQuery,
 		templateModel.Name,
 		templateModel.Body,
 		templateModel.Tags,
@@ -89,7 +98,13 @@ func (r TemplateRepository) List(ctx context.Context, flt template.Filter) ([]te
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, query, args...)
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "templates"),
+	}
+
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +133,14 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 	}
 
 	var templateModel model.Template
-	if err = r.client.GetContext(ctx, &templateModel, query, args...); err != nil {
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select"),
+		attribute.String("db.sql.table", "templates"),
+	}
+
+	if err = r.client.GetContext(otelsql.AddMeterLabels(ctx, attrs...), &templateModel, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, template.NotFoundError{Name: name}
 		}
@@ -134,7 +156,13 @@ func (r TemplateRepository) GetByName(ctx context.Context, name string) (*templa
 }
 
 func (r TemplateRepository) Delete(ctx context.Context, name string) error {
-	if _, err := r.client.ExecContext(ctx, templateDeleteByNameQuery, name); err != nil {
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Delete"),
+		attribute.String("db.sql.table", "templates"),
+	}
+
+	if _, err := r.client.ExecContext(otelsql.AddMeterLabels(ctx, attrs...), templateDeleteByNameQuery, name); err != nil {
 		return err
 	}
 	return nil

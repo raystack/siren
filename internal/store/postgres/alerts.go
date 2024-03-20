@@ -11,6 +11,8 @@ import (
 	"github.com/goto/siren/pkg/errors"
 	"github.com/goto/siren/pkg/pgc"
 	"github.com/lib/pq"
+	"go.nhat.io/otelsql"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const alertInsertQuery = `
@@ -51,7 +53,14 @@ func (r AlertRepository) Create(ctx context.Context, alrt alert.Alert) (alert.Al
 	alertModel.FromDomain(alrt)
 
 	var newAlertModel model.Alert
-	if err := r.client.QueryRowxContext(ctx, alertInsertQuery,
+
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Insert"),
+		attribute.String("db.sql.table", "alerts"),
+	}
+
+	if err := r.client.QueryRowxContext(otelsql.AddMeterLabels(ctx, attrs...), alertInsertQuery,
 		alertModel.ProviderID,
 		alertModel.NamespaceID,
 		alertModel.ResourceName,
@@ -99,7 +108,13 @@ func (r AlertRepository) List(ctx context.Context, flt alert.Filter) ([]alert.Al
 		return nil, err
 	}
 
-	rows, err := r.client.QueryxContext(ctx, query, args...)
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Select *"),
+		attribute.String("db.sql.table", "alerts"),
+	}
+
+	rows, err := r.client.QueryxContext(otelsql.AddMeterLabels(ctx, attrs...), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +141,13 @@ func (r AlertRepository) BulkUpdateSilence(ctx context.Context, alertIDs []int64
 		silenceStatusPG = sql.NullString{Valid: true, String: silenceStatus}
 	}
 
-	if _, err := r.client.ExecContext(ctx, alertUpdateBulkSilenceQuery,
+	// Instrumentation attributes
+	attrs := []attribute.KeyValue{
+		attribute.String("db.method", "Update"),
+		attribute.String("db.sql.table", "alerts"),
+	}
+	
+	if _, err := r.client.ExecContext(otelsql.AddMeterLabels(ctx, attrs...), alertUpdateBulkSilenceQuery,
 		silenceStatusPG,
 		sqlAlertIDs,
 	); err != nil {

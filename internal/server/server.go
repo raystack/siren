@@ -84,6 +84,7 @@ func RunServer(
 			grpc_validator.UnaryServerInterceptor(),
 			grpc_zap.UnaryServerInterceptor(zapLogger, loggerOpts...),
 			grpc_recovery.UnaryServerInterceptor(),
+			// interceptors.OtelsqlMeterInterceptor,
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_ctxtags.StreamServerInterceptor(),
