@@ -8936,17 +8936,6 @@ func (m *UpsertTemplateRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if len(m.GetVariables()) < 1 {
-		err := UpsertTemplateRequestValidationError{
-			field:  "Variables",
-			reason: "value must contain at least 1 item(s)",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	for idx, item := range m.GetVariables() {
 		_, _ = idx, item
 
