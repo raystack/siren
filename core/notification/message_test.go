@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/core/notification/mocks"
+	"github.com/goto/siren/core/template"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -21,7 +22,7 @@ func TestMessage_InitMessage(t *testing.T) {
 	)
 	testCases := []struct {
 		name                string
-		setup               func(*mocks.Notifier)
+		setup               func(*mocks.Notifier, *mocks.TemplateService)
 		n                   notification.Notification
 		receiverType        string
 		notificationConfigs map[string]any
@@ -30,8 +31,9 @@ func TestMessage_InitMessage(t *testing.T) {
 	}{
 		{
 			name: "all notification labels and data should be merged to message detail and data takes precedence if key conflict",
-			setup: func(n *mocks.Notifier) {
+			setup: func(n *mocks.Notifier, t *mocks.TemplateService) {
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(nil, nil)
+				n.EXPECT().GetSystemDefaultTemplate().Return("")
 			},
 			n: notification.Notification{
 				Type: notification.FlowSubscriber,
@@ -43,6 +45,7 @@ func TestMessage_InitMessage(t *testing.T) {
 					"varkey1": "value1",
 					"samekey": "var_value",
 				},
+				Template: template.ReservedName_SystemDefault,
 			},
 			want: notification.Message{
 				ID:     testID,
@@ -62,14 +65,16 @@ func TestMessage_InitMessage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockNotifierPlugin := new(mocks.Notifier)
+			mockTemplateService := new(mocks.TemplateService)
 
 			if tc.setup != nil {
-				tc.setup(mockNotifierPlugin)
+				tc.setup(mockNotifierPlugin, mockTemplateService)
 			}
 
 			m, err := notification.InitMessage(
 				context.TODO(),
 				mockNotifierPlugin,
+				mockTemplateService,
 				tc.n,
 				tc.receiverType,
 				tc.notificationConfigs,

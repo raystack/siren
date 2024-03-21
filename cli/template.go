@@ -426,8 +426,9 @@ func uploadTemplateCmd(cmdxConfig *cmdx.Config) *cobra.Command {
 	return cmd
 }
 
+// TODO might be broken
 func UploadTemplate(client sirenv1beta1.SirenServiceClient, yamlFile []byte) (uint64, error) {
-	var t template.TemplateFile
+	var t template.File
 	err := yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
 		return 0, err

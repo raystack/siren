@@ -1255,6 +1255,8 @@ definitions:
         type: object
         additionalProperties:
           type: string
+      template:
+        type: string
   PostNotificationResponse:
     type: object
     properties:

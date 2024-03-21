@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func uploadTemplate(ctx context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {
+func uploadTemplate(_ context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {
 	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)
@@ -39,7 +39,7 @@ func uploadTemplate(ctx context.Context, cl sirenv1beta1.SirenServiceClient, fil
 		return errors.New("yaml is not template type")
 	}
 
-	var t template.TemplateFile
+	var t template.File
 	err = yaml.Unmarshal(yamlFile, &t)
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func uploadTemplate(ctx context.Context, cl sirenv1beta1.SirenServiceClient, fil
 	return nil
 }
 
-func uploadRule(ctx context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {
+func uploadRule(_ context.Context, cl sirenv1beta1.SirenServiceClient, filePath string) error {
 	yamlFile, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %s\n", err)

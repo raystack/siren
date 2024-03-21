@@ -1,0 +1,46 @@
+apiVersion: v2
+type: template
+name: test-message
+body:
+  - receiver_type: slack
+    content: |-
+      title: |
+        Several lines of text.
+        with some "quotes" of various 'types'.
+        Escapes (like \n) don't do anything.
+
+        Newlines can be added by leaving a blank line.
+        Additional leading whitespace is ignored.
+  - receiver_type: pagerduty
+    content: |-
+      title: |
+        Plain flow scalars are picky about the (:) and (#) characters. 
+        They can be in the string, but (:) cannot appear before a space or newline.
+        And (#) cannot appear after a space or newline; doing this will cause a syntax error. 
+        If you need to use these characters you are probably better off using one of the quoted styles instead.
+  - receiver_type: http
+    content: |-
+      title: {{.Data.title}}
+      description: |
+        Plain flow scalars are picky about the (:) and (#) characters. 
+        They can be in the string, but (:) cannot appear before a space or newline.
+        And (#) cannot appear after a space or newline; doing this will cause a syntax error. 
+        If you need to use these characters you are probably better off using one of the quoted styles instead.
+      category: {{.Labels.category}}
+variables:
+  - name: for
+    type: string
+    description: Golang duration format e.g. 5m, 2h
+    default: 5m
+  - name: warning
+    type: int
+    default: 85
+  - name: critical
+    type: int
+    default: 90
+  - name: team
+    type: string
+    description: Team name which the alert should go to
+    default: gotocompany-infra
+tags:
+  - test-message

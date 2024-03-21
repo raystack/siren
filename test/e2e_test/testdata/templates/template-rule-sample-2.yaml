@@ -7,7 +7,7 @@ body:
     for: "[[.for]]"
     labels:
       severity: CRITICAL
-      alertname: CPU usage has been above [[.critical]] for last [[.for]] {{ $labels.host }}
+      alert_name: CPU usage has been above [[.critical]] for last [[.for]] {{ $labels.host }}
       environment: "{{ $labels.environment }}"
       team: "[[.team]]"
     annotations:

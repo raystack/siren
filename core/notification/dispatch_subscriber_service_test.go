@@ -11,8 +11,10 @@ import (
 	"github.com/goto/siren/core/log"
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/core/notification/mocks"
+	"github.com/goto/siren/core/receiver"
 	"github.com/goto/siren/core/silence"
 	"github.com/goto/siren/core/subscription"
+	"github.com/goto/siren/core/template"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -261,6 +263,8 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 			name: "should return no error if all flow passed and no silences",
 			n: notification.Notification{
 				NamespaceID: 1,
+				Type:        receiver.TypeHTTP,
+				Template:    template.ReservedName_SystemDefault,
 			},
 			setup: func(ss1 *mocks.SubscriptionService, ss2 *mocks.SilenceService, n *mocks.Notifier) {
 				ss1.EXPECT().MatchByLabels(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("uint64"), mock.AnythingOfType("map[string]string")).Return([]subscription.Subscription{
@@ -289,13 +293,14 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 					SubscriptionID: 123,
 				}).Return(nil, nil)
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
+				n.EXPECT().GetSystemDefaultTemplate().Return("")
 			},
 			want: []notification.Message{
 				{
 					Status:       notification.MessageStatusEnqueued,
 					ReceiverType: testPluginType,
 					Configs:      map[string]any{},
-					Details:      map[string]any{"notification_type": string("")},
+					Details:      map[string]any{"notification_type": string("http")},
 					MaxTries:     3,
 				},
 			},
@@ -309,11 +314,14 @@ func TestDispatchSubscriberService_PrepareMessage(t *testing.T) {
 				mockSubscriptionService = new(mocks.SubscriptionService)
 				mockSilenceService      = new(mocks.SilenceService)
 				mockNotifier            = new(mocks.Notifier)
+				mockTemplateService     = new(mocks.TemplateService)
 			)
 			s := notification.NewDispatchSubscriberService(
 				saltlog.NewNoop(),
 				mockSubscriptionService,
-				mockSilenceService, map[string]notification.Notifier{
+				mockSilenceService,
+				mockTemplateService,
+				map[string]notification.Notifier{
 					testPluginType: mockNotifier,
 				},
 				true,

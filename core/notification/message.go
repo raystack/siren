@@ -86,11 +86,27 @@ type Message struct {
 func InitMessage(
 	ctx context.Context,
 	notifierPlugin Notifier,
+	templateService TemplateService,
 	n Notification,
 	receiverType string,
 	messageConfig map[string]any,
 	opts ...MessageOption,
 ) (Message, error) {
+	var (
+		timeNow = time.Now()
+		details = make(map[string]any)
+	)
+
+	m := &Message{
+		ID:             uuid.NewString(),
+		NotificationID: n.ID,
+		Status:         MessageStatusEnqueued,
+		ReceiverType:   receiverType,
+		MaxTries:       defaultMaxTries,
+		CreatedAt:      timeNow,
+		UpdatedAt:      timeNow,
+	}
+
 	if notifierPlugin == nil {
 		return Message{}, errors.New("notifierPlugin cannot be nil")
 	}
@@ -99,30 +115,7 @@ func InitMessage(
 	if err != nil {
 		return Message{}, err
 	}
-
-	var (
-		timeNow = time.Now()
-		details = make(map[string]any)
-	)
-
-	for k, v := range n.Labels {
-		details[k] = v
-	}
-	for k, v := range n.Data {
-		details[k] = v
-	}
-
-	m := &Message{
-		ID:             uuid.NewString(),
-		NotificationID: n.ID,
-		Status:         MessageStatusEnqueued,
-		ReceiverType:   receiverType,
-		Configs:        newConfigs,
-		Details:        details,
-		MaxTries:       defaultMaxTries,
-		CreatedAt:      timeNow,
-		UpdatedAt:      timeNow,
-	}
+	m.Configs = newConfigs
 
 	for _, opt := range opts {
 		opt(m)
@@ -132,27 +125,54 @@ func InitMessage(
 		m.ExpiredAt = m.CreatedAt.Add(m.expiryDuration)
 	}
 
+	if n.Template == "" {
+		return Message{}, errors.ErrInvalid.WithMsgf("found no template, template is mandatory")
+	}
 	//TODO fetch template if any, if not exist, check provider type, if exist use the default template, if not pass as-is
 	// if there is template, render and replace detail with the new one
-	if n.Template != "" {
-		var templateBody string
 
-		if template.IsReservedName(n.Template) {
-			templateBody = notifierPlugin.GetSystemDefaultTemplate()
+	var contentTemplate string
+
+	if template.IsReservedName(n.Template) {
+		contentTemplate = notifierPlugin.GetSystemDefaultTemplate()
+	} else {
+		tmpl, err := templateService.GetByName(ctx, n.Template)
+		if err != nil {
+			return Message{}, err
 		}
 
-		if templateBody != "" {
-			renderedDetailString, err := template.RenderBody(templateBody, n)
-			if err != nil {
-				return Message{}, errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", receiverType, err.Error())
-			}
-
-			var messageDetails map[string]any
-			if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
-				return Message{}, errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", receiverType, err.Error(), renderedDetailString)
-			}
-			m.Details = messageDetails
+		templateMessages, err := template.MessagesFromBody(tmpl)
+		if err != nil {
+			return Message{}, err
 		}
+
+		contentTmpl, err := template.MessageContentByReceiverType(templateMessages, receiverType)
+		if err != nil {
+			return Message{}, err
+		}
+		contentTemplate = contentTmpl
+	}
+
+	if contentTemplate != "" {
+		renderedDetailString, err := template.RenderBody(contentTemplate, n, template.DelimMessageLeft, template.DelimMessageRight)
+		if err != nil {
+			return Message{}, errors.ErrInvalid.WithMsgf("failed to render template receiver %s: %s", receiverType, err.Error())
+		}
+
+		var messageDetails map[string]any
+		if err := yaml.Unmarshal([]byte(renderedDetailString), &messageDetails); err != nil {
+			return Message{}, errors.ErrInvalid.WithMsgf("failed to unmarshal rendered template receiver %s: %s, rendered template: %v", receiverType, err.Error(), renderedDetailString)
+		}
+		m.Details = messageDetails
+	} else {
+		for k, v := range n.Labels {
+			details[k] = v
+		}
+		for k, v := range n.Data {
+			details[k] = v
+		}
+
+		m.Details = details
 	}
 
 	m.Details[DetailsKeyNotificationType] = n.Type

@@ -161,6 +161,7 @@ func InitDeps(
 			SubscriptionService:   subscriptionService,
 			SilenceService:        silenceService,
 			AlertService:          alertService,
+			TemplateService:       templateService,
 		},
 		cfg.Service.EnableSilenceFeature,
 	)

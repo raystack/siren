@@ -40,6 +40,10 @@ type LogService interface {
 	LogNotifications(ctx context.Context, nlogs ...log.Notification) error
 }
 
+type TemplateService interface {
+	GetByName(ctx context.Context, name string) (*template.Template, error)
+}
+
 // Service is a service for notification domain
 type Service struct {
 	logger                saltlog.Logger
@@ -61,6 +65,7 @@ type Deps struct {
 	IdempotencyRepository     IdempotencyRepository
 	LogService                LogService
 	ReceiverService           ReceiverService
+	TemplateService           TemplateService
 	SubscriptionService       SubscriptionService
 	SilenceService            SilenceService
 	AlertService              AlertService
@@ -83,10 +88,10 @@ func NewService(
 		dispatchSubscriberService = deps.DispatchSubscriberService
 	)
 	if deps.DispatchReceiverService == nil {
-		dispatchReceiverService = NewDispatchReceiverService(deps.ReceiverService, notifierPlugins)
+		dispatchReceiverService = NewDispatchReceiverService(deps.ReceiverService, deps.TemplateService, notifierPlugins)
 	}
 	if deps.DispatchSubscriberService == nil {
-		dispatchSubscriberService = NewDispatchSubscriberService(logger, deps.SubscriptionService, deps.SilenceService, notifierPlugins, enableSilenceFeature)
+		dispatchSubscriberService = NewDispatchSubscriberService(logger, deps.SubscriptionService, deps.SilenceService, deps.TemplateService, notifierPlugins, enableSilenceFeature)
 	}
 
 	ns := &Service{

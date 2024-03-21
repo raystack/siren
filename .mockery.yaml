@@ -114,6 +114,9 @@ packages:
       LogService:
         config:
           filename: "log_service.go"
+      TemplateService:
+        config:
+          filename: "template_service.go"
   github.com/goto/siren/core/provider:
     config:
       dir: "core/provider/mocks"

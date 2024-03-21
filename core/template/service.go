@@ -10,8 +10,11 @@ import (
 )
 
 const (
-	leftDelim  = "[["
-	rightDelim = "]]"
+	defaultLeftDelim  = "[["
+	defaultrightDelim = "]]"
+
+	DelimMessageLeft  = "{{"
+	DelimMessageRight = "}}"
 )
 
 // Service handles business logic
@@ -81,10 +84,10 @@ func enrichWithDefaults(variables []Variable, requestVariables map[string]string
 
 func RenderWithEnrichedDefault(templateBody string, templateVars []Variable, requestVariables map[string]string) (string, error) {
 	enrichedVariables := enrichWithDefaults(templateVars, requestVariables)
-	return RenderBody(templateBody, enrichedVariables)
+	return RenderBody(templateBody, enrichedVariables, defaultLeftDelim, defaultrightDelim)
 }
 
-func RenderBody(templateBody string, aStruct interface{}) (string, error) {
+func RenderBody(templateBody string, aStruct interface{}, leftDelim, rightDelim string) (string, error) {
 	var tpl bytes.Buffer
 	tmpl, err := texttemplate.New("parser").Funcs(defaultFuncMap).Delims(leftDelim, rightDelim).Parse(templateBody)
 	if err != nil {

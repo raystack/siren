@@ -10,6 +10,7 @@ import (
 	"github.com/goto/siren/core/notification"
 	"github.com/goto/siren/core/notification/mocks"
 	"github.com/goto/siren/core/receiver"
+	"github.com/goto/siren/core/template"
 	"github.com/goto/siren/pkg/errors"
 	"github.com/stretchr/testify/mock"
 )
@@ -69,7 +70,7 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should return no error if all flow passed",
+			name: "should return error if template is not passed",
 			n: notification.Notification{
 				ID: notificationID,
 				ReceiverSelectors: []map[string]string{
@@ -86,6 +87,29 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 					},
 				}, nil)
 				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "should return no error if all flow passed",
+			n: notification.Notification{
+				ID: notificationID,
+				ReceiverSelectors: []map[string]string{
+					{
+						"id": "11",
+					},
+				},
+				Template: template.ReservedName_SystemDefault,
+			},
+			setup: func(rs *mocks.ReceiverService, n *mocks.Notifier) {
+				rs.EXPECT().List(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("receiver.Filter")).Return([]receiver.Receiver{
+					{
+						ID:   11,
+						Type: testPluginType,
+					},
+				}, nil)
+				n.EXPECT().PreHookQueueTransformConfigs(mock.AnythingOfType("context.todoCtx"), mock.AnythingOfType("map[string]interface {}")).Return(map[string]any{}, nil)
+				n.EXPECT().GetSystemDefaultTemplate().Return("")
 			},
 			want: []notification.Message{
 				{
@@ -108,9 +132,11 @@ func TestDispatchReceiverService_PrepareMessage(t *testing.T) {
 			var (
 				mockReceiverService = new(mocks.ReceiverService)
 				mockNotifier        = new(mocks.Notifier)
+				mockTemplateService = new(mocks.TemplateService)
 			)
 			s := notification.NewDispatchReceiverService(
 				mockReceiverService,
+				mockTemplateService,
 				map[string]notification.Notifier{
 					testPluginType: mockNotifier,
 				})

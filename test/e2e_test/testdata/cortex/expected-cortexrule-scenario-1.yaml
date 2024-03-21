@@ -5,7 +5,7 @@ system:
         expr: avg by (host, environment) (cpu_usage_user{cpu="cpu-total"}) > 85
         for: 5m
         labels:
-          alertname: CPU usage has been above 85 for last 5m {{ $labels.host }}
+          alert_name: CPU usage has been above 85 for last 5m {{ $labels.host }}
           environment: "{{ $labels.environment }}"
           severity: WARNING
           team: gotocompany-infra-2
@@ -20,7 +20,7 @@ system:
         expr: avg by (host, environment) (cpu_usage_user{cpu="cpu-total"}) > 90
         for: 5m
         labels:
-          alertname: CPU usage has been above 90 for last 5m {{ $labels.host }}
+          alert_name: CPU usage has been above 90 for last 5m {{ $labels.host }}
           environment: "{{ $labels.environment }}"
           severity: CRITICAL
           team: gotocompany-infra-2
@@ -37,7 +37,7 @@ system:
         expr: avg by (host, environment) (cpu_usage_user{cpu="cpu-total"}) > 90
         for: 5m
         labels:
-          alertname: CPU usage has been above 90 for last 5m {{ $labels.host }}
+          alert_name: CPU usage has been above 90 for last 5m {{ $labels.host }}
           environment: "{{ $labels.environment }}"
           severity: CRITICAL
           team: gotocompany-infra-2

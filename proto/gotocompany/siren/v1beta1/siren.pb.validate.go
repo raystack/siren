@@ -11077,6 +11077,8 @@ func (m *PostNotificationRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
+	// no validation rules for Template
+
 	if len(errors) > 0 {
 		return PostNotificationRequestMultiError(errors)
 	}

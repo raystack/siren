@@ -48,6 +48,9 @@ func (s *GRPCServer) PostNotification(ctx context.Context, req *sirenv1beta1.Pos
 
 	// TODO once custom template is supported, this needs to be set
 	var notificationTemplate = template.ReservedName_SystemDefault
+	if req.GetTemplate() != "" {
+		notificationTemplate = req.GetTemplate()
+	}
 
 	n := notification.Notification{
 		Type:              notification.TypeEvent,

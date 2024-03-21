@@ -10,13 +10,18 @@ import (
 
 type DispatchReceiverService struct {
 	receiverService ReceiverService
+	templateService TemplateService
 	notifierPlugins map[string]Notifier
 }
 
-func NewDispatchReceiverService(receiverService ReceiverService, notifierPlugins map[string]Notifier) *DispatchReceiverService {
+func NewDispatchReceiverService(
+	receiverService ReceiverService,
+	templateService TemplateService,
+	notifierPlugins map[string]Notifier) *DispatchReceiverService {
 	return &DispatchReceiverService{
 		receiverService: receiverService,
 		notifierPlugins: notifierPlugins,
+		templateService: templateService,
 	}
 }
 
@@ -55,6 +60,7 @@ func (s *DispatchReceiverService) PrepareMessage(ctx context.Context, n Notifica
 		message, err := InitMessage(
 			ctx,
 			notifierPlugin,
+			s.templateService,
 			n,
 			rcv.Type,
 			rcv.Configurations,

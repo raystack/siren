@@ -14,6 +14,7 @@ type DispatchSubscriberService struct {
 	logger               saltlog.Logger
 	subscriptionService  SubscriptionService
 	silenceService       SilenceService
+	templateService      TemplateService
 	notifierPlugins      map[string]Notifier
 	enableSilenceFeature bool
 }
@@ -22,6 +23,7 @@ func NewDispatchSubscriberService(
 	logger saltlog.Logger,
 	subscriptionService SubscriptionService,
 	silenceService SilenceService,
+	templateService TemplateService,
 	notifierPlugins map[string]Notifier,
 	enableSilenceFeature bool,
 ) *DispatchSubscriberService {
@@ -31,6 +33,7 @@ func NewDispatchSubscriberService(
 		silenceService:       silenceService,
 		notifierPlugins:      notifierPlugins,
 		enableSilenceFeature: enableSilenceFeature,
+		templateService:      templateService,
 	}
 }
 
@@ -147,6 +150,7 @@ func (s *DispatchSubscriberService) PrepareMessage(ctx context.Context, n Notifi
 			message, err := InitMessage(
 				ctx,
 				notifierPlugin,
+				s.templateService,
 				n,
 				rcv.Type,
 				rcv.Configuration,
